@@ -17,9 +17,9 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     jvm("desktop")
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -30,7 +30,7 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     sourceSets {
         val desktopMain by getting
 
@@ -53,6 +53,8 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.sqldelight.jvm.driver)
+            implementation(libs.nativeparameteraccess)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native.driver)
@@ -103,6 +105,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            jvmArgs("-Dapple.awt.application.appearance=system")
             packageName = "com.zhufucdev.practiso"
             packageVersion = "1.0.0"
         }
