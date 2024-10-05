@@ -1,12 +1,14 @@
-CREATE TABLE TextFrame(
+import kotlinx.datetime.Instant;
+
+CREATE TABLE text_frame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     quizId INTEGER NOT NULL,
     prior INTEGER NOT NULL,
     content TEXT NOT NULL,
-    FOREIGN KEY (id) REFERENCES Quiz(id)
+    FOREIGN KEY (id) REFERENCES quiz(id)
 );
 
-CREATE TABLE ImageFrame(
+CREATE TABLE image_frame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     quizId INTEGER NOT NULL,
     prior INTEGER NOT NULL,
@@ -14,65 +16,73 @@ CREATE TABLE ImageFrame(
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
     altText TEXT,
-    FOREIGN KEY (id) REFERENCES Quiz(id)
+    FOREIGN KEY (id) REFERENCES quiz(id)
 );
 
-CREATE TABLE Quiz(
+CREATE TABLE quiz(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    creationTimeISO TEXT NOT NULL,
-    modificationTimeISO TEXT
+    name TEXT NOT NULL,
+    creationTimeISO TEXT AS Instant NOT NULL,
+    modificationTimeISO TEXT AS Instant
 );
 
 getAllQuiz:
 SELECT *
-FROM Quiz;
+FROM quiz;
 
 insertQuiz:
-INSERT INTO Quiz(creationTimeISO, modificationTimeISO)
-VALUES (?, ?);
+INSERT INTO quiz(name, creationTimeISO, modificationTimeISO)
+VALUES (?, ?, ?);
+
+updateQuizName:
+UPDATE quiz SET name = ?
+WHERE id = ?;
 
 updateQuizModificationTimeISO:
-UPDATE Quiz SET modificationTimeISO = ?
+UPDATE quiz SET modificationTimeISO = ?
 WHERE id = ?;
 
 removeQuiz:
-DELETE FROM Quiz WHERE id = ?;
+DELETE FROM quiz WHERE id = ?;
 
 
 getTextFramesByQuizId:
 SELECT *
-FROM TextFrame
+FROM text_frame
 WHERE quizId = ?;
 
 insertTextFrame:
-INSERT INTO TextFrame(quizId, prior, content)
+INSERT INTO text_frame(quizId, prior, content)
 VALUES (?, ?, ?);
 
 updateTextFrameContent:
-UPDATE TextFrame SET content = ? WHERE id = ?;
+UPDATE text_frame SET content = ? WHERE id = ?;
 
 updateTextFramePriority:
-UPDATE TextFrame SET prior = ? WHERE id = ?;
+UPDATE text_frame SET prior = ? WHERE id = ?;
 
 removeTextFrame:
-DELETE FROM TextFrame WHERE id = ?;
+DELETE FROM text_frame WHERE id = ?;
 
 
 getImageFramesByQuizId:
-SELECT * FROM ImageFrame WHERE quizId = ?;
+SELECT * FROM image_frame WHERE quizId = ?;
 
 insertImageFrame:
-INSERT INTO ImageFrame(quizId, prior, filename, altText, width, height)
+INSERT INTO image_frame(quizId, prior, filename, altText, width, height)
 VALUES (?, ?, ?, ?, ?, ?);
 
 updateImageFrameContent:
-UPDATE ImageFrame SET filename = ?, width = ?, height = ? WHERE id = ?;
+UPDATE image_frame SET filename = ?, width = ?, height = ? WHERE id = ?;
 
 updateImageFramePriority:
-UPDATE ImageFrame SET prior = ? WHERE id = ?;
+UPDATE image_frame SET prior = ? WHERE id = ?;
 
 updateImagrFrameAltText:
-UPDATE ImageFrame SET altText = ? WHERE id = ?;
+UPDATE image_frame SET altText = ? WHERE id = ?;
 
 removeImageFrame:
-DELETE FROM ImageFrame WHERE id = ?;
+DELETE FROM image_frame WHERE id = ?;
+
+lastInsertRowId:
+SELECT last_insert_rowid();
