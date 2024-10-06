@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Practiso</string>
+    <string name="session_para">Session</string>
+    <string name="library_para">Library</string>
 </resources>

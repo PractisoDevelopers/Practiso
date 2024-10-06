@@ -1,4 +1,4 @@
-package com.zhufucdev.practiso.ui
+package com.zhufucdev.practiso.style
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

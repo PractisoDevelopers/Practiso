@@ -5,6 +5,7 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.github.tkuenneth.nativeparameterstoreaccess.Dconf
 import com.github.tkuenneth.nativeparameterstoreaccess.MacOSDefaults
 import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
+import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.name
 
@@ -15,7 +16,9 @@ abstract class JVMPlatform : Platform {
     abstract val dataPath: String
 
     override suspend fun createDbDriver(): SqlDriver {
-        return JdbcSqliteDriver("jdbc:sqlite:${Path(dataPath, "app.db")}")
+        return JdbcSqliteDriver("jdbc:sqlite:${Path(dataPath, "app.db")}", properties = Properties().apply {
+            put("foreign_keys", "true")
+        })
     }
 }
 

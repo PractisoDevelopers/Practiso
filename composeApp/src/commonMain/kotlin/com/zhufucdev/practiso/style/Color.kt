@@ -1,4 +1,4 @@
-package com.zhufucdev.practiso.ui
+package com.zhufucdev.practiso.style
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF4C662B)

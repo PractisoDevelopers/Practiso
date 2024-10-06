@@ -4,6 +4,7 @@ import app.cash.sqldelight.ColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Quiz
+import com.zhufucdev.practiso.database.Session
 import kotlinx.datetime.Instant
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
@@ -20,6 +21,13 @@ private object DateTimeAdapter : ColumnAdapter<Instant, String> {
 }
 
 fun SqlDriver.toDatabase() = AppDatabase(
-    this,
-    quizAdapter = Quiz.Adapter(creationTimeISOAdapter = DateTimeAdapter, modificationTimeISOAdapter = DateTimeAdapter)
+    driver = this,
+    quizAdapter = Quiz.Adapter(
+        creationTimeISOAdapter = DateTimeAdapter,
+        modificationTimeISOAdapter = DateTimeAdapter
+    ),
+    sessionAdapter = Session.Adapter(
+        creationTimeISOAdapter = DateTimeAdapter,
+        lastAccessTimeISOAdapter = DateTimeAdapter
+    ),
 )

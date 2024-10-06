@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso
 
 import android.os.Build
+import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.zhufucdev.practiso.database.AppDatabase
@@ -8,7 +9,16 @@ import com.zhufucdev.practiso.database.AppDatabase
 class AndroidPlatform : Platform {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
     override suspend fun createDbDriver(): SqlDriver {
-        return AndroidSqliteDriver(AppDatabase.Schema, MainActivity.contextChan.receive(), "practiso.db")
+        return AndroidSqliteDriver(
+            schema = AppDatabase.Schema,
+            context = MainActivity.contextChan.receive(),
+            name = "practiso.db",
+            callback = object : AndroidSqliteDriver.Callback(AppDatabase.Schema) {
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    db.setForeignKeyConstraintsEnabled(true)
+                }
+            }
+        )
     }
 }
 
