@@ -4,4 +4,10 @@
     <string name="library_para">Library</string>
     <string name="deactivate_global_search_span">deactivate global search</string>
     <string name="search_app_para">Search Practiso…</string>
+    <string name="recently_used_para">Recently used</string>
+    <string name="take_completeness">take completeness</string>
+    <plurals name="done_questions_completed_in_total">
+        <item quantity="one">%1$d question out of %2$d done</item>
+        <item quantity="other">%1$d questions out of %2$d done</item>
+    </plurals>
 </resources>
