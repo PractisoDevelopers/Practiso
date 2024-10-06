@@ -15,13 +15,13 @@ CREATE TABLE take(
     PRIMARY KEY (id, sessionId)
 );
 
-CREATE TABLE options_frame_answer(
+CREATE TABLE optionsFrameAnswer(
     takeId INTEGER NOT NULL,
     optionsFrameId INTEGER NOT NULL,
     PRIMARY KEY (takeId, optionsFrameId)
 );
 
-CREATE TABLE quiz_by_session(
+CREATE TABLE quizBySession(
     sessionId INTEGER NOT NULL,
     quizId INTEGER NOT NULL,
     PRIMARY KEY (sessionId, quizId),
@@ -29,7 +29,7 @@ CREATE TABLE quiz_by_session(
     FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
 );
 
-CREATE TABLE quiz_by_take(
+CREATE TABLE quizByTake(
     id INTEGER PRIMARY KEY,
     takeId INTEGER NOT NULL,
     quizId INTEGER NOT NULL,
@@ -37,14 +37,14 @@ CREATE TABLE quiz_by_take(
     FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
 );
 
-CREATE VIEW session_stat AS
+CREATE VIEW sessionStat AS
 SELECT S.id, S.name, S.lastAccessTimeISO, T.durationSeconds, Q.countQuizDone, QT.countQuizTotal FROM session S JOIN take T ON T.sessionId = S.id JOIN (
 SELECT count(*) AS countQuizDone, takeId
-FROM quiz_by_take
+FROM quizByTake
 GROUP BY takeId
 ) Q ON Q.takeId = T.id JOIN (
 SELECT count(*) AS countQuizTotal, sessionId
-FROM quiz_by_session
+FROM quizBySession
 GROUP BY sessionId
 ) QT ON QT.sessionId = S.id;
 
@@ -59,10 +59,10 @@ VALUES (?, ?);
 
 getAllSessionStats:
 SELECT *
-FROM session_stat;
+FROM sessionStat;
 
 getRecentSessionStats:
 SELECT *
-FROM session_stat
-ORDER BY session_stat.lastAccessTimeISO ASC
+FROM sessionStat
+ORDER BY sessionStat.lastAccessTimeISO ASC
 LIMIT ?;

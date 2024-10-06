@@ -1,11 +1,11 @@
 import kotlinx.datetime.Instant;
 
-CREATE TABLE text_frame(
+CREATE TABLE textFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT NOT NULL
 );
 
-CREATE TABLE image_frame(
+CREATE TABLE imageFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     filename TEXT NOT NULL,
     width INTEGER NOT NULL,
@@ -13,33 +13,33 @@ CREATE TABLE image_frame(
     altText TEXT
 );
 
-CREATE TABLE options_frame(
+CREATE TABLE optionsFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT
 );
 
-CREATE TABLE frame_by_quiz(
+CREATE TABLE frameByQuiz(
     quizId INTEGER NOT NULL,
     priority INTEGER NOT NULL,
     textFrameId INTEGER,
     imageFrameId INTEGER,
     optionsFrameId INTEGER,
     PRIMARY KEY (quizId, textFrameId, imageFrameId, optionsFrameId),
-    FOREIGN KEY (textFrameId) REFERENCES text_frame(id) ON DELETE CASCADE,
-    FOREIGN KEY (imageFrameId) REFERENCES image_frame(id) ON DELETE CASCADE,
-    FOREIGN KEY (optionsFrameId) REFERENCES options_frame(id) ON DELETE CASCADE,
+    FOREIGN KEY (textFrameId) REFERENCES textFrame(id) ON DELETE CASCADE,
+    FOREIGN KEY (imageFrameId) REFERENCES imageFrame(id) ON DELETE CASCADE,
+    FOREIGN KEY (optionsFrameId) REFERENCES optionsFrame(id) ON DELETE CASCADE,
     CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL OR optionsFrameId IS NOT NULL)
 );
 
-CREATE TABLE frame_by_options_frame(
+CREATE TABLE frameByOptionsFrame(
     optionsFrameId INTEGER NOT NULL,
     priority INTEGER NOT NULL,
     textFrameId INTEGER,
     imageFrameId INTEGER,
     PRIMARY KEY (optionsFrameId, textFrameId, imageFrameId),
-    FOREIGN KEY (optionsFrameId) REFERENCES options_frame(id),
-    FOREIGN KEY (textFrameId) REFERENCES text_frame(id) ON DELETE CASCADE,
-    FOREIGN KEY (imageFrameId) REFERENCES image_frame(id) ON DELETE CASCADE,
+    FOREIGN KEY (optionsFrameId) REFERENCES optionsFrame(id),
+    FOREIGN KEY (textFrameId) REFERENCES textFrame(id) ON DELETE CASCADE,
+    FOREIGN KEY (imageFrameId) REFERENCES imageFrame(id) ON DELETE CASCADE,
     CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
 );
 
@@ -72,80 +72,80 @@ DELETE FROM quiz WHERE id = ?;
 
 getTextFramesByQuizId:
 SELECT T.*
-FROM text_frame T JOIN frame_by_quiz Q ON T.id = Q.textFrameId
+FROM textFrame T JOIN frameByQuiz Q ON T.id = Q.textFrameId
 WHERE Q.quizId = ?;
 
 insertTextFrame:
-INSERT INTO text_frame(content)
+INSERT INTO textFrame(content)
 VALUES ( ?);
 
 associateLastTextFrameWithQuiz:
-INSERT INTO frame_by_quiz(textFrameId, quizId, priority)
+INSERT INTO frameByQuiz(textFrameId, quizId, priority)
 VALUES (last_insert_rowid(), ?, ?);
 
 assoicateLastTextFrameWithOption:
-INSERT INTO frame_by_options_frame(textFrameId, optionsFrameId, priority)
+INSERT INTO frameByOptionsFrame(textFrameId, optionsFrameId, priority)
 VALUES (last_insert_rowid(), ?, ?);
 
 dissociateTextFrameFromQuiz:
-DELETE FROM frame_by_quiz WHERE quizId = ? AND textFrameId = ?;
+DELETE FROM frameByQuiz WHERE quizId = ? AND textFrameId = ?;
 
 dissociateTextFrameFromOption:
-DELETE FROM frame_by_options_frame WHERE optionsFrameId = ? AND textFrameId = ?;
+DELETE FROM frameByOptionsFrame WHERE optionsFrameId = ? AND textFrameId = ?;
 
 updateTextFrameContent:
-UPDATE text_frame SET content = ? WHERE id = ?;
+UPDATE textFrame SET content = ? WHERE id = ?;
 
 removeTextFrame:
-DELETE FROM text_frame WHERE id = ?;
+DELETE FROM textFrame WHERE id = ?;
 
 
 getImageFramesByQuizId:
 SELECT I.*
-FROM image_frame I JOIN frame_by_quiz Q ON Q.textFrameId = I.id
+FROM imageFrame I JOIN frameByQuiz Q ON Q.textFrameId = I.id
 WHERE Q.quizId = ?;
 
 insertImageFrame:
-INSERT INTO image_frame(filename, altText, width, height)
+INSERT INTO imageFrame(filename, altText, width, height)
 VALUES (?, ?, ?, ?);
 
 associateLastImageFrameWithQuiz:
-INSERT INTO frame_by_quiz(quizId, imageFrameId, priority)
+INSERT INTO frameByQuiz(quizId, imageFrameId, priority)
 VALUES (?, last_insert_rowid(), ?);
 
 assoicateLastImageFrameWithOption:
-INSERT INTO frame_by_options_frame(optionsFrameId, imageFrameId, priority)
+INSERT INTO frameByOptionsFrame(optionsFrameId, imageFrameId, priority)
 VALUES (?, last_insert_rowid(), ?);
 
 dissociateImageFrameFromQuiz:
-DELETE FROM frame_by_quiz WHERE quizId = ? AND imageFrameId = ?;
+DELETE FROM frameByQuiz WHERE quizId = ? AND imageFrameId = ?;
 
 dissociateImageFrameFromOption:
-DELETE FROM frame_by_options_frame WHERE optionsFrameId = ? AND imageFrameId = ?;
+DELETE FROM frameByOptionsFrame WHERE optionsFrameId = ? AND imageFrameId = ?;
 
 updateImageFrameContent:
-UPDATE image_frame SET filename = ?, width = ?, height = ? WHERE id = ?;
+UPDATE imageFrame SET filename = ?, width = ?, height = ? WHERE id = ?;
 
 updateImagrFrameAltText:
-UPDATE image_frame SET altText = ? WHERE id = ?;
+UPDATE imageFrame SET altText = ? WHERE id = ?;
 
 removeImageFrame:
-DELETE FROM image_frame WHERE id = ?;
+DELETE FROM imageFrame WHERE id = ?;
 
 
 insertOptionsFrame:
-INSERT INTO options_frame(name)
+INSERT INTO optionsFrame(name)
 VALUES (?);
 
 associateLastOptionsFrameWithQuiz:
-INSERT INTO frame_by_quiz(quizId, optionsFrameId, priority)
+INSERT INTO frameByQuiz(quizId, optionsFrameId, priority)
 VALUES (?, last_insert_rowid(), ?);
 
 updateOptionsFrameName:
-UPDATE options_frame SET name = ? WHERE id = ?;
+UPDATE optionsFrame SET name = ? WHERE id = ?;
 
 removeOptionsFrame:
-DELETE FROM options_frame WHERE id = ?;
+DELETE FROM optionsFrame WHERE id = ?;
 
 lastInsertRowId:
 SELECT last_insert_rowid();

@@ -3,7 +3,7 @@ CREATE TABLE dimension(
     name TEXT NOT NULL
 );
 
-CREATE TABLE quiz_by_dimension(
+CREATE TABLE quizByDimension(
     quizId INTEGER NOT NULL,
     dimensionId INTEGER NOT NULL,
     intensity REAL NOT NULL DEFAULT 1 CHECK (0 < intensity <= 1),
@@ -24,14 +24,14 @@ updateDimensionName:
 UPDATE dimension SET name = ? WHERE id = ?;
 
 updateDimensionAssoicationIntensity:
-UPDATE quiz_by_dimension SET intensity = ? WHERE quizId = ? AND dimensionId = ?;
+UPDATE quizByDimension SET intensity = ? WHERE quizId = ? AND dimensionId = ?;
 
 associateQuizWithDimension:
-INSERT INTO quiz_by_dimension(quizId, dimensionId, intensity)
+INSERT INTO quizByDimension(quizId, dimensionId, intensity)
 VALUES (?, ?, ?);
 
 dissoicateQuizFromDimension:
-DELETE FROM quiz_by_dimension WHERE quizId = ? AND dimensionId = ?;
+DELETE FROM quizByDimension WHERE quizId = ? AND dimensionId = ?;
 
 removeDimension:
-DELETE FROM quiz_by_dimension WHERE quizId = ? AND dimensionId = ?;
+DELETE FROM quizByDimension WHERE quizId = ? AND dimensionId = ?;
