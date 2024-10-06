@@ -136,6 +136,8 @@ DELETE FROM image_frame WHERE id = ?;
 insertOptionsFrame:
 INSERT INTO options_frame(name)
 VALUES (?);
+
+associateLastOptionsFrameWithQuiz:
 INSERT INTO frame_by_quiz(quizId, optionsFrameId, priority)
 VALUES (?, last_insert_rowid(), ?);
 
