@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
 import com.zhufucdev.practiso.database.TakeStat
-import com.zhufucdev.practiso.page.TakeCard
-import com.zhufucdev.practiso.page.TakeCardSkeleton
+import com.zhufucdev.practiso.page.TakeContent
+import com.zhufucdev.practiso.page.TakeSkeleton
 
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_UNDEFINED,
@@ -16,8 +16,8 @@ import com.zhufucdev.practiso.page.TakeCardSkeleton
 @Composable
 fun SessionCardPreview() {
     Column {
-        TakeCardSkeleton(progress = 0.618f)
-        TakeCard(TakeStat(
+        TakeSkeleton(progress = 0.618f)
+        TakeContent(TakeStat(
             id = 0,
             name = "test take",
             durationSeconds = 114514,
