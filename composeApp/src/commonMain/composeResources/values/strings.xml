@@ -12,4 +12,5 @@
     </plurals>
     <string name="welcome_to_app_para">Welcome to Practiso!</string>
     <string name="get_started_by_para">Get started by creating a session</string>
+    <string name="create_para">Create</string>
 </resources>

@@ -18,7 +18,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.zhufucdev.practiso.composable.FabClaimScope
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.globalViewModel
@@ -45,6 +49,7 @@ import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.baseline_check_circle_outline
 import practiso.composeapp.generated.resources.baseline_timelapse
+import practiso.composeapp.generated.resources.create_para
 import practiso.composeapp.generated.resources.done_questions_completed_in_total
 import practiso.composeapp.generated.resources.get_started_by_para
 import practiso.composeapp.generated.resources.recently_used_para
@@ -53,8 +58,20 @@ import practiso.composeapp.generated.resources.welcome_to_app_para
 import kotlin.math.min
 
 @Composable
-fun SessionApp(sessionViewModel: SessionViewModel = globalViewModel()) {
+fun FabClaimScope.SessionApp(sessionViewModel: SessionViewModel = globalViewModel()) {
     val takeStats by sessionViewModel.recentTakeStats.collectAsState(null)
+
+    floatingActionButton {
+        ExtendedFloatingActionButton(
+            onClick = {},
+            icon = {
+                Icon(imageVector = Icons.Default.Add, contentDescription = null)
+            },
+            text = {
+                Text(stringResource(Res.string.create_para))
+            }
+        )
+    }
 
     if (takeStats?.isEmpty() == true) {
         Column(

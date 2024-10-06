@@ -2,7 +2,9 @@ package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animate
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,9 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +35,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.zhufucdev.practiso.composable.FabClaimScope
+import com.zhufucdev.practiso.composable.FabScope
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.page.LibraryApp
@@ -57,28 +60,43 @@ fun App(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.F
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-    Scaffold(
-        topBar = {
-            TopSearchBar(searchViewModel)
-        },
-        bottomBar = {
-            NavigationBar {
-                TopLevelDestination.entries.forEach {
-                    NavigationBarItem(
-                        selected = navBackStackEntry?.destination?.route == it.route,
-                        onClick = { navController.navigate(it.route) },
-                        icon = it.icon,
-                        label = { Text(stringResource(it.nameRes)) },
-                    )
+    FabScope {
+        Scaffold(
+            topBar = {
+                TopSearchBar(searchViewModel)
+            },
+            bottomBar = {
+                NavigationBar {
+                    TopLevelDestination.entries.forEach {
+                        NavigationBarItem(
+                            selected = navBackStackEntry?.destination?.route == it.route,
+                            onClick = { navController.navigate(it.route) },
+                            icon = it.icon,
+                            label = { Text(stringResource(it.nameRes)) },
+                        )
+                    }
+                }
+            },
+            floatingActionButton = {
+                AnimatedContent(
+                    floatingActionButton,
+                    contentAlignment = Alignment.BottomEnd,
+                    transitionSpec = {
+                        scaleIn().togetherWith(scaleOut())
+                    }
+                ) { content ->
+                    content?.invoke()
                 }
             }
-        }
-    ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            CompositionLocalProvider(
-                LocalNavController provides navController,
-            ) {
-                NavigatedApp()
+        ) { padding ->
+            Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+                CompositionLocalProvider(
+                    LocalNavController provides navController,
+                ) {
+                    ClaimScope {
+                        NavigatedApp()
+                    }
+                }
             }
         }
     }
@@ -102,7 +120,7 @@ private enum class TopLevelDestination(
 }
 
 @Composable
-private fun NavigatedApp() {
+private fun FabClaimScope.NavigatedApp() {
     NavHost(
         navController = currentNavController(),
         startDestination = TopLevelDestination.Session.route,
