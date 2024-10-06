@@ -2,4 +2,6 @@
     <string name="app_name">Practiso</string>
     <string name="session_para">Session</string>
     <string name="library_para">Library</string>
+    <string name="deactivate_global_search_span">deactivate global search</string>
+    <string name="search_app_para">Search Practiso…</string>
 </resources>
