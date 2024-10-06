@@ -1,0 +1,47 @@
+import kotlinx.datetime.Instant;
+
+CREATE TABLE session(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    creationTimeISO TEXT AS Instant NOT NULL,
+    lastAccessTimeISO TEXT AS Instant
+);
+
+CREATE TABLE take(
+    id INTEGER NOT NULL,
+    sessionId INTEGER NOT NULL,
+    creationTimeISO TEXT AS Instant NOT NULL,
+    durationSeconds INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (id, sessionId)
+);
+
+CREATE TABLE options_frame_answer(
+    takeId INTEGER NOT NULL,
+    optionsFrameId INTEGER NOT NULL,
+    PRIMARY KEY (takeId, optionsFrameId)
+);
+
+CREATE TABLE quiz_by_session(
+    sessionId INTEGER NOT NULL,
+    quizId INTEGER NOT NULL,
+    PRIMARY KEY (sessionId, quizId),
+    FOREIGN KEY (sessionId) REFERENCES session(id) ON DELETE CASCADE,
+    FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
+);
+
+CREATE TABLE quiz_by_take(
+    id INTEGER PRIMARY KEY,
+    takeId INTEGER NOT NULL,
+    quizId INTEGER NOT NULL,
+    FOREIGN KEY (takeId) REFERENCES take(id) ON DELETE CASCADE,
+    FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
+);
+
+getAllSessions:
+SELECT *
+FROM session;
+
+insertSession:
+INSERT INTO session(name, creationTimeISO)
+VALUES (?, ?);
+
