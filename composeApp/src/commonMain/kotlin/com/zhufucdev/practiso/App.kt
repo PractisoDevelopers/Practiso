@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +20,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -112,14 +119,11 @@ private fun NavigatedApp() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopSearchBar(searchViewModel: SearchViewModel) {
-    var padding by remember { mutableStateOf(PaddingNormal.value) }
+    val padding = remember { Animatable(PaddingNormal.value) }
     LaunchedEffect(searchViewModel.active) {
-        animate(
-            initialValue = padding,
-            targetValue = if (searchViewModel.active) 0f else PaddingNormal.value,
-        ) { p, v ->
-            padding = p
-        }
+        padding.animateTo(
+            if (searchViewModel.active) 0f else PaddingNormal.value
+        )
     }
     SearchBar(
         query = searchViewModel.query,
@@ -149,7 +153,7 @@ private fun TopSearchBar(searchViewModel: SearchViewModel) {
         modifier =
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = padding.dp)
+            .padding(horizontal = padding.value.dp)
     ) {
 
     }
