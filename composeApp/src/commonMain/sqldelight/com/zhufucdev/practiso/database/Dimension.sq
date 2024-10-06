@@ -1,0 +1,37 @@
+CREATE TABLE dimension(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE quiz_by_dimension(
+    quizId INTEGER NOT NULL,
+    dimensionId INTEGER NOT NULL,
+    intensity REAL NOT NULL DEFAULT 1 CHECK (0 < intensity <= 1),
+    PRIMARY KEY (quizId, dimensionId),
+    FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE,
+    FOREIGN KEY (dimensionId) REFERENCES dimension(id) ON DELETE CASCADE
+);
+
+getAllDimensions:
+SELECT *
+FROM dimension;
+
+insertDimension:
+INSERT INTO dimension(name)
+VALUES (?);
+
+updateDimensionName:
+UPDATE dimension SET name = ? WHERE id = ?;
+
+updateDimensionAssoicationIntensity:
+UPDATE quiz_by_dimension SET intensity = ? WHERE quizId = ? AND dimensionId = ?;
+
+associateQuizWithDimension:
+INSERT INTO quiz_by_dimension(quizId, dimensionId, intensity)
+VALUES (?, ?, ?);
+
+dissoicateQuizFromDimension:
+DELETE FROM quiz_by_dimension WHERE quizId = ? AND dimensionId = ?;
+
+removeDimension:
+DELETE FROM quiz_by_dimension WHERE quizId = ? AND dimensionId = ?;
