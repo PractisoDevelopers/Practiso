@@ -37,15 +37,19 @@ CREATE TABLE quizByTake(
     FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
 );
 
-CREATE VIEW sessionStat AS
-SELECT S.id, S.name, S.lastAccessTimeISO, T.durationSeconds, Q.countQuizDone, QT.countQuizTotal FROM session S JOIN take T ON T.sessionId = S.id JOIN (
-SELECT count(*) AS countQuizDone, takeId
-FROM quizByTake
-GROUP BY takeId
-) Q ON Q.takeId = T.id JOIN (
-SELECT count(*) AS countQuizTotal, sessionId
-FROM quizBySession
-GROUP BY sessionId
+CREATE VIEW takeStat AS
+SELECT S.id, S.name, S.lastAccessTimeISO, T.durationSeconds, Q.countQuizDone, QT.countQuizTotal
+FROM session S
+JOIN take T ON T.sessionId = S.id
+JOIN (
+    SELECT count(*) AS countQuizDone, takeId
+    FROM quizByTake
+    GROUP BY takeId
+) Q ON Q.takeId = T.id
+JOIN (
+    SELECT count(*) AS countQuizTotal, sessionId
+    FROM quizBySession
+    GROUP BY sessionId
 ) QT ON QT.sessionId = S.id;
 
 getAllSessions:
@@ -57,12 +61,12 @@ INSERT INTO session(name, creationTimeISO)
 VALUES (?, ?);
 
 
-getAllSessionStats:
+getAllTakeStats:
 SELECT *
-FROM sessionStat;
+FROM takeStat;
 
-getRecentSessionStats:
+getRecentTakeStats:
 SELECT *
-FROM sessionStat
-ORDER BY sessionStat.lastAccessTimeISO ASC
+FROM takeStat
+ORDER BY takeStat.lastAccessTimeISO ASC
 LIMIT ?;
