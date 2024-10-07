@@ -35,12 +35,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.zhufucdev.practiso.composable.FabClaimScope
-import com.zhufucdev.practiso.composable.FabScope
+import com.zhufucdev.practiso.composition.BottomUpComposableScope
+import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
+import com.zhufucdev.practiso.page.SessionQuickStarterKey
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import org.jetbrains.compose.resources.StringResource
@@ -60,7 +61,7 @@ fun App(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.F
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-    FabScope {
+    BottomUpComposableScope { buc ->
         Scaffold(
             topBar = {
                 TopSearchBar(searchViewModel)
@@ -79,7 +80,7 @@ fun App(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.F
             },
             floatingActionButton = {
                 AnimatedContent(
-                    floatingActionButton,
+                    buc.get("fab"),
                     contentAlignment = Alignment.BottomEnd,
                     transitionSpec = {
                         scaleIn().togetherWith(scaleOut())
@@ -92,13 +93,14 @@ fun App(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.F
             Box(modifier = Modifier.padding(padding).fillMaxSize()) {
                 CompositionLocalProvider(
                     LocalNavController provides navController,
+                    LocalBottomUpComposable provides buc
                 ) {
-                    ClaimScope {
-                        NavigatedApp()
-                    }
+                    NavigatedApp()
                 }
             }
         }
+
+        buc.compose(SessionQuickStarterKey)
     }
 }
 
@@ -120,7 +122,7 @@ private enum class TopLevelDestination(
 }
 
 @Composable
-private fun FabClaimScope.NavigatedApp() {
+private fun NavigatedApp() {
     NavHost(
         navController = currentNavController(),
         startDestination = TopLevelDestination.Session.route,

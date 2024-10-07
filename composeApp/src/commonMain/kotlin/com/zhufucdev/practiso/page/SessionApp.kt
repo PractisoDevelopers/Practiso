@@ -1,15 +1,26 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,24 +36,37 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.zhufucdev.practiso.composable.FabClaimScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
+import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.globalViewModel
 import com.zhufucdev.practiso.database.TakeStat
+import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.SessionViewModel
+import com.zhufucdev.practiso.viewmodel.SimplifiedSessionCreationViewModel
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -52,25 +76,60 @@ import practiso.composeapp.generated.resources.baseline_timelapse
 import practiso.composeapp.generated.resources.create_para
 import practiso.composeapp.generated.resources.done_questions_completed_in_total
 import practiso.composeapp.generated.resources.get_started_by_para
+import practiso.composeapp.generated.resources.quickly_start_new_session_para
 import practiso.composeapp.generated.resources.recently_used_para
+import practiso.composeapp.generated.resources.session_para
 import practiso.composeapp.generated.resources.take_completeness
+import practiso.composeapp.generated.resources.use_recommendations_para
 import practiso.composeapp.generated.resources.welcome_to_app_para
 import kotlin.math.min
 
-@Composable
-fun FabClaimScope.SessionApp(sessionViewModel: SessionViewModel = globalViewModel()) {
-    val takeStats by sessionViewModel.recentTakeStats.collectAsState(null)
+const val SessionQuickStarterKey = "session_quickstarter"
 
-    floatingActionButton {
-        ExtendedFloatingActionButton(
-            onClick = {},
-            icon = {
-                Icon(imageVector = Icons.Default.Add, contentDescription = null)
-            },
-            text = {
-                Text(stringResource(Res.string.create_para))
-            }
-        )
+@Composable
+fun SessionApp(
+    sessionViewModel: SessionViewModel = globalViewModel(),
+    sscmViewModel: SimplifiedSessionCreationViewModel =
+        viewModel(factory = SimplifiedSessionCreationViewModel.Factory),
+) {
+    val takeStats by sessionViewModel.recentTakeStats.collectAsState(null)
+    var quickStartExpanded by remember { mutableStateOf(false) }
+
+    composeFromBottomUp("fab") {
+        AnimatedVisibility(
+            visible = !sscmViewModel.expanded,
+            enter = fadeIn(tween(delayMillis = 230)),
+            exit = fadeOut(tween(1))
+        ) {
+            FabCreate(
+                onClick = { quickStartExpanded = true },
+                modifier = Modifier.onGloballyPositioned {
+                    sscmViewModel.transitionStart = it.boundsInRoot()
+                })
+        }
+    }
+
+    composeFromBottomUp(SessionQuickStarterKey) {
+        if (quickStartExpanded) {
+            SimplifiedSessionCreationModal(
+                model = sscmViewModel,
+                onCreate = {},
+            )
+        }
+    }
+
+    LaunchedEffect(quickStartExpanded) {
+        if (quickStartExpanded && !sscmViewModel.expanded) {
+            delay(1)
+            sscmViewModel.expanded = true
+        }
+    }
+
+    LaunchedEffect(sscmViewModel.expanded) {
+        if (!sscmViewModel.expanded && quickStartExpanded) {
+            delay(400)
+            quickStartExpanded = false
+        }
     }
 
     if (takeStats?.isEmpty() == true) {
@@ -119,6 +178,7 @@ fun FabClaimScope.SessionApp(sessionViewModel: SessionViewModel = globalViewMode
             }
         }
     }
+
 }
 
 @Composable
@@ -198,3 +258,109 @@ fun TakeSkeleton(
     }
 }
 
+@Composable
+private fun FabCreate(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    ExtendedFloatingActionButton(
+        onClick = onClick,
+        icon = {
+            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+        },
+        text = {
+            Text(stringResource(Res.string.create_para))
+        },
+        modifier = modifier
+    )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun SimplifiedSessionCreationModal(
+    model: SimplifiedSessionCreationViewModel,
+    onCreate: () -> Unit,
+) {
+    SharedTransitionScope { mod ->
+        val maskAlpha by animateFloatAsState(
+            if (model.expanded) 0.5f else 0f
+        )
+        Box(
+            mod.fillMaxSize().background(Color.Black.copy(alpha = maskAlpha))
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = {
+                        model.expanded = false
+                    })
+        ) {
+            AnimatedVisibility(model.expanded, modifier = Modifier.align(Alignment.Center)) {
+                Card(
+                    Modifier.fillMaxWidth()
+                        .padding(PaddingNormal)
+                        .sharedBounds(
+                            sharedContentState = rememberSharedContentState("quickstart"),
+                            animatedVisibilityScope = this@AnimatedVisibility
+                        )
+                ) {
+                    Column(Modifier.padding(PaddingBig)) {
+                        SimplifiedSessionCreationModalContent(model, onCreate)
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                !model.expanded,
+                modifier = Modifier.offset {
+                    IntOffset(
+                        model.transitionStart.left.toInt(),
+                        model.transitionStart.top.toInt()
+                    )
+                }
+            ) {
+                FabCreate(
+                    modifier = Modifier.sharedBounds(
+                        sharedContentState = rememberSharedContentState("quickstart"),
+                        animatedVisibilityScope = this@AnimatedVisibility
+                    ),
+                    onClick = {}
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.SimplifiedSessionCreationModalContent(
+    model: SimplifiedSessionCreationViewModel,
+    onCreate: () -> Unit,
+) {
+    Text(
+        stringResource(Res.string.session_para),
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
+    Text(
+        stringResource(Res.string.quickly_start_new_session_para),
+        style = MaterialTheme.typography.labelMedium,
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
+
+    Spacer(Modifier.height(PaddingNormal))
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+    ) {
+        Text(stringResource(Res.string.use_recommendations_para))
+        Spacer(Modifier.weight(1f))
+        Spacer(
+            Modifier.size(height = 26.dp, width = 1.dp)
+                .background(MaterialTheme.colorScheme.onSurface)
+        )
+        Switch(
+            checked = model.useRecommendations,
+            onCheckedChange = { model.useRecommendations = it }
+        )
+    }
+}
