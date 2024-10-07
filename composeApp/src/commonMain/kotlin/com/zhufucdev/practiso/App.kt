@@ -71,7 +71,10 @@ fun App(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.F
                     TopLevelDestination.entries.forEach {
                         NavigationBarItem(
                             selected = navBackStackEntry?.destination?.route == it.route,
-                            onClick = { navController.navigate(it.route) },
+                            onClick = {
+                                if (navBackStackEntry?.destination?.route != it.route)
+                                    navController.navigate(it.route)
+                            },
                             icon = it.icon,
                             label = { Text(stringResource(it.nameRes)) },
                         )
