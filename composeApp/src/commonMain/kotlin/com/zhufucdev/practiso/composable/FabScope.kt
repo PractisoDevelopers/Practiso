@@ -1,7 +1,6 @@
 package com.zhufucdev.practiso.composable
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,7 +20,6 @@ fun FabScope(content: @Composable FabScope.() -> Unit) {
         @Composable
         override fun ClaimScope(content: @Composable FabClaimScope.() -> Unit) {
             content(object : FabClaimScope {
-                @Composable
                 override fun floatingActionButton(content: (@Composable () -> Unit)?) {
                     fab = content
                 }
@@ -39,6 +37,5 @@ fun FabScope(content: @Composable FabScope.() -> Unit) {
 }
 
 interface FabClaimScope {
-    @Composable
     fun floatingActionButton(content: (@Composable () -> Unit)?)
 }
