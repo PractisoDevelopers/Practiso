@@ -75,6 +75,11 @@ SELECT T.*
 FROM textFrame T JOIN frameByQuiz Q ON T.id = Q.textFrameId
 WHERE Q.quizId = ?;
 
+getTextFrameByOptionsFrameId:
+SELECT T.*
+FROM textFrame T JOIN frameByOptionsFrame F ON F.textFrameId = T.id
+WHERE F.textFrameId = ?;
+
 insertTextFrame:
 INSERT INTO textFrame(content)
 VALUES ( ?);
@@ -104,6 +109,11 @@ getImageFramesByQuizId:
 SELECT I.*
 FROM imageFrame I JOIN frameByQuiz Q ON Q.textFrameId = I.id
 WHERE Q.quizId = ?;
+
+getImageFramesByOptionsFrameId:
+SELECT I.*
+FROM imageFrame I JOIN frameByOptionsFrame O ON O.imageFrameId = I.id
+WHERE O.optionsFrameId = ?;
 
 insertImageFrame:
 INSERT INTO imageFrame(filename, altText, width, height)
@@ -136,6 +146,10 @@ DELETE FROM imageFrame WHERE id = ?;
 insertOptionsFrame:
 INSERT INTO optionsFrame(name)
 VALUES (?);
+
+getOptionsFrameByQuizId:
+SELECT O.* FROM optionsFrame O JOIN frameByQuiz F ON F.optionsFrameId = O.id
+WHERE F.quizId = ?;
 
 associateLastOptionsFrameWithQuiz:
 INSERT INTO frameByQuiz(quizId, optionsFrameId, priority)
