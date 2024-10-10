@@ -35,6 +35,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalNavController
@@ -148,6 +149,7 @@ private fun TopSearchBar(searchViewModel: SearchViewModel) {
             if (searchViewModel.active) 0f else PaddingNormal.value
         )
     }
+
     SearchBar(
         query = searchViewModel.query,
         onSearch = { },
@@ -178,6 +180,8 @@ private fun TopSearchBar(searchViewModel: SearchViewModel) {
             .fillMaxWidth()
             .padding(horizontal = padding.value.dp)
     ) {
-
+        BackHandlerOrIgnored {
+            searchViewModel.active = false
+        }
     }
 }
