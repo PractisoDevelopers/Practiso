@@ -62,6 +62,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
@@ -343,6 +344,10 @@ private fun SimplifiedSessionCreationModal(
                 )
             }
         }
+    }
+
+    BackHandlerOrIgnored {
+        model.expanded = false
     }
 }
 
