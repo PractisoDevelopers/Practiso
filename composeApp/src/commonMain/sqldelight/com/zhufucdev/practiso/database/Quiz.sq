@@ -1,3 +1,4 @@
+import kotlin.Boolean;
 import kotlinx.datetime.Instant;
 
 CREATE TABLE textFrame(
@@ -36,6 +37,7 @@ CREATE TABLE frameByOptionsFrame(
     priority INTEGER NOT NULL,
     textFrameId INTEGER,
     imageFrameId INTEGER,
+    isKey INTEGER AS Boolean NOT NULL,
     PRIMARY KEY (optionsFrameId, textFrameId, imageFrameId),
     FOREIGN KEY (optionsFrameId) REFERENCES optionsFrame(id),
     FOREIGN KEY (textFrameId) REFERENCES textFrame(id) ON DELETE CASCADE,
@@ -95,8 +97,8 @@ INSERT INTO frameByQuiz(textFrameId, quizId, priority)
 VALUES (last_insert_rowid(), ?, ?);
 
 assoicateLastTextFrameWithOption:
-INSERT INTO frameByOptionsFrame(textFrameId, optionsFrameId, priority)
-VALUES (last_insert_rowid(), ?, ?);
+INSERT INTO frameByOptionsFrame(textFrameId, optionsFrameId, isKey, priority)
+VALUES (last_insert_rowid(), ?, ?, ?);
 
 dissociateTextFrameFromQuiz:
 DELETE FROM frameByQuiz WHERE quizId = ? AND textFrameId = ?;
@@ -130,8 +132,8 @@ INSERT INTO frameByQuiz(quizId, imageFrameId, priority)
 VALUES (?, last_insert_rowid(), ?);
 
 assoicateLastImageFrameWithOption:
-INSERT INTO frameByOptionsFrame(optionsFrameId, imageFrameId, priority)
-VALUES (?, last_insert_rowid(), ?);
+INSERT INTO frameByOptionsFrame(optionsFrameId, imageFrameId, priority, isKey)
+VALUES (?, last_insert_rowid(), ?, ?);
 
 dissociateImageFrameFromQuiz:
 DELETE FROM frameByQuiz WHERE quizId = ? AND imageFrameId = ?;
