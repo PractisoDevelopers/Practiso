@@ -13,6 +13,12 @@
     <string name="welcome_to_app_para">Welcome to Practiso!</string>
     <string name="get_started_by_para">Get started by creating a session</string>
     <string name="create_para">Create</string>
-    <string name="use_recommendations_para">Use recommendations</string>
+    <string name="use_smart_recommendations_para">Use smart recommendations</string>
     <string name="quickly_start_new_session_para">Quickly start a new session</string>
+    <string name="new_question_span">new question</string>
+    <string name="image_span">image</string>
+    <string name="no_recommendations_span">no recommendations</string>
+    <string name="loading_recommendations_span">loading recommendations</string>
+    <string name="see_all_options_para">See all options</string>
+    <string name="start_para">Start</string>
 </resources>

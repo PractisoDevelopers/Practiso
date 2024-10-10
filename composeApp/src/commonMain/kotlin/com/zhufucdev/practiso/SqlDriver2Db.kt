@@ -17,7 +17,6 @@ private object DateTimeAdapter : ColumnAdapter<Instant, String> {
     override fun encode(value: Instant): String {
         return value.format(DateTimeComponents.Formats.ISO_DATE_TIME_OFFSET)
     }
-
 }
 
 fun SqlDriver.toDatabase() = AppDatabase(

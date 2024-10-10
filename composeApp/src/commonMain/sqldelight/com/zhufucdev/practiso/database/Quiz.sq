@@ -54,6 +54,12 @@ getAllQuiz:
 SELECT *
 FROM quiz;
 
+getRecentQuiz:
+SELECT *
+FROM quiz
+ORDER BY creationTimeISO
+LIMIT ?;
+
 insertQuiz:
 INSERT INTO quiz(name, creationTimeISO, modificationTimeISO)
 VALUES (?, ?, ?);

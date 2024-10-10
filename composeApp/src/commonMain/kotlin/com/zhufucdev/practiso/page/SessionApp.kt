@@ -30,12 +30,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,11 +82,15 @@ import practiso.composeapp.generated.resources.baseline_timelapse
 import practiso.composeapp.generated.resources.create_para
 import practiso.composeapp.generated.resources.done_questions_completed_in_total
 import practiso.composeapp.generated.resources.get_started_by_para
+import practiso.composeapp.generated.resources.loading_recommendations_span
+import practiso.composeapp.generated.resources.no_recommendations_span
 import practiso.composeapp.generated.resources.quickly_start_new_session_para
 import practiso.composeapp.generated.resources.recently_used_para
+import practiso.composeapp.generated.resources.see_all_options_para
 import practiso.composeapp.generated.resources.session_para
+import practiso.composeapp.generated.resources.start_para
 import practiso.composeapp.generated.resources.take_completeness
-import practiso.composeapp.generated.resources.use_recommendations_para
+import practiso.composeapp.generated.resources.use_smart_recommendations_para
 import practiso.composeapp.generated.resources.welcome_to_app_para
 import kotlin.math.min
 
@@ -113,6 +123,7 @@ fun SessionApp(
         if (quickStartExpanded) {
             SimplifiedSessionCreationModal(
                 model = sscmViewModel,
+                sessionModel = sessionViewModel,
                 onCreate = {},
             )
         }
@@ -279,6 +290,7 @@ private fun FabCreate(
 @Composable
 private fun SimplifiedSessionCreationModal(
     model: SimplifiedSessionCreationViewModel,
+    sessionModel: SessionViewModel,
     onCreate: () -> Unit,
 ) {
     SharedTransitionScope { mod ->
@@ -290,9 +302,8 @@ private fun SimplifiedSessionCreationModal(
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
-                    onClick = {
-                        model.expanded = false
-                    })
+                    onClick = { model.expanded = false }
+                )
         ) {
             AnimatedVisibility(model.expanded, modifier = Modifier.align(Alignment.Center)) {
                 Card(
@@ -302,9 +313,14 @@ private fun SimplifiedSessionCreationModal(
                             sharedContentState = rememberSharedContentState("quickstart"),
                             animatedVisibilityScope = this@AnimatedVisibility
                         )
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = {}
+                        )
                 ) {
-                    Column(Modifier.padding(PaddingBig)) {
-                        SimplifiedSessionCreationModalContent(model, onCreate)
+                    Column(Modifier.padding(PaddingBig).fillMaxWidth()) {
+                        SimplifiedSessionCreationModalContent(model, sessionModel, onCreate)
                     }
                 }
             }
@@ -333,26 +349,41 @@ private fun SimplifiedSessionCreationModal(
 @Composable
 private fun ColumnScope.SimplifiedSessionCreationModalContent(
     model: SimplifiedSessionCreationViewModel,
+    sessionModel: SessionViewModel,
     onCreate: () -> Unit,
 ) {
+    var loadingRecommendations by remember { mutableStateOf(true) }
+
     Text(
         stringResource(Res.string.session_para),
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.align(Alignment.CenterHorizontally)
     )
+    Spacer(Modifier.height(PaddingSmall))
     Text(
         stringResource(Res.string.quickly_start_new_session_para),
-        style = MaterialTheme.typography.labelMedium,
+        style = MaterialTheme.typography.labelLarge,
         modifier = Modifier.align(Alignment.CenterHorizontally)
     )
 
-    Spacer(Modifier.height(PaddingNormal))
+    if (loadingRecommendations) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxWidth().height(PaddingNormal)
+        ) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(fraction = 0.382f)
+            )
+        }
+    } else {
+        Spacer(Modifier.height(PaddingNormal))
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
     ) {
-        Text(stringResource(Res.string.use_recommendations_para))
+        Text(stringResource(Res.string.use_smart_recommendations_para))
         Spacer(Modifier.weight(1f))
         Spacer(
             Modifier.size(height = 26.dp, width = 1.dp)
@@ -361,6 +392,78 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
         Switch(
             checked = model.useRecommendations,
             onCheckedChange = { model.useRecommendations = it }
+        )
+    }
+
+    Spacer(Modifier.height(PaddingNormal))
+
+    Box(
+        modifier = Modifier.height(200.dp).fillMaxWidth()
+    ) {
+        val items by (
+                if (model.useRecommendations) sessionModel.smartRecommendations
+                else sessionModel.smartRecommendations
+                ).collectAsState(null)
+
+        LaunchedEffect(items) {
+            loadingRecommendations = items == null
+        }
+
+        items.let {
+            if (it?.isNotEmpty() == true) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(PaddingSmall),
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    it.forEach {
+                        Surface(
+                            shape = CardDefaults.shape,
+                            onClick = {
+
+                            },
+                            modifier = Modifier.padding(PaddingNormal)
+                        ) {
+                            Text(it.previewText(), style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
+            } else {
+                when {
+                    it?.isEmpty() == true -> Text(
+                        stringResource(Res.string.no_recommendations_span),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
+                    it == null -> Text(
+                        stringResource(Res.string.loading_recommendations_span),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+        }
+    }
+
+    Surface(
+        onClick = {},
+        shape = CardDefaults.shape,
+        color = Color.Transparent,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(PaddingNormal),
+            modifier = Modifier.fillMaxWidth().padding(PaddingNormal)
+        ) {
+            Icon(Icons.AutoMirrored.Default.ArrowForward, contentDescription = null)
+            Text(stringResource(Res.string.see_all_options_para))
+        }
+    }
+
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        FilledTonalButton(
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            content = { Text(stringResource(Res.string.start_para)) }
         )
     }
 }
