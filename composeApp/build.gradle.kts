@@ -32,6 +32,14 @@ kotlin {
         }
     }
 
+    targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().forEach{
+        it.binaries.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.Framework>()
+            .forEach { lib ->
+                lib.isStatic = false
+                lib.linkerOpts.add("-lsqlite3")
+            }
+    }
+
     sourceSets {
         val desktopMain by getting
 
@@ -123,4 +131,5 @@ sqldelight {
             packageName.set("com.zhufucdev.practiso.database")
         }
     }
+    linkSqlite = true
 }
