@@ -11,12 +11,29 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import kotlinx.coroutines.delay
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class SimplifiedSessionCreationViewModel(private val state: SavedStateHandle) : ViewModel() {
     var expanded by state.saveable { mutableStateOf(false) }
+        private set
+    var visible by state.saveable { mutableStateOf(false) }
+        private set
+
     var useRecommendations by state.saveable { mutableStateOf(true) }
     var transitionStart: Rect by mutableStateOf(Rect.Zero)
+
+    suspend fun expand() {
+        visible = true
+        delay(10)
+        expanded = true
+    }
+
+    suspend fun collapse() {
+        expanded = false
+        delay(500)
+        visible = false
+    }
 
     companion object {
         val Factory get() = viewModelFactory {

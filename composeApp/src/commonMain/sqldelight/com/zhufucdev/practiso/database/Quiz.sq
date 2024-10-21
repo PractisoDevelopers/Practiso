@@ -62,6 +62,17 @@ FROM quiz
 ORDER BY creationTimeISO
 LIMIT ?;
 
+getQuizByDimension:
+SELECT Q.*
+FROM quiz Q JOIN quizByDimension D ON D.quizId = Q.id
+WHERE D.dimensionId = ?;
+
+getQuizCountByDimension:
+SELECT count(*)
+FROM quizByDimension
+WHERE dimensionId = ?
+GROUP BY dimensionId;
+
 insertQuiz:
 INSERT INTO quiz(name, creationTimeISO, modificationTimeISO)
 VALUES (?, ?, ?);

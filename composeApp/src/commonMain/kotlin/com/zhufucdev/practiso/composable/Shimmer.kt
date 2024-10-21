@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -17,7 +18,10 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 
-fun Modifier.shimmerBackground(shape: Shape = RectangleShape): Modifier = composed {
+fun Modifier.shimmerBackground(
+    shape: Shape = RectangleShape,
+    shimmerColors: List<Color>? = null,
+): Modifier = composed {
     val transition = rememberInfiniteTransition()
 
     val translateAnimation by transition.animateFloat(
@@ -28,12 +32,11 @@ fun Modifier.shimmerBackground(shape: Shape = RectangleShape): Modifier = compos
             RepeatMode.Restart
         ),
     )
-    val shimmerColors = listOf(
-        Color.LightGray.copy(alpha = 0.9f),
-        Color.LightGray.copy(alpha = 0.4f),
-    )
     val brush = Brush.linearGradient(
-        colors = shimmerColors,
+        colors = shimmerColors ?: listOf(
+            MaterialTheme.colorScheme.surfaceBright,
+            MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.4f)
+        ),
         start = Offset(translateAnimation, translateAnimation),
         end = Offset(translateAnimation + 100f, translateAnimation + 100f),
         tileMode = TileMode.Mirror,

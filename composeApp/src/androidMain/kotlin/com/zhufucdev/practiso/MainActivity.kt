@@ -20,6 +20,7 @@ import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.style.PractisoTheme
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.QuizViewModel
+import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
 import com.zhufucdev.practiso.viewmodel.SessionViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -67,6 +68,10 @@ class MainActivity : ComponentActivity() {
 
         initializer {
             SessionViewModel(db, createSavedStateHandle())
+        }
+
+        initializer {
+            SessionStarterAppViewModel(db)
         }
     }
 

@@ -51,6 +51,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,10 +63,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.composition.globalViewModel
 import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.style.PaddingBig
@@ -73,7 +76,7 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.SessionViewModel
 import com.zhufucdev.practiso.viewmodel.SimplifiedSessionCreationViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -104,7 +107,7 @@ fun SessionApp(
         viewModel(factory = SimplifiedSessionCreationViewModel.Factory),
 ) {
     val takeStats by sessionViewModel.recentTakeStats.collectAsState(null)
-    var quickStartExpanded by remember { mutableStateOf(false) }
+    val coroutine = rememberCoroutineScope()
 
     composeFromBottomUp("fab") {
         AnimatedVisibility(
@@ -113,7 +116,7 @@ fun SessionApp(
             exit = fadeOut(tween(1))
         ) {
             FabCreate(
-                onClick = { quickStartExpanded = true },
+                onClick = { coroutine.launch { sscmViewModel.expand() } },
                 modifier = Modifier.onGloballyPositioned {
                     sscmViewModel.transitionStart = it.boundsInRoot()
                 })
@@ -121,26 +124,12 @@ fun SessionApp(
     }
 
     composeFromBottomUp(SessionQuickStarterKey) {
-        if (quickStartExpanded) {
+        if (sscmViewModel.visible) {
             SimplifiedSessionCreationModal(
                 model = sscmViewModel,
                 sessionModel = sessionViewModel,
                 onCreate = {},
             )
-        }
-    }
-
-    LaunchedEffect(quickStartExpanded) {
-        if (quickStartExpanded && !sscmViewModel.expanded) {
-            delay(1)
-            sscmViewModel.expanded = true
-        }
-    }
-
-    LaunchedEffect(sscmViewModel.expanded) {
-        if (!sscmViewModel.expanded && quickStartExpanded) {
-            delay(400)
-            quickStartExpanded = false
         }
     }
 
@@ -294,6 +283,7 @@ private fun SimplifiedSessionCreationModal(
     sessionModel: SessionViewModel,
     onCreate: () -> Unit,
 ) {
+    val coroutine = rememberCoroutineScope()
     SharedTransitionScope { mod ->
         val maskAlpha by animateFloatAsState(
             if (model.expanded) 0.5f else 0f
@@ -303,7 +293,7 @@ private fun SimplifiedSessionCreationModal(
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
-                    onClick = { model.expanded = false }
+                    onClick = { coroutine.launch { model.collapse() } }
                 )
         ) {
             AnimatedVisibility(model.expanded, modifier = Modifier.align(Alignment.Center)) {
@@ -347,7 +337,9 @@ private fun SimplifiedSessionCreationModal(
     }
 
     BackHandlerOrIgnored {
-        model.expanded = false
+        coroutine.launch {
+            model.collapse()
+        }
     }
 }
 
@@ -407,7 +399,7 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
     ) {
         val items by (
                 if (model.useRecommendations) sessionModel.smartRecommendations
-                else sessionModel.smartRecommendations
+                else sessionModel.recentRecommendations
                 ).collectAsState(null)
 
         LaunchedEffect(items) {
@@ -448,8 +440,15 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
         }
     }
 
+    val navController = currentNavController()
+    val coroutine = rememberCoroutineScope()
     Surface(
-        onClick = {},
+        onClick = {
+            coroutine.launch {
+                model.collapse()
+                navController.navigate("${TopLevelDestination.Session.route}/new")
+            }
+        },
         shape = CardDefaults.shape,
         color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()

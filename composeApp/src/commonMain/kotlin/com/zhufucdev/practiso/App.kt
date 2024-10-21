@@ -35,6 +35,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
@@ -43,6 +44,8 @@ import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionQuickStarterKey
+import com.zhufucdev.practiso.page.SessionStarter
+import com.zhufucdev.practiso.page.SessionStarterInitialDataModel
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import org.jetbrains.compose.resources.StringResource
@@ -63,52 +66,58 @@ fun App(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.F
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
     BottomUpComposableScope { buc ->
-        Scaffold(
-            topBar = {
-                TopSearchBar(searchViewModel)
-            },
-            bottomBar = {
-                NavigationBar {
-                    TopLevelDestination.entries.forEach {
-                        NavigationBarItem(
-                            selected = navBackStackEntry?.destination?.route == it.route,
-                            onClick = {
-                                if (navBackStackEntry?.destination?.route != it.route)
-                                    navController.navigate(it.route)
-                            },
-                            icon = it.icon,
-                            label = { Text(stringResource(it.nameRes)) },
-                        )
+        CompositionLocalProvider(
+            LocalNavController provides navController,
+        ) {
+            Scaffold(
+                topBar = {
+                    TopSearchBar(searchViewModel)
+                },
+                bottomBar = {
+                    NavigationBar {
+                        TopLevelDestination.entries.forEach {
+                            NavigationBarItem(
+                                selected = navBackStackEntry?.destination?.route?.startsWith(it.route) == true,
+                                onClick = {
+                                    if (navBackStackEntry?.destination?.route != it.route) {
+                                        navController.navigate(it.route) {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                },
+                                icon = it.icon,
+                                label = { Text(stringResource(it.nameRes)) },
+                            )
+                        }
+                    }
+                },
+                floatingActionButton = {
+                    AnimatedContent(
+                        buc.get("fab"),
+                        contentAlignment = Alignment.BottomEnd,
+                        transitionSpec = {
+                            scaleIn().togetherWith(scaleOut())
+                        }
+                    ) { content ->
+                        content?.invoke()
                     }
                 }
-            },
-            floatingActionButton = {
-                AnimatedContent(
-                    buc.get("fab"),
-                    contentAlignment = Alignment.BottomEnd,
-                    transitionSpec = {
-                        scaleIn().togetherWith(scaleOut())
+            ) { padding ->
+                Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+                    CompositionLocalProvider(
+                        LocalBottomUpComposable provides buc
+                    ) {
+                        NavigatedApp()
                     }
-                ) { content ->
-                    content?.invoke()
                 }
             }
-        ) { padding ->
-            Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-                CompositionLocalProvider(
-                    LocalNavController provides navController,
-                    LocalBottomUpComposable provides buc
-                ) {
-                    NavigatedApp()
-                }
-            }
-        }
 
-        buc.compose(SessionQuickStarterKey)
+            buc.compose(SessionQuickStarterKey)
+        }
     }
 }
 
-private enum class TopLevelDestination(
+internal enum class TopLevelDestination(
     val nameRes: StringResource,
     val icon: @Composable () -> Unit,
     val route: String,
@@ -136,6 +145,12 @@ private fun NavigatedApp() {
         }
         composable(TopLevelDestination.Library.route) {
             LibraryApp()
+        }
+        composable("${TopLevelDestination.Session.route}/new") {
+            SessionStarter()
+        }
+        composable<SessionStarterInitialDataModel> { entry ->
+            SessionStarter(entry.toRoute())
         }
     }
 }

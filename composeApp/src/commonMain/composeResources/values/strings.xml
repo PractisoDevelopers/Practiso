@@ -21,4 +21,10 @@
     <string name="loading_recommendations_span">loading recommendations</string>
     <string name="see_all_options_para">See all options</string>
     <string name="start_para">Start</string>
+    <string name="empty_span">empty</string>
+    <plurals name="n_questions_span">
+        <item quantity="one">%1$d question</item>
+        <item quantity="other">%1$d questions</item>
+    </plurals>
+    <string name="loading_options_span">loading options…</string>
 </resources>
