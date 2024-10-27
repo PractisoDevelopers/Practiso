@@ -59,12 +59,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
+import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
@@ -135,24 +135,17 @@ fun SessionApp(
 
     AnimatedContent(takeStats?.isEmpty() == true) { empty ->
         if (empty) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Text("👋", style = MaterialTheme.typography.displayLarge)
-                Spacer(Modifier.height(PaddingNormal))
-                Text(
-                    stringResource(Res.string.welcome_to_app_para),
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    stringResource(Res.string.get_started_by_para),
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center
-                )
-            }
+            AlertHelper(
+                label = {
+                    Text(stringResource(Res.string.welcome_to_app_para))
+                },
+                header = {
+                    Text("👋")
+                },
+                helper = {
+                    Text(stringResource(Res.string.get_started_by_para))
+                }
+            )
         } else {
             Column(
                 Modifier.verticalScroll(rememberScrollState())

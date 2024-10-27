@@ -26,11 +26,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingNormal
@@ -68,24 +67,17 @@ fun SessionStarter(
 
     AnimatedContent(items?.isEmpty() == true) { empty ->
         if (empty) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Text("🤔", style = MaterialTheme.typography.displayLarge)
-                Spacer(Modifier.height(PaddingNormal))
-                Text(
-                    stringResource(Res.string.no_options_available_para),
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    stringResource(Res.string.head_to_library_to_create),
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center
-                )
-            }
+            AlertHelper(
+                header = {
+                    Text("🤔")
+                },
+                label = {
+                    Text(stringResource(Res.string.no_options_available_para))
+                },
+                helper = {
+                    Text(stringResource(Res.string.head_to_library_to_create))
+                }
+            )
         } else {
             Column(Modifier.fillMaxSize()) {
                 Spacer(Modifier.height(PaddingNormal))
