@@ -19,7 +19,8 @@ abstract class JVMPlatform : Platform {
     abstract val dataPath: String
 
     override fun createDbDriver(): SqlDriver {
-        if (Path(dataPath).notExists()) {
+        val emptyDb = Path(dataPath).notExists()
+        if (emptyDb) {
             Path(dataPath).createDirectory()
         }
         return JdbcSqliteDriver(
@@ -27,7 +28,9 @@ abstract class JVMPlatform : Platform {
             properties = Properties().apply {
                 put("foreign_keys", "true")
             }).apply {
-            AppDatabase.Schema.create(this)
+            if (emptyDb) {
+                AppDatabase.Schema.create(this)
+            }
         }
     }
 }
