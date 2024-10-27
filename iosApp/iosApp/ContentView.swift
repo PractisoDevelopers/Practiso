@@ -4,7 +4,7 @@ import ComposeApp
 
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        MainViewControllerKt.MainViewController()
+        MainViewControllerKt.MainViewController(darkMode: context.environment.colorScheme == .dark)
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
