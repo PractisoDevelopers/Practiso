@@ -2,8 +2,12 @@ package com.zhufucdev.practiso.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.zhufucdev.practiso.Database
+import com.zhufucdev.practiso.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.TakeStat
@@ -34,5 +38,14 @@ class SessionViewModel(private val db: AppDatabase, private val state: SavedStat
     val recentRecommendations by lazy {
         db.quizQueries.getFramedQuizzes(db.quizQueries.getRecentQuiz(5))
             .toSessionStarterOptionFlow()
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            val db = Database.app
+            initializer {
+                SessionViewModel(db, createPlatformSavedStateHandle())
+            }
+        }
     }
 }

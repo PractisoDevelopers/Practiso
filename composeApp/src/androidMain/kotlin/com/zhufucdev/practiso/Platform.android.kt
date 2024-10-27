@@ -8,10 +8,10 @@ import com.zhufucdev.practiso.database.AppDatabase
 
 class AndroidPlatform : Platform {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
-    override suspend fun createDbDriver(): SqlDriver {
+    override fun createDbDriver(): SqlDriver {
         return AndroidSqliteDriver(
             schema = AppDatabase.Schema,
-            context = MainActivity.contextChan.receive(),
+            context = PractisoApplication.instance,
             name = "practiso.db",
             callback = object : AndroidSqliteDriver.Callback(AppDatabase.Schema) {
                 override fun onOpen(db: SupportSQLiteDatabase) {

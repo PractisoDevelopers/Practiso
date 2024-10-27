@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.zhufucdev.practiso.createPlatformSavedStateHandle
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class SessionSelectorViewModel(state: SavedStateHandle) : ViewModel() {
@@ -18,7 +19,7 @@ class SessionSelectorViewModel(state: SavedStateHandle) : ViewModel() {
         val Factory
             get() = viewModelFactory {
                 initializer {
-                    SessionSelectorViewModel(createSavedStateHandle())
+                    SessionSelectorViewModel(createPlatformSavedStateHandle())
                 }
             }
     }

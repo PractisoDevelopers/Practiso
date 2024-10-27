@@ -1,8 +1,11 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.datamodel.getFramedQuizzes
@@ -39,6 +42,15 @@ class SessionStarterAppViewModel(private val db: AppDatabase) : ViewModel() {
                     }.awaitAll()
                 }
             }
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            val db = Database.app
+            initializer {
+                SessionStarterAppViewModel(db)
+            }
+        }
     }
 }
 

@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.zhufucdev.practiso.createPlatformSavedStateHandle
 import kotlinx.coroutines.delay
 
 @OptIn(SavedStateHandleSaveableApi::class)
@@ -38,7 +39,7 @@ class SimplifiedSessionCreationViewModel(private val state: SavedStateHandle) : 
     companion object {
         val Factory get() = viewModelFactory {
             initializer {
-                SimplifiedSessionCreationViewModel(createSavedStateHandle())
+                SimplifiedSessionCreationViewModel(createPlatformSavedStateHandle())
             }
         }
     }

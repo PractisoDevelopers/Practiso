@@ -9,7 +9,7 @@ import platform.UIKit.UIDevice
 class IOSPlatform : Platform {
     override val name: String = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
 
-    override suspend fun createDbDriver(): SqlDriver {
+    override fun createDbDriver(): SqlDriver {
         return NativeSqliteDriver(
             schema = AppDatabase.Schema,
             name = "practiso.db",

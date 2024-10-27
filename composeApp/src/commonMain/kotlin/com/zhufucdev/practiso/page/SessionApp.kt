@@ -69,7 +69,6 @@ import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
-import com.zhufucdev.practiso.composition.globalViewModel
 import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
@@ -102,7 +101,7 @@ const val SessionQuickStarterKey = "session_quickstarter"
 
 @Composable
 fun SessionApp(
-    sessionViewModel: SessionViewModel = globalViewModel(),
+    sessionViewModel: SessionViewModel = viewModel(factory = SessionViewModel.Factory),
     sscmViewModel: SimplifiedSessionCreationViewModel =
         viewModel(factory = SimplifiedSessionCreationViewModel.Factory),
 ) {

@@ -4,7 +4,7 @@ import app.cash.sqldelight.db.SqlDriver
 
 interface Platform {
     val name: String
-    suspend fun createDbDriver(): SqlDriver
+    fun createDbDriver(): SqlDriver
 }
 
 expect fun getPlatform(): Platform

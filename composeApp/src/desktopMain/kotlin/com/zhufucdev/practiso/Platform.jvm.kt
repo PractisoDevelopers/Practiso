@@ -7,7 +7,11 @@ import com.github.tkuenneth.nativeparameterstoreaccess.MacOSDefaults
 import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
 import java.util.Properties
 import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.createDirectory
+import kotlin.io.path.exists
 import kotlin.io.path.name
+import kotlin.io.path.notExists
 
 abstract class JVMPlatform : Platform {
     override val name: String = "Java ${System.getProperty("java.version")}"
@@ -15,17 +19,29 @@ abstract class JVMPlatform : Platform {
     abstract val isDarkModeEnabled: Boolean
     abstract val dataPath: String
 
-    override suspend fun createDbDriver(): SqlDriver {
-        return JdbcSqliteDriver("jdbc:sqlite:${Path(dataPath, "app.db")}", properties = Properties().apply {
-            put("foreign_keys", "true")
-        })
+    override fun createDbDriver(): SqlDriver {
+        if (Path(dataPath).notExists()) {
+            Path(dataPath).createDirectory()
+        }
+        return JdbcSqliteDriver(
+            "jdbc:sqlite:${Path(dataPath, "app.db")}",
+            properties = Properties().apply {
+                put("foreign_keys", "true")
+            })
     }
 }
 
 fun getUserHome() = System.getProperty("user.home")!!
 
 class MacOSPlatform : JVMPlatform() {
-    override val dataPath: String by lazy { Path(getUserHome(), "Library", "Application Support", "Practiso").name }
+    override val dataPath: String by lazy {
+        Path(
+            getUserHome(),
+            "Library",
+            "Application Support",
+            "Practiso"
+        ).absolutePathString()
+    }
 
     override val isDarkModeEnabled: Boolean
         get() = MacOSDefaults.getDefaultsEntry("AppleInterfaceStyle") == "Dark"
@@ -37,22 +53,35 @@ class WindowsPlatform : JVMPlatform() {
             "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
             "AppsUseLightTheme"
         ) == 0x0
-    override val dataPath: String by lazy { Path(System.getenv("APPDATA"), "Practiso").name }
+    override val dataPath: String by lazy {
+        Path(
+            System.getenv("APPDATA"),
+            "Practiso"
+        ).absolutePathString()
+    }
 }
 
 class LinuxPlatform : JVMPlatform() {
     override val isDarkModeEnabled: Boolean
         get() = Dconf.HAS_DCONF
-                && Dconf.getDconfEntry("/org/gnome/desktop/interface/color-scheme").lowercase().contains("dark")
+                && Dconf.getDconfEntry("/org/gnome/desktop/interface/color-scheme").lowercase()
+            .contains("dark")
 
-    override val dataPath: String by lazy { Path(getUserHome(), ".local", "share", "Practiso").name }
+    override val dataPath: String by lazy {
+        Path(
+            getUserHome(),
+            ".local",
+            "share",
+            "Practiso"
+        ).absolutePathString()
+    }
 }
 
 class OtherPlatform : JVMPlatform() {
     override val isDarkModeEnabled: Boolean
         get() = false
 
-    override val dataPath: String by lazy { Path(getUserHome(), ".practiso").name }
+    override val dataPath: String by lazy { Path(getUserHome(), ".practiso").absolutePathString() }
 }
 
 internal val PlatformInstance by lazy {

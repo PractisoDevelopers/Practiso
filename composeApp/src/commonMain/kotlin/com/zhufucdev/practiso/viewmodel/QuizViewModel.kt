@@ -2,8 +2,12 @@ package com.zhufucdev.practiso.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Quiz
 import kotlinx.coroutines.Dispatchers
@@ -35,5 +39,14 @@ class QuizViewModel(private val db: AppDatabase, private val state: SavedStateHa
     fun setModificationTimeToNow(id: Long) {
         val t = Clock.System.now()
         db.quizQueries.updateQuizModificationTimeISO(t, id)
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            val db = Database.app
+            initializer {
+                QuizViewModel(db, createSavedStateHandle())
+            }
+        }
     }
 }

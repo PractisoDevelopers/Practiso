@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
-import com.zhufucdev.practiso.composition.globalViewModel
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.SessionSelectorViewModel
@@ -37,7 +36,7 @@ import kotlinx.serialization.Serializable
 @Composable
 fun SessionStarter(
     initModel: SessionStarterInitialDataModel = SessionStarterInitialDataModel(),
-    appModel: SessionStarterAppViewModel = globalViewModel(),
+    appModel: SessionStarterAppViewModel = viewModel(factory = SessionStarterAppViewModel.Factory),
     selectorModel: SessionSelectorViewModel = viewModel(factory = SessionSelectorViewModel.Factory),
 ) {
     composeFromBottomUp("fab", null)
