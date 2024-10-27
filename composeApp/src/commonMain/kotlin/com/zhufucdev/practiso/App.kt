@@ -20,13 +20,16 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -45,7 +48,7 @@ import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionQuickStarterKey
 import com.zhufucdev.practiso.page.SessionStarter
-import com.zhufucdev.practiso.page.SessionStarterInitialDataModel
+import com.zhufucdev.practiso.page.SessionStarterDataModel
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import org.jetbrains.compose.resources.StringResource
@@ -147,10 +150,18 @@ private fun NavigatedApp() {
             LibraryApp()
         }
         composable("${TopLevelDestination.Session.route}/new") {
-            SessionStarter()
+            var dataModel by remember { mutableStateOf(SessionStarterDataModel()) }
+            SessionStarter(
+                dataModel = dataModel,
+                onDataModelChange = { dataModel = it }
+            )
         }
-        composable<SessionStarterInitialDataModel> { entry ->
-            SessionStarter(entry.toRoute())
+        composable<SessionStarterDataModel> { entry ->
+            var dataModel by remember { mutableStateOf(entry.toRoute<SessionStarterDataModel>()) }
+            SessionStarter(
+                dataModel = dataModel,
+                onDataModelChange = { dataModel = it }
+            )
         }
     }
 }
@@ -166,30 +177,36 @@ private fun TopSearchBar(searchViewModel: SearchViewModel) {
     }
 
     SearchBar(
-        query = searchViewModel.query,
-        onSearch = { },
-        onQueryChange = { searchViewModel.query = it },
-        active = searchViewModel.active,
-        onActiveChange = { searchViewModel.active = it },
-        leadingIcon = {
-            AnimatedContent(searchViewModel.active) { active ->
-                if (!active) {
-                    Icon(Icons.Default.Search, "")
-                } else {
-                    IconButton(
-                        onClick = { searchViewModel.active = false },
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Default.ArrowBack,
-                            stringResource(Res.string.deactivate_global_search_span)
-                        )
+        inputField = {
+            SearchBarDefaults.InputField(
+                query = searchViewModel.query,
+                onSearch = { },
+                onQueryChange = { searchViewModel.query = it },
+                expanded = searchViewModel.active,
+                onExpandedChange = { searchViewModel.active = it },
+                leadingIcon = {
+                    AnimatedContent(searchViewModel.active) { active ->
+                        if (!active) {
+                            Icon(Icons.Default.Search, "")
+                        } else {
+                            IconButton(
+                                onClick = { searchViewModel.active = false },
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Default.ArrowBack,
+                                    stringResource(Res.string.deactivate_global_search_span)
+                                )
+                            }
+                        }
                     }
-                }
-            }
+                },
+                placeholder = {
+                    Text(stringResource(Res.string.search_app_para))
+                },
+            )
         },
-        placeholder = {
-            Text(stringResource(Res.string.search_app_para))
-        },
+        expanded = searchViewModel.active,
+        onExpandedChange = { searchViewModel.active = it },
         modifier =
         Modifier
             .fillMaxWidth()

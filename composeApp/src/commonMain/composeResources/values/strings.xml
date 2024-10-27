@@ -27,4 +27,6 @@
         <item quantity="other">%1$d questions</item>
     </plurals>
     <string name="loading_options_span">loading options…</string>
+    <string name="no_options_available_para">No options available</string>
+    <string name="head_to_library_to_create">Head to library to create</string>
 </resources>

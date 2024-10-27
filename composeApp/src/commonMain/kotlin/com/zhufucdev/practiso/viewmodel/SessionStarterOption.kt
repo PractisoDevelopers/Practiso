@@ -11,7 +11,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.pluralStringResource
@@ -31,10 +30,10 @@ sealed interface SessionStarterOption {
     @Composable
     fun previewText(): String
 
-    data class Quiz(val value: DbQuiz, val preview: String?) : SessionStarterOption {
+    data class Quiz(val quiz: DbQuiz, val preview: String?) : SessionStarterOption {
         @Composable
         override fun titleText(): String {
-            return value.name ?: stringResource(Res.string.new_question_span)
+            return quiz.name ?: stringResource(Res.string.new_question_span)
         }
 
         @Composable
@@ -43,10 +42,10 @@ sealed interface SessionStarterOption {
         }
     }
 
-    data class Dimension(val value: DbDimension, val quizCount: Int) : SessionStarterOption {
+    data class Dimension(val dimension: DbDimension, val quizCount: Int) : SessionStarterOption {
         @Composable
         override fun titleText(): String {
-            return value.name
+            return dimension.name
         }
 
         @Composable
@@ -67,7 +66,7 @@ fun Flow<List<FramedQuiz>>.toSessionStarterOptionFlow(): Flow<List<SessionStarte
             frames.map {
                 async {
                     SessionStarterOption.Quiz(
-                        value = it.quiz,
+                        quiz = it.quiz,
                         preview = it.frames.firstOrNull()?.getPreviewText()
                     )
                 }
@@ -81,7 +80,7 @@ fun Flow<List<DbDimension>>.toSessionStarterOptionFlow(db: QuizQueries): Flow<Li
             dimensions.map {
                 async {
                     SessionStarterOption.Dimension(
-                        value = it,
+                        dimension = it,
                         quizCount = db.getQuizCountByDimension(it.id)
                             .asFlow()
                             .mapToList(Dispatchers.IO)
