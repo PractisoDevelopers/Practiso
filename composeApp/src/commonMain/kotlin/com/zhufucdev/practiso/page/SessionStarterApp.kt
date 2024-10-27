@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -65,71 +66,73 @@ fun SessionStarter(
         derivedStateOf { selectedItems?.map { it.quizzes }?.flatten() }
     }
 
-    if (items?.isEmpty() == true) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text("🤔", style = MaterialTheme.typography.displayLarge)
-            Spacer(Modifier.height(PaddingNormal))
-            Text(
-                stringResource(Res.string.no_options_available_para),
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                stringResource(Res.string.head_to_library_to_create),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-        }
-    } else {
-        Column(Modifier.fillMaxSize()) {
-            Spacer(Modifier.height(PaddingNormal))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
-                item("start_spacer") {
-                    Spacer(Modifier.width(PaddingSmall))
-                }
-                selectedItems?.let {
-                    items(it, key = { d -> d.dimension.id }) { d ->
-                        DimensionSkeleton(
-                            label = { Text(d.dimension.name) }
-                        )
-                    }
-                } ?: items(4) {
-                    DimensionSkeleton()
-                }
-                item("end_spacer") {
-                    Spacer(Modifier.width(PaddingSmall))
-                }
+    AnimatedContent(items?.isEmpty() == true) { empty ->
+        if (empty) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text("🤔", style = MaterialTheme.typography.displayLarge)
+                Spacer(Modifier.height(PaddingNormal))
+                Text(
+                    stringResource(Res.string.no_options_available_para),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    stringResource(Res.string.head_to_library_to_create),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
             }
-            Spacer(Modifier.height(PaddingNormal))
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(PaddingNormal)) {
-                quizzes?.let {
-                    it.forEachIndexed { index, quiz ->
-                        item(quiz.quiz.id) {
-                            QuizSkeleton(
-                                label = { Text(quiz.titleText()) },
-                                preview = { Text(quiz.previewText()) }
+        } else {
+            Column(Modifier.fillMaxSize()) {
+                Spacer(Modifier.height(PaddingNormal))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
+                    item("start_spacer") {
+                        Spacer(Modifier.width(PaddingSmall))
+                    }
+                    selectedItems?.let {
+                        items(it, key = { d -> d.dimension.id }) { d ->
+                            DimensionSkeleton(
+                                label = { Text(d.dimension.name) }
                             )
-                            if (index < it.lastIndex) {
-                                Spacer(Modifier.height(PaddingNormal))
-                                Spacer(
-                                    Modifier.fillMaxWidth().height(1.dp)
-                                        .background(MaterialTheme.colorScheme.surfaceBright)
+                        }
+                    } ?: items(4) {
+                        DimensionSkeleton()
+                    }
+                    item("end_spacer") {
+                        Spacer(Modifier.width(PaddingSmall))
+                    }
+                }
+                Spacer(Modifier.height(PaddingNormal))
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(PaddingNormal)) {
+                    quizzes?.let {
+                        it.forEachIndexed { index, quiz ->
+                            item(quiz.quiz.id) {
+                                QuizSkeleton(
+                                    label = { Text(quiz.titleText()) },
+                                    preview = { Text(quiz.previewText()) }
                                 )
+                                if (index < it.lastIndex) {
+                                    Spacer(Modifier.height(PaddingNormal))
+                                    Spacer(
+                                        Modifier.fillMaxWidth().height(1.dp)
+                                            .background(MaterialTheme.colorScheme.surfaceBright)
+                                    )
+                                }
                             }
                         }
-                    }
-                } ?: items(8) { index ->
-                    QuizSkeleton(modifier = Modifier.padding(horizontal = PaddingNormal))
-                    if (index < 7) {
-                        Spacer(Modifier.height(PaddingNormal))
-                        Spacer(
-                            Modifier.fillMaxWidth().height(1.dp)
-                                .background(MaterialTheme.colorScheme.surfaceBright)
-                        )
+                    } ?: items(8) { index ->
+                        QuizSkeleton(modifier = Modifier.padding(horizontal = PaddingNormal))
+                        if (index < 7) {
+                            Spacer(Modifier.height(PaddingNormal))
+                            Spacer(
+                                Modifier.fillMaxWidth().height(1.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceBright)
+                            )
+                        }
                     }
                 }
             }

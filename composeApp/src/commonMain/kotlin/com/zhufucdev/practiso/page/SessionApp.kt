@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -132,51 +133,54 @@ fun SessionApp(
         }
     }
 
-    if (takeStats?.isEmpty() == true) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text("👋", style = MaterialTheme.typography.displayLarge)
-            Spacer(Modifier.height(PaddingNormal))
-            Text(
-                stringResource(Res.string.welcome_to_app_para),
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                stringResource(Res.string.get_started_by_para),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-        }
-    } else {
-        Column(
-            Modifier.verticalScroll(rememberScrollState())
-                .padding(top = PaddingNormal)
-        ) {
-            SectionCaption(
-                stringResource(Res.string.recently_used_para),
-                Modifier.padding(start = PaddingNormal)
-            )
-            Spacer(Modifier.height(PaddingSmall))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
-                item("start_spacer") {
-                    Spacer(Modifier)
-                }
-                takeStats?.let {
-                    items(it, TakeStat::id) { session ->
-                        Card { TakeContent(session) }
+    AnimatedContent(takeStats?.isEmpty() == true) { empty ->
+        if (empty) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text("👋", style = MaterialTheme.typography.displayLarge)
+                Spacer(Modifier.height(PaddingNormal))
+                Text(
+                    stringResource(Res.string.welcome_to_app_para),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    stringResource(Res.string.get_started_by_para),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            Column(
+                Modifier.verticalScroll(rememberScrollState())
+                    .padding(top = PaddingNormal)
+            ) {
+                SectionCaption(
+                    stringResource(Res.string.recently_used_para),
+                    Modifier.padding(start = PaddingNormal)
+                )
+                Spacer(Modifier.height(PaddingSmall))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
+                    item("start_spacer") {
+                        Spacer(Modifier)
                     }
-                } ?: items(3) {
-                    Card { TakeSkeleton() }
-                }
-                item("end_spacer") {
-                    Spacer(Modifier)
+                    takeStats?.let {
+                        items(it, TakeStat::id) { session ->
+                            Card { TakeContent(session) }
+                        }
+                    } ?: items(3) {
+                        Card { TakeSkeleton() }
+                    }
+                    item("end_spacer") {
+                        Spacer(Modifier)
+                    }
                 }
             }
         }
+
     }
 
 }
