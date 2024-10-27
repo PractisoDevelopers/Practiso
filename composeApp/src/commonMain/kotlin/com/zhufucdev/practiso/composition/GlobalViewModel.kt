@@ -10,5 +10,5 @@ val LocalGlobalViewModelSoreOwner = compositionLocalOf<ViewModelStoreOwner?> { n
 
 @Composable
 inline fun <reified T : ViewModel> globalViewModel(): T {
-    return viewModel<T>(LocalGlobalViewModelSoreOwner.current ?: error("no global view model store owner"))
+    return viewModel<T>(LocalGlobalViewModelSoreOwner.current ?: error("No global view model store owner"))
 }
