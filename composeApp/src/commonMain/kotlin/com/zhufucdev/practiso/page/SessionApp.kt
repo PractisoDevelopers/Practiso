@@ -32,11 +32,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -66,6 +64,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
+import com.zhufucdev.practiso.composable.FabCreate
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
@@ -83,7 +82,6 @@ import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.baseline_check_circle_outline
 import practiso.composeapp.generated.resources.baseline_timelapse
-import practiso.composeapp.generated.resources.create_para
 import practiso.composeapp.generated.resources.done_questions_completed_in_total
 import practiso.composeapp.generated.resources.get_started_by_para
 import practiso.composeapp.generated.resources.loading_recommendations_span
@@ -255,22 +253,6 @@ fun TakeSkeleton(
     }
 }
 
-@Composable
-private fun FabCreate(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    ExtendedFloatingActionButton(
-        onClick = onClick,
-        icon = {
-            Icon(imageVector = Icons.Default.Add, contentDescription = null)
-        },
-        text = {
-            Text(stringResource(Res.string.create_para))
-        },
-        modifier = modifier
-    )
-}
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
