@@ -5,12 +5,11 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.github.tkuenneth.nativeparameterstoreaccess.Dconf
 import com.github.tkuenneth.nativeparameterstoreaccess.MacOSDefaults
 import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
+import com.zhufucdev.practiso.database.AppDatabase
 import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectory
-import kotlin.io.path.exists
-import kotlin.io.path.name
 import kotlin.io.path.notExists
 
 abstract class JVMPlatform : Platform {
@@ -27,7 +26,9 @@ abstract class JVMPlatform : Platform {
             "jdbc:sqlite:${Path(dataPath, "app.db")}",
             properties = Properties().apply {
                 put("foreign_keys", "true")
-            })
+            }).apply {
+            AppDatabase.Schema.create(this)
+        }
     }
 }
 
