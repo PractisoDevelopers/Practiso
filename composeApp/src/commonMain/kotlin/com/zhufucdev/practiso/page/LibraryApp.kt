@@ -100,12 +100,11 @@ fun LibraryApp(
                 modifier = Modifier.padding(start = PaddingNormal, top = PaddingNormal).fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(PaddingNormal)
             ) {
-                item("templates_caption") {
-                    SectionCaption(stringResource(Res.string.templates_para))
-                }
-
                 flatContent(
                     value = templates,
+                    caption = {
+                        SectionCaption(stringResource(Res.string.templates_para))
+                    },
                     content = {
                         ContentSkeleton(
                             label = { Text(it.name) },
@@ -115,12 +114,11 @@ fun LibraryApp(
                     id = Template::id
                 )
 
-                item("dimensions_caption") {
-                    SectionCaption(stringResource(Res.string.dimensions_para))
-                }
-
                 flatContent(
                     value = dimensions,
+                    caption = {
+                        SectionCaption(stringResource(Res.string.dimensions_para))
+                    },
                     content = {
                         ContentSkeleton(
                             label = { it.titleText() },
@@ -130,12 +128,11 @@ fun LibraryApp(
                     id = { it.dimension.id }
                 )
 
-                item("questions_caption") {
-                    SectionCaption(stringResource(Res.string.questions_para))
-                }
-
                 flatContent(
                     value = quizzes,
+                    caption = {
+                        SectionCaption(stringResource(Res.string.questions_para))
+                    },
                     content = {
                         ContentSkeleton(
                             label = { it.titleText() },
@@ -152,29 +149,28 @@ fun LibraryApp(
 
 fun <T> LazyListScope.flatContent(
     value: List<T>?,
+    caption: @Composable () -> Unit,
     content: @Composable (T) -> Unit,
     id: (T) -> Any,
     skeleton: @Composable () -> Unit = { ContentSkeleton() },
     skeletonsCount: Int = 3,
 ) {
+    if (value?.isEmpty() == true) {
+        return
+    }
+
+    item {
+        caption()
+    }
+
     value?.let { t ->
-        if (t.isNotEmpty()) {
-            t.forEachIndexed { index, v ->
-                item(id(v)) {
-                    content(v)
-                    Spacer(Modifier.height(PaddingNormal))
-                    if (index < t.lastIndex) {
-                        HorizontalSeparator()
-                    }
+        t.forEachIndexed { index, v ->
+            item(id(v)) {
+                content(v)
+                Spacer(Modifier.height(PaddingNormal))
+                if (index < t.lastIndex) {
+                    HorizontalSeparator()
                 }
-            }
-        } else {
-            item {
-                Text(
-                    text = stringResource(Res.string.no_options_available_para),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
             }
         }
     } ?: items(skeletonsCount) { i ->
