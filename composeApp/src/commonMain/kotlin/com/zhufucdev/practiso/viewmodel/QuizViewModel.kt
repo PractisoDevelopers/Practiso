@@ -1,25 +1,19 @@
 package com.zhufucdev.practiso.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Quiz
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import com.zhufucdev.practiso.datamodel.getFramedQuizzes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 
-class QuizViewModel(private val db: AppDatabase, private val state: SavedStateHandle): ViewModel() {
-    val quiz: Flow<List<Quiz>> by lazy {
-        db.quizQueries.getAllQuiz()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
+class QuizViewModel(private val db: AppDatabase): ViewModel() {
+    val quiz: Flow<List<PractisoOption.Quiz>> by lazy {
+        db.quizQueries.getFramedQuizzes(db.quizQueries.getAllQuiz())
+            .toOptionFlow()
     }
 
     fun add(name: String): Quiz {
@@ -45,7 +39,7 @@ class QuizViewModel(private val db: AppDatabase, private val state: SavedStateHa
         val Factory = viewModelFactory {
             val db = Database.app
             initializer {
-                QuizViewModel(db, createSavedStateHandle())
+                QuizViewModel(db)
             }
         }
     }

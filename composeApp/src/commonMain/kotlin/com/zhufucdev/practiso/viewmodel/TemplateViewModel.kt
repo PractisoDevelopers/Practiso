@@ -10,19 +10,18 @@ import com.zhufucdev.practiso.database.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 
-class DimensionViewModel(db: AppDatabase) : ViewModel() {
-    val dimensions by lazy {
-        db.dimensionQueries.getAllDimensions()
+class TemplateViewModel(db: AppDatabase) : ViewModel() {
+    val templates by lazy {
+        db.templateQueries.getAllTemplates()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .toOptionFlow(db.quizQueries)
     }
 
     companion object {
         val Factory
             get() = viewModelFactory {
                 initializer {
-                    DimensionViewModel(Database.app)
+                    TemplateViewModel(Database.app)
                 }
             }
     }

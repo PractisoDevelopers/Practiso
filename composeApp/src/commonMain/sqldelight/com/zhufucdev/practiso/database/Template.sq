@@ -1,0 +1,19 @@
+import kotlinx.datetime.Instant;
+
+CREATE TABLE template(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    creationTimeISO TEXT AS Instant NOT NULL,
+    modificationTimeISO TEXT AS Instant
+);
+
+getAllTemplates:
+SELECT * FROM template;
+
+insertTemplate:
+INSERT INTO template(id, name, description, creationTimeISO)
+VALUES (?, ?, ?, ?);
+
+removeTemplate:
+DELETE FROM template WHERE id == ?;

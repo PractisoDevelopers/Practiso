@@ -5,6 +5,7 @@ import app.cash.sqldelight.db.SqlDriver
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.Session
+import com.zhufucdev.practiso.database.Template
 import kotlinx.datetime.Instant
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
@@ -29,4 +30,8 @@ fun SqlDriver.toDatabase() = AppDatabase(
         creationTimeISOAdapter = DateTimeAdapter,
         lastAccessTimeISOAdapter = DateTimeAdapter
     ),
+    templateAdapter = Template.Adapter(
+        creationTimeISOAdapter = DateTimeAdapter,
+        modificationTimeISOAdapter = DateTimeAdapter
+    )
 )

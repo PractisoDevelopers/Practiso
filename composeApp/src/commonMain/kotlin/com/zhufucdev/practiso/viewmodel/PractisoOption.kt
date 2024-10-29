@@ -23,14 +23,14 @@ import practiso.composeapp.generated.resources.new_question_span
 private typealias DbQuiz = com.zhufucdev.practiso.database.Quiz
 private typealias DbDimension = com.zhufucdev.practiso.database.Dimension
 
-sealed interface SessionStarterOption {
+sealed interface PractisoOption {
     @Composable
     fun titleText(): String
 
     @Composable
     fun previewText(): String
 
-    data class Quiz(val quiz: DbQuiz, val preview: String?) : SessionStarterOption {
+    data class Quiz(val quiz: DbQuiz, val preview: String?) : PractisoOption {
         @Composable
         override fun titleText(): String {
             return quiz.name ?: stringResource(Res.string.new_question_span)
@@ -42,7 +42,7 @@ sealed interface SessionStarterOption {
         }
     }
 
-    data class Dimension(val dimension: DbDimension, val quizCount: Int) : SessionStarterOption {
+    data class Dimension(val dimension: DbDimension, val quizCount: Int) : PractisoOption {
         @Composable
         override fun titleText(): String {
             return dimension.name
@@ -60,12 +60,12 @@ sealed interface SessionStarterOption {
     }
 }
 
-fun Flow<List<FramedQuiz>>.toSessionStarterOptionFlow(): Flow<List<SessionStarterOption.Quiz>> =
+fun Flow<List<FramedQuiz>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
     map { frames ->
         coroutineScope {
             frames.map {
                 async {
-                    SessionStarterOption.Quiz(
+                    PractisoOption.Quiz(
                         quiz = it.quiz,
                         preview = it.frames.firstOrNull()?.getPreviewText()
                     )
@@ -74,12 +74,12 @@ fun Flow<List<FramedQuiz>>.toSessionStarterOptionFlow(): Flow<List<SessionStarte
         }
     }
 
-fun Flow<List<DbDimension>>.toSessionStarterOptionFlow(db: QuizQueries): Flow<List<SessionStarterOption.Dimension>> =
+fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<PractisoOption.Dimension>> =
     map { dimensions ->
         coroutineScope {
             dimensions.map {
                 async {
-                    SessionStarterOption.Dimension(
+                    PractisoOption.Dimension(
                         dimension = it,
                         quizCount = db.getQuizCountByDimension(it.id)
                             .asFlow()

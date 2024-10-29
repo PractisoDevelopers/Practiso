@@ -30,4 +30,9 @@
     <string name="no_options_available_para">No options available</string>
     <string name="head_to_library_to_create">Head to library to create</string>
     <string name="import_para">Import</string>
+    <string name="templates_para">Templates</string>
+    <string name="questions_para">Questions</string>
+    <string name="dimensions_para">Dimensions</string>
+    <string name="library_is_empty_para">Library is empty</string>
+    <string name="add_item_to_get_started_para">Add item to get started</string>
 </resources>

@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.map
 class SessionStarterAppViewModel(private val db: AppDatabase) : ViewModel() {
     data class Item(
         val dimension: Dimension,
-        val quizzes: List<SessionStarterOption.Quiz>,
+        val quizzes: List<PractisoOption.Quiz>,
     )
 
     val items by lazy {
@@ -35,7 +35,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase) : ViewModel() {
                                 dimension = dimension,
                                 quizzes = db.quizQueries
                                     .getFramedQuizzes(db.quizQueries.getQuizByDimension(dimension.id))
-                                    .toSessionStarterOptionFlow()
+                                    .toOptionFlow()
                                     .last()
                             )
                         }
