@@ -24,7 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
@@ -47,7 +46,6 @@ import practiso.composeapp.generated.resources.create_para
 import practiso.composeapp.generated.resources.dimensions_para
 import practiso.composeapp.generated.resources.import_para
 import practiso.composeapp.generated.resources.library_is_empty_para
-import practiso.composeapp.generated.resources.no_options_available_para
 import practiso.composeapp.generated.resources.questions_para
 import practiso.composeapp.generated.resources.templates_para
 
