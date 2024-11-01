@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -36,6 +37,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
@@ -276,7 +278,9 @@ private fun SimplifiedSessionCreationModal(
         ) {
             AnimatedVisibility(model.expanded, modifier = Modifier.align(Alignment.Center)) {
                 Card(
-                    Modifier.fillMaxWidth()
+                    shape = FloatingActionButtonDefaults.extendedFabShape,
+                    modifier = Modifier
+                        .widthIn(max = 400.dp)
                         .padding(PaddingNormal)
                         .sharedBounds(
                             sharedContentState = rememberSharedContentState("quickstart"),
