@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,11 +33,14 @@ import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.database.Template
+import com.zhufucdev.practiso.platform.AppDestination
+import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.QuizViewModel
 import com.zhufucdev.practiso.viewmodel.TemplateViewModel
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
@@ -58,11 +62,13 @@ fun LibraryApp(
     var showActions by remember {
         mutableStateOf(false)
     }
+    val coroutine = rememberCoroutineScope()
 
     composeFromBottomUp("fab") {
         FloatingPopupButton(
             expanded = showActions,
-            onExpandedChange = { showActions = it }
+            onExpandedChange = { showActions = it },
+            autoCollapse = true
         ) {
             item(
                 label = { Text(stringResource(Res.string.import_para)) },
@@ -77,7 +83,11 @@ fun LibraryApp(
             item(
                 label = { Text(stringResource(Res.string.create_para)) },
                 icon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                onClick = { }
+                onClick = {
+                    coroutine.launch {
+                        Navigator.navigate(AppDestination.QuizCreate)
+                    }
+                }
             )
         }
     }

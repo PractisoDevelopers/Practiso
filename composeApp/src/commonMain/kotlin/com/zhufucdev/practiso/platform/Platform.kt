@@ -1,4 +1,4 @@
-package com.zhufucdev.practiso
+package com.zhufucdev.practiso.platform
 
 import app.cash.sqldelight.db.SqlDriver
 

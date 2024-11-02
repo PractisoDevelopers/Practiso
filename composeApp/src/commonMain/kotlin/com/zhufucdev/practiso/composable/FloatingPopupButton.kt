@@ -35,6 +35,7 @@ import com.zhufucdev.practiso.style.PaddingNormal
 fun FloatingPopupButton(
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
+    autoCollapse: Boolean = false,
     content: FloatingPopupItemBuildScope.() -> Unit,
 ) {
     var showActions by remember { mutableStateOf(false) }
@@ -75,7 +76,12 @@ fun FloatingPopupButton(
                     onClick: () -> Unit,
                 ) {
                     add {
-                        FloatingPopupItem(label, icon, onClick, it)
+                        FloatingPopupItem(label, icon, onClick = {
+                            if (autoCollapse) {
+                                onExpandedChange(false)
+                            }
+                            onClick()
+                        }, it)
                     }
                 }
             }

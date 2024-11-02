@@ -1,4 +1,4 @@
-package com.zhufucdev.practiso
+package com.zhufucdev.practiso.platform
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle

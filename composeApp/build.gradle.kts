@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.skie)
 }
 
 kotlin {
@@ -62,6 +63,7 @@ kotlin {
             implementation(libs.sqldelight.coroutines)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.serialization.protobuf)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -6,12 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.zhufucdev.practiso.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import kotlinx.coroutines.delay
 
 @OptIn(SavedStateHandleSaveableApi::class)

@@ -1,9 +1,10 @@
-package com.zhufucdev.practiso
+package com.zhufucdev.practiso.platform
 
 import android.os.Build
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import com.zhufucdev.practiso.PractisoApplication
 import com.zhufucdev.practiso.database.AppDatabase
 
 class AndroidPlatform : Platform {
