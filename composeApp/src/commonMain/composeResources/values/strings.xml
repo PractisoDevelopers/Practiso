@@ -37,4 +37,8 @@
     <string name="add_item_to_get_started_para">Add item to get started</string>
     <string name="new_question_para">New question</string>
     <string name="navigate_up_para">Navigate up</string>
+    <string name="question_name_para">Name of question</string>
+    <string name="confirm_para">Confirm</string>
+    <string name="rename_para">Rename</string>
+    <string name="cancel_para">Cancel</string>
 </resources>

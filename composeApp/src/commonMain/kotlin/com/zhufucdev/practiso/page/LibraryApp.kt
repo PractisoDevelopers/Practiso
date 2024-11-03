@@ -39,7 +39,7 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
-import com.zhufucdev.practiso.viewmodel.QuizViewModel
+import com.zhufucdev.practiso.viewmodel.QuizzesViewModel
 import com.zhufucdev.practiso.viewmodel.TemplateViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -58,7 +58,7 @@ import practiso.composeapp.generated.resources.templates_para
 fun LibraryApp(
     templateViewModel: TemplateViewModel = viewModel(factory = TemplateViewModel.Factory),
     dimensionViewModel: DimensionViewModel = viewModel(factory = DimensionViewModel.Factory),
-    quizViewModel: QuizViewModel = viewModel(factory = QuizViewModel.Factory),
+    quizzesViewModel: QuizzesViewModel = viewModel(factory = QuizzesViewModel.Factory),
 ) {
     var showActions by remember {
         mutableStateOf(false)
@@ -95,7 +95,7 @@ fun LibraryApp(
 
     val templates by templateViewModel.templates.collectAsState(null)
     val dimensions by dimensionViewModel.dimensions.collectAsState(null)
-    val quizzes by quizViewModel.quiz.collectAsState(null)
+    val quizzes by quizzesViewModel.quiz.collectAsState(null)
 
     AnimatedContent(templates?.isEmpty() == true && dimensions?.isEmpty() == true && quizzes?.isEmpty() == true) { empty ->
         if (empty) {

@@ -1,45 +1,44 @@
 package com.zhufucdev.practiso.viewmodel
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.toMutableStateList
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
+import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.zhufucdev.practiso.Database
-import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.database.Quiz
-import com.zhufucdev.practiso.datamodel.getFramedQuizzes
-import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
+import com.zhufucdev.practiso.datamodel.Frame
+import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.protobuf.ProtoBuf
+import kotlinx.serialization.serializer
 
-class QuizViewModel(private val db: AppDatabase): ViewModel() {
-    val quiz: Flow<List<PractisoOption.Quiz>> by lazy {
-        db.quizQueries.getFramedQuizzes(db.quizQueries.getAllQuiz())
-            .toOptionFlow()
-    }
-
-    fun add(name: String): Quiz {
-        val t = Clock.System.now()
-        val id = db.quizQueries.transactionWithResult {
-            db.quizQueries.insertQuiz(name, t, t)
-            db.quizQueries.lastInsertRowId().executeAsOne()
+@OptIn(SavedStateHandleSaveableApi::class, ExperimentalSerializationApi::class)
+class QuizViewModel(state: SavedStateHandle) : ViewModel() {
+    val frames: MutableList<Frame> by state.saveable(saver = listSaver(
+        save = {
+            it.map { frame ->
+                ProtoBuf.encodeToByteArray(serializer(), frame)
+            }
+        },
+        restore = {
+            it.map { s ->
+                ProtoBuf.decodeFromByteArray(serializer<Frame>(), s)
+            }.toMutableStateList()
         }
-
-        return Quiz(id, name, t, t)
+    )) {
+        mutableStateListOf()
     }
 
-    fun setName(id: Long, newName: String) {
-        db.quizQueries.updateQuizName(newName, id)
-    }
-
-    fun setModificationTimeToNow(id: Long) {
-        val t = Clock.System.now()
-        db.quizQueries.updateQuizModificationTimeISO(t, id)
-    }
+    var name by state.saveable { mutableStateOf("") }
 
     companion object {
-        val Factory = viewModelFactory {
-            val db = Database.app
+        val Factory get() = viewModelFactory {
             initializer {
-                QuizViewModel(db)
+                QuizViewModel(createPlatformSavedStateHandle())
             }
         }
     }
