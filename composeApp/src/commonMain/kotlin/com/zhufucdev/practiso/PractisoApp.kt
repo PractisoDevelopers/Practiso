@@ -34,10 +34,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
@@ -63,9 +63,11 @@ import practiso.composeapp.generated.resources.session_para
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PractisoApp(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory)) {
+fun PractisoApp(
+    navController: NavHostController,
+    searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
+) {
     val topBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
     BottomUpComposableScope { buc ->

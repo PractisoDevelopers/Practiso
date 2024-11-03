@@ -3,6 +3,7 @@ package com.zhufucdev.practiso
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.navigation.compose.rememberNavController
 import com.zhufucdev.practiso.style.PractisoTheme
 
 class MainActivity : NavigatorComponentActivity() {
@@ -12,7 +13,9 @@ class MainActivity : NavigatorComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PractisoTheme {
-                PractisoApp()
+                PractisoApp(
+                    navController = rememberNavController()
+                )
             }
         }
     }

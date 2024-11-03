@@ -12,7 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.singleWindowApplication
-import com.zhufucdev.practiso.page.QuizCreateApp
+import androidx.navigation.compose.rememberNavController
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
 import com.zhufucdev.practiso.platform.Navigation
@@ -23,6 +23,8 @@ import com.zhufucdev.practiso.style.lightScheme
 
 fun main() = singleWindowApplication(title = "Practiso") {
     val destination by DesktopNavigator.current.collectAsState()
+    val navController = rememberNavController()
+
     MaterialTheme(
         colorScheme = if (PlatformInstance.isDarkModeEnabled) darkScheme else lightScheme,
         typography = AppTypography
@@ -49,7 +51,7 @@ fun main() = singleWindowApplication(title = "Practiso") {
                 }
             ) { model ->
                 when (model.destination) {
-                    AppDestination.MainView -> App()
+                    AppDestination.MainView -> PractisoApp(navController)
                     AppDestination.QuizCreate -> QuizCreateApp()
                 }
             }
