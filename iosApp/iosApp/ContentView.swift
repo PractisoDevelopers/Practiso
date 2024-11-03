@@ -1,6 +1,7 @@
 import UIKit
 import SwiftUI
 import ComposeApp
+import Combine
 
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
@@ -36,12 +37,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack(path: $viewModel.navigationPath) {
             ComposeView()
-                .task {
-                    do {
-                        try await UINavigator.shared.navigate(destination: .mainView)
-                    } catch {
-                    }
-                }
                 .ignoresSafeArea(.keyboard) // Compose has own keyboard handler
                 .navigationDestination(for: AppDestination.self) { screen in
                     switch screen {
@@ -49,10 +44,7 @@ struct ContentView: View {
                         QuizCreateView()
                             .navigationBarBackButtonHidden()
                     case .mainView:
-                        EmptyView()
-                            .task {
-                                viewModel.navigationPath.removeLast()
-                            }
+                        Text("should never reach here")
                     }
                 }
         }
@@ -65,14 +57,32 @@ struct ContentView: View {
 extension ContentView {
     @MainActor
     class ViewModel: ObservableObject {
-        @Published var navigationPath = NavigationPath()
+        @Published var navigationPath: [AppDestination] = []
+        var subscription: AnyCancellable?
+        
+        init() {
+            subscription = $navigationPath.sink { path in
+                Task {
+                    do {
+                        try await UINavigator.shared.mutateBackstack(
+                            newValue: [AppDestination.mainView] + path,
+                            pointer: Int32(path.count)
+                        )
+                    } catch {
+                        // ignored
+                    }
+                }
+            }
+        }
+        
+        deinit {
+            subscription!.cancel()
+        }
         
         func startObserving() async {
-            for await dest in UINavigator.shared.current {
-                if dest == .mainView {
-                    navigationPath = NavigationPath()
-                } else {
-                    navigationPath.append(dest)
+            for await path in UINavigator.shared.path {
+                if path != navigationPath {
+                    navigationPath = path
                 }
             }
         }

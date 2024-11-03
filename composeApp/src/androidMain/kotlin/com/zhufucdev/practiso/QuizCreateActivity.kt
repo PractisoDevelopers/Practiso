@@ -6,7 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import com.zhufucdev.practiso.page.QuizCreateApp
 import com.zhufucdev.practiso.style.PractisoTheme
 
-class QuizCreateActivity : SharedComponentActivity() {
+class QuizCreateActivity : NavigatorComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

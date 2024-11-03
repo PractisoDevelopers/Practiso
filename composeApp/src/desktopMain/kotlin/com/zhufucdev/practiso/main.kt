@@ -2,9 +2,9 @@ package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
@@ -15,6 +15,7 @@ import androidx.compose.ui.window.singleWindowApplication
 import com.zhufucdev.practiso.page.QuizCreateApp
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
+import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.PlatformInstance
 import com.zhufucdev.practiso.style.AppTypography
 import com.zhufucdev.practiso.style.darkScheme
@@ -30,14 +31,24 @@ fun main() = singleWindowApplication(title = "Practiso") {
             AnimatedContent(
                 targetState = destination,
                 transitionSpec = {
-                    slideIntoContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Start,
-                        animationSpec = spring(stiffness = Spring.StiffnessLow)
-                    )
-                        .togetherWith(fadeOut())
+                    if (destination.navigation is Navigation.Forward || destination.navigation is Navigation.Goto) {
+                        slideIntoContainer(
+                            AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                        )
+                            .togetherWith(fadeOut())
+                    } else {
+                        fadeIn()
+                            .togetherWith(
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.End,
+                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                )
+                            )
+                    }
                 }
-            ) { dest ->
-                when (dest) {
+            ) { model ->
+                when (model.destination) {
                     AppDestination.MainView -> App()
                     AppDestination.QuizCreate -> QuizCreateApp()
                 }

@@ -34,6 +34,7 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.database.Template
 import com.zhufucdev.practiso.platform.AppDestination
+import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -85,7 +86,7 @@ fun LibraryApp(
                 icon = { Icon(Icons.Default.Edit, contentDescription = null) },
                 onClick = {
                     coroutine.launch {
-                        Navigator.navigate(AppDestination.QuizCreate)
+                        Navigator.navigate(Navigation.Goto(AppDestination.QuizCreate))
                     }
                 }
             )
@@ -105,7 +106,8 @@ fun LibraryApp(
             )
         } else {
             LazyColumn(
-                modifier = Modifier.padding(start = PaddingNormal, top = PaddingNormal).fillMaxWidth(),
+                modifier = Modifier.padding(start = PaddingNormal, top = PaddingNormal)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(PaddingNormal)
             ) {
                 flatContent(
