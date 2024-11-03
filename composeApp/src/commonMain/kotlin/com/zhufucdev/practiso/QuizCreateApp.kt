@@ -1,4 +1,4 @@
-package com.zhufucdev.practiso.page
+package com.zhufucdev.practiso
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

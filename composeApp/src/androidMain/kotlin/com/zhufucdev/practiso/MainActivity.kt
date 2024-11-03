@@ -12,7 +12,7 @@ class MainActivity : NavigatorComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PractisoTheme {
-                App()
+                PractisoApp()
             }
         }
     }

@@ -4,7 +4,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.window.ComposeUIViewController
-import com.zhufucdev.practiso.page.QuizCreateApp
 import com.zhufucdev.practiso.style.AppTypography
 
 fun MainViewController(darkMode: Boolean) = ComposeUIViewController {
@@ -12,7 +11,7 @@ fun MainViewController(darkMode: Boolean) = ComposeUIViewController {
         colorScheme = if (darkMode) darkColorScheme() else lightColorScheme(),
         typography = AppTypography
     ) {
-        App()
+        PractisoApp()
     }
 }
 

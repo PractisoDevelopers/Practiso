@@ -63,7 +63,7 @@ import practiso.composeapp.generated.resources.session_para
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory)) {
+fun PractisoApp(searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory)) {
     val topBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
