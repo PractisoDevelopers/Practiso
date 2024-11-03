@@ -43,8 +43,11 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
     }
 
     override fun finish() {
-        super.finish()
         pointer--
+        lifecycleScope.launch {
+            _navigation.emit(Navigation.Backward and backstack[pointer])
+        }
+        super.finish()
     }
 
     companion object : AppNavigator {
@@ -70,9 +73,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                     if (pointer <= 0) {
                         error("Backstack cannot move backwards")
                     }
-                    val dest = backstack[--pointer]
-                    startActivity(dest)
-                    _navigation.emit(navigation and dest)
+                    shared?.finish() ?: error("Shared activity presents nothing")
                 }
 
                 is Navigation.WithDestination -> {
