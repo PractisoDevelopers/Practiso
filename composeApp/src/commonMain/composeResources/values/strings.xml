@@ -41,4 +41,7 @@
     <string name="confirm_para">Confirm</string>
     <string name="rename_para">Rename</string>
     <string name="cancel_para">Cancel</string>
+    <string name="sample_text_para">Sample text…</string>
+    <string name="text_frame_span">text frame</string>
+    <string name="add_frame_para">Add frame</string>
 </resources>
