@@ -18,11 +18,12 @@ fun AlertHelper(
     header: @Composable () -> Unit,
     label: @Composable () -> Unit,
     helper: @Composable () -> Unit,
+    modifier: Modifier? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier ?: Modifier.fillMaxSize()
     ) {
         CompositionLocalProvider(
             LocalTextStyle provides MaterialTheme.typography.displayLarge
