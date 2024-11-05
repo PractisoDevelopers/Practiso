@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import com.zhufucdev.practiso.style.PaddingNormal
 
 @Composable
@@ -18,7 +19,7 @@ fun AlertHelper(
     header: @Composable () -> Unit,
     label: @Composable () -> Unit,
     helper: @Composable () -> Unit,
-    modifier: Modifier? = null
+    modifier: Modifier? = null,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -32,12 +33,12 @@ fun AlertHelper(
         }
         Spacer(Modifier.height(PaddingNormal))
         CompositionLocalProvider(
-            LocalTextStyle provides MaterialTheme.typography.titleLarge
+            LocalTextStyle provides MaterialTheme.typography.titleLarge.copy(textAlign = TextAlign.Center)
         ) {
             label()
         }
         CompositionLocalProvider(
-            LocalTextStyle provides MaterialTheme.typography.bodyLarge
+            LocalTextStyle provides MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Center)
         ) {
             helper()
         }
