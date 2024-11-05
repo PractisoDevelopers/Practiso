@@ -75,7 +75,7 @@ import com.zhufucdev.practiso.composable.ImageFrameSkeleton
 import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
-import com.zhufucdev.practiso.composition.secondaryClickable
+import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
 import com.zhufucdev.practiso.platform.Navigation
@@ -433,12 +433,9 @@ private fun GlowingSurface(
     content: @Composable () -> Unit,
 ) {
     Surface(
-        onClick = onClick,
         color = if (glow) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
         shape = RoundedCornerShape(4.dp),
-        modifier =
-        if (onSecondaryClick != null) modifier.secondaryClickable(onSecondaryClick)
-        else modifier,
+        modifier = modifier.combineClickable(onClick = onClick, onSecondaryClick = onSecondaryClick),
         content = content
     )
 }
