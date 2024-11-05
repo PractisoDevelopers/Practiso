@@ -235,31 +235,35 @@ fun QuizCreateApp(
         },
     ) { p ->
         if (quizViewModel.frames.isEmpty()) {
-            AlertHelper(header = {
-                Icon(
-                    painterResource(Res.drawable.baseline_elevator_down),
-                    contentDescription = null,
-                    modifier = Modifier.size(56.dp)
-                )
-            }, label = { Text(stringResource(Res.string.question_is_empty_para)) }, helper = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(PaddingSmall),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(stringResource(Res.string.get_started_by_checking_sheet_para))
-                    Button(onClick = {
-                        coroutine.launch {
-                            scaffoldState.bottomSheetState.expand()
+            AlertHelper(
+                header = {
+                    Icon(
+                        painterResource(Res.drawable.baseline_elevator_down),
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp)
+                    )
+                },
+                label = { Text(stringResource(Res.string.question_is_empty_para)) },
+                helper = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(PaddingSmall),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(stringResource(Res.string.get_started_by_checking_sheet_para))
+                        Button(onClick = {
+                            coroutine.launch {
+                                scaffoldState.bottomSheetState.expand()
+                            }
+                        }) {
+                            Text(stringResource(Res.string.expand_para))
                         }
-                    }) {
-                        Text(stringResource(Res.string.expand_para))
                     }
-                }
-            }, modifier = Modifier.fillMaxSize().padding(p)
+                },
+                modifier = Modifier.fillMaxSize().padding(p)
             )
         } else {
             LazyColumn(
-                Modifier.padding(p).padding(horizontal = PaddingBig)
+                Modifier.fillMaxSize().padding(p).padding(horizontal = PaddingBig)
                     .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
             ) {
                 quizViewModel.frames.forEachIndexed { index, frame ->

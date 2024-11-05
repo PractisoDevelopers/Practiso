@@ -42,6 +42,7 @@ struct ContentView: View {
                     switch screen {
                     case .quizCreate:
                         QuizCreateView()
+                            .ignoresSafeArea(.keyboard)
                             .navigationBarBackButtonHidden()
                     case .mainView:
                         Text("should never reach here")
