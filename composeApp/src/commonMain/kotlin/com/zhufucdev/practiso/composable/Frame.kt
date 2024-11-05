@@ -1,13 +1,13 @@
 package com.zhufucdev.practiso.composable
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -29,7 +29,7 @@ fun TextFrameSkeleton(
     },
 ) {
     CompositionLocalProvider(
-        LocalTextStyle provides MaterialTheme.typography.bodyMedium
+        LocalTextStyle provides MaterialTheme.typography.bodyLarge
     ) {
         content()
     }
@@ -47,6 +47,7 @@ fun ImageFrameSkeleton(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(PaddingNormal),
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
         image()
@@ -60,15 +61,16 @@ fun ImageFrameSkeleton(
 
 @Composable
 fun OptionSkeleton(
+    modifier: Modifier = Modifier,
     prefix: @Composable () -> Unit = {},
     content: @Composable () -> Unit = {
         SingleLineTextShimmer(Modifier.fillMaxWidth())
-    }
+    },
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         prefix()
         content()
@@ -77,14 +79,28 @@ fun OptionSkeleton(
 
 @Composable
 fun OptionsFrameSkeleton(
-    content: LazyListScope.() -> Unit = {
-        items(3) {
+    modifier: Modifier = Modifier,
+    label: @Composable () -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit = {
+        repeat(3) {
             OptionSkeleton()
         }
-    }
+    },
 ) {
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(PaddingNormal)) {
-        content(this)
+    Column {
+        Box(Modifier.fillMaxWidth()) {
+            CompositionLocalProvider(
+                LocalTextStyle provides MaterialTheme.typography.labelLarge
+            ) {
+                label()
+            }
+        }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(PaddingSmall),
+            modifier = modifier
+        ) {
+            content(this)
+        }
     }
 }
 

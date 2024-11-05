@@ -6,13 +6,13 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Quiz
-import com.zhufucdev.practiso.datamodel.getFramedQuizzes
+import com.zhufucdev.practiso.datamodel.getQuizFrames
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 
 class QuizzesViewModel(private val db: AppDatabase): ViewModel() {
     val quiz: Flow<List<PractisoOption.Quiz>> by lazy {
-        db.quizQueries.getFramedQuizzes(db.quizQueries.getAllQuiz())
+        db.quizQueries.getQuizFrames(db.quizQueries.getAllQuiz())
             .toOptionFlow()
     }
 

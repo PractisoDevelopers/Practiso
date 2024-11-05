@@ -90,12 +90,12 @@ DELETE FROM quiz WHERE id = ?;
 
 
 getTextFramesByQuizId:
-SELECT T.*
+SELECT T.*, priority
 FROM textFrame T JOIN frameByQuiz Q ON T.id = Q.textFrameId
 WHERE Q.quizId = ?;
 
 getTextFrameByOptionsFrameId:
-SELECT T.*
+SELECT T.*, isKey, priority
 FROM textFrame T JOIN frameByOptionsFrame F ON F.textFrameId = T.id
 WHERE F.textFrameId = ?;
 
@@ -125,12 +125,12 @@ DELETE FROM textFrame WHERE id = ?;
 
 
 getImageFramesByQuizId:
-SELECT I.*
+SELECT I.*, priority
 FROM imageFrame I JOIN frameByQuiz Q ON Q.textFrameId = I.id
 WHERE Q.quizId = ?;
 
 getImageFramesByOptionsFrameId:
-SELECT I.*
+SELECT I.*, isKey, priority
 FROM imageFrame I JOIN frameByOptionsFrame O ON O.imageFrameId = I.id
 WHERE O.optionsFrameId = ?;
 
@@ -167,7 +167,7 @@ INSERT INTO optionsFrame(name)
 VALUES (?);
 
 getOptionsFrameByQuizId:
-SELECT O.* FROM optionsFrame O JOIN frameByQuiz F ON F.optionsFrameId = O.id
+SELECT O.*, priority FROM optionsFrame O JOIN frameByQuiz F ON F.optionsFrameId = O.id
 WHERE F.quizId = ?;
 
 associateLastOptionsFrameWithQuiz:

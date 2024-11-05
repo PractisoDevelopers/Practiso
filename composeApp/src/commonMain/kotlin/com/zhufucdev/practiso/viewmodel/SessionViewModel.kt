@@ -11,7 +11,7 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.TakeStat
-import com.zhufucdev.practiso.datamodel.getFramedQuizzes
+import com.zhufucdev.practiso.datamodel.getQuizFrames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -31,12 +31,12 @@ class SessionViewModel(private val db: AppDatabase, private val state: SavedStat
 
     // TODO: recommend based on error rates, quiz legitimacy, etc
     val smartRecommendations by lazy {
-        db.quizQueries.getFramedQuizzes(db.quizQueries.getAllQuiz())
+        db.quizQueries.getQuizFrames(db.quizQueries.getAllQuiz())
             .toOptionFlow()
     }
 
     val recentRecommendations by lazy {
-        db.quizQueries.getFramedQuizzes(db.quizQueries.getRecentQuiz(5))
+        db.quizQueries.getQuizFrames(db.quizQueries.getRecentQuiz(5))
             .toOptionFlow()
     }
 

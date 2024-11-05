@@ -8,7 +8,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
-import com.zhufucdev.practiso.datamodel.getFramedQuizzes
+import com.zhufucdev.practiso.datamodel.getQuizFrames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -34,7 +34,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase) : ViewModel() {
                             Item(
                                 dimension = dimension,
                                 quizzes = db.quizQueries
-                                    .getFramedQuizzes(db.quizQueries.getQuizByDimension(dimension.id))
+                                    .getQuizFrames(db.quizQueries.getQuizByDimension(dimension.id))
                                     .toOptionFlow()
                                     .last()
                             )

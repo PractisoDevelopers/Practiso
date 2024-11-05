@@ -44,4 +44,20 @@
     <string name="sample_text_para">Sample text…</string>
     <string name="text_frame_span">text frame</string>
     <string name="add_frame_para">Add frame</string>
+    <string name="sample_image_para">Sample image</string>
+    <string name="frame_type_span">frame type…</string>
+    <string name="image_frame_span">image frame</string>
+    <string name="question_is_empty_para">Question is empty</string>
+    <string name="get_started_by_checking_sheet_para">Get started by checking the bottom sheet</string>
+    <string name="expand_para">Expand</string>
+    <string name="sample_option_para">Sample option…</string>
+    <string name="options_frame_span">options frame</string>
+    <string name="empty_text_para">Empty text</string>
+    <string name="remove_para">Remove</string>
+    <string name="new_options_frame_para">New options frame</string>
+    <string name="new_option_para">New option</string>
+    <string name="text_option_para">Text option</string>
+    <string name="image_option_para">Image option</string>
+    <string name="set_as_key_span">set as key</string>
+    <string name="remove_from_keys_span">remove from keys</string>
 </resources>

@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.database.QuizQueries
-import com.zhufucdev.practiso.datamodel.FramedQuiz
+import com.zhufucdev.practiso.datamodel.QuizFrames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -60,14 +60,14 @@ sealed interface PractisoOption {
     }
 }
 
-fun Flow<List<FramedQuiz>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
+fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
     map { frames ->
         coroutineScope {
             frames.map {
                 async {
                     PractisoOption.Quiz(
                         quiz = it.quiz,
-                        preview = it.frames.firstOrNull()?.getPreviewText()
+                        preview = it.frames.firstOrNull()?.frame?.getPreviewText()
                     )
                 }
             }.awaitAll()

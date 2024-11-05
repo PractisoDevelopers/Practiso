@@ -10,19 +10,13 @@ import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.QuizQueries
 import com.zhufucdev.practiso.database.TextFrame
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -44,84 +38,124 @@ sealed interface Frame {
     suspend fun getPreviewText(): String
 
     @Serializable(TextSerializer::class)
-    data class Text(val textFrame: TextFrame) : Frame {
+    data class Text(val textFrame: TextFrame = TextFrame(-1, "")) : Frame {
         override suspend fun getPreviewText(): String {
             return textFrame.content
         }
     }
 
     @Serializable(ImageSerializer::class)
-    data class Image(val imageFrame: ImageFrame) : Frame {
+    data class Image(val imageFrame: ImageFrame = ImageFrame(-1, "", 0, 0, null)) : Frame {
         override suspend fun getPreviewText(): String {
             return imageFrame.altText ?: getString(Res.string.image_span)
         }
     }
 
     @Serializable(OptionsSerializer::class)
-    data class Options(val optionsFrame: OptionsFrame, val frames: List<Frame>) : Frame {
+    data class Options(
+        val optionsFrame: OptionsFrame = OptionsFrame(-1, null),
+        val frames: List<KeyedPrioritizedFrame> = emptyList(),
+    ) : Frame {
         override suspend fun getPreviewText(): String {
             return optionsFrame.name
-                ?: frames.mapIndexed { index, frame -> "$index. ${frame.getPreviewText()}" }
+                ?: frames.mapIndexed { index, frame -> "$index. ${frame.frame.getPreviewText()}" }
                     .joinToString("; ")
         }
     }
 }
 
-data class FramedQuiz(val quiz: Quiz, val frames: List<Frame>)
+@Serializable
+data class KeyedPrioritizedFrame(val frame: Frame, val isKey: Boolean, val priority: Int)
 
-private fun getL1FrameFlow(
-    textFrameQuery: Query<TextFrame>,
-    imageFrameQuery: Query<ImageFrame>,
-): Flow<List<Frame>> {
-    val textFrameFlow: Flow<List<Frame>> =
-        textFrameQuery
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map { textFrame ->
-                textFrame.map(Frame::Text)
-            }
-    val imageFrameFlow: Flow<List<Frame>> =
-        imageFrameQuery
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map {
-                it.map(Frame::Image)
-            }
-    return textFrameFlow.concatOrThrow(imageFrameFlow)
-}
+@Serializable
+data class PrioritizedFrame(val frame: Frame, val priority: Int)
 
-fun QuizQueries.getFramedQuizzes(starter: Query<Quiz>): Flow<List<FramedQuiz>> =
+data class QuizFrames(val quiz: Quiz, val frames: List<PrioritizedFrame>)
+
+private fun QuizQueries.getPrioritizedOptionsFrameFlow(quizId: Long): Flow<List<PrioritizedFrame>> =
+    getOptionsFrameByQuizId(quizId)
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { frames ->
+            coroutineScope {
+                frames.map { q ->
+                    async {
+                        val frame = Frame.Options(
+                            optionsFrame = OptionsFrame(q.id, q.name),
+                            frames = (
+                                    getTextFrameByOptionsFrameId(q.id) { id, content, isKey, priority ->
+                                        KeyedPrioritizedFrame(
+                                            frame = Frame.Text(TextFrame(id, content)),
+                                            isKey = isKey,
+                                            priority = priority.toInt()
+                                        )
+                                    }
+                                        .asFlow()
+                                        .mapToList(Dispatchers.IO)
+                                        .last()
+                                            + getImageFramesByOptionsFrameId(
+                                        q.id
+                                    ) { id, filename, width, height, altText, isKey, priority ->
+                                        KeyedPrioritizedFrame(
+                                            frame = Frame.Image(
+                                                ImageFrame(
+                                                    id,
+                                                    filename,
+                                                    width,
+                                                    height,
+                                                    altText
+                                                )
+                                            ),
+                                            isKey = isKey,
+                                            priority = priority.toInt()
+                                        )
+                                    }
+                                        .asFlow()
+                                        .mapToList(Dispatchers.IO)
+                                        .last()
+                                    ).sortedBy(KeyedPrioritizedFrame::priority)
+                        )
+                        PrioritizedFrame(frame, q.priority.toInt())
+                    }
+                }.awaitAll()
+            }
+        }
+
+private fun QuizQueries.getPrioritizedImageFrameFlow(quizId: Long): Flow<List<PrioritizedFrame>> =
+    getImageFramesByQuizId(quizId) { id, filename, width, height, altText, priority ->
+        PrioritizedFrame(
+            frame = Frame.Image(ImageFrame(id, filename, width, height, altText)),
+            priority = priority.toInt()
+        )
+    }
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+
+private fun QuizQueries.getPrioritizedTextFrameFlow(quizId: Long): Flow<List<PrioritizedFrame>> =
+    getTextFramesByQuizId(quizId) { id, content, priority ->
+        PrioritizedFrame(
+            frame = Frame.Text(TextFrame(id, content)),
+            priority = priority.toInt()
+        )
+    }
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+
+fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
     starter.asFlow()
         .mapToList(Dispatchers.IO)
         .map { quizzes ->
             quizzes.map { quiz ->
-                val optionsFrameFlow: Flow<List<Frame>> = getOptionsFrameByQuizId(quiz.id)
-                    .asFlow()
-                    .mapToList(Dispatchers.IO)
-                    .map { frames ->
-                        coroutineScope {
-                            frames.map { optionsFrame ->
-                                async {
-                                    Frame.Options(
-                                        optionsFrame = optionsFrame,
-                                        frames = getL1FrameFlow(
-                                            textFrameQuery = getTextFrameByOptionsFrameId(
-                                                optionsFrame.id
-                                            ),
-                                            imageFrameQuery = getImageFramesByOptionsFrameId(
-                                                optionsFrame.id
-                                            )
-                                        ).last()
-                                    )
-                                }
-                            }.awaitAll()
-                        }
+                getPrioritizedOptionsFrameFlow(quiz.id)
+                    .concatOrThrow(getPrioritizedTextFrameFlow(quiz.id))
+                    .concatOrThrow(getPrioritizedImageFrameFlow(quiz.id))
+                    .map {
+                        QuizFrames(
+                            quiz = quiz,
+                            frames = it.sortedBy(PrioritizedFrame::priority)
+                        )
                     }
-
-                FramedQuiz(
-                    quiz = quiz,
-                    frames = optionsFrameFlow.last()
-                )
+                    .last()
             }
         }
 
@@ -209,32 +243,34 @@ private class OptionsSerializer : KSerializer<Frame.Options> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("frame_options") {
         element("id", serialDescriptor<Long>())
         element("name", serialDescriptor<String>(), isOptional = true)
-        element("frames", serialDescriptor<Frame>(), isOptional = true)
+        element("frames", serialDescriptor<KeyedPrioritizedFrame>(), isOptional = true)
     }
 
-    override fun deserialize(decoder: Decoder): Frame.Options = decoder.decodeStructure(descriptor) {
-        var id = -1L
-        var name: String? = null
-        var frames = emptyList<Frame>()
-        while (true) {
-            when (val index = decodeElementIndex(descriptor)) {
-                CompositeDecoder.DECODE_DONE -> break
-                0 -> id = decodeLongElement(descriptor, index)
-                1 -> name = decodeStringElement(descriptor, index)
-                2 -> frames = decodeSerializableElement(descriptor, index, serializer())
+    override fun deserialize(decoder: Decoder): Frame.Options =
+        decoder.decodeStructure(descriptor) {
+            var id = -1L
+            var name: String? = null
+            var frames = emptyList<KeyedPrioritizedFrame>()
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    CompositeDecoder.DECODE_DONE -> break
+                    0 -> id = decodeLongElement(descriptor, index)
+                    1 -> name = decodeStringElement(descriptor, index)
+                    2 -> frames = decodeSerializableElement(descriptor, index, serializer())
+                }
             }
+            Frame.Options(
+                optionsFrame = OptionsFrame(id, name),
+                frames = frames
+            )
         }
-        Frame.Options(
-            optionsFrame = OptionsFrame(id, name),
-            frames = frames
-        )
-    }
 
-    override fun serialize(encoder: Encoder, value: Frame.Options) = encoder.encodeStructure(descriptor) {
-        encodeLongElement(descriptor, 0, value.optionsFrame.id)
-        if (value.optionsFrame.name != null) {
-            encodeStringElement(descriptor, 1, value.optionsFrame.name)
+    override fun serialize(encoder: Encoder, value: Frame.Options) =
+        encoder.encodeStructure(descriptor) {
+            encodeLongElement(descriptor, 0, value.optionsFrame.id)
+            if (value.optionsFrame.name != null) {
+                encodeStringElement(descriptor, 1, value.optionsFrame.name)
+            }
+            encodeSerializableElement(descriptor, 2, serializer(), value.frames)
         }
-        encodeSerializableElement(descriptor, 2, serializer(), value.frames)
-    }
 }
