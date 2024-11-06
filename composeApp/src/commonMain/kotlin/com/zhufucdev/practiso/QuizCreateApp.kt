@@ -85,7 +85,9 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import com.zhufucdev.practiso.viewmodel.QuizViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -435,7 +437,10 @@ private fun GlowingSurface(
     Surface(
         color = if (glow) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
         shape = RoundedCornerShape(4.dp),
-        modifier = modifier.combineClickable(onClick = onClick, onSecondaryClick = onSecondaryClick),
+        modifier = modifier.combineClickable(
+            onClick = onClick,
+            onSecondaryClick = onSecondaryClick
+        ),
         content = content
     )
 }
@@ -520,6 +525,19 @@ private fun EditableOptionsFrame(
     var appendingMenu by remember { mutableStateOf(false) }
     var masterMenu by remember { mutableStateOf(false) }
 
+    val coroutine = rememberCoroutineScope()
+    var lastFlush by remember { mutableStateOf(Clock.System.now()) }
+    fun notifyValueChangeWithLocalBufferDebounced() {
+        coroutine.launch {
+            val flush = Clock.System.now()
+            lastFlush = flush
+            delay(100)
+            if (lastFlush == flush) {
+                onValueChange(Frame.Options(frame, options))
+            }
+        }
+    }
+
     OptionsFrameSkeleton(
         label = {
             AnimatedContent(editingName) { showTextField ->
@@ -533,7 +551,6 @@ private fun EditableOptionsFrame(
                             frame.name?.takeIf(String::isNotEmpty)
                                 ?: stringResource(Res.string.new_options_frame_para)
                         )
-
                         DropdownMenu(
                             expanded = masterMenu,
                             onDismissRequest = { masterMenu = false }
@@ -600,16 +617,27 @@ private fun EditableOptionsFrame(
                         ) {
                             Checkbox(
                                 checked = option.isKey,
-                                onCheckedChange = { options[index] = option.copy(isKey = it) }
+                                onCheckedChange = {
+                                    options[index] = option.copy(isKey = it)
+                                    notifyValueChangeWithLocalBufferDebounced()
+                                }
                             )
                         }
                     },
                     content = {
                         when (option.frame) {
                             is Frame.Image -> TODO()
-                            is Frame.Text -> EditableTextFrame(value = option.frame,
-                                onValueChange = { options[index] = option.copy(frame = it) },
-                                onDelete = { options.removeAt(index) })
+                            is Frame.Text -> EditableTextFrame(
+                                value = option.frame,
+                                onValueChange = {
+                                    options[index] = option.copy(frame = it)
+                                    notifyValueChangeWithLocalBufferDebounced()
+                                },
+                                onDelete = {
+                                    options.removeAt(index)
+                                    notifyValueChangeWithLocalBufferDebounced()
+                                }
+                            )
 
                             else -> throw UnsupportedOperationException("${option.frame::class.simpleName} is not supported")
                         }
@@ -649,6 +677,7 @@ private fun EditableOptionsFrame(
                                 )
                             )
                             appendingMenu = false
+                            notifyValueChangeWithLocalBufferDebounced()
                         }
                     )
                     DropdownMenuItem(
@@ -662,6 +691,7 @@ private fun EditableOptionsFrame(
                                 )
                             )
                             appendingMenu = false
+                            notifyValueChangeWithLocalBufferDebounced()
                         }
                     )
                 }
