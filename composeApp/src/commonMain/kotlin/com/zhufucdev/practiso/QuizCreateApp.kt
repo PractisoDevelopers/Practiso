@@ -75,6 +75,7 @@ import com.zhufucdev.practiso.composable.ImageFrameSkeleton
 import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
+import com.zhufucdev.practiso.composable.stroker
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
@@ -539,6 +540,7 @@ private fun EditableOptionsFrame(
     }
 
     OptionsFrameSkeleton(
+        modifier = if (masterMenu) Modifier.stroker() else Modifier,
         label = {
             AnimatedContent(editingName) { showTextField ->
                 if (!showTextField) {
