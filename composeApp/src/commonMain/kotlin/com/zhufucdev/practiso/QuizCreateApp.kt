@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -23,8 +24,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.BottomSheetScaffold
@@ -35,6 +38,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -44,6 +48,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,6 +61,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,41 +85,56 @@ import com.zhufucdev.practiso.composable.stroker
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
+import com.zhufucdev.practiso.platform.BitmapLoader
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
+import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import com.zhufucdev.practiso.viewmodel.QuizViewModel
+import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.core.PickerType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import okio.buffer
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.add_frame_para
 import practiso.composeapp.generated.resources.baseline_elevator_down
+import practiso.composeapp.generated.resources.baseline_image
 import practiso.composeapp.generated.resources.cancel_para
 import practiso.composeapp.generated.resources.cat_walker
+import practiso.composeapp.generated.resources.clear_para
 import practiso.composeapp.generated.resources.confirm_para
 import practiso.composeapp.generated.resources.empty_text_para
 import practiso.composeapp.generated.resources.expand_para
 import practiso.composeapp.generated.resources.frame_type_span
 import practiso.composeapp.generated.resources.get_started_by_checking_sheet_para
 import practiso.composeapp.generated.resources.image_frame_span
+import practiso.composeapp.generated.resources.image_is_missing_or_empty_span
 import practiso.composeapp.generated.resources.image_option_para
 import practiso.composeapp.generated.resources.navigate_up_para
+import practiso.composeapp.generated.resources.new_image_frame_para
 import practiso.composeapp.generated.resources.new_option_para
 import practiso.composeapp.generated.resources.new_options_frame_para
 import practiso.composeapp.generated.resources.new_question_para
 import practiso.composeapp.generated.resources.options_frame_span
+import practiso.composeapp.generated.resources.pick_an_image_for_this_frame_para
 import practiso.composeapp.generated.resources.question_is_empty_para
 import practiso.composeapp.generated.resources.question_name_para
 import practiso.composeapp.generated.resources.remove_from_keys_span
 import practiso.composeapp.generated.resources.remove_para
 import practiso.composeapp.generated.resources.rename_para
+import practiso.composeapp.generated.resources.replace_para
 import practiso.composeapp.generated.resources.sample_image_para
 import practiso.composeapp.generated.resources.sample_option_para
 import practiso.composeapp.generated.resources.sample_text_para
@@ -133,34 +154,37 @@ fun QuizCreateApp(
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            LargeTopAppBar(title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = quizViewModel.name.takeIf(String::isNotEmpty) ?: stringResource(
-                        Res.string.new_question_para
-                    ), modifier = Modifier.clickable {
-                        model.showNameEditDialog = true
-                    })
-                }
-            }, navigationIcon = {
-                TooltipBox(
-                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                    tooltip = { PlainTooltip { Text(stringResource(Res.string.navigate_up_para)) } },
-                    state = rememberTooltipState()
-                ) {
-                    IconButton(
-                        onClick = {
-                            coroutine.launch {
-                                Navigator.navigate(Navigation.Backward)
-                            }
-                        },
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = stringResource(Res.string.navigate_up_para)
-                        )
+            LargeTopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = quizViewModel.name.takeIf(String::isNotEmpty) ?: stringResource(
+                            Res.string.new_question_para
+                        ), modifier = Modifier.clickable {
+                            model.showNameEditDialog = true
+                        })
                     }
-                }
-            }, scrollBehavior = topBarScrollBehavior
+                },
+                navigationIcon = {
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        tooltip = { PlainTooltip { Text(stringResource(Res.string.navigate_up_para)) } },
+                        state = rememberTooltipState()
+                    ) {
+                        IconButton(
+                            onClick = {
+                                coroutine.launch {
+                                    Navigator.navigate(Navigation.Backward)
+                                }
+                            },
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Default.ArrowBack,
+                                contentDescription = stringResource(Res.string.navigate_up_para)
+                            )
+                        }
+                    }
+                },
+                scrollBehavior = topBarScrollBehavior
             )
         },
         sheetContent = {
@@ -171,9 +195,7 @@ fun QuizCreateApp(
                 verticalArrangement = Arrangement.spacedBy(PaddingBig),
             ) {
                 val pagerState = rememberPagerState { 3 }
-                HorizontalPager(
-                    state = pagerState,
-                ) { page ->
+                HorizontalPager(state = pagerState) { page ->
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Box(
                             Modifier.height(300.dp).fillMaxWidth(0.618f),
@@ -272,7 +294,12 @@ fun QuizCreateApp(
                 quizViewModel.frames.forEachIndexed { index, frame ->
                     item {
                         when (frame) {
-                            is Frame.Image -> TODO()
+                            is Frame.Image -> {
+                                EditableImageFrame(value = frame,
+                                    onValueChange = { quizViewModel.frames[index] = it },
+                                    onDelete = { quizViewModel.frames.removeAt(index) })
+                            }
+
                             is Frame.Options -> {
                                 EditableOptionsFrame(value = frame,
                                     onValueChange = { quizViewModel.frames[index] = it },
@@ -628,7 +655,18 @@ private fun EditableOptionsFrame(
                     },
                     content = {
                         when (option.frame) {
-                            is Frame.Image -> TODO()
+                            is Frame.Image -> EditableImageFrame(
+                                value = option.frame,
+                                onValueChange = {
+                                    options[index] = option.copy(frame = it)
+                                    notifyValueChangeWithLocalBufferDebounced()
+                                },
+                                onDelete = {
+                                    options.removeAt(index)
+                                    notifyValueChangeWithLocalBufferDebounced()
+                                }
+                            )
+
                             is Frame.Text -> EditableTextFrame(
                                 value = option.frame,
                                 onValueChange = {
@@ -698,6 +736,183 @@ private fun EditableOptionsFrame(
                     )
                 }
             }
+        }
+    )
+}
+
+
+@Composable
+private fun EditableImageFrame(
+    value: Frame.Image,
+    onValueChange: (Frame.Image) -> Unit,
+    onDelete: () -> Unit,
+    deleteImageOnRemoval: Boolean = true
+) {
+    var editingAltText by remember { mutableStateOf(false) }
+    var masterMenu by remember { mutableStateOf(false) }
+
+    val coroutine = rememberCoroutineScope()
+    val bitmap by remember(value) {
+        val platform = getPlatform()
+        derivedStateOf {
+            value.imageFrame.filename
+                .takeIf { it.isNotBlank() }
+                ?.let { platform.resourcePath.resolve(it) }
+                ?.takeIf { platform.filesystem.exists(it) }
+                ?.let { platform.filesystem.source(it) }
+                ?.buffer()
+                ?.readByteArray()
+                ?.let(BitmapLoader::from)
+        }
+    }
+    val pickerLauncher = rememberFilePickerLauncher(
+        type = PickerType.Image,
+        title = stringResource(Res.string.pick_an_image_for_this_frame_para)
+    ) { file ->
+        if (file == null) {
+            return@rememberFilePickerLauncher
+        }
+
+        val platform = getPlatform()
+        if (value.imageFrame.filename.isNotBlank()) {
+            platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
+        }
+
+        val name = randomUUID() + "." + file.name.split(".").last()
+        coroutine.launch {
+            withContext(Dispatchers.IO) {
+                platform
+                    .filesystem
+                    .sink(platform.resourcePath.resolve(name))
+                    .copyFrom(file)
+            }
+
+            onValueChange(value.copy(imageFrame = value.imageFrame.copy(filename = name)))
+        }
+    }
+
+    fun deleteCurrentImage() {
+        val platform = getPlatform()
+        platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
+    }
+
+    ImageFrameSkeleton(
+        modifier = Modifier.fillMaxWidth(),
+        image = {
+            bitmap?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = value.imageFrame.altText,
+                    modifier = Modifier.combineClickable(
+                        onClick = { },
+                        onSecondaryClick = { masterMenu = true }
+                    )
+                )
+                DropdownMenu(
+                    expanded = masterMenu,
+                    onDismissRequest = { masterMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.remove_para)) },
+                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                        onClick = {
+                            if (deleteImageOnRemoval) {
+                                deleteCurrentImage()
+                            }
+                            onDelete()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.replace_para)) },
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        onClick = {
+                            pickerLauncher.launch()
+                            masterMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(Res.string.clear_para)) },
+                        leadingIcon = { Icon(Icons.Default.Clear, contentDescription = null) },
+                        onClick = {
+                            masterMenu = false
+                            deleteCurrentImage()
+                            onValueChange(value.copy(imageFrame = value.imageFrame.copy(filename = "")))
+                        }
+                    )
+                }
+            } ?: OutlinedCard(
+                Modifier.width(150.dp)
+                    .combineClickable(onSecondaryClick = { masterMenu = true })
+            ) {
+                Box(Modifier.padding(PaddingNormal).fillMaxSize()) {
+                    Icon(
+                        painterResource(Res.drawable.baseline_image),
+                        contentDescription = stringResource(Res.string.image_is_missing_or_empty_span),
+                        modifier = Modifier.align(Alignment.Center).size(60.dp)
+                    )
+                    SmallFloatingActionButton(
+                        onClick = pickerLauncher::launch,
+                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null)
+                    }
+                    DropdownMenu(
+                        expanded = masterMenu,
+                        onDismissRequest = { masterMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.remove_para)) },
+                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                            onClick = {
+                                if (deleteImageOnRemoval) {
+                                    deleteCurrentImage()
+                                }
+                                onDelete()
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        altText = {
+            var buffer by remember { mutableStateOf(value.imageFrame.altText ?: "") }
+            GlowingSurface(
+                glow = value.imageFrame.altText.isNullOrEmpty(),
+                onClick = { editingAltText = true },
+                content = {
+                    AnimatedContent(editingAltText) { editing ->
+                        if (!editing) {
+                            Text(
+                                value.imageFrame.altText?.takeIf(String::isNotEmpty)
+                                    ?: stringResource(Res.string.new_image_frame_para)
+                            )
+                        } else {
+                            TextField(
+                                value = buffer,
+                                onValueChange = { buffer = it },
+                                placeholder = { Text(stringResource(Res.string.new_image_frame_para)) },
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = {
+                                            editingAltText = false
+                                            onValueChange(
+                                                value.copy(
+                                                    imageFrame = value.imageFrame.copy(
+                                                        altText = buffer
+                                                    )
+                                                )
+                                            )
+                                        }
+                                    ) {
+                                        Icon(Icons.Default.Done, contentDescription = null)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            )
         }
     )
 }

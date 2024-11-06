@@ -6,6 +6,8 @@ import com.github.tkuenneth.nativeparameterstoreaccess.Dconf
 import com.github.tkuenneth.nativeparameterstoreaccess.MacOSDefaults
 import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
 import com.zhufucdev.practiso.database.AppDatabase
+import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
@@ -32,6 +34,15 @@ abstract class JVMPlatform : Platform {
                 AppDatabase.Schema.create(this)
             }
         }
+    }
+
+    override val filesystem: FileSystem
+        get() = FileSystem.SYSTEM
+
+    override val resourcePath: okio.Path by lazy {
+        Path(dataPath, "resource").apply {
+            if (notExists()) createDirectory()
+        }.toOkioPath()
     }
 }
 

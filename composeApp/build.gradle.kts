@@ -64,6 +64,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.serialization.protobuf)
+            implementation(libs.filekit)
+            implementation(libs.okio)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -120,7 +122,12 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            jvmArgs("-Dapple.awt.application.appearance=system")
+            linux {
+                modules("jdk.security.auth")
+            }
+            macOS {
+                jvmArgs("-Dapple.awt.application.appearance=system")
+            }
             packageName = "com.zhufucdev.practiso"
             packageVersion = "1.0.0"
         }

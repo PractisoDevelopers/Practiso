@@ -60,4 +60,9 @@
     <string name="image_option_para">Image option</string>
     <string name="set_as_key_span">set as key</string>
     <string name="remove_from_keys_span">remove from keys</string>
+    <string name="new_image_frame_para">New image frame</string>
+    <string name="image_is_missing_or_empty_span">image is missing or empty</string>
+    <string name="pick_an_image_for_this_frame_para">Pick an image for this frame</string>
+    <string name="replace_para">Replace</string>
+    <string name="clear_para">Clear</string>
 </resources>
