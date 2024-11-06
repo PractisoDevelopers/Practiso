@@ -793,7 +793,9 @@ private fun EditableImageFrame(
 
     fun deleteCurrentImage() {
         val platform = getPlatform()
-        platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
+        if (value.imageFrame.filename.isNotBlank()) {
+            platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
+        }
     }
 
     ImageFrameSkeleton(
