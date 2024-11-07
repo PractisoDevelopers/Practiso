@@ -12,6 +12,7 @@ import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectory
+import kotlin.io.path.exists
 import kotlin.io.path.notExists
 
 abstract class JVMPlatform : Platform {
@@ -21,16 +22,18 @@ abstract class JVMPlatform : Platform {
     abstract val dataPath: String
 
     override fun createDbDriver(): SqlDriver {
-        val emptyDb = Path(dataPath).notExists()
-        if (emptyDb) {
-            Path(dataPath).createDirectory()
+        val dataPath = Path(dataPath)
+        val dbPath = dataPath.resolve( "app.db")
+        if (dataPath.notExists()) {
+            dataPath.createDirectory()
         }
+        val dbExits = dbPath.exists()
         return JdbcSqliteDriver(
-            "jdbc:sqlite:${Path(dataPath, "app.db")}",
+            "jdbc:sqlite:${dbPath}",
             properties = Properties().apply {
                 put("foreign_keys", "true")
             }).apply {
-            if (emptyDb) {
+            if (!dbExits) {
                 AppDatabase.Schema.create(this)
             }
         }
