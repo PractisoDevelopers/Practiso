@@ -528,6 +528,7 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                 is Frame.Options -> async {
                     db.quizQueries.insertOptionsFrame(frame.optionsFrame.name)
                     val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
+                    db.quizQueries.associateLastOptionsFrameWithQuiz(quizId, index.toLong())
 
                     frame.frames.map { optionFrame ->
                         when (optionFrame.frame) {
