@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -251,67 +252,69 @@ fun QuizCreateApp(
             }
         },
     ) { p ->
-        if (quizViewModel.frames.isEmpty()) {
-            AlertHelper(
-                header = {
-                    Icon(
-                        painterResource(Res.drawable.baseline_elevator_down),
-                        contentDescription = null,
-                        modifier = Modifier.size(56.dp)
-                    )
-                },
-                label = { Text(stringResource(Res.string.question_is_empty_para)) },
-                helper = {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(PaddingSmall),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(stringResource(Res.string.get_started_by_checking_sheet_para))
-                        Button(onClick = {
-                            coroutine.launch {
-                                scaffoldState.bottomSheetState.expand()
+        AnimatedContent(quizViewModel.frames.isEmpty()) { showHelper ->
+            if (showHelper) {
+                AlertHelper(
+                    header = {
+                        Icon(
+                            painterResource(Res.drawable.baseline_elevator_down),
+                            contentDescription = null,
+                            modifier = Modifier.size(56.dp)
+                        )
+                    },
+                    label = { Text(stringResource(Res.string.question_is_empty_para)) },
+                    helper = {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(PaddingSmall),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(stringResource(Res.string.get_started_by_checking_sheet_para))
+                            Button(onClick = {
+                                coroutine.launch {
+                                    scaffoldState.bottomSheetState.expand()
+                                }
+                            }) {
+                                Text(stringResource(Res.string.expand_para))
                             }
-                        }) {
-                            Text(stringResource(Res.string.expand_para))
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxSize().padding(p)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(p).padding(horizontal = PaddingBig)
-                    .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
-                state = contentScrollState
-            ) {
-                quizViewModel.frames.forEachIndexed { index, frame ->
-                    item(frame.id) {
-                        when (frame) {
-                            is Frame.Image -> {
-                                EditableImageFrame(
-                                    value = frame,
-                                    onValueChange = { quizViewModel.frames[index] = it },
-                                    onDelete = { quizViewModel.frames.removeAt(index) },
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
+                    },
+                    modifier = Modifier.fillMaxSize().padding(p)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(p).padding(horizontal = PaddingBig)
+                        .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
+                    state = contentScrollState
+                ) {
+                    quizViewModel.frames.forEachIndexed { index, frame ->
+                        item(frame.id) {
+                            when (frame) {
+                                is Frame.Image -> {
+                                    EditableImageFrame(
+                                        value = frame,
+                                        onValueChange = { quizViewModel.frames[index] = it },
+                                        onDelete = { quizViewModel.frames.removeAt(index) },
+                                        modifier = Modifier.animateItem()
+                                    )
+                                }
 
-                            is Frame.Options -> {
-                                EditableOptionsFrame(value = frame,
-                                    onValueChange = { quizViewModel.frames[index] = it },
-                                    onDelete = {
-                                        quizViewModel.frames.removeAt(index)
-                                    },
-                                    modifier = Modifier.animateItem())
-                            }
+                                is Frame.Options -> {
+                                    EditableOptionsFrame(value = frame,
+                                        onValueChange = { quizViewModel.frames[index] = it },
+                                        onDelete = {
+                                            quizViewModel.frames.removeAt(index)
+                                        },
+                                        modifier = Modifier.animateItem())
+                                }
 
-                            is Frame.Text -> {
-                                EditableTextFrame(value = frame,
-                                    onValueChange = { quizViewModel.frames[index] = it },
-                                    onDelete = {
-                                        quizViewModel.frames.removeAt(index)
-                                    },
-                                    modifier = Modifier.animateItem())
+                                is Frame.Text -> {
+                                    EditableTextFrame(value = frame,
+                                        onValueChange = { quizViewModel.frames[index] = it },
+                                        onDelete = {
+                                            quizViewModel.frames.removeAt(index)
+                                        },
+                                        modifier = Modifier.animateItem())
+                                }
                             }
                         }
                     }
