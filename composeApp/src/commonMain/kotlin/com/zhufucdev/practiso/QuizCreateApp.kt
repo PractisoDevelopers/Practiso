@@ -2,6 +2,7 @@ package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -58,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.EditableImageFrame
@@ -67,6 +71,7 @@ import com.zhufucdev.practiso.composable.ImageFrameSkeleton
 import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
+import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.TextFrame
@@ -78,7 +83,15 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import com.zhufucdev.practiso.viewmodel.QuizViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -116,6 +129,16 @@ fun QuizCreateApp(
     val scaffoldState = rememberBottomSheetScaffoldState()
     val contentScrollState = rememberLazyListState()
     var idCounter by remember { mutableLongStateOf(0) }
+    var saving by remember { mutableStateOf(false) }
+
+    if (saving) {
+        Popup {
+            Box(
+                Modifier.fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceDim.copy(alpha = 0.5f))
+            )
+        }
+    }
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
@@ -159,12 +182,25 @@ fun QuizCreateApp(
                         }
                     ) {
                         IconButton(
-                            onClick = { }
+                            onClick = {
+                                coroutine.launch {
+                                    saving = true
+                                    quizViewModel.frames.saveTo(
+                                        Database.app,
+                                        quizViewModel.name
+                                    )
+                                    Navigator.navigate(Navigation.Backward)
+                                }
+                            }
                         ) {
-                            Icon(
-                                painterResource(Res.drawable.baseline_content_save_outline),
-                                contentDescription = null
-                            )
+                            if (!saving) {
+                                Icon(
+                                    painterResource(Res.drawable.baseline_content_save_outline),
+                                    contentDescription = null
+                                )
+                            } else {
+                                CircularProgressIndicator(Modifier.size(24.dp))
+                            }
                         }
                     }
                 },
@@ -294,26 +330,32 @@ fun QuizCreateApp(
                                         value = frame,
                                         onValueChange = { quizViewModel.frames[index] = it },
                                         onDelete = { quizViewModel.frames.removeAt(index) },
-                                        modifier = Modifier.animateItem()
+                                        modifier = Modifier.animateItem(),
+                                        cache = model.imageCache
                                     )
                                 }
 
                                 is Frame.Options -> {
-                                    EditableOptionsFrame(value = frame,
+                                    EditableOptionsFrame(
+                                        value = frame,
                                         onValueChange = { quizViewModel.frames[index] = it },
                                         onDelete = {
                                             quizViewModel.frames.removeAt(index)
                                         },
-                                        modifier = Modifier.animateItem())
+                                        modifier = Modifier.animateItem(),
+                                        imageCache = model.imageCache
+                                    )
                                 }
 
                                 is Frame.Text -> {
-                                    EditableTextFrame(value = frame,
+                                    EditableTextFrame(
+                                        value = frame,
                                         onValueChange = { quizViewModel.frames[index] = it },
                                         onDelete = {
                                             quizViewModel.frames.removeAt(index)
                                         },
-                                        modifier = Modifier.animateItem())
+                                        modifier = Modifier.animateItem()
+                                    )
                                 }
                             }
                         }
@@ -460,4 +502,70 @@ private fun SampleFrameContainer(
             label()
         }
     }
+}
+
+private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
+    withContext(Dispatchers.IO) {
+        db.quizQueries.insertQuiz(name, Clock.System.now(), null)
+        val quizId = db.quizQueries.lastInsertRowId().executeAsOne()
+
+        mapIndexed { index, frame ->
+            when (frame) {
+                is Frame.Text -> async {
+                    db.transaction {
+                        db.quizQueries.insertTextFrame(frame.textFrame.content)
+                        db.quizQueries.associateLastTextFrameWithQuiz(quizId, index.toLong())
+                    }
+                }
+
+                is Frame.Image -> async {
+                    db.transaction {
+                        frame.insertTo(db)
+                        db.quizQueries.associateLastImageFrameWithQuiz(quizId, index.toLong())
+                    }
+                }
+
+                is Frame.Options -> async {
+                    db.quizQueries.insertOptionsFrame(frame.optionsFrame.name)
+                    val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
+
+                    frame.frames.map { optionFrame ->
+                        when (optionFrame.frame) {
+                            is Frame.Image -> async {
+                                db.transaction {
+                                    optionFrame.frame.insertTo(db)
+                                    db.quizQueries.assoicateLastImageFrameWithOption(
+                                        frameId,
+                                        maxOf(optionFrame.priority, 0).toLong(),
+                                        optionFrame.isKey
+                                    )
+                                }
+                            }
+
+                            is Frame.Text -> async {
+                                db.transaction {
+                                    db.quizQueries.insertTextFrame(optionFrame.frame.textFrame.content)
+                                    db.quizQueries.assoicateLastTextFrameWithOption(
+                                        frameId,
+                                        optionFrame.isKey,
+                                        maxOf(optionFrame.priority, 0).toLong()
+                                    )
+                                }
+                            }
+
+                            is Frame.Options -> throw UnsupportedOperationException("Options frame inception")
+                        }
+                    }.awaitAll()
+                }
+            }
+        }.awaitAll()
+    }
+
+private fun Frame.Image.insertTo(db: AppDatabase) {
+    db.quizQueries.insertImageFrame(
+        imageFrame.filename,
+        imageFrame.altText,
+        imageFrame.width,
+        imageFrame.height
+    )
 }
