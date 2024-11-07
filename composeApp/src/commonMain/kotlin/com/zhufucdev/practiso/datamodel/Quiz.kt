@@ -3,7 +3,6 @@ package com.zhufucdev.practiso.datamodel
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.zhufucdev.practiso.concatOrThrow
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.Quiz
@@ -72,90 +71,93 @@ data class PrioritizedFrame(val frame: Frame, val priority: Int)
 
 data class QuizFrames(val quiz: Quiz, val frames: List<PrioritizedFrame>)
 
-private fun QuizQueries.getPrioritizedOptionsFrameFlow(quizId: Long): Flow<List<PrioritizedFrame>> =
-    getOptionsFrameByQuizId(quizId)
-        .asFlow()
-        .mapToList(Dispatchers.IO)
-        .map { frames ->
-            coroutineScope {
-                frames.map { q ->
-                    async {
-                        val frame = Frame.Options(
-                            optionsFrame = OptionsFrame(q.id, q.name),
-                            frames = (
-                                    getTextFrameByOptionsFrameId(q.id) { id, content, isKey, priority ->
-                                        KeyedPrioritizedFrame(
-                                            frame = Frame.Text(TextFrame(id, content)),
-                                            isKey = isKey,
-                                            priority = priority.toInt()
-                                        )
-                                    }
-                                        .asFlow()
-                                        .mapToList(Dispatchers.IO)
-                                        .last()
-                                            + getImageFramesByOptionsFrameId(
-                                        q.id
-                                    ) { id, filename, width, height, altText, isKey, priority ->
-                                        KeyedPrioritizedFrame(
-                                            frame = Frame.Image(
-                                                ImageFrame(
-                                                    id,
-                                                    filename,
-                                                    width,
-                                                    height,
-                                                    altText
-                                                )
-                                            ),
-                                            isKey = isKey,
-                                            priority = priority.toInt()
-                                        )
-                                    }
-                                        .asFlow()
-                                        .mapToList(Dispatchers.IO)
-                                        .last()
-                                    ).sortedBy(KeyedPrioritizedFrame::priority)
-                        )
-                        PrioritizedFrame(frame, q.priority.toInt())
-                    }
-                }.awaitAll()
-            }
-        }
+private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<PrioritizedFrame> =
+    coroutineScope {
+        getOptionsFrameByQuizId(quizId)
+            .executeAsList()
+            .map { q ->
+                async {
+                    val textFrames =
+                        getTextFrameByOptionsFrameId(q.id) { id, content, isKey, priority ->
+                            KeyedPrioritizedFrame(
+                                frame = Frame.Text(TextFrame(id, content)),
+                                isKey = isKey,
+                                priority = priority.toInt()
+                            )
+                        }.executeAsList()
 
-private fun QuizQueries.getPrioritizedImageFrameFlow(quizId: Long): Flow<List<PrioritizedFrame>> =
+
+                    val imageFrames =
+                        getImageFramesByOptionsFrameId(q.id) { id, filename, width, height, altText, isKey, priority ->
+                            KeyedPrioritizedFrame(
+                                frame = Frame.Image(
+                                    ImageFrame(
+                                        id,
+                                        filename,
+                                        width,
+                                        height,
+                                        altText
+                                    )
+                                ),
+                                isKey = isKey,
+                                priority = priority.toInt()
+                            )
+                        }.executeAsList()
+
+                    val frame = Frame.Options(
+                        optionsFrame = OptionsFrame(q.id, q.name),
+                        frames = (textFrames + imageFrames)
+                            .sortedBy(KeyedPrioritizedFrame::priority)
+                    )
+                    PrioritizedFrame(frame, q.priority.toInt())
+                }
+            }.awaitAll()
+    }
+
+private fun QuizQueries.getPrioritizedImageFrames(quizId: Long): List<PrioritizedFrame> =
     getImageFramesByQuizId(quizId) { id, filename, width, height, altText, priority ->
         PrioritizedFrame(
             frame = Frame.Image(ImageFrame(id, filename, width, height, altText)),
             priority = priority.toInt()
         )
     }
-        .asFlow()
-        .mapToList(Dispatchers.IO)
+        .executeAsList()
 
-private fun QuizQueries.getPrioritizedTextFrameFlow(quizId: Long): Flow<List<PrioritizedFrame>> =
+private fun QuizQueries.getPrioritizedTextFrames(quizId: Long): List<PrioritizedFrame> =
     getTextFramesByQuizId(quizId) { id, content, priority ->
         PrioritizedFrame(
             frame = Frame.Text(TextFrame(id, content)),
             priority = priority.toInt()
         )
     }
-        .asFlow()
-        .mapToList(Dispatchers.IO)
+        .executeAsList()
 
 fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
     starter.asFlow()
         .mapToList(Dispatchers.IO)
         .map { quizzes ->
             quizzes.map { quiz ->
-                getPrioritizedOptionsFrameFlow(quiz.id)
-                    .concatOrThrow(getPrioritizedTextFrameFlow(quiz.id))
-                    .concatOrThrow(getPrioritizedImageFrameFlow(quiz.id))
-                    .map {
-                        QuizFrames(
-                            quiz = quiz,
-                            frames = it.sortedBy(PrioritizedFrame::priority)
+                val frames =
+                    coroutineScope {
+                        listOf(
+                            async {
+                                getPrioritizedOptionsFrames(quiz.id)
+                            },
+                            async {
+                                getPrioritizedTextFrames(quiz.id)
+                            },
+                            async {
+                                getPrioritizedImageFrames(quiz.id)
+                            }
                         )
                     }
-                    .last()
+                        .awaitAll()
+                        .flatten()
+
+                QuizFrames(
+                    quiz = quiz,
+                    frames = frames.sortedBy(PrioritizedFrame::priority)
+                )
             }
         }
 

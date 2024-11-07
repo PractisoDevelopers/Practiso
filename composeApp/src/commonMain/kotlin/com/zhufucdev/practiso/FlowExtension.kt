@@ -1,13 +1,6 @@
 package com.zhufucdev.practiso
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.combine
 
-fun <T> Flow<T>.concatOrThrow(others: Flow<T>) = onCompletion {
-    if (it == null) {
-        emitAll(others)
-    } else {
-        throw it
-    }
-}
+fun <T> Flow<List<T>>.concat(others: Flow<List<T>>) = combine(others) { a, b -> a + b }

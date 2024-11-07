@@ -82,10 +82,8 @@ fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<PractisoOpt
                     PractisoOption.Dimension(
                         dimension = it,
                         quizCount = db.getQuizCountByDimension(it.id)
-                            .asFlow()
-                            .mapToList(Dispatchers.IO)
-                            .map { it.first().toInt() }
-                            .last()
+                            .executeAsOne()
+                            .toInt()
                     )
                 }
             }.awaitAll()
