@@ -126,7 +126,7 @@ DELETE FROM textFrame WHERE id = ?;
 
 getImageFramesByQuizId:
 SELECT I.*, priority
-FROM imageFrame I JOIN frameByQuiz Q ON Q.textFrameId = I.id
+FROM imageFrame I JOIN frameByQuiz Q ON Q.imageFrameId = I.id
 WHERE Q.quizId = ?;
 
 getImageFramesByOptionsFrameId:
@@ -173,6 +173,10 @@ WHERE F.quizId = ?;
 associateLastOptionsFrameWithQuiz:
 INSERT INTO frameByQuiz(quizId, optionsFrameId, priority)
 VALUES (?, last_insert_rowid(), ?);
+
+associateOptionsFrameWithQuiz:
+INSERT INTO frameByQuiz(quizId, optionsFrameId, priority)
+VALUES (?, ?, ?);
 
 updateOptionsFrameName:
 UPDATE optionsFrame SET name = ? WHERE id = ?;

@@ -87,8 +87,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -526,14 +524,18 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                 }
 
                 is Frame.Options -> async {
-                    db.quizQueries.insertOptionsFrame(frame.optionsFrame.name)
-                    val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
-                    db.quizQueries.associateLastOptionsFrameWithQuiz(quizId, index.toLong())
+                    db.transaction {
+                        db.quizQueries.insertOptionsFrame(frame.optionsFrame.name)
+                        val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
+                        db.quizQueries.associateOptionsFrameWithQuiz(
+                            quizId,
+                            frameId,
+                            index.toLong()
+                        )
 
-                    frame.frames.map { optionFrame ->
-                        when (optionFrame.frame) {
-                            is Frame.Image -> async {
-                                db.transaction {
+                        frame.frames.forEach { optionFrame ->
+                            when (optionFrame.frame) {
+                                is Frame.Image -> {
                                     optionFrame.frame.insertTo(db)
                                     db.quizQueries.assoicateLastImageFrameWithOption(
                                         frameId,
@@ -541,10 +543,8 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                                         optionFrame.isKey
                                     )
                                 }
-                            }
 
-                            is Frame.Text -> async {
-                                db.transaction {
+                                is Frame.Text -> {
                                     db.quizQueries.insertTextFrame(optionFrame.frame.textFrame.content)
                                     db.quizQueries.assoicateLastTextFrameWithOption(
                                         frameId,
@@ -552,11 +552,11 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                                         maxOf(optionFrame.priority, 0).toLong()
                                     )
                                 }
-                            }
 
-                            is Frame.Options -> throw UnsupportedOperationException("Options frame inception")
+                                is Frame.Options -> throw UnsupportedOperationException("Options frame inception")
+                            }
                         }
-                    }.awaitAll()
+                    }
                 }
             }
         }.awaitAll()
