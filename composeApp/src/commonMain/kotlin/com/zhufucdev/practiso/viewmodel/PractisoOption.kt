@@ -13,7 +13,7 @@ import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.empty_span
 import practiso.composeapp.generated.resources.n_questions_span
-import practiso.composeapp.generated.resources.new_question_span
+import practiso.composeapp.generated.resources.new_question_para
 
 private typealias DbQuiz = com.zhufucdev.practiso.database.Quiz
 private typealias DbDimension = com.zhufucdev.practiso.database.Dimension
@@ -28,7 +28,8 @@ sealed interface PractisoOption {
     data class Quiz(val quiz: DbQuiz, val preview: String?) : PractisoOption {
         @Composable
         override fun titleString(): String {
-            return quiz.name ?: stringResource(Res.string.new_question_span)
+            return quiz.name?.takeIf(String::isNotEmpty)
+                ?: stringResource(Res.string.new_question_para)
         }
 
         @Composable
@@ -62,7 +63,8 @@ fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
                 async {
                     PractisoOption.Quiz(
                         quiz = it.quiz,
-                        preview = it.frames.firstOrNull()?.frame?.getPreviewText()
+                        preview = it.frames.map { async { it.frame.getPreviewText() } }.awaitAll()
+                            .joinToString(" ")
                     )
                 }
             }.awaitAll()

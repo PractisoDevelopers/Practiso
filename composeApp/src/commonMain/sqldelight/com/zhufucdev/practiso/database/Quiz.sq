@@ -97,7 +97,7 @@ WHERE Q.quizId = ?;
 getTextFrameByOptionsFrameId:
 SELECT T.*, isKey, priority
 FROM textFrame T JOIN frameByOptionsFrame F ON F.textFrameId = T.id
-WHERE F.textFrameId = ?;
+WHERE F.optionsFrameId = ?;
 
 insertTextFrame:
 INSERT INTO textFrame(content)
