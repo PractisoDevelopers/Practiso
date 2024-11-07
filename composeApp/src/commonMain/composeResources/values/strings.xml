@@ -65,4 +65,5 @@
     <string name="pick_an_image_for_this_frame_para">Pick an image for this frame</string>
     <string name="replace_para">Replace</string>
     <string name="clear_para">Clear</string>
+    <string name="save_para">Save</string>
 </resources>

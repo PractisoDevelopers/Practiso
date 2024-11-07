@@ -90,7 +90,7 @@ fun OptionsFrameSkeleton(
         }
     },
 ) {
-    Column {
+    Column(modifier) {
         Box(Modifier.fillMaxWidth()) {
             CompositionLocalProvider(
                 LocalTextStyle provides MaterialTheme.typography.labelLarge
@@ -100,7 +100,6 @@ fun OptionsFrameSkeleton(
         }
         Column(
             verticalArrangement = Arrangement.spacedBy(PaddingSmall),
-            modifier = modifier
         ) {
             content(this)
         }

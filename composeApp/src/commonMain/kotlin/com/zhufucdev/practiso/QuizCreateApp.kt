@@ -64,6 +64,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -84,6 +85,9 @@ import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
 import com.zhufucdev.practiso.composable.stroker
 import com.zhufucdev.practiso.composition.combineClickable
+import com.zhufucdev.practiso.database.ImageFrame
+import com.zhufucdev.practiso.database.OptionsFrame
+import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
 import com.zhufucdev.practiso.platform.BitmapLoader
@@ -110,6 +114,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.add_frame_para
+import practiso.composeapp.generated.resources.baseline_content_save_outline
 import practiso.composeapp.generated.resources.baseline_elevator_down
 import practiso.composeapp.generated.resources.baseline_image
 import practiso.composeapp.generated.resources.cancel_para
@@ -139,6 +144,7 @@ import practiso.composeapp.generated.resources.replace_para
 import practiso.composeapp.generated.resources.sample_image_para
 import practiso.composeapp.generated.resources.sample_option_para
 import practiso.composeapp.generated.resources.sample_text_para
+import practiso.composeapp.generated.resources.save_para
 import practiso.composeapp.generated.resources.set_as_key_span
 import practiso.composeapp.generated.resources.text_frame_span
 import practiso.composeapp.generated.resources.text_option_para
@@ -153,6 +159,8 @@ fun QuizCreateApp(
     val topBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scaffoldState = rememberBottomSheetScaffoldState()
     val contentScrollState = rememberLazyListState()
+    var idCounter by remember { mutableLongStateOf(0) }
+
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -182,6 +190,24 @@ fun QuizCreateApp(
                             Icon(
                                 Icons.AutoMirrored.Default.ArrowBack,
                                 contentDescription = stringResource(Res.string.navigate_up_para)
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        state = rememberTooltipState(),
+                        tooltip = {
+                            PlainTooltip { Text(stringResource(Res.string.save_para)) }
+                        }
+                    ) {
+                        IconButton(
+                            onClick = { }
+                        ) {
+                            Icon(
+                                painterResource(Res.drawable.baseline_content_save_outline),
+                                contentDescription = null
                             )
                         }
                     }
@@ -239,13 +265,21 @@ fun QuizCreateApp(
                 Button(
                     onClick = {
                         when (pagerState.currentPage) {
-                            0 -> quizViewModel.frames.add(Frame.Text())
-                            1 -> quizViewModel.frames.add(Frame.Image())
-                            2 -> quizViewModel.frames.add(Frame.Options())
+                            0 -> quizViewModel.frames.add(
+                                Frame.Text(TextFrame(idCounter++, ""))
+                            )
+
+                            1 -> quizViewModel.frames.add(
+                                Frame.Image(ImageFrame(idCounter++, "", 0, 0, null))
+                            )
+
+                            2 -> quizViewModel.frames.add(
+                                Frame.Options(OptionsFrame(idCounter++, null))
+                            )
                         }
                         coroutine.launch {
+                            contentScrollState.scrollToItem(quizViewModel.frames.lastIndex)
                             scaffoldState.bottomSheetState.partialExpand()
-                            contentScrollState.animateScrollToItem(quizViewModel.frames.lastIndex)
                         }
                     },
                 ) {
@@ -296,12 +330,15 @@ fun QuizCreateApp(
                 state = contentScrollState
             ) {
                 quizViewModel.frames.forEachIndexed { index, frame ->
-                    item {
+                    item(frame.id) {
                         when (frame) {
                             is Frame.Image -> {
-                                EditableImageFrame(value = frame,
+                                EditableImageFrame(
+                                    value = frame,
                                     onValueChange = { quizViewModel.frames[index] = it },
-                                    onDelete = { quizViewModel.frames.removeAt(index) })
+                                    onDelete = { quizViewModel.frames.removeAt(index) },
+                                    modifier = Modifier.animateItem()
+                                )
                             }
 
                             is Frame.Options -> {
@@ -309,7 +346,8 @@ fun QuizCreateApp(
                                     onValueChange = { quizViewModel.frames[index] = it },
                                     onDelete = {
                                         quizViewModel.frames.removeAt(index)
-                                    })
+                                    },
+                                    modifier = Modifier.animateItem())
                             }
 
                             is Frame.Text -> {
@@ -317,7 +355,8 @@ fun QuizCreateApp(
                                     onValueChange = { quizViewModel.frames[index] = it },
                                     onDelete = {
                                         quizViewModel.frames.removeAt(index)
-                                    })
+                                    },
+                                    modifier = Modifier.animateItem())
                             }
                         }
                     }
@@ -342,6 +381,13 @@ fun QuizCreateApp(
             })
     }
 }
+
+private val Frame.id: Long
+    get() = when (this) {
+        is Frame.Image -> imageFrame.id
+        is Frame.Options -> optionsFrame.id
+        is Frame.Text -> textFrame.id
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -482,12 +528,13 @@ private fun EditableTextFrame(
     value: Frame.Text,
     onValueChange: (Frame.Text) -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var editing by remember { mutableStateOf(false) }
     var contextMenu by remember { mutableStateOf(false) }
     var buffer by remember { mutableStateOf(value.textFrame.content) }
 
-    AnimatedContent(!editing) { showTextField ->
+    AnimatedContent(!editing, modifier) { showTextField ->
         if (showTextField) {
             GlowingSurface(
                 onClick = { editing = true },
@@ -550,6 +597,7 @@ private fun EditableOptionsFrame(
     value: Frame.Options,
     onValueChange: (Frame.Options) -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var frame by remember { mutableStateOf(value.optionsFrame) }
     val options = remember { value.frames.toMutableStateList() }
@@ -571,7 +619,7 @@ private fun EditableOptionsFrame(
     }
 
     OptionsFrameSkeleton(
-        modifier = if (masterMenu) Modifier.stroker() else Modifier,
+        modifier = modifier then if (masterMenu) Modifier.stroker() else Modifier,
         label = {
             AnimatedContent(editingName) { showTextField ->
                 if (!showTextField) {
@@ -750,7 +798,8 @@ private fun EditableImageFrame(
     value: Frame.Image,
     onValueChange: (Frame.Image) -> Unit,
     onDelete: () -> Unit,
-    deleteImageOnRemoval: Boolean = true
+    deleteImageOnRemoval: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
     var editingAltText by remember { mutableStateOf(false) }
     var masterMenu by remember { mutableStateOf(false) }
@@ -803,7 +852,7 @@ private fun EditableImageFrame(
     }
 
     ImageFrameSkeleton(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth() then modifier,
         image = {
             bitmap?.let {
                 Image(
