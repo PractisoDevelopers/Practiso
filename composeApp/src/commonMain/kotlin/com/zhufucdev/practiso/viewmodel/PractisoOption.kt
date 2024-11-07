@@ -64,7 +64,7 @@ fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
                     PractisoOption.Quiz(
                         quiz = it.quiz,
                         preview = it.frames.map { async { it.frame.getPreviewText() } }.awaitAll()
-                            .joinToString(" ")
+                            .joinToString("  ")
                     )
                 }
             }.awaitAll()

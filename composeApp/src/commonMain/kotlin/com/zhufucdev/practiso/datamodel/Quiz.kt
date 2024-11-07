@@ -14,7 +14,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -57,8 +56,8 @@ sealed interface Frame {
     ) : Frame {
         override suspend fun getPreviewText(): String {
             return optionsFrame.name
-                ?: frames.mapIndexed { index, frame -> "${index + 1}. ${frame.frame.getPreviewText()}" }
-                    .joinToString("; ")
+                ?: frames.mapIndexed { index, frame -> "${'A' + index % 26}. ${frame.frame.getPreviewText()}" }
+                    .joinToString(" ")
         }
     }
 }
