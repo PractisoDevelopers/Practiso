@@ -504,8 +504,10 @@ private fun SampleFrameContainer(
 
 private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
     withContext(Dispatchers.IO) {
-        db.quizQueries.insertQuiz(name, Clock.System.now(), null)
-        val quizId = db.quizQueries.lastInsertRowId().executeAsOne()
+        val quizId = db.transactionWithResult {
+            db.quizQueries.insertQuiz(name, Clock.System.now(), null)
+            db.quizQueries.lastInsertRowId().executeAsOne()
+        }
 
         mapIndexed { index, frame ->
             when (frame) {
@@ -524,7 +526,7 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                 }
 
                 is Frame.Options -> async {
-                    db.transaction {
+                    val frameId = db.transactionWithResult {
                         db.quizQueries.insertOptionsFrame(frame.optionsFrame.name)
                         val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
                         db.quizQueries.associateOptionsFrameWithQuiz(
@@ -532,10 +534,13 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                             frameId,
                             index.toLong()
                         )
+                        frameId
+                    }
 
-                        frame.frames.forEach { optionFrame ->
-                            when (optionFrame.frame) {
-                                is Frame.Image -> {
+                    frame.frames.map { optionFrame ->
+                        when (optionFrame.frame) {
+                            is Frame.Image -> async {
+                                db.transaction {
                                     optionFrame.frame.insertTo(db)
                                     db.quizQueries.assoicateLastImageFrameWithOption(
                                         frameId,
@@ -543,8 +548,10 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                                         optionFrame.isKey
                                     )
                                 }
+                            }
 
-                                is Frame.Text -> {
+                            is Frame.Text -> async {
+                                db.transaction {
                                     db.quizQueries.insertTextFrame(optionFrame.frame.textFrame.content)
                                     db.quizQueries.assoicateLastTextFrameWithOption(
                                         frameId,
@@ -552,11 +559,11 @@ private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
                                         maxOf(optionFrame.priority, 0).toLong()
                                     )
                                 }
-
-                                is Frame.Options -> throw UnsupportedOperationException("Options frame inception")
                             }
+
+                            is Frame.Options -> throw UnsupportedOperationException("Options frame inception")
                         }
-                    }
+                    }.awaitAll()
                 }
             }
         }.awaitAll()
