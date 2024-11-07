@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -151,6 +152,7 @@ fun QuizCreateApp(
     val coroutine = rememberCoroutineScope()
     val topBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scaffoldState = rememberBottomSheetScaffoldState()
+    val contentScrollState = rememberLazyListState()
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -243,6 +245,7 @@ fun QuizCreateApp(
                         }
                         coroutine.launch {
                             scaffoldState.bottomSheetState.partialExpand()
+                            contentScrollState.animateScrollToItem(quizViewModel.frames.lastIndex)
                         }
                     },
                 ) {
@@ -288,8 +291,9 @@ fun QuizCreateApp(
             )
         } else {
             LazyColumn(
-                Modifier.fillMaxSize().padding(p).padding(horizontal = PaddingBig)
-                    .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
+                modifier = Modifier.fillMaxSize().padding(p).padding(horizontal = PaddingBig)
+                    .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
+                state = contentScrollState
             ) {
                 quizViewModel.frames.forEachIndexed { index, frame ->
                     item {
