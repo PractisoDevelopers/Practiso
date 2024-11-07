@@ -1,17 +1,12 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.compose.runtime.Composable
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.database.QuizQueries
 import com.zhufucdev.practiso.datamodel.QuizFrames
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -25,31 +20,31 @@ private typealias DbDimension = com.zhufucdev.practiso.database.Dimension
 
 sealed interface PractisoOption {
     @Composable
-    fun titleText(): String
+    fun titleString(): String
 
     @Composable
-    fun previewText(): String
+    fun previewString(): String
 
     data class Quiz(val quiz: DbQuiz, val preview: String?) : PractisoOption {
         @Composable
-        override fun titleText(): String {
+        override fun titleString(): String {
             return quiz.name ?: stringResource(Res.string.new_question_span)
         }
 
         @Composable
-        override fun previewText(): String {
+        override fun previewString(): String {
             return preview ?: stringResource(Res.string.empty_span)
         }
     }
 
     data class Dimension(val dimension: DbDimension, val quizCount: Int) : PractisoOption {
         @Composable
-        override fun titleText(): String {
+        override fun titleString(): String {
             return dimension.name
         }
 
         @Composable
-        override fun previewText(): String =
+        override fun previewString(): String =
             if (quizCount > 0)
                 pluralStringResource(
                     Res.plurals.n_questions_span,

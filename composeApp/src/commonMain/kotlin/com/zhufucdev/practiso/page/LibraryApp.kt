@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -132,8 +131,8 @@ fun LibraryApp(
                     },
                     content = {
                         ContentSkeleton(
-                            label = { it.titleText() },
-                            preview = { it.previewText() }
+                            label = { Text(it.titleString()) },
+                            preview = { Text(it.previewString()) }
                         )
                     },
                     id = { it.dimension.id }
@@ -146,8 +145,8 @@ fun LibraryApp(
                     },
                     content = {
                         ContentSkeleton(
-                            label = { it.titleText() },
-                            preview = { it.previewText() }
+                            label = { Text(it.titleString()) },
+                            preview = { Text(it.previewString()) }
                         )
                     },
                     id = { it.quiz.id }

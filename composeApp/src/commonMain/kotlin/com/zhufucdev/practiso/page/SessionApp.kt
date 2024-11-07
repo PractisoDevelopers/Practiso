@@ -402,7 +402,7 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
                             },
                             modifier = Modifier.padding(PaddingNormal)
                         ) {
-                            Text(it.previewText(), style = MaterialTheme.typography.titleMedium)
+                            Text(it.previewString(), style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }

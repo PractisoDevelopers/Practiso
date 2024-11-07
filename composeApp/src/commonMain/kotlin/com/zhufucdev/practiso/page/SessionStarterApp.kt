@@ -99,8 +99,8 @@ fun SessionStarter(
                         it.forEachIndexed { index, quiz ->
                             item(quiz.quiz.id) {
                                 QuizSkeleton(
-                                    label = { Text(quiz.titleText()) },
-                                    preview = { Text(quiz.previewText()) }
+                                    label = { Text(quiz.titleString()) },
+                                    preview = { Text(quiz.previewString()) }
                                 )
                                 if (index < it.lastIndex) {
                                     Spacer(Modifier.height(PaddingNormal))
