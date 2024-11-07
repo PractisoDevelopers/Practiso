@@ -23,7 +23,6 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.copyFrom
 import com.zhufucdev.practiso.datamodel.Frame
-import com.zhufucdev.practiso.platform.BitmapLoader
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.style.PaddingNormal
@@ -45,13 +43,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okio.buffer
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
-import practiso.composeapp.generated.resources.baseline_image
 import practiso.composeapp.generated.resources.clear_para
-import practiso.composeapp.generated.resources.image_is_missing_or_empty_span
 import practiso.composeapp.generated.resources.new_image_frame_para
 import practiso.composeapp.generated.resources.pick_an_image_for_this_frame_para
 import practiso.composeapp.generated.resources.remove_para
@@ -62,26 +56,16 @@ fun EditableImageFrame(
     value: Frame.Image,
     onValueChange: (Frame.Image) -> Unit,
     onDelete: () -> Unit,
+    cache: BitmapRepository = remember { BitmapRepository() },
     deleteImageOnRemoval: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     var editingAltText by remember { mutableStateOf(false) }
     var masterMenu by remember { mutableStateOf(false) }
+    val platform = getPlatform()
+    val imageState = rememberFileImageState()
 
     val coroutine = rememberCoroutineScope()
-    val bitmap by remember(value) {
-        val platform = getPlatform()
-        derivedStateOf {
-            value.imageFrame.filename
-                .takeIf { it.isNotBlank() }
-                ?.let { platform.resourcePath.resolve(it) }
-                ?.takeIf { platform.filesystem.exists(it) }
-                ?.let { platform.filesystem.source(it) }
-                ?.buffer()
-                ?.readByteArray()
-                ?.let(BitmapLoader::from)
-        }
-    }
     val pickerLauncher = rememberFilePickerLauncher(
         type = PickerType.Image,
         title = stringResource(Res.string.pick_an_image_for_this_frame_para)
@@ -90,7 +74,6 @@ fun EditableImageFrame(
             return@rememberFilePickerLauncher
         }
 
-        val platform = getPlatform()
         if (value.imageFrame.filename.isNotBlank()) {
             platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
         }
@@ -109,7 +92,6 @@ fun EditableImageFrame(
     }
 
     fun deleteCurrentImage() {
-        val platform = getPlatform()
         if (value.imageFrame.filename.isNotBlank()) {
             platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
         }
@@ -118,15 +100,58 @@ fun EditableImageFrame(
     ImageFrameSkeleton(
         modifier = Modifier.fillMaxWidth() then modifier,
         image = {
-            bitmap?.let {
-                Image(
-                    bitmap = it,
+            @Composable
+            fun imageContent(modifier: Modifier = Modifier) {
+                FileImage(
+                    path = value.imageFrame.filename.takeIf(String::isNotBlank)
+                        ?.let { platform.resourcePath.resolve(it) },
                     contentDescription = value.imageFrame.altText,
-                    modifier = Modifier.combineClickable(
-                        onClick = { },
-                        onSecondaryClick = { masterMenu = true }
-                    )
+                    state = imageState,
+                    modifier = modifier
                 )
+            }
+
+            if (imageState.image !is ImageLoaderState.Loaded) {
+                OutlinedCard(
+                    Modifier.width(150.dp)
+                        .combineClickable(onSecondaryClick = { masterMenu = true })
+                ) {
+                    Box(Modifier.padding(PaddingNormal).fillMaxSize()) {
+                        imageContent(Modifier.align(Alignment.Center).size(60.dp))
+                        SmallFloatingActionButton(
+                            onClick = pickerLauncher::launch,
+                            elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                            modifier = Modifier.align(Alignment.BottomEnd)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null)
+                        }
+                        DropdownMenu(
+                            expanded = masterMenu,
+                            onDismissRequest = { masterMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.remove_para)) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    if (deleteImageOnRemoval) {
+                                        deleteCurrentImage()
+                                    }
+                                    onDelete()
+                                }
+                            )
+                        }
+                    }
+                }
+            } else {
+                imageContent(Modifier.combineClickable(
+                    onClick = { },
+                    onSecondaryClick = { masterMenu = true },
+                ))
                 DropdownMenu(
                     expanded = masterMenu,
                     onDismissRequest = { masterMenu = false }
@@ -158,39 +183,6 @@ fun EditableImageFrame(
                             onValueChange(value.copy(imageFrame = value.imageFrame.copy(filename = "")))
                         }
                     )
-                }
-            } ?: OutlinedCard(
-                Modifier.width(150.dp)
-                    .combineClickable(onSecondaryClick = { masterMenu = true })
-            ) {
-                Box(Modifier.padding(PaddingNormal).fillMaxSize()) {
-                    Icon(
-                        painterResource(Res.drawable.baseline_image),
-                        contentDescription = stringResource(Res.string.image_is_missing_or_empty_span),
-                        modifier = Modifier.align(Alignment.Center).size(60.dp)
-                    )
-                    SmallFloatingActionButton(
-                        onClick = pickerLauncher::launch,
-                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
-                        modifier = Modifier.align(Alignment.BottomEnd)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = null)
-                    }
-                    DropdownMenu(
-                        expanded = masterMenu,
-                        onDismissRequest = { masterMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.remove_para)) },
-                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
-                            onClick = {
-                                if (deleteImageOnRemoval) {
-                                    deleteCurrentImage()
-                                }
-                                onDelete()
-                            }
-                        )
-                    }
                 }
             }
         },
