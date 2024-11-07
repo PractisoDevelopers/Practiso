@@ -49,6 +49,7 @@ fun EditableOptionsFrame(
     value: Frame.Options,
     onValueChange: (Frame.Options) -> Unit,
     onDelete: () -> Unit,
+    imageCache: BitmapRepository = remember { BitmapRepository() },
     modifier: Modifier = Modifier,
 ) {
     var frame by remember { mutableStateOf(value.optionsFrame) }
@@ -168,7 +169,8 @@ fun EditableOptionsFrame(
                                 onDelete = {
                                     options.removeAt(index)
                                     notifyValueChangeWithLocalBufferDebounced()
-                                }
+                                },
+                                cache = imageCache
                             )
 
                             is Frame.Text -> EditableTextFrame(
