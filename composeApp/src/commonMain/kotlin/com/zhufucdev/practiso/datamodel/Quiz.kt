@@ -57,7 +57,7 @@ sealed interface Frame {
     ) : Frame {
         override suspend fun getPreviewText(): String {
             return optionsFrame.name
-                ?: frames.mapIndexed { index, frame -> "$index. ${frame.frame.getPreviewText()}" }
+                ?: frames.mapIndexed { index, frame -> "${index + 1}. ${frame.frame.getPreviewText()}" }
                     .joinToString("; ")
         }
     }
@@ -75,10 +75,10 @@ private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<
     coroutineScope {
         getOptionsFrameByQuizId(quizId)
             .executeAsList()
-            .map { q ->
+            .map { optionsFrame ->
                 async {
                     val textFrames =
-                        getTextFrameByOptionsFrameId(q.id) { id, content, isKey, priority ->
+                        getTextFrameByOptionsFrameId(optionsFrame.id) { id, content, isKey, priority ->
                             KeyedPrioritizedFrame(
                                 frame = Frame.Text(TextFrame(id, content)),
                                 isKey = isKey,
@@ -86,9 +86,8 @@ private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<
                             )
                         }.executeAsList()
 
-
                     val imageFrames =
-                        getImageFramesByOptionsFrameId(q.id) { id, filename, width, height, altText, isKey, priority ->
+                        getImageFramesByOptionsFrameId(optionsFrame.id) { id, filename, width, height, altText, isKey, priority ->
                             KeyedPrioritizedFrame(
                                 frame = Frame.Image(
                                     ImageFrame(
@@ -105,11 +104,11 @@ private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<
                         }.executeAsList()
 
                     val frame = Frame.Options(
-                        optionsFrame = OptionsFrame(q.id, q.name),
+                        optionsFrame = OptionsFrame(optionsFrame.id, optionsFrame.name),
                         frames = (textFrames + imageFrames)
                             .sortedBy(KeyedPrioritizedFrame::priority)
                     )
-                    PrioritizedFrame(frame, q.priority.toInt())
+                    PrioritizedFrame(frame, optionsFrame.priority.toInt())
                 }
             }.awaitAll()
     }
@@ -140,15 +139,9 @@ fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
                 val frames =
                     coroutineScope {
                         listOf(
-                            async {
-                                getPrioritizedOptionsFrames(quiz.id)
-                            },
-                            async {
-                                getPrioritizedTextFrames(quiz.id)
-                            },
-                            async {
-                                getPrioritizedImageFrames(quiz.id)
-                            }
+                            async { getPrioritizedOptionsFrames(quiz.id) },
+                            async { getPrioritizedTextFrames(quiz.id) },
+                            async { getPrioritizedImageFrames(quiz.id) }
                         )
                     }
                         .awaitAll()
@@ -201,7 +194,6 @@ private class ImageSerializer : KSerializer<Frame.Image> {
         element("alt_text", serialDescriptor<String>(), isOptional = true)
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
     override fun deserialize(decoder: Decoder): Frame.Image = decoder.decodeStructure(descriptor) {
         var id = -1L
         var filename = ""
