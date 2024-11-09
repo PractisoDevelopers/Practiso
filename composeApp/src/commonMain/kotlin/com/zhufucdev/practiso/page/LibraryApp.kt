@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
@@ -35,6 +37,7 @@ import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.database.Template
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -118,7 +121,11 @@ fun LibraryApp(
                     content = {
                         ContentSkeleton(
                             label = { Text(it.name) },
-                            preview = { it.description?.let { p -> Text(p) } }
+                            preview = {
+                                it.description?.let { p ->
+                                    Text(p, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
                         )
                     },
                     id = Template::id
@@ -132,7 +139,13 @@ fun LibraryApp(
                     content = {
                         ContentSkeleton(
                             label = { Text(it.titleString()) },
-                            preview = { Text(it.previewString()) }
+                            preview = {
+                                Text(
+                                    text = it.previewString(),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         )
                     },
                     id = { it.dimension.id }
@@ -146,7 +159,23 @@ fun LibraryApp(
                     content = {
                         ContentSkeleton(
                             label = { Text(it.titleString()) },
-                            preview = { Text(it.previewString()) }
+                            preview = {
+                                Text(
+                                    text = it.previewString(),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                coroutine.launch {
+                                    Navigator.navigate(
+                                        Navigation.Goto(AppDestination.QuizCreate),
+                                        options = listOf(
+                                            NavigationOption.OpenQuiz(it.quiz.id)
+                                        )
+                                    )
+                                }
+                            }
                         )
                     },
                     id = { it.quiz.id }

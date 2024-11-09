@@ -3,19 +3,28 @@ package com.zhufucdev.practiso.platform
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
 
 enum class AppDestination {
     MainView,
     QuizCreate
 }
 
+@Serializable
+sealed interface NavigationOption {
+    @Serializable
+    data class OpenQuiz(val quizId: Long) : NavigationOption
+}
 
 sealed interface Navigation {
     interface WithDestination : Navigation {
         val destination: AppDestination
     }
 
-    data class Goto(override val destination: AppDestination) : WithDestination
+    data class Goto(
+        override val destination: AppDestination,
+    ) : WithDestination
+
     data object Forward : Navigation
     data object Backward : Navigation
     data object Home : WithDestination {
@@ -23,33 +32,40 @@ sealed interface Navigation {
     }
 }
 
-data class NavigationDestination(val navigation: Navigation, val destination: AppDestination)
-
-infix fun Navigation.and(destination: AppDestination) = NavigationDestination(this, destination)
-
+data class NavigationStateSnapshot(
+    val navigation: Navigation,
+    val destination: AppDestination,
+    val options: List<NavigationOption> = emptyList(),
+)
 
 interface AppNavigator {
-    val current: StateFlow<NavigationDestination>
-    suspend fun navigate(navigation: Navigation)
+    val current: StateFlow<NavigationStateSnapshot>
+    suspend fun navigate(navigation: Navigation, options: List<NavigationOption> = emptyList())
 }
 
+data class NavigatorStackItem(
+    val destination: AppDestination,
+    val options: List<NavigationOption>,
+)
+
 abstract class StackNavigator : AppNavigator {
-    protected val _navigation =
-        MutableStateFlow(Navigation.Home and Navigation.Home.destination)
+    protected val state =
+        MutableStateFlow(NavigationStateSnapshot(Navigation.Home, Navigation.Home.destination))
 
-    override val current: StateFlow<NavigationDestination> = _navigation.asStateFlow()
+    override val current: StateFlow<NavigationStateSnapshot> = state.asStateFlow()
 
-    protected val backstack = mutableListOf(Navigation.Home.destination)
+    protected val backstack =
+        mutableListOf(NavigatorStackItem(Navigation.Home.destination, emptyList()))
     protected var pointer = 0
 
-    override suspend fun navigate(navigation: Navigation) {
+    override suspend fun navigate(navigation: Navigation, options: List<NavigationOption>) {
         when (navigation) {
             is Navigation.Backward -> {
                 if (pointer <= 0) {
                     error("Backstack will become empty")
                 }
                 val dest = backstack[--pointer]
-                _navigation.emit(navigation and dest)
+                state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options + options))
             }
 
             is Navigation.Forward -> {
@@ -57,7 +73,7 @@ abstract class StackNavigator : AppNavigator {
                     error("Backstack is currently at the edge")
                 }
                 val dest = backstack[++pointer]
-                _navigation.emit(navigation and dest)
+                state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options + options))
             }
 
             is Navigation.WithDestination -> {
@@ -66,15 +82,15 @@ abstract class StackNavigator : AppNavigator {
                         backstack.removeAt(pointer)
                     }
                 }
-                backstack.add(navigation.destination)
+                backstack.add(NavigatorStackItem(navigation.destination, options))
                 pointer++
-                _navigation.emit(navigation and navigation.destination)
+                state.emit(NavigationStateSnapshot(navigation, navigation.destination, options))
             }
         }
-        onNavigate(_navigation.value)
+        onNavigate(state.value)
     }
 
-    open suspend fun onNavigate(model: NavigationDestination) {
+    open suspend fun onNavigate(model: NavigationStateSnapshot) {
     }
 }
 

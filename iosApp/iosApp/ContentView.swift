@@ -38,8 +38,8 @@ struct ContentView: View {
         NavigationStack(path: $viewModel.navigationPath) {
             ComposeView()
                 .ignoresSafeArea(.keyboard) // Compose has own keyboard handler
-                .navigationDestination(for: AppDestination.self) { screen in
-                    switch screen {
+                .navigationDestination(for: NavigatorStackItem.self) { screen in
+                    switch screen.destination {
                     case .quizCreate:
                         QuizCreateView()
                             .ignoresSafeArea(.keyboard)
@@ -58,7 +58,7 @@ struct ContentView: View {
 extension ContentView {
     @MainActor
     class ViewModel: ObservableObject {
-        @Published var navigationPath: [AppDestination] = []
+        @Published var navigationPath: [NavigatorStackItem] = []
         var subscription: AnyCancellable?
         
         init() {
@@ -66,7 +66,7 @@ extension ContentView {
                 Task {
                     do {
                         try await UINavigator.shared.mutateBackstack(
-                            newValue: [AppDestination.mainView] + path,
+                            newValue: [NavigatorStackItem(destination: AppDestination.mainView, options: [])] + path,
                             pointer: Int32(path.count)
                         )
                     } catch {

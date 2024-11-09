@@ -7,14 +7,21 @@ import androidx.lifecycle.lifecycleScope
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.AppNavigator
 import com.zhufucdev.practiso.platform.Navigation
-import com.zhufucdev.practiso.platform.NavigationDestination
-import com.zhufucdev.practiso.platform.and
+import com.zhufucdev.practiso.platform.NavigationStateSnapshot
+import com.zhufucdev.practiso.platform.NavigationOption
+import com.zhufucdev.practiso.platform.NavigatorStackItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.protobuf.ProtoBuf
+import kotlinx.serialization.serializer
 
 abstract class NavigatorComponentActivity : ComponentActivity() {
+    private lateinit var navigationOptions: List<NavigationOption>
+
+    @OptIn(ExperimentalSerializationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val destination =
@@ -24,14 +31,23 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
         repeat(backstack.lastIndex - pointer) {
             backstack.removeAt(backstack.lastIndex)
         }
-        backstack.add(destination)
+        navigationOptions =
+            intent.getByteArrayExtra("options")
+                ?.let { ProtoBuf.decodeFromByteArray(serializer<List<NavigationOption>>(), it) }
+                ?: emptyList()
+
+        backstack.add(NavigatorStackItem(destination, navigationOptions))
         pointer = backstack.lastIndex
         lifecycleScope.launch {
-            _navigation.emit(
+            state.emit(
                 if (destination == Navigation.Home.destination) {
-                    Navigation.Home and destination
+                    NavigationStateSnapshot(Navigation.Home, destination, navigationOptions)
                 } else {
-                    Navigation.Goto(destination) and destination
+                    NavigationStateSnapshot(
+                        Navigation.Goto(destination),
+                        destination,
+                        navigationOptions
+                    )
                 }
             )
         }
@@ -45,28 +61,34 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
     override fun finish() {
         pointer--
         lifecycleScope.launch {
-            _navigation.emit(Navigation.Backward and backstack[pointer])
+            state.emit(
+                NavigationStateSnapshot(
+                    Navigation.Backward,
+                    backstack[pointer].destination
+                )
+            )
         }
         super.finish()
     }
 
     companion object : AppNavigator {
-        val backstack = mutableListOf(AppDestination.MainView)
+        val backstack = mutableListOf(NavigatorStackItem(AppDestination.MainView, emptyList()))
         private var pointer: Int = 0
 
         private var shared: NavigatorComponentActivity? = null
-        private val _navigation = MutableStateFlow(Navigation.Home and Navigation.Home.destination)
-        override val current: StateFlow<NavigationDestination> = _navigation.asStateFlow()
+        private val state =
+            MutableStateFlow(NavigationStateSnapshot(Navigation.Home, Navigation.Home.destination))
+        override val current: StateFlow<NavigationStateSnapshot> = state.asStateFlow()
 
-        override suspend fun navigate(navigation: Navigation) {
+        override suspend fun navigate(navigation: Navigation, options: List<NavigationOption>) {
             when (navigation) {
                 is Navigation.Forward -> {
                     if (pointer >= backstack.lastIndex) {
                         error("Backstack cannot move forwards")
                     }
                     val dest = backstack[++pointer]
-                    startActivity(dest)
-                    _navigation.emit(navigation and dest)
+                    startActivity(dest.destination, dest.options)
+                    state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options))
                 }
 
                 is Navigation.Backward -> {
@@ -88,9 +110,15 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                 AppDestination.QuizCreate -> QuizCreateActivity::class.java
             }
 
-        private fun startActivity(destination: AppDestination) {
+        @OptIn(ExperimentalSerializationApi::class)
+        private fun startActivity(
+            destination: AppDestination,
+            options: List<NavigationOption> = emptyList(),
+        ) {
             shared?.apply {
-                startActivity(Intent(this, getActivity(destination)))
+                startActivity(Intent(this, getActivity(destination)).apply {
+                    putExtra("options", ProtoBuf.encodeToByteArray(serializer(), options))
+                })
             } ?: error("Shared activity presents nothing")
         }
     }

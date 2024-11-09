@@ -6,12 +6,12 @@ actual val Navigator: AppNavigator
     get() = UINavigator
 
 object UINavigator : StackNavigator() {
-    val path = MutableStateFlow(emptyList<AppDestination>())
+    val path = MutableStateFlow(emptyList<NavigatorStackItem>())
 
-    override suspend fun onNavigate(model: NavigationDestination) {
+    override suspend fun onNavigate(model: NavigationStateSnapshot) {
         if (model.navigation is Navigation.Home) {
             backstack.clear()
-            backstack.add(AppDestination.MainView)
+            backstack.add(NavigatorStackItem(AppDestination.MainView, model.options))
             pointer = 0
         }
         emitPath()
@@ -19,7 +19,7 @@ object UINavigator : StackNavigator() {
 
     private suspend fun emitPath() {
         val p = backstack.slice(0 .. pointer)
-        val start = maxOf(p.lastIndexOf(AppDestination.MainView), 0) + 1
+        val start = maxOf(p.indexOfLast { it.destination == AppDestination.MainView }, 0) + 1
         path.emit(p.slice(start .. pointer))
     }
 
@@ -27,7 +27,7 @@ object UINavigator : StackNavigator() {
         navigate(Navigation.Home)
     }
 
-    suspend fun mutateBackstack(newValue: List<AppDestination>, pointer: Int) {
+    suspend fun mutateBackstack(newValue: List<NavigatorStackItem>, pointer: Int) {
         backstack.clear()
         backstack.addAll(newValue)
         this.pointer = pointer
