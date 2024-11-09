@@ -66,4 +66,5 @@
     <string name="replace_para">Replace</string>
     <string name="clear_para">Clear</string>
     <string name="save_para">Save</string>
+    <string name="requested_quiz_not_found_para">The requested question was not found</string>
 </resources>

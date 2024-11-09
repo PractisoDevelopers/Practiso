@@ -41,10 +41,12 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTooltipState
@@ -60,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -76,17 +79,22 @@ import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.Frame
+import com.zhufucdev.practiso.datamodel.PrioritizedFrame
+import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
+import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.*
 import com.zhufucdev.practiso.viewmodel.QuizViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -110,6 +118,7 @@ import practiso.composeapp.generated.resources.options_frame_span
 import practiso.composeapp.generated.resources.question_is_empty_para
 import practiso.composeapp.generated.resources.question_name_para
 import practiso.composeapp.generated.resources.rename_para
+import practiso.composeapp.generated.resources.requested_quiz_not_found_para
 import practiso.composeapp.generated.resources.sample_image_para
 import practiso.composeapp.generated.resources.sample_option_para
 import practiso.composeapp.generated.resources.sample_text_para
@@ -122,6 +131,92 @@ fun QuizCreateApp(
     model: QuizCreateViewModel = viewModel(factory = QuizCreateViewModel.Factory),
     quizViewModel: QuizViewModel = viewModel(factory = QuizViewModel.Factory),
 ) {
+    when (model.state) {
+        Ready -> Editor(model, quizViewModel)
+        else -> {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {},
+                        navigationIcon = { NavigateUpButton() }
+                    )
+                }
+            ) {
+                Box(Modifier.padding(it).fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (model.state == Pending) {
+                        CircularProgressIndicator()
+                    } else if (model.state == NotFound) {
+                        Text(
+                            stringResource(Res.string.requested_quiz_not_found_para),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+object QuizCreateApp {
+    suspend fun manipulateViewModelsWithNavigationOptions(
+        model: QuizCreateViewModel,
+        quizModel: QuizViewModel,
+        navigationOptions: List<NavigationOption>,
+    ) {
+        model.state = QuizCreateViewModel.State.Pending
+        val openQuiz = navigationOptions.filterIsInstance<NavigationOption.OpenQuiz>()
+        if (openQuiz.isNotEmpty()) {
+            val quizId = openQuiz.last().quizId
+            val quiz = Database.app.quizQueries
+                .getQuizFrames(Database.app.quizQueries.getQuizById(quizId))
+                .first()
+                .firstOrNull()
+            if (quiz == null) {
+                model.state = QuizCreateViewModel.State.NotFound
+            } else {
+                quizModel.apply {
+                    name = quiz.quiz.name ?: ""
+                    frames.addAll(quiz.frames.map(PrioritizedFrame::frame))
+                }
+
+                model.nameEditValue = quizModel.name
+                model.state = QuizCreateViewModel.State.Ready
+            }
+        } else {
+            model.state = QuizCreateViewModel.State.Ready
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NavigateUpButton() {
+    val coroutine = rememberCoroutineScope()
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = { PlainTooltip { Text(stringResource(Res.string.navigate_up_para)) } },
+        state = rememberTooltipState()
+    ) {
+        IconButton(
+            onClick = {
+                coroutine.launch {
+                    Navigator.navigate(Navigation.Backward)
+                }
+            },
+        ) {
+            Icon(
+                Icons.AutoMirrored.Default.ArrowBack,
+                contentDescription = stringResource(Res.string.navigate_up_para)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
     val coroutine = rememberCoroutineScope()
     val topBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scaffoldState = rememberBottomSheetScaffoldState()
@@ -151,26 +246,7 @@ fun QuizCreateApp(
                         })
                     }
                 },
-                navigationIcon = {
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip = { PlainTooltip { Text(stringResource(Res.string.navigate_up_para)) } },
-                        state = rememberTooltipState()
-                    ) {
-                        IconButton(
-                            onClick = {
-                                coroutine.launch {
-                                    Navigator.navigate(Navigation.Backward)
-                                }
-                            },
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Default.ArrowBack,
-                                contentDescription = stringResource(Res.string.navigate_up_para)
-                            )
-                        }
-                    }
-                },
+                navigationIcon = { NavigateUpButton() },
                 actions = {
                     TooltipBox(
                         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
@@ -185,7 +261,7 @@ fun QuizCreateApp(
                                     saving = true
                                     quizViewModel.frames.saveTo(
                                         Database.app,
-                                        quizViewModel.name
+                                        quizViewModel.name.takeIf(String::isNotEmpty)
                                     )
                                     Navigator.navigate(Navigation.Backward)
                                 }
@@ -316,7 +392,8 @@ fun QuizCreateApp(
                 )
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(p).padding(horizontal = PaddingBig)
+                    modifier = Modifier.fillMaxSize().padding(p)
+                        .padding(horizontal = PaddingBig)
                         .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
                     state = contentScrollState
                 ) {
@@ -502,7 +579,7 @@ private fun SampleFrameContainer(
     }
 }
 
-private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String) =
+private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String?) =
     withContext(Dispatchers.IO) {
         val quizId = db.transactionWithResult {
             db.quizQueries.insertQuiz(name, Clock.System.now(), null)

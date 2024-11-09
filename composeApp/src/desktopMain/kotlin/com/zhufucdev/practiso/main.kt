@@ -2,6 +2,7 @@ package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -9,20 +10,25 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.singleWindowApplication
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
 import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationStateSnapshot
 import com.zhufucdev.practiso.platform.PlatformInstance
 import com.zhufucdev.practiso.style.AppTypography
 import com.zhufucdev.practiso.style.darkScheme
 import com.zhufucdev.practiso.style.lightScheme
+import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
+import com.zhufucdev.practiso.viewmodel.QuizViewModel
 
 fun main() = singleWindowApplication(title = "Practiso") {
-    val destination by DesktopNavigator.current.collectAsState()
+    val navState by DesktopNavigator.current.collectAsState()
     val navController = rememberNavController()
 
     MaterialTheme(
@@ -31,31 +37,48 @@ fun main() = singleWindowApplication(title = "Practiso") {
     ) {
         Surface {
             AnimatedContent(
-                targetState = destination,
-                transitionSpec = {
-                    if (destination.navigation is Navigation.Forward || destination.navigation is Navigation.Goto) {
-                        slideIntoContainer(
-                            AnimatedContentTransitionScope.SlideDirection.Start,
-                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                        )
-                            .togetherWith(fadeOut())
-                    } else {
-                        fadeIn()
-                            .togetherWith(
-                                slideOutOfContainer(
-                                    AnimatedContentTransitionScope.SlideDirection.End,
-                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                )
-                            )
-                    }
-                }
-            ) { model ->
-                when (model.destination) {
+                targetState = navState,
+                transitionSpec = mainFrameTransitionSpec
+            ) { state ->
+                when (state.destination) {
                     AppDestination.MainView -> PractisoApp(navController)
-                    AppDestination.QuizCreate -> QuizCreateApp()
+                    AppDestination.QuizCreate -> {
+                        val quizModel: QuizViewModel = viewModel(factory = QuizViewModel.Factory)
+                        val appModel: QuizCreateViewModel =
+                            viewModel(factory = QuizCreateViewModel.Factory)
+
+                        LaunchedEffect(quizModel, appModel, navState) {
+                            quizModel.frames.clear()
+                            QuizCreateApp.manipulateViewModelsWithNavigationOptions(
+                                appModel,
+                                quizModel,
+                                navState.options
+                            )
+                        }
+
+                        QuizCreateApp(appModel, quizModel)
+                    }
                 }
             }
         }
     }
 }
 
+val mainFrameTransitionSpec: AnimatedContentTransitionScope<NavigationStateSnapshot>.() -> ContentTransform =
+    {
+        if (targetState.navigation is Navigation.Forward || targetState.navigation is Navigation.Goto) {
+            slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Start,
+                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+            )
+                .togetherWith(fadeOut())
+        } else {
+            fadeIn()
+                .togetherWith(
+                    slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                    )
+                )
+        }
+    }

@@ -166,7 +166,7 @@ fun LibraryApp(
                                     overflow = TextOverflow.Ellipsis
                                 )
                             },
-                            modifier = Modifier.clickable {
+                            modifier = Modifier.fillMaxWidth().clickable {
                                 coroutine.launch {
                                     Navigator.navigate(
                                         Navigation.Goto(AppDestination.QuizCreate),

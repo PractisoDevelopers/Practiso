@@ -19,7 +19,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.serializer
 
 abstract class NavigatorComponentActivity : ComponentActivity() {
-    private lateinit var navigationOptions: List<NavigationOption>
+    lateinit var navigationOptions: List<NavigationOption>
 
     @OptIn(ExperimentalSerializationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,8 +87,8 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                         error("Backstack cannot move forwards")
                     }
                     val dest = backstack[++pointer]
-                    startActivity(dest.destination, dest.options)
-                    state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options))
+                    startActivity(dest.destination, dest.options + options)
+                    state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options + options))
                 }
 
                 is Navigation.Backward -> {
@@ -99,7 +99,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                 }
 
                 is Navigation.WithDestination -> {
-                    startActivity(navigation.destination)
+                    startActivity(navigation.destination, options)
                 }
             }
         }

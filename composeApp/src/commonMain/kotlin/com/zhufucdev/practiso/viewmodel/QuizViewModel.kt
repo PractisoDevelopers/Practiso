@@ -17,7 +17,10 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.serializer
 
 @OptIn(SavedStateHandleSaveableApi::class, ExperimentalSerializationApi::class)
-class QuizViewModel(state: SavedStateHandle) : ViewModel() {
+class QuizViewModel(
+    state: SavedStateHandle,
+) : ViewModel() {
+
     val frames: MutableList<Frame> by state.saveable(saver = listSaver(
         save = {
             it.map { frame ->
@@ -36,10 +39,11 @@ class QuizViewModel(state: SavedStateHandle) : ViewModel() {
     var name by state.saveable { mutableStateOf("") }
 
     companion object {
-        val Factory get() = viewModelFactory {
-            initializer {
-                QuizViewModel(createPlatformSavedStateHandle())
+        val Factory
+            get() = viewModelFactory {
+                initializer {
+                    QuizViewModel(createPlatformSavedStateHandle())
+                }
             }
-        }
     }
 }

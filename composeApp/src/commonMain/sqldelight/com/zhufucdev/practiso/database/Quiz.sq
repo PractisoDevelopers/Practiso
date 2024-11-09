@@ -56,6 +56,11 @@ getAllQuiz:
 SELECT *
 FROM quiz;
 
+getQuizById:
+SELECT *
+FROM quiz
+WHERE id = ?;
+
 getRecentQuiz:
 SELECT *
 FROM quiz
