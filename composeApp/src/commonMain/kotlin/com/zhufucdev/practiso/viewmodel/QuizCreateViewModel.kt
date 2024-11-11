@@ -60,14 +60,18 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
 
     val event = EventChannels()
 
+    private fun addEdit(edit: Edit) {
+        history.removeRange(head + 1, history.size)
+        history.add(edit)
+    }
+
     init {
         viewModelScope.launch {
             while (viewModelScope.isActive) {
                 select {
                     event.add.onReceive {
                         _frames.add(it)
-                        history.add(Edit.Append(it, _frames.lastIndex))
-                        head++
+                        addEdit(Edit.Append(it, _frames.lastIndex))
                     }
 
                     event.remove.onReceive {
@@ -77,20 +81,20 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
                         }
 
                         _frames.removeAt(index)
-                        history.add(Edit.Remove(it, index))
+                        addEdit(Edit.Remove(it, index))
                     }
 
                     event.update.onReceive { new ->
                         val oldIndex = _frames.indexOfFirst { it.id == new.id }
                         val old = _frames[oldIndex]
                         _frames[oldIndex] = new
-                        history.add(Edit.Update(old, new))
+                        addEdit(Edit.Update(old, new))
                         head = history.lastIndex
                         Unit
                     }
 
                     event.rename.onReceive {
-                        history.add(Edit.Rename(name, it))
+                        addEdit(Edit.Rename(name, it))
                         name = it
                         Unit
                     }
