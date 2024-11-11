@@ -7,7 +7,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.style.PractisoTheme
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
-import com.zhufucdev.practiso.viewmodel.QuizViewModel
 
 class QuizCreateActivity : NavigatorComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,21 +14,13 @@ class QuizCreateActivity : NavigatorComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val model: QuizCreateViewModel = viewModel(factory = QuizCreateViewModel.Factory)
-            val quizModel: QuizViewModel = viewModel(factory = QuizViewModel.Factory)
 
-            LaunchedEffect(model, quizModel) {
-                QuizCreateApp.manipulateViewModelsWithNavigationOptions(
-                    model,
-                    quizModel,
-                    navigationOptions
-                )
+            LaunchedEffect(model) {
+                model.loadNavOptions(navigationOptions)
             }
 
             PractisoTheme {
-                QuizCreateApp(
-                    model = model,
-                    quizViewModel = quizModel
-                )
+                QuizCreateApp(model)
             }
         }
     }

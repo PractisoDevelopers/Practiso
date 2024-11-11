@@ -66,7 +66,7 @@ fun EditableOptionsFrame(
             lastFlush = flush
             delay(100)
             if (lastFlush == flush) {
-                onValueChange(Frame.Options(frame, options))
+                onValueChange(Frame.Options(frame, options.toList()))
             }
         }
     }

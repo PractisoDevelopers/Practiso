@@ -34,9 +34,13 @@ import practiso.composeapp.generated.resources.image_span
 @Serializable
 sealed interface Frame {
     suspend fun getPreviewText(): String
+    val id: Long
 
     @Serializable(TextSerializer::class)
     data class Text(val textFrame: TextFrame = TextFrame(-1, "")) : Frame {
+        override val id: Long
+            get() = textFrame.id
+
         override suspend fun getPreviewText(): String {
             return textFrame.content
         }
@@ -44,6 +48,9 @@ sealed interface Frame {
 
     @Serializable(ImageSerializer::class)
     data class Image(val imageFrame: ImageFrame = ImageFrame(-1, "", 0, 0, null)) : Frame {
+        override val id: Long
+            get() = imageFrame.id
+
         override suspend fun getPreviewText(): String {
             return imageFrame.altText ?: getString(Res.string.image_span)
         }
@@ -54,6 +61,9 @@ sealed interface Frame {
         val optionsFrame: OptionsFrame = OptionsFrame(-1, null),
         val frames: List<KeyedPrioritizedFrame> = emptyList(),
     ) : Frame {
+        override val id: Long
+            get() = optionsFrame.id
+
         override suspend fun getPreviewText(): String {
             return optionsFrame.name
                 ?: frames.mapIndexed { index, frame -> "${'A' + index % 26}. ${frame.frame.getPreviewText()}" }

@@ -25,7 +25,6 @@ import com.zhufucdev.practiso.style.AppTypography
 import com.zhufucdev.practiso.style.darkScheme
 import com.zhufucdev.practiso.style.lightScheme
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
-import com.zhufucdev.practiso.viewmodel.QuizViewModel
 
 fun main() = singleWindowApplication(title = "Practiso") {
     val navState by DesktopNavigator.current.collectAsState()
@@ -43,20 +42,14 @@ fun main() = singleWindowApplication(title = "Practiso") {
                 when (state.destination) {
                     AppDestination.MainView -> PractisoApp(navController)
                     AppDestination.QuizCreate -> {
-                        val quizModel: QuizViewModel = viewModel(factory = QuizViewModel.Factory)
                         val appModel: QuizCreateViewModel =
                             viewModel(factory = QuizCreateViewModel.Factory)
 
-                        LaunchedEffect(quizModel, appModel, navState) {
-                            quizModel.frames.clear()
-                            QuizCreateApp.manipulateViewModelsWithNavigationOptions(
-                                appModel,
-                                quizModel,
-                                navState.options
-                            )
+                        LaunchedEffect(appModel, navState) {
+                            appModel.loadNavOptions(navState.options)
                         }
 
-                        QuizCreateApp(appModel, quizModel)
+                        QuizCreateApp(appModel)
                     }
                 }
             }

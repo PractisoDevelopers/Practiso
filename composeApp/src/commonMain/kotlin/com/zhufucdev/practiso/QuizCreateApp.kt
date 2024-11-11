@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
@@ -52,12 +53,7 @@ import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -74,30 +70,20 @@ import com.zhufucdev.practiso.composable.ImageFrameSkeleton
 import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
-import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.Frame
-import com.zhufucdev.practiso.datamodel.PrioritizedFrame
-import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.platform.Navigation
-import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
-import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.*
-import com.zhufucdev.practiso.viewmodel.QuizViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.first
+import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.NotFound
+import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.Pending
+import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.Ready
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -117,6 +103,7 @@ import practiso.composeapp.generated.resources.new_question_para
 import practiso.composeapp.generated.resources.options_frame_span
 import practiso.composeapp.generated.resources.question_is_empty_para
 import practiso.composeapp.generated.resources.question_name_para
+import practiso.composeapp.generated.resources.redo_para
 import practiso.composeapp.generated.resources.rename_para
 import practiso.composeapp.generated.resources.requested_quiz_not_found_para
 import practiso.composeapp.generated.resources.sample_image_para
@@ -124,15 +111,15 @@ import practiso.composeapp.generated.resources.sample_option_para
 import practiso.composeapp.generated.resources.sample_text_para
 import practiso.composeapp.generated.resources.save_para
 import practiso.composeapp.generated.resources.text_frame_span
+import practiso.composeapp.generated.resources.undo_para
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizCreateApp(
     model: QuizCreateViewModel = viewModel(factory = QuizCreateViewModel.Factory),
-    quizViewModel: QuizViewModel = viewModel(factory = QuizViewModel.Factory),
 ) {
     when (model.state) {
-        Ready -> Editor(model, quizViewModel)
+        Ready -> Editor(model)
         else -> {
             Scaffold(
                 topBar = {
@@ -154,37 +141,6 @@ fun QuizCreateApp(
                     }
                 }
             }
-        }
-    }
-}
-
-object QuizCreateApp {
-    suspend fun manipulateViewModelsWithNavigationOptions(
-        model: QuizCreateViewModel,
-        quizModel: QuizViewModel,
-        navigationOptions: List<NavigationOption>,
-    ) {
-        model.state = QuizCreateViewModel.State.Pending
-        val openQuiz = navigationOptions.filterIsInstance<NavigationOption.OpenQuiz>()
-        if (openQuiz.isNotEmpty()) {
-            val quizId = openQuiz.last().quizId
-            val quiz = Database.app.quizQueries
-                .getQuizFrames(Database.app.quizQueries.getQuizById(quizId))
-                .first()
-                .firstOrNull()
-            if (quiz == null) {
-                model.state = QuizCreateViewModel.State.NotFound
-            } else {
-                quizModel.apply {
-                    name = quiz.quiz.name ?: ""
-                    frames.addAll(quiz.frames.map(PrioritizedFrame::frame))
-                }
-
-                model.nameEditValue = quizModel.name
-                model.state = QuizCreateViewModel.State.Ready
-            }
-        } else {
-            model.state = QuizCreateViewModel.State.Ready
         }
     }
 }
@@ -216,15 +172,13 @@ private fun NavigateUpButton() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
+private fun Editor(model: QuizCreateViewModel) {
     val coroutine = rememberCoroutineScope()
     val topBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scaffoldState = rememberBottomSheetScaffoldState()
     val contentScrollState = rememberLazyListState()
-    var idCounter by remember { mutableLongStateOf(0) }
-    var saving by remember { mutableStateOf(false) }
 
-    if (saving) {
+    if (model.saving) {
         Popup {
             Box(
                 Modifier.fillMaxSize()
@@ -239,7 +193,7 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
             LargeTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = quizViewModel.name.takeIf(String::isNotEmpty) ?: stringResource(
+                        Text(text = model.name.takeIf(String::isNotEmpty) ?: stringResource(
                             Res.string.new_question_para
                         ), modifier = Modifier.clickable {
                             model.showNameEditDialog = true
@@ -248,33 +202,53 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
                 },
                 navigationIcon = { NavigateUpButton() },
                 actions = {
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        state = rememberTooltipState(),
-                        tooltip = {
-                            PlainTooltip { Text(stringResource(Res.string.save_para)) }
+                    IconButtonWithPlainTooltip(
+                        onClick = {
+                            coroutine.launch {
+                                model.event.undo.send(Unit)
+                            }
+                        },
+                        enabled = model.canUndo,
+                        tooltipContent = { Text(stringResource(Res.string.undo_para)) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = null
+                        )
+                    }
+                    IconButtonWithPlainTooltip(
+                        onClick = {
+                            coroutine.launch {
+                                model.event.redo.send(Unit)
+                            }
+                        },
+                        enabled = model.canRedo,
+                        tooltipContent = { Text(stringResource(Res.string.redo_para)) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowForward,
+                            contentDescription = null
+                        )
+                    }
+
+                    IconButtonWithPlainTooltip(
+                        onClick = {
+                            coroutine.launch {
+                                model.event.save.send(Unit)
+                                Navigator.navigate(Navigation.Backward)
+                            }
+                        },
+                        tooltipContent = {
+                            Text(stringResource(Res.string.save_para))
                         }
                     ) {
-                        IconButton(
-                            onClick = {
-                                coroutine.launch {
-                                    saving = true
-                                    quizViewModel.frames.saveTo(
-                                        Database.app,
-                                        quizViewModel.name.takeIf(String::isNotEmpty)
-                                    )
-                                    Navigator.navigate(Navigation.Backward)
-                                }
-                            }
-                        ) {
-                            if (!saving) {
-                                Icon(
-                                    painterResource(Res.drawable.baseline_content_save_outline),
-                                    contentDescription = null
-                                )
-                            } else {
-                                CircularProgressIndicator(Modifier.size(24.dp))
-                            }
+                        if (!model.saving) {
+                            Icon(
+                                painterResource(Res.drawable.baseline_content_save_outline),
+                                contentDescription = null
+                            )
+                        } else {
+                            CircularProgressIndicator(Modifier.size(24.dp))
                         }
                     }
                 },
@@ -330,21 +304,23 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
 
                 Button(
                     onClick = {
-                        when (pagerState.currentPage) {
-                            0 -> quizViewModel.frames.add(
-                                Frame.Text(TextFrame(idCounter++, ""))
-                            )
+                        coroutine.launch {
+                            when (pagerState.currentPage) {
+                                0 -> model.event.add.send(
+                                    Frame.Text(TextFrame(model.lastFrameId++, ""))
+                                )
 
-                            1 -> quizViewModel.frames.add(
-                                Frame.Image(ImageFrame(idCounter++, "", 0, 0, null))
-                            )
+                                1 -> model.event.add.send(
+                                    Frame.Image(ImageFrame(model.lastFrameId++, "", 0, 0, null))
+                                )
 
-                            2 -> quizViewModel.frames.add(
-                                Frame.Options(OptionsFrame(idCounter++, null))
-                            )
+                                2 -> model.event.add.send(
+                                    Frame.Options(OptionsFrame(model.lastFrameId++, null))
+                                )
+                            }
                         }
                         coroutine.launch {
-                            contentScrollState.scrollToItem(quizViewModel.frames.lastIndex)
+                            contentScrollState.scrollToItem(model.frames.lastIndex)
                             scaffoldState.bottomSheetState.partialExpand()
                         }
                     },
@@ -362,7 +338,7 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
             }
         },
     ) { p ->
-        AnimatedContent(quizViewModel.frames.isEmpty()) { showHelper ->
+        AnimatedContent(model.frames.isEmpty()) { showHelper ->
             if (showHelper) {
                 AlertHelper(
                     header = {
@@ -397,14 +373,22 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
                         .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
                     state = contentScrollState
                 ) {
-                    quizViewModel.frames.forEachIndexed { index, frame ->
+                    model.frames.forEachIndexed { index, frame ->
                         item(frame.id) {
                             when (frame) {
                                 is Frame.Image -> {
                                     EditableImageFrame(
                                         value = frame,
-                                        onValueChange = { quizViewModel.frames[index] = it },
-                                        onDelete = { quizViewModel.frames.removeAt(index) },
+                                        onValueChange = {
+                                            coroutine.launch {
+                                                model.event.update.send(it)
+                                            }
+                                        },
+                                        onDelete = {
+                                            coroutine.launch {
+                                                model.event.remove.send(frame)
+                                            }
+                                        },
                                         modifier = Modifier.animateItem(),
                                         cache = model.imageCache
                                     )
@@ -413,9 +397,15 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
                                 is Frame.Options -> {
                                     EditableOptionsFrame(
                                         value = frame,
-                                        onValueChange = { quizViewModel.frames[index] = it },
+                                        onValueChange = {
+                                            coroutine.launch {
+                                                model.event.update.send(it)
+                                            }
+                                        },
                                         onDelete = {
-                                            quizViewModel.frames.removeAt(index)
+                                            coroutine.launch {
+                                                model.event.remove.send(frame)
+                                            }
                                         },
                                         modifier = Modifier.animateItem(),
                                         imageCache = model.imageCache
@@ -425,9 +415,15 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
                                 is Frame.Text -> {
                                     EditableTextFrame(
                                         value = frame,
-                                        onValueChange = { quizViewModel.frames[index] = it },
+                                        onValueChange = {
+                                            coroutine.launch {
+                                                model.event.update.send(it)
+                                            }
+                                        },
                                         onDelete = {
-                                            quizViewModel.frames.removeAt(index)
+                                            coroutine.launch {
+                                                model.event.remove.send(frame)
+                                            }
                                         },
                                         modifier = Modifier.animateItem()
                                     )
@@ -447,22 +443,15 @@ private fun Editor(model: QuizCreateViewModel, quizViewModel: QuizViewModel) {
                 model.showNameEditDialog = false
             },
             onConfirm = {
-                quizViewModel.name = model.nameEditValue
+                model.name = model.nameEditValue
                 model.showNameEditDialog = false
             },
             onCancel = {
-                model.nameEditValue = quizViewModel.name
+                model.nameEditValue = model.name
                 model.showNameEditDialog = false
             })
     }
 }
-
-private val Frame.id: Long
-    get() = when (this) {
-        is Frame.Image -> imageFrame.id
-        is Frame.Options -> optionsFrame.id
-        is Frame.Text -> textFrame.id
-    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -579,78 +568,26 @@ private fun SampleFrameContainer(
     }
 }
 
-private suspend fun List<Frame>.saveTo(db: AppDatabase, name: String?) =
-    withContext(Dispatchers.IO) {
-        val quizId = db.transactionWithResult {
-            db.quizQueries.insertQuiz(name, Clock.System.now(), null)
-            db.quizQueries.lastInsertRowId().executeAsOne()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun IconButtonWithPlainTooltip(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    tooltipContent: @Composable () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        state = rememberTooltipState(),
+        tooltip = {
+            PlainTooltip { tooltipContent() }
         }
-
-        mapIndexed { index, frame ->
-            when (frame) {
-                is Frame.Text -> async {
-                    db.transaction {
-                        db.quizQueries.insertTextFrame(frame.textFrame.content)
-                        db.quizQueries.associateLastTextFrameWithQuiz(quizId, index.toLong())
-                    }
-                }
-
-                is Frame.Image -> async {
-                    db.transaction {
-                        frame.insertTo(db)
-                        db.quizQueries.associateLastImageFrameWithQuiz(quizId, index.toLong())
-                    }
-                }
-
-                is Frame.Options -> async {
-                    val frameId = db.transactionWithResult {
-                        db.quizQueries.insertOptionsFrame(frame.optionsFrame.name)
-                        val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
-                        db.quizQueries.associateOptionsFrameWithQuiz(
-                            quizId,
-                            frameId,
-                            index.toLong()
-                        )
-                        frameId
-                    }
-
-                    frame.frames.map { optionFrame ->
-                        when (optionFrame.frame) {
-                            is Frame.Image -> async {
-                                db.transaction {
-                                    optionFrame.frame.insertTo(db)
-                                    db.quizQueries.assoicateLastImageFrameWithOption(
-                                        frameId,
-                                        maxOf(optionFrame.priority, 0).toLong(),
-                                        optionFrame.isKey
-                                    )
-                                }
-                            }
-
-                            is Frame.Text -> async {
-                                db.transaction {
-                                    db.quizQueries.insertTextFrame(optionFrame.frame.textFrame.content)
-                                    db.quizQueries.assoicateLastTextFrameWithOption(
-                                        frameId,
-                                        optionFrame.isKey,
-                                        maxOf(optionFrame.priority, 0).toLong()
-                                    )
-                                }
-                            }
-
-                            is Frame.Options -> throw UnsupportedOperationException("Options frame inception")
-                        }
-                    }.awaitAll()
-                }
-            }
-        }.awaitAll()
+    ) {
+        IconButton(
+            onClick = onClick,
+            enabled = enabled
+        ) {
+            content()
+        }
     }
-
-private fun Frame.Image.insertTo(db: AppDatabase) {
-    db.quizQueries.insertImageFrame(
-        imageFrame.filename,
-        imageFrame.altText,
-        imageFrame.width,
-        imageFrame.height
-    )
 }
