@@ -23,7 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
@@ -91,6 +90,8 @@ import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.add_frame_para
 import practiso.composeapp.generated.resources.baseline_content_save_outline
 import practiso.composeapp.generated.resources.baseline_elevator_down
+import practiso.composeapp.generated.resources.baseline_redo
+import practiso.composeapp.generated.resources.baseline_undo
 import practiso.composeapp.generated.resources.cancel_para
 import practiso.composeapp.generated.resources.cat_walker
 import practiso.composeapp.generated.resources.confirm_para
@@ -212,7 +213,7 @@ private fun Editor(model: QuizCreateViewModel) {
                         tooltipContent = { Text(stringResource(Res.string.undo_para)) }
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            painter = painterResource(Res.drawable.baseline_undo),
                             contentDescription = null
                         )
                     }
@@ -226,7 +227,7 @@ private fun Editor(model: QuizCreateViewModel) {
                         tooltipContent = { Text(stringResource(Res.string.redo_para)) }
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowForward,
+                            painter = painterResource(Res.drawable.baseline_redo),
                             contentDescription = null
                         )
                     }
