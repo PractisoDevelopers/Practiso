@@ -52,8 +52,8 @@ fun EditableOptionsFrame(
     imageCache: BitmapRepository = remember { BitmapRepository() },
     modifier: Modifier = Modifier,
 ) {
-    var frame by remember { mutableStateOf(value.optionsFrame) }
-    val options = remember { value.frames.toMutableStateList() }
+    var frame by remember(value) { mutableStateOf(value.optionsFrame) }
+    val options = remember(value) { value.frames.toMutableStateList() }
     var editingName by remember { mutableStateOf(false) }
     var appendingMenu by remember { mutableStateOf(false) }
     var masterMenu by remember { mutableStateOf(false) }
@@ -66,7 +66,7 @@ fun EditableOptionsFrame(
             lastFlush = flush
             delay(100)
             if (lastFlush == flush) {
-                onValueChange(Frame.Options(frame, options.toList()))
+                onValueChange(Frame.Options(frame, options.map(KeyedPrioritizedFrame::copy)))
             }
         }
     }
