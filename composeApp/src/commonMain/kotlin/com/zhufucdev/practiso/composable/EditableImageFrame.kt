@@ -1,7 +1,6 @@
 package com.zhufucdev.practiso.composable
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +22,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,6 +91,24 @@ fun EditableImageFrame(
         }
     }
 
+    LaunchedEffect(imageState.image) {
+        val im = imageState.image
+        if (im is ImageLoaderState.Loaded) {
+            // update frame model size record
+            val frame = value.imageFrame
+            if (frame.width.toInt() != im.bitmap.width || frame.height.toInt() != im.bitmap.height) {
+                onValueChange(
+                    value.copy(
+                        imageFrame = frame.copy(
+                            width = im.bitmap.width.toLong(),
+                            height = im.bitmap.height.toLong()
+                        )
+                    )
+                )
+            }
+        }
+    }
+
     fun deleteCurrentImage() {
         if (value.imageFrame.filename.isNotBlank()) {
             platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
@@ -107,6 +125,7 @@ fun EditableImageFrame(
                         ?.let { platform.resourcePath.resolve(it) },
                     contentDescription = value.imageFrame.altText,
                     state = imageState,
+                    cache = cache,
                     modifier = modifier
                 )
             }
@@ -148,10 +167,12 @@ fun EditableImageFrame(
                     }
                 }
             } else {
-                imageContent(Modifier.combineClickable(
-                    onClick = { },
-                    onSecondaryClick = { masterMenu = true },
-                ))
+                imageContent(
+                    Modifier.combineClickable(
+                        onClick = { },
+                        onSecondaryClick = { masterMenu = true },
+                    )
+                )
                 DropdownMenu(
                     expanded = masterMenu,
                     onDismissRequest = { masterMenu = false }
