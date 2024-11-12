@@ -160,7 +160,7 @@ DELETE FROM frameByOptionsFrame WHERE optionsFrameId = ? AND imageFrameId = ?;
 updateImageFrameContent:
 UPDATE imageFrame SET filename = ?, width = ?, height = ? WHERE id = ?;
 
-updateImagrFrameAltText:
+updateImageFrameAltText:
 UPDATE imageFrame SET altText = ? WHERE id = ?;
 
 removeImageFrame:
