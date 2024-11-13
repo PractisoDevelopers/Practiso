@@ -89,7 +89,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
                     }
 
                     event.update.onReceive { new ->
-                        val oldIndex = _frames.indexOfFirst { it.id == new.id }
+                        val oldIndex = _frames.indexOfFirst { it::class == new::class && it.id == new.id }
                         val old = _frames[oldIndex]
                         _frames[oldIndex] = new
                         addEdit(Edit.Update(old, new))
@@ -181,7 +181,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
     }
 
     private fun Edit.Update.undo() {
-        val index = _frames.indexOfFirst { it.id == new.id }
+        val index = _frames.indexOfFirst { it::class == new::class && it.id == new.id }
         if (index < 0) {
             error("Target frame not found")
         }
@@ -189,7 +189,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
     }
 
     private fun Edit.Update.redo() {
-        val index = _frames.indexOfFirst { it.id == old.id }
+        val index = _frames.indexOfFirst { it::class == new::class && it.id == old.id }
         if (index < 0) {
             error("Target frame not found")
         }

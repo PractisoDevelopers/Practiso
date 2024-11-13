@@ -59,18 +59,19 @@ sealed interface Edit {
                 }
 
                 is Frame.Options -> {
-                    val oldFrameIds = (old as Frame.Options).frames.map { it.frame.id }.toSet()
-                    val newFrameIds = new.frames.map { it.frame.id }.toSet()
+                    val oldFrameIds =
+                        (old as Frame.Options).frames.map { it.frame::class to it.frame.id }.toSet()
+                    val newFrameIds = new.frames.map { it.frame::class to it.frame.id }.toSet()
                     val removals = (oldFrameIds - newFrameIds)
-                        .map { removedId -> old.frames.first { it.frame.id == removedId } }
+                        .map { (removedClass, removedId) -> old.frames.first { it.frame::class == removedClass && it.frame.id == removedId } }
                     removals
                         .forEachIndexed { index, removal ->
                             Remove(removal.frame, index).applyTo(db, quizId)
                         }
                     val additions =
                         (newFrameIds - oldFrameIds)
-                            .map { newId ->
-                                new.frames.mapIndexedNotNull { index, frame -> index.takeIf { frame.frame.id == newId } }
+                            .map { (newClass, newId) ->
+                                new.frames.mapIndexedNotNull { index, frame -> index.takeIf { frame.frame::class == newClass && frame.frame.id == newId } }
                             }
                             .flatten()
                     additions
@@ -98,8 +99,7 @@ sealed interface Edit {
                             }
                         }
                     val updates = new.frames.mapNotNull { n ->
-                        val id = n.frame.id
-                        old.frames.firstOrNull { it.frame.id == id && it != n }
+                        old.frames.firstOrNull { it.frame::class == n.frame::class && it.frame.id == n.frame.id && it != n }
                             ?.let { it to n }
                     }
                     updates
@@ -158,10 +158,10 @@ fun List<Edit>.optimized(): List<Edit> {
         when (it) {
             is Edit.Append -> appends.add(it)
             is Edit.Remove -> {
-                appends.indexOfFirst { a -> a.frame.id == it.frame.id }
+                appends.indexOfFirst { a -> a.frame::class == it.frame::class && a.frame.id == it.frame.id }
                     .takeIf { i -> i >= 0 }
                     ?.let(appends::removeAt)
-                    ?: updates.indexOfFirst { u -> u.new.id == it.frame.id }
+                    ?: updates.indexOfFirst { u -> u.new::class == it.frame::class && u.new.id == it.frame.id }
                         .takeIf { i -> i >= 0 }
                         ?.let(updates::removeAt)
                     ?: removals.add(it)
@@ -172,10 +172,10 @@ fun List<Edit>.optimized(): List<Edit> {
             }
 
             is Edit.Update -> {
-                appends.indexOfFirst { a -> a.frame.id == it.new.id }
+                appends.indexOfFirst { a -> a.frame::class == it.new::class && a.frame.id == it.new.id }
                     .takeIf { i -> i >= 0 }
                     ?.let { i -> appends[i] = appends[i].copy(frame = it.new) }
-                    ?: updates.indexOfFirst { u -> u.new.id == it.new.id }
+                    ?: updates.indexOfFirst { u -> u.new::class == it.new::class && u.new.id == it.new.id }
                         .takeIf { i -> i >= 0 }
                         ?.let { i -> updates[i] = updates[i].copy(new = it.new) }
                     ?: updates.add(it)

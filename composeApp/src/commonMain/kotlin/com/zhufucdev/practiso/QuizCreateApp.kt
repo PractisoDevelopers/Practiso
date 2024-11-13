@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -194,11 +195,12 @@ private fun Editor(model: QuizCreateViewModel) {
             LargeTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = model.name.takeIf(String::isNotEmpty) ?: stringResource(
-                            Res.string.new_question_para
-                        ), modifier = Modifier.clickable {
-                            model.showNameEditDialog = true
-                        })
+                        Text(
+                            text = model.name.takeIf(String::isNotEmpty) ?: stringResource(
+                                Res.string.new_question_para
+                            ), modifier = Modifier.clickable {
+                                model.showNameEditDialog = true
+                            })
                     }
                 },
                 navigationIcon = { NavigateUpButton() },
@@ -374,62 +376,60 @@ private fun Editor(model: QuizCreateViewModel) {
                         .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
                     state = contentScrollState
                 ) {
-                    model.frames.forEachIndexed { index, frame ->
-                        item(frame.id) {
-                            when (frame) {
-                                is Frame.Image -> {
-                                    EditableImageFrame(
-                                        value = frame,
-                                        onValueChange = {
-                                            coroutine.launch {
-                                                model.event.update.send(it)
-                                            }
-                                        },
-                                        onDelete = {
-                                            coroutine.launch {
-                                                model.event.remove.send(frame)
-                                            }
-                                        },
-                                        modifier = Modifier.animateItem(),
-                                        deleteImageOnRemoval = false,
-                                        cache = model.imageCache
-                                    )
-                                }
+                    items(items = model.frames, key = { it::class.simpleName + it.id }) { frame ->
+                        when (frame) {
+                            is Frame.Image -> {
+                                EditableImageFrame(
+                                    value = frame,
+                                    onValueChange = {
+                                        coroutine.launch {
+                                            model.event.update.send(it)
+                                        }
+                                    },
+                                    onDelete = {
+                                        coroutine.launch {
+                                            model.event.remove.send(frame)
+                                        }
+                                    },
+                                    modifier = Modifier.animateItem(),
+                                    deleteImageOnRemoval = false,
+                                    cache = model.imageCache
+                                )
+                            }
 
-                                is Frame.Options -> {
-                                    EditableOptionsFrame(
-                                        value = frame,
-                                        onValueChange = {
-                                            coroutine.launch {
-                                                model.event.update.send(it)
-                                            }
-                                        },
-                                        onDelete = {
-                                            coroutine.launch {
-                                                model.event.remove.send(frame)
-                                            }
-                                        },
-                                        modifier = Modifier.animateItem(),
-                                        imageCache = model.imageCache
-                                    )
-                                }
+                            is Frame.Options -> {
+                                EditableOptionsFrame(
+                                    value = frame,
+                                    onValueChange = {
+                                        coroutine.launch {
+                                            model.event.update.send(it)
+                                        }
+                                    },
+                                    onDelete = {
+                                        coroutine.launch {
+                                            model.event.remove.send(frame)
+                                        }
+                                    },
+                                    modifier = Modifier.animateItem(),
+                                    imageCache = model.imageCache
+                                )
+                            }
 
-                                is Frame.Text -> {
-                                    EditableTextFrame(
-                                        value = frame,
-                                        onValueChange = {
-                                            coroutine.launch {
-                                                model.event.update.send(it)
-                                            }
-                                        },
-                                        onDelete = {
-                                            coroutine.launch {
-                                                model.event.remove.send(frame)
-                                            }
-                                        },
-                                        modifier = Modifier.animateItem()
-                                    )
-                                }
+                            is Frame.Text -> {
+                                EditableTextFrame(
+                                    value = frame,
+                                    onValueChange = {
+                                        coroutine.launch {
+                                            model.event.update.send(it)
+                                        }
+                                    },
+                                    onDelete = {
+                                        coroutine.launch {
+                                            model.event.remove.send(frame)
+                                        }
+                                    },
+                                    modifier = Modifier.animateItem()
+                                )
                             }
                         }
                     }
@@ -439,7 +439,8 @@ private fun Editor(model: QuizCreateViewModel) {
     }
 
     if (model.showNameEditDialog) {
-        QuizNameEditDialog(value = model.nameEditValue,
+        QuizNameEditDialog(
+            value = model.nameEditValue,
             onValueChange = { model.nameEditValue = it },
             onDismissRequest = {
                 model.showNameEditDialog = false
