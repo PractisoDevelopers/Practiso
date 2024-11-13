@@ -68,13 +68,11 @@ sealed interface Edit {
                             Remove(removal.frame, index).applyTo(db, quizId)
                         }
                     val additions =
-                        (newFrameIds - oldFrameIds).map { newId ->
-                            val index = new.frames.indexOfFirst { it.frame.id == newId }
-                            if (index < 0) {
-                                error("unreachable")
+                        (newFrameIds - oldFrameIds)
+                            .map { newId ->
+                                new.frames.mapIndexedNotNull { index, frame -> index.takeIf { frame.frame.id == newId } }
                             }
-                            index
-                        }
+                            .flatten()
                     additions
                         .forEach { index ->
                             val keyedPrioritizedFrame = new.frames[index]
