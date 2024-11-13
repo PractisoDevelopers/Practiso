@@ -391,6 +391,7 @@ private fun Editor(model: QuizCreateViewModel) {
                                             }
                                         },
                                         modifier = Modifier.animateItem(),
+                                        deleteImageOnRemoval = false,
                                         cache = model.imageCache
                                     )
                                 }
@@ -444,8 +445,10 @@ private fun Editor(model: QuizCreateViewModel) {
                 model.showNameEditDialog = false
             },
             onConfirm = {
-                model.name = model.nameEditValue
-                model.showNameEditDialog = false
+                coroutine.launch {
+                    model.event.rename.send(model.nameEditValue)
+                    model.showNameEditDialog = false
+                }
             },
             onCancel = {
                 model.nameEditValue = model.name

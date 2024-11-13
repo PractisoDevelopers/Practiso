@@ -1,8 +1,10 @@
 package com.zhufucdev.practiso.datamodel
 
+import androidx.compose.ui.util.fastForEachIndexed
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.Quiz
@@ -15,6 +17,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -36,6 +39,8 @@ sealed interface Frame {
     suspend fun getPreviewText(): String
     val id: Long
 
+    fun insertInto(db: AppDatabase, quizId: Long, priority: Long)
+
     @Serializable(TextSerializer::class)
     data class Text(val textFrame: TextFrame = TextFrame(-1, "")) : Frame {
         override val id: Long
@@ -43,6 +48,13 @@ sealed interface Frame {
 
         override suspend fun getPreviewText(): String {
             return textFrame.content
+        }
+
+        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+            db.transaction {
+                db.quizQueries.insertTextFrame(textFrame.content)
+                db.quizQueries.associateLastTextFrameWithQuiz(quizId, priority)
+            }
         }
     }
 
@@ -53,6 +65,13 @@ sealed interface Frame {
 
         override suspend fun getPreviewText(): String {
             return imageFrame.altText ?: getString(Res.string.image_span)
+        }
+
+        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+            db.transaction {
+                insertTo(db)
+                db.quizQueries.associateLastImageFrameWithQuiz(quizId, priority)
+            }
         }
     }
 
@@ -68,6 +87,47 @@ sealed interface Frame {
             return optionsFrame.name
                 ?: frames.mapIndexed { index, frame -> "${'A' + index % 26}. ${frame.frame.getPreviewText()}" }
                     .joinToString(" ")
+        }
+
+        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+            val frameId = db.transactionWithResult {
+                db.quizQueries.insertOptionsFrame(optionsFrame.name)
+                val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
+                db.quizQueries.associateOptionsFrameWithQuiz(
+                    quizId,
+                    frameId,
+                    priority
+                )
+                frameId
+            }
+
+            frames.forEach { optionFrame ->
+                when (optionFrame.frame) {
+                    is Image -> {
+                        db.transaction {
+                            optionFrame.frame.insertTo(db)
+                            db.quizQueries.assoicateLastImageFrameWithOption(
+                                frameId,
+                                maxOf(optionFrame.priority, 0).toLong(),
+                                optionFrame.isKey
+                            )
+                        }
+                    }
+
+                    is Text -> {
+                        db.transaction {
+                            db.quizQueries.insertTextFrame(optionFrame.frame.textFrame.content)
+                            db.quizQueries.assoicateLastTextFrameWithOption(
+                                frameId,
+                                optionFrame.isKey,
+                                maxOf(optionFrame.priority, 0).toLong()
+                            )
+                        }
+                    }
+
+                    is Options -> throw UnsupportedOperationException("Options frame inception")
+                }
+            }
         }
     }
 }
@@ -276,4 +336,24 @@ private class OptionsSerializer : KSerializer<Frame.Options> {
             }
             encodeSerializableElement(descriptor, 2, serializer(), value.frames)
         }
+}
+
+fun List<Frame>.insertInto(db: AppDatabase, name: String?) {
+    val quizId = db.transactionWithResult {
+        db.quizQueries.insertQuiz(name, Clock.System.now(), null)
+        db.quizQueries.lastInsertRowId().executeAsOne()
+    }
+
+    fastForEachIndexed { index, frame ->
+        frame.insertInto(db, quizId, index.toLong())
+    }
+}
+
+fun Frame.Image.insertTo(db: AppDatabase) {
+    db.quizQueries.insertImageFrame(
+        imageFrame.filename,
+        imageFrame.altText,
+        imageFrame.width,
+        imageFrame.height
+    )
 }

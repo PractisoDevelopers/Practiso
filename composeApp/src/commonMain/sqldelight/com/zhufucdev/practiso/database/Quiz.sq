@@ -116,6 +116,10 @@ assoicateLastTextFrameWithOption:
 INSERT INTO frameByOptionsFrame(textFrameId, optionsFrameId, isKey, priority)
 VALUES (last_insert_rowid(), ?, ?, ?);
 
+associateTextFrameWithOption:
+INSERT INTO frameByOptionsFrame(textFrameId, optionsFrameId, isKey, priority)
+VALUES (?, ?, ?, ?);
+
 dissociateTextFrameFromQuiz:
 DELETE FROM frameByQuiz WHERE quizId = ? AND textFrameId = ?;
 
@@ -150,6 +154,10 @@ VALUES (?, last_insert_rowid(), ?);
 assoicateLastImageFrameWithOption:
 INSERT INTO frameByOptionsFrame(optionsFrameId, imageFrameId, priority, isKey)
 VALUES (?, last_insert_rowid(), ?, ?);
+
+assoicateImageFrameWithOption:
+INSERT INTO frameByOptionsFrame(optionsFrameId, imageFrameId, priority, isKey)
+VALUES (?, ?, ?, ?);
 
 dissociateImageFrameFromQuiz:
 DELETE FROM frameByQuiz WHERE quizId = ? AND imageFrameId = ?;
@@ -191,3 +199,10 @@ DELETE FROM optionsFrame WHERE id = ?;
 
 lastInsertRowId:
 SELECT last_insert_rowid();
+
+
+updateIsKeyTextFrameAssoicated:
+UPDATE frameByOptionsFrame SET isKey = ? WHERE textFrameId = ?;
+
+updateIsKeyImageFrameAssocicated:
+UPDATE frameByOptionsFrame SET isKey = ? WHERE imageFrameId = ?;

@@ -15,10 +15,13 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.composable.BitmapRepository
+import com.zhufucdev.practiso.datamodel.Edit
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.PrioritizedFrame
 import com.zhufucdev.practiso.datamodel.getQuizFrames
-import com.zhufucdev.practiso.insertTo
+import com.zhufucdev.practiso.datamodel.applyTo
+import com.zhufucdev.practiso.datamodel.insertInto
+import com.zhufucdev.practiso.datamodel.optimized
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.protoBufStateListSaver
@@ -27,7 +30,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.serialization.Serializable
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
@@ -36,10 +38,11 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
     val imageCache = BitmapRepository()
     var state by state.saveable { mutableStateOf(State.Pending) }
     var lastFrameId by state.saveable { mutableStateOf(0L) }
-    var name by state.saveable { mutableStateOf("") }
-    val frames: List<Frame> get() = _frames
-
     private val _frames: MutableList<Frame> by state.saveable(saver = protoBufStateListSaver()) { mutableStateListOf() }
+    val frames: List<Frame> get() = _frames
+    var name by state.saveable { mutableStateOf("") }
+        private set
+
     var saving by state.saveable { mutableStateOf(false) }
         private set
 
@@ -63,6 +66,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
     private fun addEdit(edit: Edit) {
         history.removeRange(head + 1, history.size)
         history.add(edit)
+        head++
     }
 
     init {
@@ -121,7 +125,9 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
 
                     event.save.onReceive {
                         if (targetId < 0) {
-                            frames.insertTo(Database.app, name)
+                            frames.insertInto(Database.app, name)
+                        } else {
+                            history.optimized().also { println(it) }.applyTo(Database.app, targetId)
                         }
                     }
                 }
@@ -133,10 +139,11 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
     suspend fun loadNavOptions(navigationOptions: List<NavigationOption>) {
         state = State.Pending
         history.clear()
+        _frames.clear()
+        head = -1
 
         val openQuiz = navigationOptions.filterIsInstance<NavigationOption.OpenQuiz>()
         if (openQuiz.isNotEmpty()) {
-            _frames.clear()
             targetId = openQuiz.last().quizId
             val quiz = Database.app.quizQueries
                 .getQuizFrames(Database.app.quizQueries.getQuizById(targetId))
@@ -153,6 +160,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
             }
         } else {
             state = State.Ready
+            targetId = -1
         }
     }
 
@@ -211,18 +219,4 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
         NotFound
     }
 
-    @Serializable
-    sealed interface Edit {
-        @Serializable
-        data class Append(val frame: Frame, val insertIndex: Int) : Edit
-
-        @Serializable
-        data class Remove(val frame: Frame, val oldIndex: Int) : Edit
-
-        @Serializable
-        data class Update(val old: Frame, val new: Frame) : Edit
-
-        @Serializable
-        data class Rename(val old: String, val new: String) : Edit
-    }
 }
