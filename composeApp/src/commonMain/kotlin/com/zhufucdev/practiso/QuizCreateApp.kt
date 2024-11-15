@@ -49,6 +49,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
@@ -62,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.EditableImageFrame
 import com.zhufucdev.practiso.composable.EditableOptionsFrame
@@ -179,6 +181,7 @@ private fun Editor(model: QuizCreateViewModel) {
     val topBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scaffoldState = rememberBottomSheetScaffoldState()
     val contentScrollState = rememberLazyListState()
+    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
 
     if (model.saving) {
         Popup {
@@ -269,7 +272,12 @@ private fun Editor(model: QuizCreateViewModel) {
                 HorizontalPager(state = pagerState) { page ->
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Box(
-                            Modifier.height(300.dp).fillMaxWidth(0.618f),
+                            Modifier.height(300.dp).then(
+                                when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
+                                    WindowWidthSizeClass.MEDIUM, WindowWidthSizeClass.EXPANDED -> Modifier.fillMaxWidth(0.618f)
+                                    else -> Modifier.fillMaxWidth().padding(horizontal = PaddingBig)
+                                }
+                            ),
                             contentAlignment = Alignment.Center
                         ) {
                             when (page) {

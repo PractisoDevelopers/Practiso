@@ -6,6 +6,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,11 +20,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +47,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
+import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
@@ -61,28 +70,31 @@ import practiso.composeapp.generated.resources.library_para
 import practiso.composeapp.generated.resources.search_app_para
 import practiso.composeapp.generated.resources.session_para
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PractisoApp(
     navController: NavHostController,
     searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
 ) {
-    val topBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
 
     BottomUpComposableScope { buc ->
         CompositionLocalProvider(
             LocalNavController provides navController,
+            LocalBottomUpComposable provides buc
         ) {
-            Scaffold(
-                topBar = {
-                    TopSearchBar(searchViewModel)
-                },
-                bottomBar = {
-                    NavigationBar {
+            when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
+                WindowWidthSizeClass.COMPACT ->
+                    ScaffoldedApp(searchViewModel, windowAdaptiveInfo, navController)
+
+                WindowWidthSizeClass.MEDIUM -> Row {
+                    NavigationRail {
+                        Spacer(Modifier.padding(top = PaddingNormal))
                         TopLevelDestination.entries.forEach {
-                            NavigationBarItem(
-                                selected = navBackStackEntry?.destination?.route?.startsWith(it.route) == true,
+                            NavigationRailItem(
+                                selected = navBackStackEntry?.destination?.route?.startsWith(
+                                    it.route
+                                ) == true,
                                 onClick = {
                                     if (navBackStackEntry?.destination?.route != it.route) {
                                         navController.navigate(it.route) {
@@ -95,29 +107,91 @@ fun PractisoApp(
                             )
                         }
                     }
-                },
-                floatingActionButton = {
-                    AnimatedContent(
-                        buc.get("fab"),
-                        contentAlignment = Alignment.BottomEnd,
-                        transitionSpec = {
-                            scaleIn().togetherWith(scaleOut())
-                        }
-                    ) { content ->
-                        content?.invoke()
-                    }
+                    ScaffoldedApp(searchViewModel, windowAdaptiveInfo, navController)
                 }
-            ) { padding ->
-                Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-                    CompositionLocalProvider(
-                        LocalBottomUpComposable provides buc
-                    ) {
-                        NavigatedApp()
+
+                WindowWidthSizeClass.EXPANDED -> Row {
+                    PermanentDrawerSheet {
+                        Spacer(Modifier.padding(top = PaddingNormal))
+                        TopLevelDestination.entries.forEach {
+                            NavigationDrawerItem(
+                                selected = navBackStackEntry?.destination?.route?.startsWith(
+                                    it.route
+                                ) == true,
+                                onClick = {
+                                    if (navBackStackEntry?.destination?.route != it.route) {
+                                        navController.navigate(it.route) {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                },
+                                icon = it.icon,
+                                label = { Text(stringResource(it.nameRes)) },
+                            )
+                        }
                     }
+                    ScaffoldedApp(searchViewModel, windowAdaptiveInfo, navController)
                 }
             }
 
             buc.compose(SessionQuickStarterKey)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScaffoldedApp(
+    searchViewModel: SearchViewModel,
+    windowAdaptiveInfo: WindowAdaptiveInfo,
+    navController: NavHostController,
+) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val topBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val buc = LocalBottomUpComposable.current
+
+    Scaffold(
+        topBar = {
+            TopSearchBar(searchViewModel)
+        },
+        bottomBar = {
+            when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
+                WindowWidthSizeClass.COMPACT -> {
+                    NavigationBar {
+                        TopLevelDestination.entries.forEach {
+                            NavigationBarItem(
+                                selected = navBackStackEntry?.destination?.route?.startsWith(
+                                    it.route
+                                ) == true,
+                                onClick = {
+                                    if (navBackStackEntry?.destination?.route != it.route) {
+                                        navController.navigate(it.route) {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                },
+                                icon = it.icon,
+                                label = { Text(stringResource(it.nameRes)) },
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        floatingActionButton = {
+            AnimatedContent(
+                buc?.get("fab"),
+                contentAlignment = Alignment.BottomEnd,
+                transitionSpec = {
+                    scaleIn().togetherWith(scaleOut())
+                }
+            ) { content ->
+                content?.invoke()
+            }
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+            NavigatedApp()
         }
     }
 }
@@ -210,9 +284,9 @@ private fun TopSearchBar(searchViewModel: SearchViewModel) {
         expanded = searchViewModel.active,
         onExpandedChange = { searchViewModel.active = it },
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = padding.value.dp)
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = padding.value.dp)
     ) {
         BackHandlerOrIgnored {
             searchViewModel.active = false
