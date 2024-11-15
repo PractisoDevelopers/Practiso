@@ -157,10 +157,12 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
 
                 nameEditValue = name
                 state = State.Ready
+                lastFrameId = frames.maxOf(Frame::id)
             }
         } else {
             state = State.Ready
             targetId = -1
+            lastFrameId = -1
         }
     }
 

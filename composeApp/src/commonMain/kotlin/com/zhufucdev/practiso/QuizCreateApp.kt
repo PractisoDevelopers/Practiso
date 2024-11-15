@@ -310,15 +310,15 @@ private fun Editor(model: QuizCreateViewModel) {
                         coroutine.launch {
                             when (pagerState.currentPage) {
                                 0 -> model.event.add.send(
-                                    Frame.Text(TextFrame(model.lastFrameId++, ""))
+                                    Frame.Text(TextFrame(++model.lastFrameId, ""))
                                 )
 
                                 1 -> model.event.add.send(
-                                    Frame.Image(ImageFrame(model.lastFrameId++, "", 0, 0, null))
+                                    Frame.Image(ImageFrame(++model.lastFrameId, "", 0, 0, null))
                                 )
 
                                 2 -> model.event.add.send(
-                                    Frame.Options(OptionsFrame(model.lastFrameId++, null))
+                                    Frame.Options(OptionsFrame(++model.lastFrameId, null))
                                 )
                             }
                         }
