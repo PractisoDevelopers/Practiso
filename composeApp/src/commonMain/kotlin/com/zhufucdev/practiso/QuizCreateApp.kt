@@ -68,6 +68,7 @@ import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.EditableImageFrame
 import com.zhufucdev.practiso.composable.EditableOptionsFrame
 import com.zhufucdev.practiso.composable.EditableTextFrame
+import com.zhufucdev.practiso.composable.HorizontalPageIndicator
 import com.zhufucdev.practiso.composable.ImageFrameSkeleton
 import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
@@ -274,7 +275,10 @@ private fun Editor(model: QuizCreateViewModel) {
                         Box(
                             Modifier.height(300.dp).then(
                                 when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
-                                    WindowWidthSizeClass.MEDIUM, WindowWidthSizeClass.EXPANDED -> Modifier.fillMaxWidth(0.618f)
+                                    WindowWidthSizeClass.MEDIUM, WindowWidthSizeClass.EXPANDED -> Modifier.fillMaxWidth(
+                                        0.618f
+                                    )
+
                                     else -> Modifier.fillMaxWidth().padding(horizontal = PaddingBig)
                                 }
                             ),
@@ -312,6 +316,16 @@ private fun Editor(model: QuizCreateViewModel) {
                         }
                     }
                 }
+
+                HorizontalPageIndicator(
+                    pageCount = pagerState.pageCount,
+                    currentPage = pagerState.currentPage,
+                    onSwitch = {
+                        coroutine.launch {
+                            pagerState.animateScrollToPage(it)
+                        }
+                    }
+                )
 
                 Button(
                     onClick = {
