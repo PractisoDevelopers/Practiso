@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,10 +33,10 @@ import com.zhufucdev.practiso.composable.QuizSkeleton
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
+import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel.Item
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.head_to_library_to_create
@@ -50,16 +52,21 @@ fun SessionStarter(
 
     val items by model.items.collectAsState(null)
     val coroutine = rememberCoroutineScope()
-    val currentItem: Item? by remember(model, items) {
+    val currentItems: List<Item>? by remember(model, items) {
         derivedStateOf {
-            items?.firstOrNull { it.id == model.currentItemId }
+            items?.filter { it.id in model.currentItemIds }
+        }
+    }
+    val quizzes: List<PractisoOption.Quiz>? by remember(currentItems) {
+        derivedStateOf {
+            currentItems?.takeIf { it.isNotEmpty() }?.flatMap(Item::quizzes)
         }
     }
 
     LaunchedEffect(items) {
         items?.let {
             it.firstOrNull()?.let { firstItem ->
-                model.event.changeCurrentItem.send(firstItem.id)
+                model.event.addCurrentItem.send(firstItem.id)
             }
         }
     }
@@ -87,7 +94,7 @@ fun SessionStarter(
                     items?.let {
                         items(it, key = { d -> d.id }) { d ->
                             DimensionSkeleton(
-                                selected = currentItem == d,
+                                selected = currentItems!!.contains(d),
                                 label = {
                                     Text(
                                         if (d is Item.Categorized) {
@@ -99,10 +106,10 @@ fun SessionStarter(
                                 },
                                 onClick = {
                                     coroutine.launch {
-                                        if (currentItem == d) {
-                                            model.event.changeCurrentItem.send(-1)
+                                        if (currentItems!!.contains(d)) {
+                                            model.event.removeCurrentItem.send(d.id)
                                         } else {
-                                            model.event.changeCurrentItem.send(d.id)
+                                            model.event.addCurrentItem.send(d.id)
                                         }
                                     }
                                 }
@@ -116,23 +123,50 @@ fun SessionStarter(
                     }
                 }
                 Spacer(Modifier.height(PaddingNormal))
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(PaddingNormal)) {
-                    currentItem?.quizzes?.let {
-                        it.forEachIndexed { index, quiz ->
-                            item(quiz.quiz.id) {
-                                QuizSkeleton(
-                                    label = { Text(quiz.titleString()) },
-                                    preview = { Text(quiz.previewString()) },
-                                    modifier = Modifier.padding(horizontal = PaddingNormal)
+                LazyColumn {
+                    quizzes?.let {
+                        it.forEachIndexed { index, item ->
+                            item(item.quiz.id) {
+                                Column(
+                                    Modifier
                                         .animateItem()
-                                )
-                                if (index < it.lastIndex) {
+                                        .clickable {
+                                            coroutine.launch {
+                                                val id = item.quiz.id
+                                                if (id !in model.selection.quizIds) {
+                                                    model.event.selectQuiz.send(id)
+                                                } else {
+                                                    model.event.deselectQuiz.send(id)
+                                                }
+                                            }
+                                        }
+                                ) {
                                     Spacer(Modifier.height(PaddingNormal))
-                                    Spacer(
-                                        Modifier.fillMaxWidth().padding(start = PaddingNormal)
-                                            .height(1.dp)
-                                            .background(MaterialTheme.colorScheme.surfaceBright)
+
+                                    QuizSkeleton(
+                                        label = { Text(item.titleString()) },
+                                        preview = { Text(item.previewString()) },
+                                        tailingIcon = {
+                                            if (item.quiz.id in model.selection.quizIds) {
+                                                Checkbox(
+                                                    checked = true,
+                                                    onCheckedChange = null,
+                                                    modifier = Modifier.width(40.dp)
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.padding(horizontal = PaddingNormal)
                                     )
+
+                                    Spacer(Modifier.height(PaddingNormal))
+
+                                    if (index < it.lastIndex) {
+                                        Spacer(
+                                            Modifier.fillMaxWidth().padding(start = PaddingNormal)
+                                                .height(1.dp)
+                                                .background(MaterialTheme.colorScheme.surfaceBright)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -146,9 +180,10 @@ fun SessionStarter(
                             )
                         }
                     } ?: items(8) { index ->
+                        Spacer(Modifier.height(PaddingNormal))
                         QuizSkeleton(modifier = Modifier.padding(horizontal = PaddingNormal))
+                        Spacer(Modifier.height(PaddingNormal))
                         if (index < 7) {
-                            Spacer(Modifier.height(PaddingNormal))
                             Spacer(
                                 Modifier.fillMaxWidth().padding(start = PaddingNormal)
                                     .height(1.dp)
@@ -161,10 +196,3 @@ fun SessionStarter(
         }
     }
 }
-
-
-@Serializable
-data class SessionStarterDataModel(
-    val quizIds: List<Long> = emptyList(),
-    val dimensionIds: List<Long> = emptyList(),
-)

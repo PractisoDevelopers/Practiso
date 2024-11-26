@@ -1,6 +1,6 @@
 package com.zhufucdev.practiso.viewmodel
 
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -15,7 +15,6 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.concat
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
-import com.zhufucdev.practiso.datamodel.SessionSelectorModel
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -29,25 +28,53 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.serialization.Serializable
 
+@OptIn(SavedStateHandleSaveableApi::class)
 class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
-    val selector = SessionSelectorModel(state)
-    @OptIn(SavedStateHandleSaveableApi::class)
-    var currentItemId by state.saveable { mutableLongStateOf(-1) }
+    var currentItemIds by state.saveable { mutableStateOf(emptySet<Long>()) }
+        private set
+
+    @Serializable
+    data class Selection(
+        val quizIds: Set<Long> = emptySet(),
+        val dimensionIds: Set<Long> = emptySet(),
+    )
+
+    var selection by state.saveable { mutableStateOf(Selection()) }
         private set
 
     data class Events(
-        val changeCurrentItem: Channel<Long> = Channel()
+        val addCurrentItem: Channel<Long> = Channel(),
+        val removeCurrentItem: Channel<Long> = Channel(),
+        val selectQuiz: Channel<Long> = Channel(),
+        val deselectQuiz: Channel<Long> = Channel(),
     )
+
     val event = Events()
 
     init {
         viewModelScope.launch {
             while (viewModelScope.isActive) {
                 select {
-                    event.changeCurrentItem.onReceive {
-                        currentItemId = it
+                    event.addCurrentItem.onReceive {
+                        currentItemIds += it
+                        Unit
+                    }
+
+                    event.removeCurrentItem.onReceive {
+                        currentItemIds -= it
+                        Unit
+                    }
+
+                    event.selectQuiz.onReceive {
+                        selection = selection.copy(quizIds = selection.quizIds + it)
+                        Unit
+                    }
+
+                    event.deselectQuiz.onReceive {
+                        selection = selection.copy(quizIds = selection.quizIds - it)
                         Unit
                     }
                 }
@@ -94,16 +121,21 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
                     }.awaitAll()
                 }
             }
-        val stranded: Flow<List<Item>> = db.quizQueries.getQuizFrames(db.quizQueries.getStrandedQuiz())
-            .toOptionFlow()
-            .map {
-                if (it.isNotEmpty()) {
-                    listOf(Item.Stranded(it))
-                } else {
-                    emptyList()
+        val stranded: Flow<List<Item>> =
+            db.quizQueries.getQuizFrames(db.quizQueries.getStrandedQuiz())
+                .toOptionFlow()
+                .map {
+                    if (it.isNotEmpty()) {
+                        listOf(Item.Stranded(it))
+                    } else {
+                        emptyList()
+                    }
                 }
-            }
         categorizedFlow.concat(stranded)
+    }
+
+    fun loadSelection(model: Selection) {
+        selection = model
     }
 
     companion object {
@@ -115,4 +147,3 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
         }
     }
 }
-

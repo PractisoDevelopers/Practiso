@@ -44,7 +44,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.toRoute
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
@@ -55,10 +54,8 @@ import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionQuickStarterKey
 import com.zhufucdev.practiso.page.SessionStarter
-import com.zhufucdev.practiso.page.SessionStarterDataModel
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
-import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -226,21 +223,6 @@ private fun NavigatedApp() {
         }
         composable("${TopLevelDestination.Session.route}/new") {
             SessionStarter()
-        }
-        composable<SessionStarterDataModel> { entry ->
-            val starter = remember { entry.toRoute<SessionStarterDataModel>() }
-            val model: SessionStarterAppViewModel =
-                viewModel(factory = SessionStarterAppViewModel.Factory)
-            LaunchedEffect(starter) {
-                model.selector.apply {
-                    quizIds.clear()
-                    quizIds.addAll(starter.quizIds)
-                    dimensionIds.clear()
-                    dimensionIds.addAll(starter.dimensionIds)
-                }
-            }
-
-            SessionStarter(model)
         }
     }
 }
