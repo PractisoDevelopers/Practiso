@@ -72,6 +72,11 @@ SELECT Q.*
 FROM quiz Q JOIN quizByDimension D ON D.quizId = Q.id
 WHERE D.dimensionId = ?;
 
+getStrandedQuiz:
+SELECT Q.*
+FROM quiz Q
+WHERE Q.id NOT IN (SELECT id FROM quizByDimension);
+
 getQuizCountByDimension:
 SELECT count(*)
 FROM quizByDimension

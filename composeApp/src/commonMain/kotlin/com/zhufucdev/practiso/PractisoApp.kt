@@ -35,9 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -60,6 +58,7 @@ import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.page.SessionStarterDataModel
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
+import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -226,18 +225,22 @@ private fun NavigatedApp() {
             LibraryApp()
         }
         composable("${TopLevelDestination.Session.route}/new") {
-            var dataModel by remember { mutableStateOf(SessionStarterDataModel()) }
-            SessionStarter(
-                dataModel = dataModel,
-                onDataModelChange = { dataModel = it }
-            )
+            SessionStarter()
         }
         composable<SessionStarterDataModel> { entry ->
-            var dataModel by remember { mutableStateOf(entry.toRoute<SessionStarterDataModel>()) }
-            SessionStarter(
-                dataModel = dataModel,
-                onDataModelChange = { dataModel = it }
-            )
+            val starter = remember { entry.toRoute<SessionStarterDataModel>() }
+            val model: SessionStarterAppViewModel =
+                viewModel(factory = SessionStarterAppViewModel.Factory)
+            LaunchedEffect(starter) {
+                model.selector.apply {
+                    quizIds.clear()
+                    quizIds.addAll(starter.quizIds)
+                    dimensionIds.clear()
+                    dimensionIds.addAll(starter.dimensionIds)
+                }
+            }
+
+            SessionStarter(model)
         }
     }
 }

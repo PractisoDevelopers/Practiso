@@ -32,7 +32,7 @@ import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.serializer
 import org.jetbrains.compose.resources.getString
 import practiso.composeapp.generated.resources.Res
-import practiso.composeapp.generated.resources.image_span
+import practiso.composeapp.generated.resources.image_emoji
 
 @Serializable
 sealed interface Frame {
@@ -64,7 +64,7 @@ sealed interface Frame {
             get() = imageFrame.id
 
         override suspend fun getPreviewText(): String {
-            return imageFrame.altText ?: getString(Res.string.image_span)
+            return imageFrame.altText ?: getString(Res.string.image_emoji)
         }
 
         override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
