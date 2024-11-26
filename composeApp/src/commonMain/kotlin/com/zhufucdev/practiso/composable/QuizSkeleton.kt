@@ -40,7 +40,7 @@ fun QuizSkeleton(
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall), modifier = Modifier.weight(1f)) {
             CompositionLocalProvider(
-                LocalTextStyle provides MaterialTheme.typography.titleLarge
+                LocalTextStyle provides MaterialTheme.typography.titleMedium
             ) {
                 label()
             }

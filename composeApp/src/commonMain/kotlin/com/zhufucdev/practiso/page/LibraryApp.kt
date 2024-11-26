@@ -111,7 +111,6 @@ fun LibraryApp(
             LazyColumn(
                 modifier = Modifier.padding(start = PaddingNormal, top = PaddingNormal)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(PaddingNormal)
             ) {
                 flatContent(
                     value = templates,
@@ -206,7 +205,6 @@ fun <T> LazyListScope.flatContent(
         t.forEachIndexed { index, v ->
             item(id(v)) {
                 content(v)
-                Spacer(Modifier.height(PaddingNormal))
                 if (index < t.lastIndex) {
                     HorizontalSeparator()
                 }
@@ -214,7 +212,6 @@ fun <T> LazyListScope.flatContent(
         }
     } ?: items(skeletonsCount) { i ->
         skeleton()
-        Spacer(Modifier.height(PaddingNormal))
         if (i < skeletonsCount - 1) {
             HorizontalSeparator()
         }
@@ -239,7 +236,12 @@ private fun ContentSkeleton(
     },
     modifier: Modifier = Modifier,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall), modifier = modifier) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(PaddingSmall),
+        modifier = modifier
+    ) {
+        Spacer(Modifier.height(PaddingNormal - PaddingSmall))
+
         CompositionLocalProvider(
             LocalTextStyle provides MaterialTheme.typography.titleMedium
         ) {
@@ -251,6 +253,8 @@ private fun ContentSkeleton(
         ) {
             preview?.invoke()
         }
+
+        Spacer(Modifier.height(PaddingNormal - PaddingSmall))
     }
 }
 

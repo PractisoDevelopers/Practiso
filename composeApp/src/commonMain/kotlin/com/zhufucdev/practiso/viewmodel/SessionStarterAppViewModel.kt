@@ -134,10 +134,6 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
         categorizedFlow.concat(stranded)
     }
 
-    fun loadSelection(model: Selection) {
-        selection = model
-    }
-
     companion object {
         val Factory = viewModelFactory {
             val db = Database.app
