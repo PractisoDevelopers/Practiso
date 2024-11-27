@@ -51,7 +51,7 @@ fun SessionStarter(
 ) {
     composeFromBottomUp("fab", null)
 
-    val items: List<Item>? by model.items.collectAsState(null)
+    val items: List<Item>? by model.items.collectAsState()
     val itemById by remember(items) {
         derivedStateOf { items?.associateBy { it.id } ?: emptyMap() }
     }
