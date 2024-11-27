@@ -23,6 +23,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -131,7 +132,11 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
                         emptyList()
                     }
                 }
-        categorizedFlow.concat(stranded)
+        val result = MutableStateFlow<List<Item>?>(null)
+        viewModelScope.launch {
+            categorizedFlow.concat(stranded).collect(result)
+        }
+        result
     }
 
     companion object {
