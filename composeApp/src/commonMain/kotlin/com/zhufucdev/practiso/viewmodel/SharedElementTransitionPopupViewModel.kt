@@ -14,13 +14,12 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import kotlinx.coroutines.delay
 
 @OptIn(SavedStateHandleSaveableApi::class)
-class SimplifiedSessionCreationViewModel(private val state: SavedStateHandle) : ViewModel() {
+class SharedElementTransitionPopupViewModel(state: SavedStateHandle) : ViewModel() {
     var expanded by state.saveable { mutableStateOf(false) }
         private set
     var visible by state.saveable { mutableStateOf(false) }
         private set
 
-    var useRecommendations by state.saveable { mutableStateOf(true) }
     var transitionStart: Rect by mutableStateOf(Rect.Zero)
 
     suspend fun expand() {
@@ -36,10 +35,11 @@ class SimplifiedSessionCreationViewModel(private val state: SavedStateHandle) : 
     }
 
     companion object {
-        val Factory get() = viewModelFactory {
-            initializer {
-                SimplifiedSessionCreationViewModel(createPlatformSavedStateHandle())
+        val Factory
+            get() = viewModelFactory {
+                initializer {
+                    SharedElementTransitionPopupViewModel(createPlatformSavedStateHandle())
+                }
             }
-        }
     }
 }

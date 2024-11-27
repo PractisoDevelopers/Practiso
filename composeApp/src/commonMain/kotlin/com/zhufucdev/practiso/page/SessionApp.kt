@@ -1,13 +1,7 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,14 +12,11 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -57,17 +48,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
-import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.FabCreate
 import com.zhufucdev.practiso.composable.SectionCaption
+import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
+import com.zhufucdev.practiso.composable.SharedElementTransitionPopupScope
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
@@ -76,7 +65,6 @@ import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.SessionViewModel
-import com.zhufucdev.practiso.viewmodel.SimplifiedSessionCreationViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -98,37 +86,44 @@ import practiso.composeapp.generated.resources.use_smart_recommendations_para
 import practiso.composeapp.generated.resources.welcome_to_app_para
 import kotlin.math.min
 
-const val SessionQuickStarterKey = "session_quickstarter"
 
 @Composable
 fun SessionApp(
     sessionViewModel: SessionViewModel = viewModel(factory = SessionViewModel.Factory),
-    sscmViewModel: SimplifiedSessionCreationViewModel =
-        viewModel(factory = SimplifiedSessionCreationViewModel.Factory),
 ) {
     val takeStats by sessionViewModel.recentTakeStats.collectAsState(null)
     val coroutine = rememberCoroutineScope()
 
-    composeFromBottomUp("fab") {
-        AnimatedVisibility(
-            visible = !sscmViewModel.expanded,
-            enter = fadeIn(tween(delayMillis = 230)),
-            exit = fadeOut(tween(1))
-        ) {
-            FabCreate(
-                onClick = { coroutine.launch { sscmViewModel.expand() } },
-                modifier = Modifier.onGloballyPositioned {
-                    sscmViewModel.transitionStart = it.boundsInRoot()
-                })
+    SharedElementTransitionPopup(
+        key = "quickstart",
+        popup = {
+            Card(
+                shape = FloatingActionButtonDefaults.extendedFabShape,
+                modifier = Modifier
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {}
+                    )
+            ) {
+                Column(Modifier.padding(PaddingBig).fillMaxWidth()) {
+                    SimplifiedSessionCreationModalContent(
+                        model = sessionViewModel,
+                        columnScope = this,
+                        popupScope = this@SharedElementTransitionPopup,
+                        onCreate = {}
+                    )
+                }
+            }
+        },
+        sharedElement = {
+            FabCreate(modifier = it, onClick = {})
         }
-    }
-
-    composeFromBottomUp(SessionQuickStarterKey) {
-        if (sscmViewModel.visible) {
-            SimplifiedSessionCreationModal(
-                model = sscmViewModel,
-                sessionModel = sessionViewModel,
-                onCreate = {},
+    ) {
+        composeFromBottomUp("fab") {
+            FabCreate(
+                onClick = { coroutine.launch { expand() } },
+                modifier = Modifier.sharedElement()
             )
         }
     }
@@ -255,80 +250,11 @@ fun TakeSkeleton(
     }
 }
 
-
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun SimplifiedSessionCreationModal(
-    model: SimplifiedSessionCreationViewModel,
-    sessionModel: SessionViewModel,
-    onCreate: () -> Unit,
-) {
-    val coroutine = rememberCoroutineScope()
-    SharedTransitionScope { mod ->
-        val maskAlpha by animateFloatAsState(
-            if (model.expanded) 0.5f else 0f
-        )
-        Box(
-            mod.fillMaxSize().background(Color.Black.copy(alpha = maskAlpha))
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = { coroutine.launch { model.collapse() } }
-                )
-        ) {
-            AnimatedVisibility(model.expanded, modifier = Modifier.align(Alignment.Center)) {
-                Card(
-                    shape = FloatingActionButtonDefaults.extendedFabShape,
-                    modifier = Modifier
-                        .widthIn(max = 400.dp)
-                        .padding(PaddingNormal)
-                        .sharedBounds(
-                            sharedContentState = rememberSharedContentState("quickstart"),
-                            animatedVisibilityScope = this@AnimatedVisibility
-                        )
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                            onClick = {}
-                        )
-                ) {
-                    Column(Modifier.padding(PaddingBig).fillMaxWidth()) {
-                        SimplifiedSessionCreationModalContent(model, sessionModel, onCreate)
-                    }
-                }
-            }
-
-            AnimatedVisibility(
-                !model.expanded,
-                modifier = Modifier.offset {
-                    IntOffset(
-                        model.transitionStart.left.toInt(),
-                        model.transitionStart.top.toInt()
-                    )
-                }
-            ) {
-                FabCreate(
-                    modifier = Modifier.sharedBounds(
-                        sharedContentState = rememberSharedContentState("quickstart"),
-                        animatedVisibilityScope = this@AnimatedVisibility
-                    ),
-                    onClick = {}
-                )
-            }
-        }
-    }
-
-    BackHandlerOrIgnored {
-        coroutine.launch {
-            model.collapse()
-        }
-    }
-}
-
-@Composable
-private fun ColumnScope.SimplifiedSessionCreationModalContent(
-    model: SimplifiedSessionCreationViewModel,
-    sessionModel: SessionViewModel,
+private fun SimplifiedSessionCreationModalContent(
+    model: SessionViewModel,
+    columnScope: ColumnScope,
+    popupScope: SharedElementTransitionPopupScope,
     onCreate: () -> Unit,
 ) {
     var loadingRecommendations by remember { mutableStateOf(true) }
@@ -336,13 +262,13 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
     Text(
         stringResource(Res.string.session_para),
         style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.align(Alignment.CenterHorizontally)
+        modifier = with(columnScope) { Modifier.align(Alignment.CenterHorizontally) }
     )
     Spacer(Modifier.height(PaddingSmall))
     Text(
         stringResource(Res.string.quickly_start_new_session_para),
         style = MaterialTheme.typography.labelLarge,
-        modifier = Modifier.align(Alignment.CenterHorizontally)
+        modifier = with(columnScope) { Modifier.align(Alignment.CenterHorizontally) }
     )
 
     if (loadingRecommendations) {
@@ -368,9 +294,10 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
             Modifier.size(height = 26.dp, width = 1.dp)
                 .background(MaterialTheme.colorScheme.onSurface)
         )
+        val coroutine = rememberCoroutineScope()
         Switch(
             checked = model.useRecommendations,
-            onCheckedChange = { model.useRecommendations = it }
+            onCheckedChange = { coroutine.launch { model.event.toggleRecommendations.send(it) } }
         )
     }
 
@@ -380,8 +307,8 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
         modifier = Modifier.height(200.dp).fillMaxWidth()
     ) {
         val items by (
-                if (model.useRecommendations) sessionModel.smartRecommendations
-                else sessionModel.recentRecommendations
+                if (model.useRecommendations) model.smartRecommendations
+                else model.recentRecommendations
                 ).collectAsState(null)
 
         LaunchedEffect(items) {
@@ -427,7 +354,7 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
     Surface(
         onClick = {
             coroutine.launch {
-                model.collapse()
+                popupScope.collapse()
                 navController.navigate("${TopLevelDestination.Session.route}/new")
             }
         },
