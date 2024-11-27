@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,7 +51,10 @@ fun SessionStarter(
 ) {
     composeFromBottomUp("fab", null)
 
-    val items by model.items.collectAsState(null)
+    val items: List<Item>? by model.items.collectAsState(null)
+    val itemById by remember(items) {
+        derivedStateOf { items?.associateBy { it.id } ?: emptyMap() }
+    }
     val coroutine = rememberCoroutineScope()
     val currentItems: List<Item>? by remember(model, items) {
         derivedStateOf {
@@ -60,6 +64,24 @@ fun SessionStarter(
     val quizzes: List<PractisoOption.Quiz>? by remember(currentItems) {
         derivedStateOf {
             currentItems?.takeIf { it.isNotEmpty() }?.flatMap(Item::quizzes)
+        }
+    }
+    val selectedQuizzes: List<PractisoOption.Quiz>? by remember(model.selection, quizzes) {
+        derivedStateOf {
+            quizzes?.filter {
+                it.quiz.id in model.selection.quizIds || it in model.selection.dimensionIds.flatMap { i ->
+                    itemById[i]?.quizzes ?: emptyList()
+                }
+            }
+        }
+    }
+    val unselectedQuizzes: List<PractisoOption.Quiz>? by remember(model.selection, quizzes) {
+        derivedStateOf {
+            quizzes?.filter {
+                it.quiz.id !in model.selection.quizIds && it !in model.selection.dimensionIds.flatMap { i ->
+                    itemById[i]?.quizzes ?: emptyList()
+                }
+            }
         }
     }
 
@@ -124,50 +146,20 @@ fun SessionStarter(
                 }
                 Spacer(Modifier.height(PaddingNormal))
                 LazyColumn {
-                    quizzes?.let {
-                        it.forEachIndexed { index, item ->
-                            item(item.quiz.id) {
-                                Column(
-                                    Modifier
-                                        .animateItem()
-                                        .clickable {
-                                            coroutine.launch {
-                                                val id = item.quiz.id
-                                                if (id !in model.selection.quizIds) {
-                                                    model.event.selectQuiz.send(id)
-                                                } else {
-                                                    model.event.deselectQuiz.send(id)
-                                                }
-                                            }
+                    selectedQuizzes?.let {
+                        it.forEachIndexed { index, option ->
+                            item(option.quiz.id) {
+                                QuizItem(
+                                    option,
+                                    hasSeparator = index < it.lastIndex || unselectedQuizzes!!.isNotEmpty(),
+                                    checked = true,
+                                    onClick = {
+                                        coroutine.launch {
+                                            model.event.deselectQuiz.send(option.quiz.id)
                                         }
-                                ) {
-                                    Spacer(Modifier.height(PaddingNormal))
-
-                                    QuizSkeleton(
-                                        label = { Text(item.titleString()) },
-                                        preview = { Text(item.previewString()) },
-                                        tailingIcon = {
-                                            if (item.quiz.id in model.selection.quizIds) {
-                                                Checkbox(
-                                                    checked = true,
-                                                    onCheckedChange = null,
-                                                    modifier = Modifier.width(40.dp)
-                                                )
-                                            }
-                                        },
-                                        modifier = Modifier.padding(horizontal = PaddingNormal)
-                                    )
-
-                                    Spacer(Modifier.height(PaddingNormal))
-
-                                    if (index < it.lastIndex) {
-                                        Spacer(
-                                            Modifier.fillMaxWidth().padding(start = PaddingNormal)
-                                                .height(1.dp)
-                                                .background(MaterialTheme.colorScheme.surfaceBright)
-                                        )
-                                    }
-                                }
+                                    },
+                                    modifier = Modifier.animateItem()
+                                )
                             }
                         }
                     } ?: items?.let { _ ->
@@ -191,8 +183,68 @@ fun SessionStarter(
                             )
                         }
                     }
+
+                    unselectedQuizzes?.let {
+                        it.forEachIndexed { index, option ->
+                            item(option.quiz.id) {
+                                QuizItem(
+                                    option,
+                                    hasSeparator = index < it.lastIndex,
+                                    checked = false,
+                                    onClick = {
+                                        coroutine.launch {
+                                            model.event.selectQuiz.send(option.quiz.id)
+                                        }
+                                    },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuizItem(
+    option: PractisoOption.Quiz,
+    hasSeparator: Boolean,
+    checked: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        Modifier
+            .clickable(onClick = onClick)
+                then modifier
+    ) {
+        Spacer(Modifier.height(PaddingNormal))
+
+        QuizSkeleton(
+            label = { Text(option.titleString()) },
+            preview = { Text(option.previewString()) },
+            tailingIcon = {
+                if (checked) {
+                    Checkbox(
+                        checked = true,
+                        onCheckedChange = null,
+                        modifier = Modifier.width(40.dp)
+                    )
+                }
+            },
+            modifier = Modifier.padding(horizontal = PaddingNormal)
+        )
+
+        Spacer(Modifier.height(PaddingNormal))
+
+        AnimatedVisibility(hasSeparator) {
+            Spacer(
+                Modifier.fillMaxWidth().padding(start = PaddingNormal)
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.surfaceBright)
+            )
         }
     }
 }
