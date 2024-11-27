@@ -46,13 +46,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
+import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
-import com.zhufucdev.practiso.page.SessionQuickStarterKey
 import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
@@ -130,7 +130,7 @@ fun PractisoApp(
                 }
             }
 
-            buc.compose(SessionQuickStarterKey)
+            buc.compose(SharedElementTransitionKey)
         }
     }
 }
