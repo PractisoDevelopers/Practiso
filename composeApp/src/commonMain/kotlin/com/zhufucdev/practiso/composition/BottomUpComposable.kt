@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.composition
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -12,6 +13,7 @@ private typealias Content = @Composable () -> Unit
 interface BottomUpComposable {
     fun set(key: String, content: Content?)
     fun get(key: String): Content?
+
     @Composable
     fun compose(key: String)
 }
@@ -45,5 +47,12 @@ fun BottomUpComposableScope(content: @Composable (BottomUpComposable) -> Unit) {
 
 @Composable
 fun composeFromBottomUp(key: String, content: Content?) {
-    LocalBottomUpComposable.current!!.set(key, content)
+    val lbuc = LocalBottomUpComposable.current!!
+    DisposableEffect(key, content) {
+        onDispose {
+            if (lbuc.get(key) == content)
+                lbuc.set(key, null)
+        }
+    }
+    lbuc.set(key, content)
 }
