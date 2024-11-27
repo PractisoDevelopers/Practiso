@@ -111,7 +111,7 @@ fun SessionStarter(
                 Spacer(Modifier.height(PaddingNormal))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
                     item("start_spacer") {
-                        Spacer(Modifier.width(PaddingSmall))
+                        Spacer(Modifier.width(0.dp))
                     }
                     items?.let {
                         items(it, key = { d -> d.id }) { d ->
