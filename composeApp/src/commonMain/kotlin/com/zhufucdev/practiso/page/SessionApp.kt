@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -54,6 +55,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.FabCreate
+import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
+import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopupScope
@@ -80,18 +84,19 @@ import practiso.composeapp.generated.resources.quickly_start_new_session_para
 import practiso.composeapp.generated.resources.recently_used_para
 import practiso.composeapp.generated.resources.see_all_options_para
 import practiso.composeapp.generated.resources.session_para
+import practiso.composeapp.generated.resources.sessions_para
 import practiso.composeapp.generated.resources.start_para
 import practiso.composeapp.generated.resources.take_completeness
 import practiso.composeapp.generated.resources.use_smart_recommendations_para
 import practiso.composeapp.generated.resources.welcome_to_app_para
 import kotlin.math.min
 
-
 @Composable
 fun SessionApp(
-    sessionViewModel: SessionViewModel = viewModel(factory = SessionViewModel.Factory),
+    model: SessionViewModel = viewModel(factory = SessionViewModel.Factory),
 ) {
-    val takeStats by sessionViewModel.recentTakeStats.collectAsState(null)
+    val takeStats by model.recentTakeStats.collectAsState()
+    val sessions by model.sessions.collectAsState()
     val coroutine = rememberCoroutineScope()
 
     SharedElementTransitionPopup(
@@ -108,7 +113,7 @@ fun SessionApp(
             ) {
                 Column(Modifier.padding(PaddingBig).fillMaxWidth()) {
                     SimplifiedSessionCreationModalContent(
-                        model = sessionViewModel,
+                        model = model,
                         columnScope = this,
                         popupScope = this@SharedElementTransitionPopup,
                         onCreate = {}
@@ -128,7 +133,7 @@ fun SessionApp(
         }
     }
 
-    AnimatedContent(takeStats?.isEmpty() == true) { empty ->
+    AnimatedContent(takeStats?.isEmpty() == true && sessions?.isEmpty() == true) { empty ->
         if (empty) {
             AlertHelper(
                 label = {
@@ -142,35 +147,55 @@ fun SessionApp(
                 }
             )
         } else {
-            Column(
-                Modifier.verticalScroll(rememberScrollState())
-                    .padding(top = PaddingNormal)
+            LazyColumn(
+                Modifier.padding(top = PaddingNormal),
             ) {
-                SectionCaption(
-                    stringResource(Res.string.recently_used_para),
-                    Modifier.padding(start = PaddingNormal)
-                )
-                Spacer(Modifier.height(PaddingSmall))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
-                    item("start_spacer") {
-                        Spacer(Modifier)
-                    }
-                    takeStats?.let {
-                        items(it, TakeStat::id) { session ->
-                            Card { TakeContent(session) }
+                item("recent_takes_and_captions") {
+                    SectionCaption(
+                        stringResource(Res.string.recently_used_para),
+                        Modifier.padding(start = PaddingNormal)
+                    )
+                    Spacer(Modifier.height(PaddingSmall))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
+                        item("start_spacer") {
+                            Spacer(Modifier)
                         }
-                    } ?: items(3) {
-                        Card { TakeSkeleton() }
+                        takeStats?.let {
+                            items(it, TakeStat::id) { session ->
+                                Card { TakeContent(session) }
+                            }
+                        } ?: items(3) {
+                            Card { TakeSkeleton() }
+                        }
+                        item("end_spacer") {
+                            Spacer(Modifier)
+                        }
                     }
-                    item("end_spacer") {
-                        Spacer(Modifier)
+                }
+
+                item {
+                    SectionCaption(
+                        stringResource(Res.string.sessions_para),
+                        Modifier.padding(start = PaddingNormal)
+                    )
+                }
+
+                sessions?.let { sessions ->
+                    sessions.forEachIndexed { index, option ->
+                        item("session_" + option.session.id) {
+                            ListItem(separator = index < sessions.lastIndex) {
+                                PractisoOptionView(option)
+                            }
+                        }
+                    }
+                } ?: items(5) {
+                    ListItem(separator = it < 4) {
+                        PractisoOptionSkeleton()
                     }
                 }
             }
         }
-
     }
-
 }
 
 @Composable
@@ -378,5 +403,22 @@ private fun SimplifiedSessionCreationModalContent(
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             content = { Text(stringResource(Res.string.start_para)) }
         )
+    }
+}
+
+@Composable
+private fun ListItem(
+    modifier: Modifier = Modifier,
+    separator: Boolean,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier) {
+        Column(Modifier.padding(start = PaddingNormal)) {
+            content()
+            Spacer(Modifier.height(PaddingNormal))
+            if (separator) {
+                HorizontalSeparator()
+            }
+        }
     }
 }

@@ -88,11 +88,6 @@ fun SharedElementTransitionPopup(
                                     sharedContentState = rememberSharedContentState(key),
                                     animatedVisibilityScope = this@AnimatedVisibility
                                 )
-                                .clickable(
-                                    indication = null,
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    onClick = {}
-                                )
                         ) {
                             popup(scopeImpl)
                         }

@@ -2,10 +2,14 @@ package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,42 +19,63 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DimensionSkeleton
 import com.zhufucdev.practiso.composable.QuizSkeleton
+import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
+import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel.Item
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
+import practiso.composeapp.generated.resources.baseline_flag_checkered
+import practiso.composeapp.generated.resources.cancel_para
+import practiso.composeapp.generated.resources.confirm_para
+import practiso.composeapp.generated.resources.create_session_para
+import practiso.composeapp.generated.resources.finish_para
 import practiso.composeapp.generated.resources.head_to_library_to_create
 import practiso.composeapp.generated.resources.no_options_available_para
 import practiso.composeapp.generated.resources.select_category_to_begin_para
+import practiso.composeapp.generated.resources.session_name_para
 import practiso.composeapp.generated.resources.stranded_quizzes_para
 
 @Composable
 fun SessionStarter(
     model: SessionStarterAppViewModel = viewModel(factory = SessionStarterAppViewModel.Factory),
 ) {
-    composeFromBottomUp("fab", null)
-
     val items: List<Item>? by model.items.collectAsState()
     val itemById by remember(items) {
         derivedStateOf { items?.associateBy { it.id } ?: emptyMap() }
@@ -205,6 +230,85 @@ fun SessionStarter(
             }
         }
     }
+
+    var sessionName by rememberSaveable { mutableStateOf("") }
+    SharedElementTransitionPopup(
+        key = "finish",
+        sharedElement = {
+            FabFinish(onClick = {}, modifier = it)
+        },
+        popup = {
+            val navController = LocalNavController.current
+            Card(
+                shape = FloatingActionButtonDefaults.extendedFabShape,
+                modifier = Modifier
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {}
+                    )
+            ) {
+                Column(
+                    Modifier.padding(PaddingBig).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(PaddingNormal)
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.baseline_flag_checkered),
+                        contentDescription = null
+                    )
+
+                    Text(
+                        stringResource(Res.string.create_session_para),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    OutlinedTextField(
+                        value = sessionName,
+                        onValueChange = { sessionName = it },
+                        label = { Text(stringResource(Res.string.session_name_para)) }
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall, Alignment.End),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedButton(
+                            onClick = { coroutine.launch { collapse() } }
+                        ) {
+                            Text(stringResource(Res.string.cancel_para))
+                        }
+                        Button(
+                            enabled = sessionName.isNotEmpty(),
+                            onClick = {
+                                coroutine.launch {
+                                    collapse()
+                                    model.event.createSession.send(sessionName)
+                                    navController?.navigate(TopLevelDestination.Session.name)
+                                }
+                            }
+                        ) {
+                            Text(stringResource(Res.string.confirm_para))
+                        }
+                    }
+                }
+            }
+        }
+    ) {
+        composeFromBottomUp("fab") {
+            AnimatedVisibility(
+                visible = model.selection.quizIds.isNotEmpty()
+                        || model.selection.dimensionIds.isNotEmpty(),
+                enter = scaleIn(transformOrigin = TransformOrigin.Center),
+                exit = scaleOut(transformOrigin = TransformOrigin.Center),
+                modifier = Modifier.sharedElement(),
+            ) {
+                FabFinish(
+                    onClick = {
+                        coroutine.launch { expand() }
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -247,4 +351,21 @@ private fun QuizItem(
             )
         }
     }
+}
+
+@Composable
+private fun FabFinish(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    ExtendedFloatingActionButton(
+        onClick = onClick,
+        icon = {
+            Icon(
+                painter = painterResource(Res.drawable.baseline_flag_checkered),
+                contentDescription = null
+            )
+        },
+        text = {
+            Text(stringResource(Res.string.finish_para))
+        },
+        modifier = modifier
+    )
 }

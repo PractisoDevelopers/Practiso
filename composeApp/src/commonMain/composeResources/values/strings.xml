@@ -72,4 +72,12 @@
     <string name="redo_para">Redo</string>
     <string name="stranded_quizzes_para">Stranded problems</string>
     <string name="select_category_to_begin_para">Select a category to begin</string>
+    <string name="finish_para">Finish</string>
+    <string name="create_session_para">Create session</string>
+    <string name="session_name_para">Session name</string>
+    <string name="sessions_para">Sessions</string>
+    <plurals name="n_questions_dot_created_date_para">
+        <item quantity="one">%1$d question · created %2$s</item>
+        <item quantity="other">%1$d questions · created %2$s</item>
+    </plurals>
 </resources>
