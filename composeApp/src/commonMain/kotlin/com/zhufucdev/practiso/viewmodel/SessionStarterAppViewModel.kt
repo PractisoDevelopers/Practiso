@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 @OptIn(SavedStateHandleSaveableApi::class)
@@ -51,6 +53,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
         val removeCurrentItem: Channel<Long> = Channel(),
         val selectQuiz: Channel<Long> = Channel(),
         val deselectQuiz: Channel<Long> = Channel(),
+        val createSession: Channel<String> = Channel()
     )
 
     val event = Events()
@@ -77,6 +80,22 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
                     event.deselectQuiz.onReceive {
                         selection = selection.copy(quizIds = selection.quizIds - it)
                         Unit
+                    }
+
+                    event.createSession.onReceive { name ->
+                        withContext(Dispatchers.IO) {
+                            val sessionId = db.transactionWithResult {
+                                db.sessionQueries.insertSession(name, Clock.System.now())
+                                db.quizQueries.lastInsertRowId().executeAsOne()
+                            }
+
+                            val quizzes = items.value!!.filter { it.id in selection.dimensionIds }
+                                .flatMap { item -> item.quizzes.map { it.quiz.id } }
+                                .toSet() + selection.dimensionIds
+                            quizzes.forEach {
+                                db.sessionQueries.assoicateQuizWithSession(it, sessionId)
+                            }
+                        }
                     }
                 }
             }

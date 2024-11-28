@@ -2,21 +2,25 @@ package com.zhufucdev.practiso.viewmodel
 
 import androidx.compose.runtime.Composable
 import com.zhufucdev.practiso.database.QuizQueries
+import com.zhufucdev.practiso.database.SessionQueries
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import nl.jacobras.humanreadable.HumanReadable
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.empty_span
+import practiso.composeapp.generated.resources.n_questions_dot_created_date_para
 import practiso.composeapp.generated.resources.n_questions_span
 import practiso.composeapp.generated.resources.new_question_para
 
 private typealias DbQuiz = com.zhufucdev.practiso.database.Quiz
 private typealias DbDimension = com.zhufucdev.practiso.database.Dimension
+private typealias DbSession = com.zhufucdev.practiso.database.Session
 
 sealed interface PractisoOption {
     @Composable
@@ -54,6 +58,23 @@ sealed interface PractisoOption {
                 )
             else stringResource(Res.string.empty_span)
     }
+
+    data class Session(val session: DbSession, val quizCount: Int) : PractisoOption {
+        @Composable
+        override fun titleString(): String {
+            return session.name
+        }
+
+        @Composable
+        override fun previewString(): String {
+            return pluralStringResource(
+                Res.plurals.n_questions_dot_created_date_para,
+                quizCount,
+                quizCount,
+                HumanReadable.timeAgo(session.creationTimeISO)
+            )
+        }
+    }
 }
 
 fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
@@ -79,6 +100,22 @@ fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<PractisoOpt
                     PractisoOption.Dimension(
                         dimension = it,
                         quizCount = db.getQuizCountByDimension(it.id)
+                            .executeAsOne()
+                            .toInt()
+                    )
+                }
+            }.awaitAll()
+        }
+    }
+
+fun Flow<List<DbSession>>.toOptionFlow(db: SessionQueries): Flow<List<PractisoOption.Session>> =
+    map { sessions ->
+        coroutineScope {
+            sessions.map {
+                async {
+                    PractisoOption.Session(
+                        session = it,
+                        quizCount = db.getQuizCountBySession(it.id)
                             .executeAsOne()
                             .toInt()
                     )

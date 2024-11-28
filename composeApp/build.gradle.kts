@@ -68,6 +68,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.protobuf)
             implementation(libs.filekit)
             implementation(libs.okio)
+            implementation(libs.humanreadable)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

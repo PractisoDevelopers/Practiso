@@ -60,6 +60,9 @@ insertSession:
 INSERT INTO session(name, creationTimeISO)
 VALUES (?, ?);
 
+assoicateQuizWithSession:
+INSERT INTO quizBySession(quizId, sessionId)
+VALUES (?, ?);
 
 getAllTakeStats:
 SELECT *
@@ -70,3 +73,7 @@ SELECT *
 FROM takeStat
 ORDER BY takeStat.lastAccessTimeISO ASC
 LIMIT ?;
+
+getQuizCountBySession:
+SELECT count(*)
+FROM quizBySession WHERE sessionId = ?;

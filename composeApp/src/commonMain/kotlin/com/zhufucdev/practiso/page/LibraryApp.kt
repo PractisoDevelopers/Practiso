@@ -1,24 +1,16 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,12 +19,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.FloatingPopupButton
+import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
+import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
-import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.database.Template
 import com.zhufucdev.practiso.platform.AppDestination
@@ -40,7 +33,6 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingNormal
-import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.QuizzesViewModel
 import com.zhufucdev.practiso.viewmodel.TemplateViewModel
@@ -118,7 +110,7 @@ fun LibraryApp(
                         SectionCaption(stringResource(Res.string.templates_para))
                     },
                     content = {
-                        ContentSkeleton(
+                        PractisoOptionSkeleton(
                             label = { Text(it.name) },
                             preview = {
                                 it.description?.let { p ->
@@ -136,16 +128,7 @@ fun LibraryApp(
                         SectionCaption(stringResource(Res.string.dimensions_para))
                     },
                     content = {
-                        ContentSkeleton(
-                            label = { Text(it.titleString()) },
-                            preview = {
-                                Text(
-                                    text = it.previewString(),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        )
+                        PractisoOptionView(option = it)
                     },
                     id = { it.dimension.id }
                 )
@@ -156,15 +139,8 @@ fun LibraryApp(
                         SectionCaption(stringResource(Res.string.questions_para))
                     },
                     content = {
-                        ContentSkeleton(
-                            label = { Text(it.titleString()) },
-                            preview = {
-                                Text(
-                                    text = it.previewString(),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
+                        PractisoOptionView(
+                            option = it,
                             modifier = Modifier.fillMaxWidth().clickable {
                                 coroutine.launch {
                                     Navigator.navigate(
@@ -190,7 +166,7 @@ fun <T> LazyListScope.flatContent(
     caption: @Composable () -> Unit,
     content: @Composable (T) -> Unit,
     id: (T) -> Any,
-    skeleton: @Composable () -> Unit = { ContentSkeleton() },
+    skeleton: @Composable () -> Unit = { PractisoOptionSkeleton() },
     skeletonsCount: Int = 3,
 ) {
     if (value?.isEmpty() == true) {
@@ -218,50 +194,3 @@ fun <T> LazyListScope.flatContent(
     }
 }
 
-@Composable
-private fun ContentSkeleton(
-    label: @Composable () -> Unit = {
-        Spacer(
-            Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
-                .fillMaxWidth(fraction = 0.618f)
-                .shimmerBackground()
-        )
-    },
-    preview: (@Composable () -> Unit)? = {
-        Spacer(
-            Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
-                .fillMaxWidth()
-                .shimmerBackground()
-        )
-    },
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(PaddingSmall),
-        modifier = modifier
-    ) {
-        Spacer(Modifier.height(PaddingNormal - PaddingSmall))
-
-        CompositionLocalProvider(
-            LocalTextStyle provides MaterialTheme.typography.titleMedium
-        ) {
-            label()
-        }
-
-        CompositionLocalProvider(
-            LocalTextStyle provides MaterialTheme.typography.bodyMedium
-        ) {
-            preview?.invoke()
-        }
-
-        Spacer(Modifier.height(PaddingNormal - PaddingSmall))
-    }
-}
-
-@Composable
-private fun HorizontalSeparator() {
-    Spacer(
-        Modifier.height(1.dp).fillMaxWidth()
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
-    )
-}
