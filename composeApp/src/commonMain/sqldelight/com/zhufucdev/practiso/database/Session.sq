@@ -64,6 +64,9 @@ assoicateQuizWithSession:
 INSERT INTO quizBySession(quizId, sessionId)
 VALUES (?, ?);
 
+removeSession:
+DELETE FROM session WHERE id == ?;
+
 getAllTakeStats:
 SELECT *
 FROM takeStat;

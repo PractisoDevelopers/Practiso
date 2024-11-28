@@ -54,6 +54,7 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
 
     data class Events(
         val toggleRecommendations: Channel<Boolean> = Channel(),
+        val deleteSession: Channel<Long> = Channel()
     )
 
     val event = Events()
@@ -64,6 +65,12 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
                 select<Unit> {
                     event.toggleRecommendations.onReceive {
                         useRecommendations = it
+                    }
+
+                    event.deleteSession.onReceive {
+                        db.transaction {
+                            db.sessionQueries.removeSession(it)
+                        }
                     }
                 }
             }

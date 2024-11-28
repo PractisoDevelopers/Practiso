@@ -1,19 +1,23 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,9 +26,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,14 +49,23 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
@@ -90,6 +106,7 @@ import practiso.composeapp.generated.resources.take_completeness
 import practiso.composeapp.generated.resources.use_smart_recommendations_para
 import practiso.composeapp.generated.resources.welcome_to_app_para
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 @Composable
 fun SessionApp(
@@ -149,6 +166,7 @@ fun SessionApp(
         } else {
             LazyColumn(
                 Modifier.padding(top = PaddingNormal),
+                userScrollEnabled = sessions != null
             ) {
                 item("recent_takes_and_captions") {
                     SectionCaption(
@@ -156,7 +174,10 @@ fun SessionApp(
                         Modifier.padding(start = PaddingNormal)
                     )
                     Spacer(Modifier.height(PaddingSmall))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(PaddingNormal),
+                        userScrollEnabled = takeStats != null
+                    ) {
                         item("start_spacer") {
                             Spacer(Modifier)
                         }
@@ -183,13 +204,26 @@ fun SessionApp(
                 sessions?.let { sessions ->
                     sessions.forEachIndexed { index, option ->
                         item("session_" + option.session.id) {
-                            ListItem(separator = index < sessions.lastIndex) {
+                            ListItem(
+                                separator = index < sessions.lastIndex,
+                                onEdit = {},
+                                onDelete = {
+                                    coroutine.launch {
+                                        model.event.deleteSession.send(option.session.id)
+                                    }
+                                },
+                                modifier = Modifier.animateItem()
+                            ) {
                                 PractisoOptionView(option)
                             }
                         }
                     }
                 } ?: items(5) {
-                    ListItem(separator = it < 4) {
+                    ListItem(
+                        separator = it < 4,
+                        swipable = false,
+                        modifier = Modifier.animateItem()
+                    ) {
                         PractisoOptionSkeleton()
                     }
                 }
@@ -410,14 +444,120 @@ private fun SimplifiedSessionCreationModalContent(
 private fun ListItem(
     modifier: Modifier = Modifier,
     separator: Boolean,
+    swipable: Boolean = true,
+    onDelete: (() -> Unit)? = null,
+    onEdit: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Box(modifier) {
-        Column(Modifier.padding(start = PaddingNormal)) {
-            content()
-            Spacer(Modifier.height(PaddingNormal))
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    val dragAnimator = remember { Animatable(0f) }
+    val coroutine = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val targetWidth = 160.dp + PaddingSmall * 3
+
+    fun onDropEnd() {
+        coroutine.launch {
+            dragAnimator.snapTo(dragOffset)
+            if (-dragOffset.dp > targetWidth * 0.9f) {
+                dragAnimator.animateTo(-targetWidth.value) {
+                    dragOffset = value
+                }
+            } else {
+                dragAnimator.animateTo(0f) {
+                    dragOffset = value
+                }
+            }
+        }
+    }
+
+    Box(modifier, contentAlignment = Alignment.CenterEnd) {
+        Column(
+            Modifier.padding(start = PaddingNormal)
+                .pointerInput(swipable) {
+                    if (!swipable) {
+                        return@pointerInput
+                    }
+
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, amount ->
+                            dragOffset += with(density) { amount.toDp().value }
+                            change.consume()
+                        },
+                        onDragCancel = {
+                            onDropEnd()
+                        },
+                        onDragEnd = {
+                            onDropEnd()
+                        }
+                    )
+                }
+        ) {
+            Surface(Modifier.fillMaxWidth().offset(x = dragOffset.dp)) {
+                content()
+            }
             if (separator) {
                 HorizontalSeparator()
+            }
+        }
+
+        Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
+            Row(
+                Modifier.fillMaxHeight().width(-dragOffset.dp)
+                    .padding(PaddingSmall),
+                horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
+            ) {
+                DisguisedButton(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    modifier = Modifier.clickable(
+                        enabled = onEdit != null,
+                        onClick = { onEdit?.invoke() })
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null)
+                }
+                DisguisedButton(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.clickable(
+                        enabled = onDelete != null,
+                        onClick = { onDelete?.invoke() })
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.DisguisedButton(
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(6.dp),
+    color: Color,
+    targetWidth: Dp = 40.dp,
+    content: @Composable () -> Unit,
+) {
+    val targetPx = with(LocalDensity.current) { targetWidth.roundToPx() }
+    Layout(
+        modifier = Modifier.weight(1f).fillMaxHeight().background(
+            shape = shape,
+            color = color
+        ).clip(shape).clipToBounds() then modifier,
+        content = content
+    ) { measurables, constraints ->
+        val childConstraints = Constraints(
+            maxHeight = (constraints.maxHeight * 0.4).roundToInt()
+        )
+        val placeables = measurables.map { it.measure(childConstraints) }
+        val layoutWidth = constraints.maxWidth
+        val layoutHeight = constraints.maxHeight
+
+        layout(layoutWidth, layoutHeight) {
+            placeables.forEach {
+                val y = ((layoutHeight - it.height) / 2f).roundToInt()
+                if (layoutWidth < targetPx * 2) {
+                    it.placeRelative(layoutWidth - targetPx - (it.width / 2f).roundToInt(), y)
+                } else {
+                    it.placeRelative(((layoutWidth - it.width) / 2f).roundToInt(), y)
+                }
             }
         }
     }
