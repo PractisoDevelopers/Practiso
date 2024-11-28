@@ -458,7 +458,7 @@ private fun ListItem(
     fun onDropEnd() {
         coroutine.launch {
             dragAnimator.snapTo(dragOffset)
-            if (-dragOffset.dp > targetWidth * 0.9f) {
+            if (-dragOffset.dp > targetWidth * 0.5f) {
                 dragAnimator.animateTo(-targetWidth.value) {
                     dragOffset = value
                 }
@@ -480,6 +480,9 @@ private fun ListItem(
 
                     detectHorizontalDragGestures(
                         onHorizontalDrag = { change, amount ->
+                            if (dragOffset >= 0 && amount > 0) {
+                                return@detectHorizontalDragGestures
+                            }
                             dragOffset += with(density) { amount.toDp().value }
                             change.consume()
                         },
