@@ -91,9 +91,11 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
 
                             val quizzes = items.value!!.filter { it.id in selection.dimensionIds }
                                 .flatMap { item -> item.quizzes.map { it.quiz.id } }
-                                .toSet() + selection.dimensionIds
-                            quizzes.forEach {
-                                db.sessionQueries.assoicateQuizWithSession(it, sessionId)
+                                .toSet() + selection.quizIds
+                            db.transaction {
+                                quizzes.forEach {
+                                    db.sessionQueries.assoicateQuizWithSession(it, sessionId)
+                                }
                             }
                         }
                     }
