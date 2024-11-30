@@ -62,8 +62,8 @@ fun SharedElementTransitionPopup(
         override suspend fun collapse() = model.collapse()
     }
 
-    composeFromBottomUp(SharedElementTransitionKey) {
-        if (model.visible) {
+    if (model.visible) {
+        composeFromBottomUp(SharedElementTransitionKey) {
             SharedTransitionScope { mod ->
                 val maskAlpha by animateFloatAsState(
                     if (model.expanded) 0.5f else 0f

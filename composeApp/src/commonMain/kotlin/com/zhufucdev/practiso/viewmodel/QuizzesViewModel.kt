@@ -1,14 +1,17 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.datamodel.getQuizFrames
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 
 class QuizzesViewModel(private val db: AppDatabase): ViewModel() {
     val quiz: Flow<List<PractisoOption.Quiz>> by lazy {
@@ -16,23 +19,23 @@ class QuizzesViewModel(private val db: AppDatabase): ViewModel() {
             .toOptionFlow()
     }
 
-    fun add(name: String): Quiz {
-        val t = Clock.System.now()
-        val id = db.quizQueries.transactionWithResult {
-            db.quizQueries.insertQuiz(name, t, t)
-            db.quizQueries.lastInsertRowId().executeAsOne()
+    data class Events(
+        val remove: Channel<Long> = Channel()
+    )
+    val event = Events()
+
+    init {
+        viewModelScope.launch {
+            while (viewModelScope.isActive) {
+                select<Unit> {
+                    event.remove.onReceive {
+                        db.transaction {
+                            db.quizQueries.removeQuiz(it)
+                        }
+                    }
+                }
+            }
         }
-
-        return Quiz(id, name, t, t)
-    }
-
-    fun setName(id: Long, newName: String) {
-        db.quizQueries.updateQuizName(newName, id)
-    }
-
-    fun setModificationTimeToNow(id: Long) {
-        val t = Clock.System.now()
-        db.quizQueries.updateQuizModificationTimeISO(t, id)
     }
 
     companion object {

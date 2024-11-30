@@ -24,7 +24,7 @@ class SharedElementTransitionPopupViewModel(state: SavedStateHandle) : ViewModel
 
     suspend fun expand() {
         visible = true
-        delay(10)
+        delay(20)
         expanded = true
     }
 

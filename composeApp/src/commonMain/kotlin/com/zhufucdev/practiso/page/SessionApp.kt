@@ -1,23 +1,19 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,12 +22,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -41,36 +38,40 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.FabCreate
+import com.zhufucdev.practiso.composable.FlipCard
+import com.zhufucdev.practiso.composable.FlipCardState
+import com.zhufucdev.practiso.composable.HorizontalControl
+import com.zhufucdev.practiso.composable.HorizontalDraggable
+import com.zhufucdev.practiso.composable.HorizontalDraggingControlTargetWidth
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
@@ -81,32 +82,53 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.database.TakeStat
+import com.zhufucdev.practiso.platform.randomUUID
+import com.zhufucdev.practiso.protoBufStateListSaver
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
+import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SessionViewModel
+import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import nl.jacobras.humanreadable.HumanReadable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.baseline_check_circle_outline
+import practiso.composeapp.generated.resources.baseline_flag_checkered
 import practiso.composeapp.generated.resources.baseline_timelapse
+import practiso.composeapp.generated.resources.baseline_timer_outline
+import practiso.composeapp.generated.resources.cancel_para
+import practiso.composeapp.generated.resources.continue_or_start_new_take_para
 import practiso.composeapp.generated.resources.done_questions_completed_in_total
+import practiso.composeapp.generated.resources.edit_para
 import practiso.composeapp.generated.resources.get_started_by_para
 import practiso.composeapp.generated.resources.loading_recommendations_span
+import practiso.composeapp.generated.resources.loading_takes_para
+import practiso.composeapp.generated.resources.n_percentage
+import practiso.composeapp.generated.resources.new_take_para
+import practiso.composeapp.generated.resources.new_timer_para
 import practiso.composeapp.generated.resources.no_recommendations_span
+import practiso.composeapp.generated.resources.no_take_available_span
 import practiso.composeapp.generated.resources.quickly_start_new_session_para
 import practiso.composeapp.generated.resources.recently_used_para
+import practiso.composeapp.generated.resources.remove_para
 import practiso.composeapp.generated.resources.see_all_options_para
 import practiso.composeapp.generated.resources.session_para
 import practiso.composeapp.generated.resources.sessions_para
 import practiso.composeapp.generated.resources.start_para
 import practiso.composeapp.generated.resources.take_completeness
+import practiso.composeapp.generated.resources.take_n_para
 import practiso.composeapp.generated.resources.use_smart_recommendations_para
 import practiso.composeapp.generated.resources.welcome_to_app_para
+import practiso.composeapp.generated.resources.will_be_identified_as_x_para
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun SessionApp(
@@ -128,7 +150,7 @@ fun SessionApp(
                         onClick = {}
                     )
             ) {
-                Column(Modifier.padding(PaddingBig).fillMaxWidth()) {
+                Column(Modifier.padding(PaddingBig).fillMaxWidth().height(450.dp)) {
                     SimplifiedSessionCreationModalContent(
                         model = model,
                         columnScope = this,
@@ -176,7 +198,8 @@ fun SessionApp(
                     Spacer(Modifier.height(PaddingSmall))
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(PaddingNormal),
-                        userScrollEnabled = takeStats != null
+                        userScrollEnabled = takeStats != null,
+                        modifier = Modifier.animateItem()
                     ) {
                         item("start_spacer") {
                             Spacer(Modifier)
@@ -192,6 +215,7 @@ fun SessionApp(
                             Spacer(Modifier)
                         }
                     }
+                    Spacer(Modifier.height(PaddingNormal))
                 }
 
                 item {
@@ -212,9 +236,76 @@ fun SessionApp(
                                         model.event.deleteSession.send(option.session.id)
                                     }
                                 },
-                                modifier = Modifier.animateItem()
+                                modifier = Modifier.padding(start = PaddingNormal).animateItem()
                             ) {
-                                PractisoOptionView(option)
+                                val key = "session_" + option.session.id
+                                SharedElementTransitionPopup(
+                                    model = viewModel(
+                                        key = key,
+                                        factory = SharedElementTransitionPopupViewModel.Factory
+                                    ),
+                                    key = key,
+                                    popup = {
+                                        val state = remember { FlipCardState() }
+                                        FlipCard(
+                                            modifier = Modifier.clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null,
+                                                onClick = {}
+                                            ),
+                                            state = state
+                                        ) { page ->
+                                            val takes by model.takeStatsOf(option.session.id)
+                                                .collectAsState()
+                                            Column(Modifier.padding(PaddingBig).height(450.dp)) {
+                                                when (page) {
+                                                    0 -> {
+                                                        TakeStarterContent(
+                                                            option = option,
+                                                            takes = takes,
+                                                            onNewTake = {
+                                                                coroutine.launch {
+                                                                    state.flip(1)
+                                                                }
+                                                            },
+                                                            onStartTake = {
+
+                                                            }
+                                                        )
+                                                    }
+
+                                                    1 -> NewTakeContent(
+                                                        number = takes?.let { it.size + 1 },
+                                                        onCreate = {
+                                                            coroutine.launch {
+                                                                model.event.createTake.send(
+                                                                    SessionViewModel.TakeCreator(
+                                                                        option.session.id,
+                                                                        it.timers
+                                                                    )
+                                                                )
+                                                            }
+                                                        },
+                                                        onCancel = {
+                                                            coroutine.launch {
+                                                                state.flip(0)
+                                                            }
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    },
+                                    sharedElement = {
+                                        PractisoOptionView(option, modifier = it)
+                                    }
+                                ) {
+                                    PractisoOptionView(
+                                        option,
+                                        modifier = Modifier.sharedElement()
+                                            .clickable { coroutine.launch { expand() } }
+                                    )
+                                }
                             }
                         }
                     }
@@ -310,7 +401,7 @@ fun TakeSkeleton(
 }
 
 @Composable
-private fun SimplifiedSessionCreationModalContent(
+private fun ColumnScope.SimplifiedSessionCreationModalContent(
     model: SessionViewModel,
     columnScope: ColumnScope,
     popupScope: SharedElementTransitionPopupScope,
@@ -321,12 +412,14 @@ private fun SimplifiedSessionCreationModalContent(
     Text(
         stringResource(Res.string.session_para),
         style = MaterialTheme.typography.titleLarge,
+        textAlign = TextAlign.Center,
         modifier = with(columnScope) { Modifier.align(Alignment.CenterHorizontally) }
     )
     Spacer(Modifier.height(PaddingSmall))
     Text(
         stringResource(Res.string.quickly_start_new_session_para),
         style = MaterialTheme.typography.labelLarge,
+        textAlign = TextAlign.Center,
         modifier = with(columnScope) { Modifier.align(Alignment.CenterHorizontally) }
     )
 
@@ -362,37 +455,47 @@ private fun SimplifiedSessionCreationModalContent(
 
     Spacer(Modifier.height(PaddingNormal))
 
-    Box(
-        modifier = Modifier.height(200.dp).fillMaxWidth()
-    ) {
-        val items by (
-                if (model.useRecommendations) model.smartRecommendations
-                else model.recentRecommendations
-                ).collectAsState(null)
+    val items by (
+            if (model.useRecommendations) model.smartRecommendations
+            else model.recentRecommendations
+            ).collectAsState(null)
 
-        LaunchedEffect(items) {
-            loadingRecommendations = items == null
-        }
+    LaunchedEffect(items) {
+        loadingRecommendations = items == null
+    }
 
-        items.let {
-            if (it?.isNotEmpty() == true) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(PaddingSmall),
-                    modifier = Modifier.verticalScroll(rememberScrollState())
-                ) {
-                    it.forEach {
-                        Surface(
-                            shape = CardDefaults.shape,
-                            onClick = {
+    items.let {
+        if (it?.isNotEmpty() == true) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()).weight(1f)
+                    .fillMaxWidth()
+            ) {
+                it.forEach {
+                    Surface(
+                        shape = CardDefaults.shape,
+                        color = Color.Transparent,
+                        onClick = {
 
-                            },
-                            modifier = Modifier.padding(PaddingNormal)
-                        ) {
-                            Text(it.previewString(), style = MaterialTheme.typography.titleMedium)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(PaddingSmall)) {
+                            Text(
+                                it.titleString(),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                it.previewString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
-            } else {
+            }
+        } else {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     it?.isEmpty() == true -> Text(
                         stringResource(Res.string.no_recommendations_span),
@@ -449,119 +552,302 @@ private fun ListItem(
     onEdit: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    var dragOffset by remember { mutableFloatStateOf(0f) }
-    val dragAnimator = remember { Animatable(0f) }
-    val coroutine = rememberCoroutineScope()
-    val density = LocalDensity.current
-    val targetWidth = 160.dp + PaddingSmall * 3
-
-    fun onDropEnd() {
-        coroutine.launch {
-            dragAnimator.snapTo(dragOffset)
-            if (-dragOffset.dp > targetWidth * 0.5f) {
-                dragAnimator.animateTo(-targetWidth.value) {
-                    dragOffset = value
-                }
-            } else {
-                dragAnimator.animateTo(0f) {
-                    dragOffset = value
-                }
-            }
-        }
-    }
-
-    Box(modifier, contentAlignment = Alignment.CenterEnd) {
-        Column(
-            Modifier.padding(start = PaddingNormal)
-                .pointerInput(swipable) {
-                    if (!swipable) {
-                        return@pointerInput
-                    }
-
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { change, amount ->
-                            if (dragOffset >= 0 && amount > 0) {
-                                return@detectHorizontalDragGestures
-                            }
-                            dragOffset += with(density) { amount.toDp().value }
-                            change.consume()
-                        },
-                        onDragCancel = {
-                            onDropEnd()
-                        },
-                        onDragEnd = {
-                            onDropEnd()
-                        }
-                    )
-                }
-        ) {
-            Surface(Modifier.fillMaxWidth().offset(x = dragOffset.dp)) {
-                content()
-            }
-            if (separator) {
-                HorizontalSeparator()
-            }
-        }
-
-        Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
-            Row(
-                Modifier.fillMaxHeight().width(-dragOffset.dp)
-                    .padding(PaddingSmall),
-                horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
-            ) {
-                DisguisedButton(
+    Column(modifier) {
+        HorizontalDraggable(
+            enabled = swipable,
+            targetWidth = HorizontalDraggingControlTargetWidth * 2 + PaddingSmall * 3,
+            controls = {
+                HorizontalControl(
                     color = MaterialTheme.colorScheme.tertiaryContainer,
                     modifier = Modifier.clickable(
                         enabled = onEdit != null,
                         onClick = { onEdit?.invoke() })
                 ) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(Res.string.edit_para)
+                    )
                 }
-                DisguisedButton(
+                HorizontalControl(
                     color = MaterialTheme.colorScheme.errorContainer,
                     modifier = Modifier.clickable(
                         enabled = onDelete != null,
                         onClick = { onDelete?.invoke() })
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = stringResource(Res.string.remove_para)
+                    )
                 }
-            }
+            },
+            content = content
+        )
+
+        if (separator) {
+            HorizontalSeparator()
         }
     }
 }
 
 @Composable
-private fun RowScope.DisguisedButton(
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(6.dp),
-    color: Color,
-    targetWidth: Dp = 40.dp,
-    content: @Composable () -> Unit,
+private fun ColumnScope.TakeStarterContent(
+    option: PractisoOption.Session,
+    takes: List<TakeStat>?,
+    onNewTake: () -> Unit,
+    onStartTake: (Long) -> Unit,
 ) {
-    val targetPx = with(LocalDensity.current) { targetWidth.roundToPx() }
-    Layout(
-        modifier = Modifier.weight(1f).fillMaxHeight().background(
-            shape = shape,
-            color = color
-        ).clip(shape).clipToBounds() then modifier,
-        content = content
-    ) { measurables, constraints ->
-        val childConstraints = Constraints(
-            maxHeight = (constraints.maxHeight * 0.4).roundToInt()
-        )
-        val placeables = measurables.map { it.measure(childConstraints) }
-        val layoutWidth = constraints.maxWidth
-        val layoutHeight = constraints.maxHeight
+    var currentTakeId by remember { mutableLongStateOf(-1) }
 
-        layout(layoutWidth, layoutHeight) {
-            placeables.forEach {
-                val y = ((layoutHeight - it.height) / 2f).roundToInt()
-                if (layoutWidth < targetPx * 2) {
-                    it.placeRelative(layoutWidth - targetPx - (it.width / 2f).roundToInt(), y)
-                } else {
-                    it.placeRelative(((layoutWidth - it.width) / 2f).roundToInt(), y)
+    Text(
+        option.titleString(),
+        style = MaterialTheme.typography.titleLarge,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
+    Spacer(Modifier.height(PaddingSmall))
+    Text(
+        stringResource(Res.string.continue_or_start_new_take_para),
+        style = MaterialTheme.typography.labelLarge,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
+
+    if (takes != null) {
+        Spacer(Modifier.height(PaddingNormal))
+        if (takes.isNotEmpty()) {
+            LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+                takes.forEachIndexed { index, stat ->
+                    item(stat.id) {
+                        Surface(
+                            shape = CardDefaults.shape,
+                            color =
+                                if (currentTakeId == stat.id) MaterialTheme.colorScheme.secondaryContainer
+                                else Color.Transparent,
+                            onClick = {
+                                currentTakeId = if (currentTakeId == stat.id) -1 else stat.id
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(PaddingNormal)
+                            ) {
+                                Icon(
+                                    painterResource(Res.drawable.baseline_timelapse),
+                                    contentDescription = null
+                                )
+                                Text(
+                                    stringResource(Res.string.take_n_para, index + 1),
+                                )
+                                Spacer(Modifier.weight(1f))
+                                Text(
+                                    stringResource(
+                                        Res.string.n_percentage,
+                                        (stat.countQuizDone * 1f / stat.countQuizTotal).roundToInt()
+                                    ),
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
+                            }
+                        }
+                    }
                 }
             }
+        } else {
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Text(
+                    stringResource(Res.string.no_take_available_span),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+    } else {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxWidth().height(PaddingNormal)
+        ) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(fraction = 0.382f)
+            )
+        }
+        Spacer(Modifier.weight(1f))
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = CardDefaults.shape,
+        color = Color.Transparent,
+        onClick = onNewTake
+    ) {
+        Row(
+            Modifier.padding(PaddingNormal),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+        ) {
+            Icon(painterResource(Res.drawable.baseline_flag_checkered), contentDescription = null)
+            Text(stringResource(Res.string.new_take_para))
+        }
+    }
+
+    Row(modifier = Modifier.align(Alignment.End)) {
+        Button(
+            onClick = {
+                onStartTake(currentTakeId)
+            },
+            enabled = currentTakeId >= 0
+        ) {
+            Text(stringResource(Res.string.start_para))
+        }
+    }
+}
+
+data class TakeCreator(val timers: List<Double>)
+
+@Serializable
+data class Timer(val duration: Duration, val id: String = randomUUID())
+
+@Composable
+private fun ColumnScope.NewTakeContent(
+    number: Int?,
+    onCreate: (TakeCreator) -> Unit,
+    onCancel: () -> Unit,
+) {
+    val timers =
+        rememberSaveable(saver = protoBufStateListSaver()) { mutableStateListOf<Timer>() }
+
+    Icon(
+        painterResource(Res.drawable.baseline_flag_checkered),
+        contentDescription = null,
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
+    Spacer(Modifier.height(PaddingSmall))
+    Text(
+        stringResource(Res.string.new_take_para),
+        modifier = Modifier.align(Alignment.CenterHorizontally),
+        style = MaterialTheme.typography.titleLarge,
+        textAlign = TextAlign.Center
+    )
+    Spacer(Modifier.height(PaddingSmall))
+    Text(
+        if (number != null)
+            stringResource(
+                Res.string.will_be_identified_as_x_para,
+                stringResource(Res.string.take_n_para, number)
+            )
+        else
+            stringResource(Res.string.loading_takes_para),
+        modifier = Modifier.align(Alignment.CenterHorizontally),
+        style = MaterialTheme.typography.labelLarge,
+        textAlign = TextAlign.Center
+    )
+    Spacer(Modifier.height(PaddingNormal))
+    LazyColumn(Modifier.weight(1f)) {
+        items(timers.size, { timers[it].id }) { index ->
+            val duration = HumanReadable.duration(timers[index].duration)
+            val state = rememberSwipeToDismissBoxState()
+            LaunchedEffect(state.currentValue) {
+                if (state.currentValue == SwipeToDismissBoxValue.EndToStart
+                    || state.currentValue == SwipeToDismissBoxValue.StartToEnd
+                ) {
+                    timers.removeAt(index)
+                }
+            }
+            SwipeToDismissBox(
+                modifier = Modifier.animateItem(),
+                state = state,
+                backgroundContent = {
+                    if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(Res.string.remove_para),
+                            modifier = Modifier.padding(start = PaddingSmall)
+                                .align(Alignment.CenterVertically)
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    if (state.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(Res.string.remove_para),
+                            modifier = Modifier.padding(end = PaddingSmall)
+                                .align(Alignment.CenterVertically)
+                        )
+                    }
+                }
+            ) {
+                TimerSkeleton(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = CardDefaults.cardColors().containerColor,
+                    onClick = {},
+                    leadingIcon = {
+                        Icon(
+                            painterResource(Res.drawable.baseline_timer_outline),
+                            contentDescription = null
+                        )
+                    },
+                    content = {
+                        Text(duration)
+                    }
+                )
+            }
+        }
+
+        item("create_timer") {
+            TimerSkeleton(
+                modifier = Modifier.fillMaxWidth().animateItem(),
+                onClick = {
+                    timers.add(Timer(10.minutes))
+                },
+                leadingIcon = {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                },
+                content = {
+                    Text(stringResource(Res.string.new_timer_para))
+                }
+            )
+        }
+    }
+
+    Row(Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = onCancel
+        ) {
+            Text(stringResource(Res.string.cancel_para))
+        }
+        Spacer(Modifier.weight(1f))
+        Button(
+            onClick = {
+                onCreate(TakeCreator(timers.map { it.duration.inWholeMilliseconds / 1000.0 }))
+            }
+        ) {
+            Text(stringResource(Res.string.start_para))
+        }
+    }
+}
+
+@Composable
+private fun TimerSkeleton(
+    modifier: Modifier = Modifier,
+    color: Color = Color.Transparent,
+    onClick: () -> Unit,
+    leadingIcon: @Composable () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        color = color,
+        shape = CardDefaults.shape,
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(PaddingSmall)
+        ) {
+            leadingIcon()
+            content()
         }
     }
 }
