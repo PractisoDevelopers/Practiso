@@ -11,8 +11,16 @@ CREATE TABLE take(
     id INTEGER PRIMARY KEY,
     sessionId INTEGER NOT NULL,
     creationTimeISO TEXT AS Instant NOT NULL,
+    lastAccessTimeISO TEXT AS Instant,
     durationSeconds INTEGER NOT NULL DEFAULT 0,
     UNIQUE (id, sessionId)
+);
+
+CREATE TABLE timerByTake(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    takeId INTEGER NOT NULL,
+    durationSeconds REAL NOT NULL,
+    FOREIGN KEY (takeId) REFERENCES take(id) ON DELETE CASCADE
 );
 
 CREATE TABLE optionsFrameAnswer(
@@ -38,10 +46,10 @@ CREATE TABLE quizByTake(
 );
 
 CREATE VIEW takeStat AS
-SELECT S.id, S.name, S.lastAccessTimeISO, T.durationSeconds, Q.countQuizDone, QT.countQuizTotal
+SELECT T.id, QT.sessionId, S.name, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal
 FROM session S
 JOIN take T ON T.sessionId = S.id
-JOIN (
+LEFT JOIN (
     SELECT count(*) AS countQuizDone, takeId
     FROM quizByTake
     GROUP BY takeId
@@ -64,8 +72,28 @@ assoicateQuizWithSession:
 INSERT INTO quizBySession(quizId, sessionId)
 VALUES (?, ?);
 
+updateSessionAccessTime:
+UPDATE session SET lastAccessTimeISO = ? WHERE id = ?;
+
 removeSession:
 DELETE FROM session WHERE id == ?;
+
+insertTake:
+INSERT INTO take(sessionId, creationTimeISO)
+VALUES (?, ?);
+
+associateTimerWithTake:
+INSERT INTO timerByTake(takeId, durationSeconds)
+VALUES (?, ?);
+
+disassociateTimerFromTake:
+DELETE FROM timerByTake WHERE id = ?;
+
+updateTakeDuration:
+UPDATE take SET durationSeconds = ? WHERE id = ?;
+
+updateTakeAccessTime:
+UPDATE take SET lastAccessTimeISO = ? WHERE id = ?;
 
 getAllTakeStats:
 SELECT *
@@ -74,8 +102,14 @@ FROM takeStat;
 getRecentTakeStats:
 SELECT *
 FROM takeStat
-ORDER BY takeStat.lastAccessTimeISO ASC
+ORDER BY COALESCE(takeStat.lastAccessTimeISO, takeStat.creationTimeISO) ASC
 LIMIT ?;
+
+getTakeStatsBySession:
+SELECT *
+FROM takeStat
+WHERE sessionId = ?
+ORDER BY id;
 
 getQuizCountBySession:
 SELECT count(*)

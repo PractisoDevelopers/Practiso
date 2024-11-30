@@ -80,4 +80,13 @@
         <item quantity="one">%1$d question · created %2$s</item>
         <item quantity="other">%1$d questions · created %2$s</item>
     </plurals>
+    <string name="continue_or_start_new_take_para">Continue or start new take</string>
+    <string name="new_take_para">New take</string>
+    <string name="edit_para">Edit</string>
+    <string name="will_be_identified_as_x_para">Will be identified as %1$s</string>
+    <string name="take_n_para">Take %1$d</string>
+    <string name="new_timer_para">New timer</string>
+    <string name="no_take_available_span">no take available</string>
+    <string name="loading_takes_para">Loading takes</string>
+    <string name="n_percentage">%1$d%</string>
 </resources>

@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.datetime.Clock
 
 class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
@@ -48,13 +49,26 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
         }
     }
 
+    fun takeStatsOf(sessionId: Long) =
+        MutableStateFlow<List<TakeStat>?>(null).apply {
+            viewModelScope.launch {
+                db.sessionQueries.getTakeStatsBySession(sessionId)
+                    .asFlow()
+                    .mapToList(Dispatchers.IO)
+                    .collect(this@apply)
+            }
+        }
+
     @OptIn(SavedStateHandleSaveableApi::class)
     var useRecommendations by state.saveable { mutableStateOf(true) }
         private set
 
+    data class TakeCreator(val sessionId: Long, val timers: List<Double>)
+
     data class Events(
         val toggleRecommendations: Channel<Boolean> = Channel(),
-        val deleteSession: Channel<Long> = Channel()
+        val deleteSession: Channel<Long> = Channel(),
+        val createTake: Channel<TakeCreator> = Channel(),
     )
 
     val event = Events()
@@ -70,6 +84,22 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
                     event.deleteSession.onReceive {
                         db.transaction {
                             db.sessionQueries.removeSession(it)
+                        }
+                    }
+
+                    event.createTake.onReceive {
+                        val takeId = db.transactionWithResult {
+                            db.sessionQueries.updateSessionAccessTime(Clock.System.now(), it.sessionId)
+                            db.sessionQueries.insertTake(
+                                it.sessionId,
+                                Clock.System.now(),
+                            )
+                            db.quizQueries.lastInsertRowId().executeAsOne()
+                        }
+                        db.transaction {
+                            it.timers.forEach { d ->
+                                db.sessionQueries.associateTimerWithTake(takeId, d)
+                            }
                         }
                     }
                 }
