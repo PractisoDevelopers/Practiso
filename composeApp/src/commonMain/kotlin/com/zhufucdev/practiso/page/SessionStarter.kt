@@ -34,11 +34,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
@@ -231,7 +228,6 @@ fun SessionStarter(
         }
     }
 
-    var sessionName by rememberSaveable { mutableStateOf("") }
     SharedElementTransitionPopup(
         key = "finish",
         sharedElement = {
@@ -263,8 +259,8 @@ fun SessionStarter(
                         style = MaterialTheme.typography.titleMedium
                     )
                     OutlinedTextField(
-                        value = sessionName,
-                        onValueChange = { sessionName = it },
+                        value = model.newSessionName,
+                        onValueChange = { model.newSessionName = it },
                         label = { Text(stringResource(Res.string.session_name_para)) }
                     )
                     Row(
@@ -277,11 +273,11 @@ fun SessionStarter(
                             Text(stringResource(Res.string.cancel_para))
                         }
                         Button(
-                            enabled = sessionName.isNotEmpty(),
+                            enabled = model.newSessionName.isNotEmpty(),
                             onClick = {
                                 coroutine.launch {
                                     collapse()
-                                    model.event.createSession.send(sessionName)
+                                    model.event.createSession.send(model.newSessionName)
                                     navController?.navigate(TopLevelDestination.Session.name)
                                 }
                             }
