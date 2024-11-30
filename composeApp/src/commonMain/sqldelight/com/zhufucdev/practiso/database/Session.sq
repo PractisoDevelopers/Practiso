@@ -8,11 +8,11 @@ CREATE TABLE session(
 );
 
 CREATE TABLE take(
-    id INTEGER NOT NULL,
+    id INTEGER PRIMARY KEY,
     sessionId INTEGER NOT NULL,
     creationTimeISO TEXT AS Instant NOT NULL,
     durationSeconds INTEGER NOT NULL DEFAULT 0,
-    PRIMARY KEY (id, sessionId)
+    UNIQUE (id, sessionId)
 );
 
 CREATE TABLE optionsFrameAnswer(
@@ -30,9 +30,9 @@ CREATE TABLE quizBySession(
 );
 
 CREATE TABLE quizByTake(
-    id INTEGER PRIMARY KEY,
     takeId INTEGER NOT NULL,
     quizId INTEGER NOT NULL,
+    PRIMARY KEY (takeId, quizId),
     FOREIGN KEY (takeId) REFERENCES take(id) ON DELETE CASCADE,
     FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
 );
