@@ -5,10 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,6 +25,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.FloatingPopupButton
+import com.zhufucdev.practiso.composable.HorizontalControl
+import com.zhufucdev.practiso.composable.HorizontalDraggable
+import com.zhufucdev.practiso.composable.HorizontalDraggingControlTargetWidth
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
@@ -33,7 +39,9 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingNormal
+import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
+import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.QuizzesViewModel
 import com.zhufucdev.practiso.viewmodel.TemplateViewModel
 import kotlinx.coroutines.launch
@@ -47,13 +55,14 @@ import practiso.composeapp.generated.resources.dimensions_para
 import practiso.composeapp.generated.resources.import_para
 import practiso.composeapp.generated.resources.library_is_empty_para
 import practiso.composeapp.generated.resources.questions_para
+import practiso.composeapp.generated.resources.remove_para
 import practiso.composeapp.generated.resources.templates_para
 
 @Composable
 fun LibraryApp(
-    templateViewModel: TemplateViewModel = viewModel(factory = TemplateViewModel.Factory),
-    dimensionViewModel: DimensionViewModel = viewModel(factory = DimensionViewModel.Factory),
-    quizzesViewModel: QuizzesViewModel = viewModel(factory = QuizzesViewModel.Factory),
+    templateModel: TemplateViewModel = viewModel(factory = TemplateViewModel.Factory),
+    dimensionModel: DimensionViewModel = viewModel(factory = DimensionViewModel.Factory),
+    quizzesModel: QuizzesViewModel = viewModel(factory = QuizzesViewModel.Factory),
 ) {
     var showActions by remember {
         mutableStateOf(false)
@@ -88,9 +97,9 @@ fun LibraryApp(
         }
     }
 
-    val templates by templateViewModel.templates.collectAsState(null)
-    val dimensions by dimensionViewModel.dimensions.collectAsState(null)
-    val quizzes by quizzesViewModel.quiz.collectAsState(null)
+    val templates by templateModel.templates.collectAsState(null)
+    val dimensions by dimensionModel.dimensions.collectAsState(null)
+    val quizzes by quizzesModel.quiz.collectAsState(null)
 
     AnimatedContent(templates?.isEmpty() == true && dimensions?.isEmpty() == true && quizzes?.isEmpty() == true) { empty ->
         if (empty) {
@@ -139,8 +148,7 @@ fun LibraryApp(
                         SectionCaption(stringResource(Res.string.questions_para))
                     },
                     content = {
-                        PractisoOptionView(
-                            option = it,
+                        ListItem(
                             modifier = Modifier.fillMaxWidth().clickable {
                                 coroutine.launch {
                                     Navigator.navigate(
@@ -149,6 +157,12 @@ fun LibraryApp(
                                             NavigationOption.OpenQuiz(it.quiz.id)
                                         )
                                     )
+                                }
+                            },
+                            option = it,
+                            onDelete = {
+                                coroutine.launch {
+                                    quizzesModel.event.remove.send(it.quiz.id)
                                 }
                             }
                         )
@@ -160,11 +174,38 @@ fun LibraryApp(
     }
 }
 
+@Composable
+private fun LazyItemScope.ListItem(
+    modifier: Modifier = Modifier,
+    swipable: Boolean = true,
+    option: PractisoOption,
+    onDelete: () -> Unit,
+) {
+    HorizontalDraggable(
+        modifier = Modifier.animateItem(),
+        enabled = swipable,
+        targetWidth = HorizontalDraggingControlTargetWidth + PaddingSmall * 2,
+        controls = {
+            HorizontalControl(
+                color = MaterialTheme.colorScheme.errorContainer,
+                modifier = Modifier.clickable(onClick = onDelete, enabled = swipable)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(Res.string.remove_para)
+                )
+            }
+        },
+        content = {
+            PractisoOptionView(option, modifier = modifier)
+        }
+    )
+}
 
 fun <T> LazyListScope.flatContent(
     value: List<T>?,
     caption: @Composable () -> Unit,
-    content: @Composable (T) -> Unit,
+    content: @Composable LazyItemScope.(T) -> Unit,
     id: (T) -> Any,
     skeleton: @Composable () -> Unit = { PractisoOptionSkeleton() },
     skeletonsCount: Int = 3,
