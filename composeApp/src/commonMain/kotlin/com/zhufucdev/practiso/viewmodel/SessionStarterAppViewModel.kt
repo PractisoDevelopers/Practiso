@@ -36,6 +36,7 @@ import kotlinx.serialization.Serializable
 @OptIn(SavedStateHandleSaveableApi::class)
 class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
+    var newSessionName by state.saveable { mutableStateOf("") }
     var currentItemIds by state.saveable { mutableStateOf(emptySet<Long>()) }
         private set
 
