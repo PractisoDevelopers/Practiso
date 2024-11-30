@@ -18,8 +18,8 @@ import com.zhufucdev.practiso.composable.BitmapRepository
 import com.zhufucdev.practiso.datamodel.Edit
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.PrioritizedFrame
-import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.applyTo
+import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.insertInto
 import com.zhufucdev.practiso.datamodel.optimized
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -157,7 +157,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
 
                 nameEditValue = name
                 state = State.Ready
-                lastFrameId = frames.maxOf(Frame::id)
+                lastFrameId = frames.maxOfOrNull(Frame::id) ?: -1
             }
         } else {
             state = State.Ready
