@@ -47,7 +47,7 @@ CREATE TABLE quizByTake(
 );
 
 CREATE VIEW takeStat AS
-SELECT T.id, QT.sessionId, S.name, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal
+SELECT T.id, QT.sessionId, S.name, T.hidden, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal
 FROM session S
 JOIN take T ON T.sessionId = S.id
 LEFT JOIN (

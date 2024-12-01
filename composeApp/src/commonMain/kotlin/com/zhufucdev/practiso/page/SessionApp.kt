@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -58,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -91,7 +94,10 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
+import practiso.composeapp.generated.resources.baseline_arrow_collapse_up
 import practiso.composeapp.generated.resources.baseline_check_circle_outline
+import practiso.composeapp.generated.resources.baseline_chevron_down
+import practiso.composeapp.generated.resources.baseline_eye_off_outline
 import practiso.composeapp.generated.resources.baseline_flag_checkered
 import practiso.composeapp.generated.resources.baseline_timelapse
 import practiso.composeapp.generated.resources.baseline_timer_outline
@@ -113,6 +119,7 @@ import practiso.composeapp.generated.resources.remove_para
 import practiso.composeapp.generated.resources.see_all_options_para
 import practiso.composeapp.generated.resources.session_para
 import practiso.composeapp.generated.resources.sessions_para
+import practiso.composeapp.generated.resources.show_hidden_para
 import practiso.composeapp.generated.resources.start_para
 import practiso.composeapp.generated.resources.take_completeness
 import practiso.composeapp.generated.resources.take_n_para
@@ -241,7 +248,10 @@ fun SessionApp(
                                     popup = {
                                         val tsModel: TakeStarterViewModel = viewModel(
                                             key = key,
-                                            factory = TakeStarterViewModel.factory(option, coroutine)
+                                            factory = TakeStarterViewModel.factory(
+                                                option,
+                                                coroutine
+                                            )
                                         )
                                         FlipCard(
                                             modifier = Modifier.clickable(
@@ -557,6 +567,12 @@ private fun ColumnScope.TakeStarterContent(
     model: TakeStarterViewModel,
 ) {
     val takes by model.takeStats.collectAsState()
+    val visibleTakes by remember(takes) {
+        derivedStateOf { takes?.filter { it.hidden == 0L } }
+    }
+    val hiddenTakes by remember(takes) {
+        derivedStateOf { takes?.filter { it.hidden == 1L } }
+    }
     val coroutine = rememberCoroutineScope()
 
     Text(
@@ -573,64 +589,163 @@ private fun ColumnScope.TakeStarterContent(
         modifier = Modifier.align(Alignment.CenterHorizontally)
     )
 
-    takes?.let { list ->
+    if (takes?.isNotEmpty() == true) {
         Spacer(Modifier.height(PaddingNormal))
-        if (list.isNotEmpty()) {
-            LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
-                list.forEachIndexed { index, stat ->
-                    item(stat.id) {
-                        Surface(
-                            shape = CardDefaults.shape,
+        LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+            visibleTakes!!.forEachIndexed { index, stat ->
+                item(stat.id) {
+                    val state = rememberSwipeToDismissBoxState()
+                    LaunchedEffect(state.currentValue) {
+                        if (state.currentValue == SwipeToDismissBoxValue.StartToEnd
+                            || state.currentValue == SwipeToDismissBoxValue.EndToStart
+                        ) {
+                            model.event.hide.send(stat.id)
+                        }
+                    }
+                    SwipeToDismissBox(
+                        state = state,
+                        backgroundContent = {
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                                    .padding(horizontal = PaddingSmall),
+                                contentAlignment =
+                                    if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart
+                                    else Alignment.CenterEnd
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.baseline_eye_off_outline),
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                        modifier = Modifier.animateItem()
+                    ) {
+                        val number by remember(stat) {
+                            derivedStateOf {
+                                takes!!.drop(index).indexOf(stat) + 1
+                            }
+                        }
+                        TakeStatView(
+                            modifier = Modifier.fillMaxWidth(),
+                            model = stat,
                             color =
                                 if (model.currentTakeId == stat.id) MaterialTheme.colorScheme.secondaryContainer
-                                else Color.Transparent,
+                                else CardDefaults.cardColors().containerColor,
+                            number = number,
                             onClick = {
                                 coroutine.launch {
                                     model.event.tapTake.send(stat.id)
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(PaddingNormal)
-                            ) {
-                                Icon(
-                                    painterResource(Res.drawable.baseline_timelapse),
-                                    contentDescription = null
-                                )
-                                Text(
-                                    stringResource(Res.string.take_n_para, index + 1),
-                                )
-                                Spacer(Modifier.weight(1f))
-                                Text(
-                                    stringResource(
-                                        Res.string.n_percentage,
-                                        (stat.countQuizDone * 1f / stat.countQuizTotal).roundToInt()
-                                    ),
-                                    style = MaterialTheme.typography.labelMedium,
-                                )
                             }
-                        }
+                        )
                     }
                 }
             }
-        } else {
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text(
-                    stringResource(Res.string.no_take_available_span),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.labelLarge
+
+            item("show_hidden") {
+                val rx by animateFloatAsState(
+                    targetValue = if (model.showHidden) 180f else 0f,
+                    animationSpec = spring()
                 )
+                Surface(
+                    shape = CardDefaults.shape,
+                    color = Color.Transparent,
+                    onClick = {
+                        coroutine.launch {
+                            model.event.toggleShowHidden.send(Unit)
+                        }
+                    }
+                ) {
+                    Box(
+                        Modifier.padding(PaddingNormal).fillMaxWidth(),
+                    ) {
+                        Text(
+                            stringResource(Res.string.show_hidden_para),
+                            modifier = Modifier.padding(start = PaddingNormal)
+                                .align(Alignment.CenterStart)
+                        )
+                        Icon(
+                            painterResource(Res.drawable.baseline_chevron_down),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .graphicsLayer {
+                                    rotationX = rx
+                                }
+                        )
+                    }
+                }
+            }
+
+            hiddenTakes?.takeIf { model.showHidden }?.forEachIndexed { index, stat ->
+                item(stat.id) {
+                    val state = rememberSwipeToDismissBoxState()
+                    LaunchedEffect(state.currentValue) {
+                        if (state.currentValue == SwipeToDismissBoxValue.StartToEnd
+                            || state.currentValue == SwipeToDismissBoxValue.EndToStart
+                        ) {
+                            model.event.unhide.send(stat.id)
+                        }
+                    }
+                    SwipeToDismissBox(
+                        state = state,
+                        backgroundContent = {
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                                    .padding(horizontal = PaddingSmall),
+                                contentAlignment =
+                                    if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart
+                                    else Alignment.CenterEnd
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.baseline_arrow_collapse_up),
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                        modifier = Modifier.animateItem()
+                    ) {
+                        val number by remember(stat) {
+                            derivedStateOf {
+                                takes!!.drop(index).indexOf(stat) + 1
+                            }
+                        }
+                        TakeStatView(
+                            modifier = Modifier.fillMaxWidth(),
+                            model = stat,
+                            color =
+                                if (model.currentTakeId == stat.id) MaterialTheme.colorScheme.secondaryContainer
+                                else CardDefaults.cardColors().containerColor,
+                            number = number,
+                            onClick = {
+                                coroutine.launch {
+                                    model.event.tapTake.send(stat.id)
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
-    } ?: Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        LinearProgressIndicator(
-            modifier = Modifier.fillMaxWidth(fraction = 0.382f)
-        )
-        Spacer(Modifier.weight(1f))
+    } else if (takes != null) {
+        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Text(
+                stringResource(Res.string.no_take_available_span),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+    } else {
+        Column(
+            Modifier.fillMaxWidth().weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(PaddingSmall))
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(fraction = 0.382f)
+            )
+        }
     }
 
     Surface(
@@ -659,6 +774,44 @@ private fun ColumnScope.TakeStarterContent(
             enabled = model.currentTakeId >= 0
         ) {
             Text(stringResource(Res.string.start_para))
+        }
+    }
+}
+
+@Composable
+private fun TakeStatView(
+    modifier: Modifier = Modifier,
+    model: TakeStat,
+    color: Color,
+    number: Int,
+    onClick: () -> Unit,
+) {
+    Surface(
+        shape = CardDefaults.shape,
+        color = color,
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(PaddingNormal)
+        ) {
+            Icon(
+                painterResource(Res.drawable.baseline_timelapse),
+                contentDescription = null
+            )
+            Text(
+                stringResource(Res.string.take_n_para, number),
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                stringResource(
+                    Res.string.n_percentage,
+                    (model.countQuizDone * 1f / model.countQuizTotal).roundToInt()
+                ),
+                style = MaterialTheme.typography.labelMedium,
+            )
         }
     }
 }
@@ -708,21 +861,16 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
                 modifier = Modifier.animateItem(),
                 state = state,
                 backgroundContent = {
-                    if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                            .padding(horizontal = PaddingSmall),
+                        contentAlignment =
+                            if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart
+                            else Alignment.CenterEnd
+                    ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = stringResource(Res.string.remove_para),
-                            modifier = Modifier.padding(start = PaddingSmall)
-                                .align(Alignment.CenterVertically)
-                        )
-                    }
-                    Spacer(Modifier.weight(1f))
-                    if (state.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = stringResource(Res.string.remove_para),
-                            modifier = Modifier.padding(end = PaddingSmall)
-                                .align(Alignment.CenterVertically)
                         )
                     }
                 }
