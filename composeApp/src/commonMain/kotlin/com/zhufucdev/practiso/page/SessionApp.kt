@@ -622,7 +622,7 @@ private fun ColumnScope.TakeStarterContent(
                     ) {
                         val number by remember(stat) {
                             derivedStateOf {
-                                takes!!.drop(index).indexOf(stat) + 1
+                                takes!!.indexOf(stat) + 1
                             }
                         }
                         TakeStatView(
@@ -661,8 +661,7 @@ private fun ColumnScope.TakeStarterContent(
                     ) {
                         Text(
                             stringResource(Res.string.show_hidden_para),
-                            modifier = Modifier.padding(start = PaddingNormal)
-                                .align(Alignment.CenterStart)
+                            modifier = Modifier.align(Alignment.CenterStart)
                         )
                         Icon(
                             painterResource(Res.drawable.baseline_chevron_down),
@@ -707,7 +706,7 @@ private fun ColumnScope.TakeStarterContent(
                     ) {
                         val number by remember(stat) {
                             derivedStateOf {
-                                takes!!.drop(index).indexOf(stat) + 1
+                                takes!!.indexOf(stat) + 1
                             }
                         }
                         TakeStatView(
