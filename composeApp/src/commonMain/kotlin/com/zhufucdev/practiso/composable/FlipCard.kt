@@ -40,6 +40,7 @@ fun FlipCard(
 @Stable
 class FlipCardState(initialPage: Int = 0) {
     var currentPage: Int by mutableIntStateOf(initialPage)
+        private set
     private val animator = Animatable(0f)
     val currentRotationDegrees by animator.asState()
 
@@ -49,6 +50,11 @@ class FlipCardState(initialPage: Int = 0) {
         currentPage = targetPage
         animator.snapTo(if (ahead) 270f else -270f)
         animator.animateTo(if (ahead) 360f else -360f, tween(easing = LinearEasing))
+        animator.snapTo(0f)
+    }
+
+    suspend fun snap(targetPage: Int) {
+        currentPage = targetPage
         animator.snapTo(0f)
     }
 

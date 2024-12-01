@@ -13,6 +13,7 @@ CREATE TABLE take(
     creationTimeISO TEXT AS Instant NOT NULL,
     lastAccessTimeISO TEXT AS Instant,
     durationSeconds INTEGER NOT NULL DEFAULT 0,
+    hidden INTEGER NOT NULL DEFAULT 0,
     UNIQUE (id, sessionId)
 );
 
@@ -94,6 +95,9 @@ UPDATE take SET durationSeconds = ? WHERE id = ?;
 
 updateTakeAccessTime:
 UPDATE take SET lastAccessTimeISO = ? WHERE id = ?;
+
+updateTakeVisibility:
+UPDATE take SET hidden = ? WHERE id = ?;
 
 getAllTakeStats:
 SELECT *
