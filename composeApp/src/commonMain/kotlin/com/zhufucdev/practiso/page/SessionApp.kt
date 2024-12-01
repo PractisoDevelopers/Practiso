@@ -49,13 +49,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,7 +66,6 @@ import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.FabCreate
 import com.zhufucdev.practiso.composable.FlipCard
-import com.zhufucdev.practiso.composable.FlipCardState
 import com.zhufucdev.practiso.composable.HorizontalControl
 import com.zhufucdev.practiso.composable.HorizontalDraggable
 import com.zhufucdev.practiso.composable.HorizontalDraggingControlTargetWidth
@@ -82,16 +79,13 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.database.TakeStat
-import com.zhufucdev.practiso.platform.randomUUID
-import com.zhufucdev.practiso.protoBufStateListSaver
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
-import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SessionViewModel
 import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
+import com.zhufucdev.practiso.viewmodel.TakeStarterViewModel
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import nl.jacobras.humanreadable.HumanReadable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -127,7 +121,6 @@ import practiso.composeapp.generated.resources.welcome_to_app_para
 import practiso.composeapp.generated.resources.will_be_identified_as_x_para
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 @Composable
@@ -246,52 +239,22 @@ fun SessionApp(
                                     ),
                                     key = key,
                                     popup = {
-                                        val state = remember { FlipCardState() }
+                                        val tsModel: TakeStarterViewModel = viewModel(
+                                            key = key,
+                                            factory = TakeStarterViewModel.factory(option, coroutine)
+                                        )
                                         FlipCard(
                                             modifier = Modifier.clickable(
                                                 interactionSource = remember { MutableInteractionSource() },
                                                 indication = null,
                                                 onClick = {}
                                             ),
-                                            state = state
+                                            state = tsModel.flipCardState
                                         ) { page ->
-                                            val takes by model.takeStatsOf(option.session.id)
-                                                .collectAsState()
                                             Column(Modifier.padding(PaddingBig).height(450.dp)) {
                                                 when (page) {
-                                                    0 -> {
-                                                        TakeStarterContent(
-                                                            option = option,
-                                                            takes = takes,
-                                                            onNewTake = {
-                                                                coroutine.launch {
-                                                                    state.flip(1)
-                                                                }
-                                                            },
-                                                            onStartTake = {
-
-                                                            }
-                                                        )
-                                                    }
-
-                                                    1 -> NewTakeContent(
-                                                        number = takes?.let { it.size + 1 },
-                                                        onCreate = {
-                                                            coroutine.launch {
-                                                                model.event.createTake.send(
-                                                                    SessionViewModel.TakeCreator(
-                                                                        option.session.id,
-                                                                        it.timers
-                                                                    )
-                                                                )
-                                                            }
-                                                        },
-                                                        onCancel = {
-                                                            coroutine.launch {
-                                                                state.flip(0)
-                                                            }
-                                                        }
-                                                    )
+                                                    0 -> TakeStarterContent(model = tsModel)
+                                                    1 -> NewTakeContent(model = tsModel)
                                                 }
                                             }
                                         }
@@ -591,15 +554,13 @@ private fun ListItem(
 
 @Composable
 private fun ColumnScope.TakeStarterContent(
-    option: PractisoOption.Session,
-    takes: List<TakeStat>?,
-    onNewTake: () -> Unit,
-    onStartTake: (Long) -> Unit,
+    model: TakeStarterViewModel,
 ) {
-    var currentTakeId by remember { mutableLongStateOf(-1) }
+    val takes by model.takeStats.collectAsState()
+    val coroutine = rememberCoroutineScope()
 
     Text(
-        option.titleString(),
+        model.option.titleString(),
         style = MaterialTheme.typography.titleLarge,
         textAlign = TextAlign.Center,
         modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -612,19 +573,21 @@ private fun ColumnScope.TakeStarterContent(
         modifier = Modifier.align(Alignment.CenterHorizontally)
     )
 
-    if (takes != null) {
+    takes?.let { list ->
         Spacer(Modifier.height(PaddingNormal))
-        if (takes.isNotEmpty()) {
+        if (list.isNotEmpty()) {
             LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
-                takes.forEachIndexed { index, stat ->
+                list.forEachIndexed { index, stat ->
                     item(stat.id) {
                         Surface(
                             shape = CardDefaults.shape,
                             color =
-                                if (currentTakeId == stat.id) MaterialTheme.colorScheme.secondaryContainer
+                                if (model.currentTakeId == stat.id) MaterialTheme.colorScheme.secondaryContainer
                                 else Color.Transparent,
                             onClick = {
-                                currentTakeId = if (currentTakeId == stat.id) -1 else stat.id
+                                coroutine.launch {
+                                    model.event.tapTake.send(stat.id)
+                                }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -663,15 +626,10 @@ private fun ColumnScope.TakeStarterContent(
                 )
             }
         }
-    } else {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxWidth().height(PaddingNormal)
-        ) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(fraction = 0.382f)
-            )
-        }
+    } ?: Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        LinearProgressIndicator(
+            modifier = Modifier.fillMaxWidth(fraction = 0.382f)
+        )
         Spacer(Modifier.weight(1f))
     }
 
@@ -679,7 +637,9 @@ private fun ColumnScope.TakeStarterContent(
         modifier = Modifier.fillMaxWidth(),
         shape = CardDefaults.shape,
         color = Color.Transparent,
-        onClick = onNewTake
+        onClick = {
+            coroutine.launch { model.event.flip.send(1) }
+        }
     ) {
         Row(
             Modifier.padding(PaddingNormal),
@@ -694,28 +654,19 @@ private fun ColumnScope.TakeStarterContent(
     Row(modifier = Modifier.align(Alignment.End)) {
         Button(
             onClick = {
-                onStartTake(currentTakeId)
+                coroutine.launch { model.event.start.send(Unit) }
             },
-            enabled = currentTakeId >= 0
+            enabled = model.currentTakeId >= 0
         ) {
             Text(stringResource(Res.string.start_para))
         }
     }
 }
 
-data class TakeCreator(val timers: List<Double>)
-
-@Serializable
-data class Timer(val duration: Duration, val id: String = randomUUID())
-
 @Composable
-private fun ColumnScope.NewTakeContent(
-    number: Int?,
-    onCreate: (TakeCreator) -> Unit,
-    onCancel: () -> Unit,
-) {
-    val timers =
-        rememberSaveable(saver = protoBufStateListSaver()) { mutableStateListOf<Timer>() }
+private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
+    val takes by model.takeStats.collectAsState()
+    val number by remember(takes) { derivedStateOf { takes?.let { it.size + 1 } } }
 
     Icon(
         painterResource(Res.drawable.baseline_flag_checkered),
@@ -731,27 +682,26 @@ private fun ColumnScope.NewTakeContent(
     )
     Spacer(Modifier.height(PaddingSmall))
     Text(
-        if (number != null)
+        number?.let {
             stringResource(
                 Res.string.will_be_identified_as_x_para,
-                stringResource(Res.string.take_n_para, number)
+                stringResource(Res.string.take_n_para, it)
             )
-        else
-            stringResource(Res.string.loading_takes_para),
+        } ?: stringResource(Res.string.loading_takes_para),
         modifier = Modifier.align(Alignment.CenterHorizontally),
         style = MaterialTheme.typography.labelLarge,
         textAlign = TextAlign.Center
     )
     Spacer(Modifier.height(PaddingNormal))
     LazyColumn(Modifier.weight(1f)) {
-        items(timers.size, { timers[it].id }) { index ->
-            val duration = HumanReadable.duration(timers[index].duration)
+        items(model.timers.size, { model.timers[it].id }) { index ->
+            val duration = HumanReadable.duration(model.timers[index].duration)
             val state = rememberSwipeToDismissBoxState()
             LaunchedEffect(state.currentValue) {
                 if (state.currentValue == SwipeToDismissBoxValue.EndToStart
                     || state.currentValue == SwipeToDismissBoxValue.StartToEnd
                 ) {
-                    timers.removeAt(index)
+                    model.timers.removeAt(index)
                 }
             }
             SwipeToDismissBox(
@@ -798,7 +748,7 @@ private fun ColumnScope.NewTakeContent(
             TimerSkeleton(
                 modifier = Modifier.fillMaxWidth().animateItem(),
                 onClick = {
-                    timers.add(Timer(10.minutes))
+                    model.timers.add(TakeStarterViewModel.Timer(10.minutes))
                 },
                 leadingIcon = {
                     Icon(Icons.Default.Add, contentDescription = null)
@@ -810,16 +760,19 @@ private fun ColumnScope.NewTakeContent(
         }
     }
 
+    val coroutine = rememberCoroutineScope()
     Row(Modifier.fillMaxWidth()) {
         OutlinedButton(
-            onClick = onCancel
+            onClick = {
+                coroutine.launch { model.event.flip.send(0) }
+            }
         ) {
             Text(stringResource(Res.string.cancel_para))
         }
         Spacer(Modifier.weight(1f))
         Button(
             onClick = {
-                onCreate(TakeCreator(timers.map { it.duration.inWholeMilliseconds / 1000.0 }))
+                coroutine.launch { model.event.create.send(Unit) }
             }
         ) {
             Text(stringResource(Res.string.start_para))
