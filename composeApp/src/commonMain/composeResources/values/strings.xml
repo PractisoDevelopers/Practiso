@@ -89,4 +89,5 @@
     <string name="no_take_available_span">no take available</string>
     <string name="loading_takes_para">Loading takes</string>
     <string name="n_percentage">%1$d%</string>
+    <string name="show_hidden_para">Show hidden</string>
 </resources>

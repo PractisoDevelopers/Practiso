@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.viewmodel
 
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -59,12 +60,17 @@ class TakeStarterViewModel(
 
     var currentTakeId by state.saveable { mutableLongStateOf(-1) }
         private set
+    var showHidden by state.saveable { mutableStateOf(false) }
+        private set
 
     data class Events(
         val create: Channel<Unit> = Channel(),
         val start: Channel<Unit> = Channel(),
         val tapTake: Channel<Long> = Channel(),
-        val flip: Channel<Int> = Channel()
+        val flip: Channel<Int> = Channel(),
+        val hide: Channel<Long> = Channel(),
+        val unhide: Channel<Long> = Channel(),
+        val toggleShowHidden: Channel<Unit> = Channel()
     )
 
     val event = Events()
@@ -114,6 +120,29 @@ class TakeStarterViewModel(
                         } else {
                             currentTakeId = it
                         }
+                    }
+
+                    event.hide.onReceive {
+                        db.transaction {
+                            db.sessionQueries.updateTakeVisibility(
+                                hidden = 1,
+                                id = it
+                            )
+                        }
+                    }
+
+                    event.unhide.onReceive {
+                        db.transaction {
+                            db.sessionQueries.updateTakeVisibility(
+                                hidden = 0,
+                                id = it
+                            )
+                        }
+                    }
+
+                    event.toggleShowHidden.onReceive {
+                        showHidden = !showHidden
+                        Unit
                     }
                 }
             }

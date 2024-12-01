@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -43,6 +44,7 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
                 db.sessionQueries.getRecentTakeStats(5)
                     .asFlow()
                     .mapToList(Dispatchers.IO)
+                    .map { it.filterNot { stat -> stat.hidden == 1L } }
                     .collect(this@apply)
             }
         }
