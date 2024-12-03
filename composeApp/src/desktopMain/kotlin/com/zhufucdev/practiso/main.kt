@@ -65,7 +65,7 @@ fun main() = singleWindowApplication(title = "Practiso") {
                         val model =
                             viewModel<AnswerViewModel>(factory = AnswerViewModel.Factory)
 
-                        LaunchedEffect(model) {
+                        LaunchedEffect(model, navState) {
                             model.loadNavOptions(navState.options)
                         }
 
