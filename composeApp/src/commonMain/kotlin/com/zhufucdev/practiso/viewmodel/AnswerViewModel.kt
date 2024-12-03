@@ -60,14 +60,16 @@ class AnswerViewModel(
     val takeNumber by lazy {
         MutableStateFlow<Int?>(null).apply {
             viewModelScope.launch {
-                session.filterNotNull().collectLatest {
-                    db.sessionQueries
-                        .getTakeStatsBySessionId(it.id)
-                        .asFlow()
-                        .mapToList(Dispatchers.IO)
-                        .collect { stats ->
-                            emit(stats.indexOfFirst { stat -> stat.id == takeId.value } + 1)
-                        }
+                takeId.filter { it >= 0 }.collectLatest { takeId ->
+                    session.filterNotNull().collectLatest {
+                        db.sessionQueries
+                            .getTakeStatsBySessionId(it.id)
+                            .asFlow()
+                            .mapToList(Dispatchers.IO)
+                            .collect { stats ->
+                                emit(stats.indexOfFirst { stat -> stat.id == takeId } + 1)
+                            }
+                    }
                 }
             }
         }
