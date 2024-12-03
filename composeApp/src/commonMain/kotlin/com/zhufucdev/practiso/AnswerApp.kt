@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -139,32 +140,78 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                             frame.frame.optionsFrame.name?.let { Text(it) }
                         },
                         content = {
-                            val answerOptionIds by remember {
+                            val answerOptionIds by remember(answers) {
                                 derivedStateOf {
                                     answers?.mapNotNull { (it.takeIf { it is Answer.Option && it.quizId == quiz.quiz.id } as Answer.Option?)?.optionId }
                                         ?: emptyList()
+                                }
+                            }
+                            val correctChoices by remember(frame) {
+                                derivedStateOf {
+                                    frame.frame.frames.count { it.isKey }
                                 }
                             }
 
                             fun answerModel(option: KeyedPrioritizedFrame) =
                                 Answer.Option(option.frame.id, frame.frame.id, quiz.quiz.id)
 
-                            frame.frame.frames.forEach { option ->
+
+                            frame.frame.frames.forEachIndexed { index, option ->
                                 val checked = option.frame.id in answerOptionIds
+
+                                suspend fun selectOnly() {
+                                    if (checked) {
+                                        model.event.unanswer.send(
+                                            answerModel(option)
+                                        )
+                                    } else {
+                                        model.event.answer.send(
+                                            answerModel(option)
+                                        )
+                                        frame.frame.frames.forEachIndexed { i, f ->
+                                            if (i != index) {
+                                                model.event.unanswer.send(
+                                                    answerModel(f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                suspend fun selectMulti() {
+                                    if (checked) {
+                                        model.event.unanswer.send(
+                                            answerModel(option)
+                                        )
+                                    } else {
+                                        model.event.answer.send(
+                                            answerModel(option)
+                                        )
+                                    }
+                                }
+
                                 OptionSkeleton(
                                     prefix = {
-                                        RadioButton(
-                                            selected = checked,
-                                            onClick = {
-                                                coroutine.launch {
-                                                    if (checked) {
-                                                        model.event.unanswer.send(answerModel(option))
-                                                    } else {
-                                                        model.event.answer.send(answerModel(option))
+                                        if (correctChoices <= 1) {
+                                            RadioButton(
+                                                selected = checked,
+                                                enabled = correctChoices > 0,
+                                                onClick = {
+                                                    coroutine.launch {
+                                                        selectOnly()
                                                     }
                                                 }
-                                            }
-                                        )
+                                            )
+                                        } else {
+                                            Checkbox(
+                                                checked = checked,
+                                                onCheckedChange = {
+                                                    coroutine.launch {
+                                                        selectMulti()
+                                                    }
+                                                }
+                                            )
+                                        }
                                     },
                                     content = {
                                         SimpleFrame(
@@ -172,12 +219,12 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                             imageCache = model.imageCache
                                         )
                                     },
-                                    modifier = Modifier.clickable {
+                                    modifier = Modifier.clickable(enabled = correctChoices > 0) {
                                         coroutine.launch {
-                                            if (checked) {
-                                                model.event.unanswer.send(answerModel(option))
+                                            if (correctChoices > 1) {
+                                                selectMulti()
                                             } else {
-                                                model.event.answer.send(answerModel(option))
+                                                selectOnly()
                                             }
                                         }
                                     }
