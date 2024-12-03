@@ -21,10 +21,8 @@ struct QuizCreateView: UIViewControllerRepresentable {
 }
 
 struct AnswerView: UIViewControllerRepresentable {
-    var takeId: Int64
-    
     func makeUIViewController(context: Context) -> UIViewController {
-        ViewControllerKt.AnswerAppViewController(darkMode: context.environment.colorScheme == .dark, takeId: takeId)
+        ViewControllerKt.AnswerAppViewController(darkMode: context.environment.colorScheme == .dark)
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
