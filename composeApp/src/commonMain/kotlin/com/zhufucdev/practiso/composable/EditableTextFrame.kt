@@ -90,7 +90,7 @@ fun EditableTextFrame(
                         Text(stringResource(Res.string.cancel_para))
                     }
                     Button(onClick = {
-                        onValueChange(value.copy(value.textFrame.copy(content = buffer)))
+                        onValueChange(value.copy(textFrame = value.textFrame.copy(content = buffer)))
                         editing = false
                     }) {
                         Text(stringResource(Res.string.confirm_para))

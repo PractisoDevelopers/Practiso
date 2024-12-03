@@ -41,10 +41,10 @@ sealed interface Frame {
     fun insertInto(db: AppDatabase, quizId: Long, priority: Long)
 
     @Serializable(TextSerializer::class)
-    data class Text(val textFrame: TextFrame = TextFrame(-1, "")) : Frame {
-        override val id: Long
-            get() = textFrame.id
-
+    data class Text(
+        override val id: Long = -1,
+        val textFrame: TextFrame = TextFrame(-1, ""),
+    ) : Frame {
         override suspend fun getPreviewText(): String {
             return textFrame.content
         }
@@ -58,10 +58,10 @@ sealed interface Frame {
     }
 
     @Serializable(ImageSerializer::class)
-    data class Image(val imageFrame: ImageFrame = ImageFrame(-1, "", 0, 0, null)) : Frame {
-        override val id: Long
-            get() = imageFrame.id
-
+    data class Image(
+        override val id: Long = -1,
+        val imageFrame: ImageFrame = ImageFrame(-1, "", 0, 0, null),
+    ) : Frame {
         override suspend fun getPreviewText(): String {
             return imageFrame.altText ?: getString(Res.string.image_emoji)
         }
@@ -148,7 +148,7 @@ private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<
                     val textFrames =
                         getTextFrameByOptionsFrameId(optionsFrame.id) { id, content, isKey, priority ->
                             KeyedPrioritizedFrame(
-                                frame = Frame.Text(TextFrame(id, content)),
+                                frame = Frame.Text(optionsFrame.id, TextFrame(id, content)),
                                 isKey = isKey,
                                 priority = priority.toInt()
                             )
@@ -158,6 +158,7 @@ private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<
                         getImageFramesByOptionsFrameId(optionsFrame.id) { id, filename, width, height, altText, isKey, priority ->
                             KeyedPrioritizedFrame(
                                 frame = Frame.Image(
+                                    optionsFrame.id,
                                     ImageFrame(
                                         id,
                                         filename,
@@ -184,7 +185,7 @@ private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<
 private fun QuizQueries.getPrioritizedImageFrames(quizId: Long): List<PrioritizedFrame> =
     getImageFramesByQuizId(quizId) { id, filename, width, height, altText, priority ->
         PrioritizedFrame(
-            frame = Frame.Image(ImageFrame(id, filename, width, height, altText)),
+            frame = Frame.Image(id, ImageFrame(id, filename, width, height, altText)),
             priority = priority.toInt()
         )
     }
@@ -193,7 +194,7 @@ private fun QuizQueries.getPrioritizedImageFrames(quizId: Long): List<Prioritize
 private fun QuizQueries.getPrioritizedTextFrames(quizId: Long): List<PrioritizedFrame> =
     getTextFramesByQuizId(quizId) { id, content, priority ->
         PrioritizedFrame(
-            frame = Frame.Text(TextFrame(id, content)),
+            frame = Frame.Text(id, TextFrame(id, content)),
             priority = priority.toInt()
         )
     }
@@ -224,18 +225,21 @@ fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
 
 private class TextSerializer : KSerializer<Frame.Text> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("frame_text") {
+        element("external_id", serialDescriptor<Long>())
         element("id", serialDescriptor<Long>())
         element("content", serialDescriptor<String>())
     }
 
     override fun deserialize(decoder: Decoder): Frame.Text = decoder.decodeStructure(descriptor) {
+        var exId = -1L
         var id = -1L
         var content = ""
         while (true) {
             when (val index = decodeElementIndex(descriptor)) {
                 CompositeDecoder.DECODE_DONE -> break
-                0 -> id = decodeLongElement(descriptor, index)
-                1 -> content = decodeStringElement(descriptor, index)
+                0 -> exId = decodeLongElement(descriptor, index)
+                1 -> id = decodeLongElement(descriptor, index)
+                2 -> content = decodeStringElement(descriptor, index)
             }
         }
 
@@ -243,7 +247,7 @@ private class TextSerializer : KSerializer<Frame.Text> {
             error("Missing id or content while deserializing Frame.Text")
         }
 
-        return@decodeStructure Frame.Text(TextFrame(id, content))
+        return@decodeStructure Frame.Text(exId, TextFrame(id, content))
     }
 
     override fun serialize(encoder: Encoder, value: Frame.Text) =
@@ -255,6 +259,7 @@ private class TextSerializer : KSerializer<Frame.Text> {
 
 private class ImageSerializer : KSerializer<Frame.Image> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("frame_image") {
+        element("external_id", serialDescriptor<Long>())
         element("id", serialDescriptor<Long>())
         element("filename", serialDescriptor<String>())
         element("width", serialDescriptor<Long>())
@@ -263,6 +268,7 @@ private class ImageSerializer : KSerializer<Frame.Image> {
     }
 
     override fun deserialize(decoder: Decoder): Frame.Image = decoder.decodeStructure(descriptor) {
+        var exId = -1L
         var id = -1L
         var filename = ""
         var width = 0L
@@ -271,17 +277,19 @@ private class ImageSerializer : KSerializer<Frame.Image> {
         while (true) {
             when (val index = decodeElementIndex(descriptor)) {
                 CompositeDecoder.DECODE_DONE -> break
-                0 -> id = decodeLongElement(descriptor, index)
-                1 -> filename = decodeStringElement(descriptor, index)
-                2 -> width = decodeLongElement(descriptor, index)
-                3 -> height = decodeLongElement(descriptor, index)
-                4 -> altText = decodeSerializableElement(descriptor, index, serializer<String>())
+                0 -> exId = decodeLongElement(descriptor, index)
+                1 -> id = decodeLongElement(descriptor, index)
+                2 -> filename = decodeStringElement(descriptor, index)
+                3 -> width = decodeLongElement(descriptor, index)
+                4 -> height = decodeLongElement(descriptor, index)
+                5 -> altText = decodeSerializableElement(descriptor, index, serializer<String>())
             }
         }
         if (id < 0 || width <= 0 || height <= 0) {
             error("Missing elements when decoding")
         }
         Frame.Image(
+            exId,
             ImageFrame(
                 id, filename, width, height, altText
             )

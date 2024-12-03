@@ -210,14 +210,17 @@ fun SessionApp(
                         }
                         takeStats?.let {
                             items(it, TakeStat::id) { takeStat ->
-                                Card(onClick = {
-                                    coroutine.launch {
-                                        Navigator.navigate(
-                                            Navigation.Goto(AppDestination.Answer),
-                                            options = listOf(NavigationOption.OpenTake(takeStat.id))
-                                        )
-                                    }
-                                }) { TakeContent(takeStat) }
+                                Card(
+                                    onClick = {
+                                        coroutine.launch {
+                                            Navigator.navigate(
+                                                Navigation.Goto(AppDestination.Answer),
+                                                options = listOf(NavigationOption.OpenTake(takeStat.id))
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.animateItem()
+                                ) { TakeStatCardContent(takeStat) }
                             }
                         } ?: items(3) {
                             Card { TakeSkeleton() }
@@ -312,19 +315,24 @@ fun SessionApp(
 }
 
 @Composable
-fun TakeContent(model: TakeStat) {
+private fun TakeStatIcon(model: TakeStat) {
+    Icon(
+        painter = painterResource(
+            if (model.countQuizDone >= model.countQuizTotal) {
+                Res.drawable.baseline_check_circle_outline
+            } else {
+                Res.drawable.baseline_timelapse
+            }
+        ),
+        contentDescription = stringResource(Res.string.take_completeness)
+    )
+}
+
+@Composable
+fun TakeStatCardContent(model: TakeStat) {
     TakeSkeleton(
         icon = {
-            Icon(
-                painter = painterResource(
-                    if (model.countQuizDone >= model.countQuizTotal) {
-                        Res.drawable.baseline_check_circle_outline
-                    } else {
-                        Res.drawable.baseline_timelapse
-                    }
-                ),
-                contentDescription = stringResource(Res.string.take_completeness)
-            )
+            TakeStatIcon(model)
         },
         label = {
             Text(
@@ -640,7 +648,7 @@ private fun ColumnScope.TakeStarterContent(
                                 takes!!.indexOf(stat) + 1
                             }
                         }
-                        TakeStatView(
+                        TakeStatItem(
                             modifier = Modifier.fillMaxWidth(),
                             model = stat,
                             color =
@@ -724,7 +732,7 @@ private fun ColumnScope.TakeStarterContent(
                                 takes!!.indexOf(stat) + 1
                             }
                         }
-                        TakeStatView(
+                        TakeStatItem(
                             modifier = Modifier.fillMaxWidth(),
                             model = stat,
                             color =
@@ -793,7 +801,7 @@ private fun ColumnScope.TakeStarterContent(
 }
 
 @Composable
-private fun TakeStatView(
+private fun TakeStatItem(
     modifier: Modifier = Modifier,
     model: TakeStat,
     color: Color,
@@ -811,10 +819,7 @@ private fun TakeStatView(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(PaddingNormal)
         ) {
-            Icon(
-                painterResource(Res.drawable.baseline_timelapse),
-                contentDescription = null
-            )
+            TakeStatIcon(model)
             Text(
                 stringResource(Res.string.take_n_para, number),
             )
@@ -822,7 +827,7 @@ private fun TakeStatView(
             Text(
                 stringResource(
                     Res.string.n_percentage,
-                    (model.countQuizDone * 1f / model.countQuizTotal).roundToInt()
+                    (model.countQuizDone * 100f / model.countQuizTotal).roundToInt()
                 ),
                 style = MaterialTheme.typography.labelMedium,
             )
