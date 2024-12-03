@@ -3,8 +3,8 @@ package com.zhufucdev.practiso
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 
 class AnswerActivity : NavigatorComponentActivity() {
@@ -12,9 +12,11 @@ class AnswerActivity : NavigatorComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val takeId = navigationOptions.filterIsInstance<NavigationOption.OpenTake>().last().takeId
         setContent {
-            val model: AnswerViewModel = viewModel(factory = AnswerViewModel.factory(takeId))
+            val model: AnswerViewModel = viewModel(factory = AnswerViewModel.Factory)
+            LaunchedEffect(model) {
+                model.loadNavOptions(navigationOptions)
+            }
             AnswerApp(model)
         }
     }
