@@ -145,7 +145,7 @@ class AnswerViewModel(
 
                     event.unanswer.onReceive {
                         db.transaction {
-                            db.sessionQueries.removeAnswer(it.quizId, takeId.value)
+                            it.rollback(db, takeId.value)
                         }
                     }
                 }

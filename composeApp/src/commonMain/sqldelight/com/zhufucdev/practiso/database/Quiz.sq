@@ -105,7 +105,7 @@ FROM textFrame T JOIN frameByQuiz Q ON T.id = Q.textFrameId
 WHERE Q.quizId = ?;
 
 getTextFrameByOptionsFrameId:
-SELECT T.*, isKey, priority
+SELECT T.*, F.id AS linkId, isKey, priority
 FROM textFrame T JOIN frameByOptionsFrame F ON F.textFrameId = T.id
 WHERE F.optionsFrameId = ?;
 
@@ -144,7 +144,7 @@ FROM imageFrame I JOIN frameByQuiz Q ON Q.imageFrameId = I.id
 WHERE Q.quizId = ?;
 
 getImageFramesByOptionsFrameId:
-SELECT I.*, isKey, priority
+SELECT I.*, O.id AS linkId, isKey, priority
 FROM imageFrame I JOIN frameByOptionsFrame O ON O.imageFrameId = I.id
 WHERE O.optionsFrameId = ?;
 

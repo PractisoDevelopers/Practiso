@@ -16,12 +16,13 @@ sealed interface Answer {
     val frameId: Long
 
     fun commit(db: AppDatabase, takeId: Long, priority: Int)
+    fun rollback(db: AppDatabase, takeId: Long)
 
     @Serializable
     data class Text(val text: String, override val frameId: Long, override val quizId: Long) :
         Answer {
         override fun commit(db: AppDatabase, takeId: Long, priority: Int) {
-            db.sessionQueries.setQuizTakeTextAnswer(
+            db.sessionQueries.setTextAnswer(
                 quizId,
                 takeId,
                 textFrameId = frameId,
@@ -29,18 +30,31 @@ sealed interface Answer {
                 priority = priority.toLong()
             )
         }
+
+        override fun rollback(db: AppDatabase, takeId: Long) {
+            db.sessionQueries.removeTextAnswer(frameId, quizId, takeId)
+        }
     }
 
     @Serializable
     data class Option(val optionId: Long, override val frameId: Long, override val quizId: Long) :
         Answer {
         override fun commit(db: AppDatabase, takeId: Long, priority: Int) {
-            db.sessionQueries.setQuizTakeOptionAnswer(
+            db.sessionQueries.setOptionAnswer(
                 quizId,
                 takeId,
                 answerOptionId = optionId,
                 optionsFrameId = frameId,
                 priority = priority.toLong()
+            )
+        }
+
+        override fun rollback(db: AppDatabase, takeId: Long) {
+            db.sessionQueries.removeOptionAnswer(
+                answerOptionId = optionId,
+                optionsFrameId = frameId,
+                quizId = quizId,
+                takeId = takeId
             )
         }
     }
