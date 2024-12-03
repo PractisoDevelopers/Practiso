@@ -90,4 +90,6 @@
     <string name="loading_takes_para">Loading takes</string>
     <string name="n_percentage">%1$d%</string>
     <string name="show_hidden_para">Show hidden</string>
+    <string name="loading_quizzes_para">Loading questions…</string>
+    <string name="missing_take_to_open_para">Missing take to open</string>
 </resources>

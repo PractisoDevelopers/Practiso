@@ -33,12 +33,12 @@ CREATE TABLE frameByQuiz(
 );
 
 CREATE TABLE frameByOptionsFrame(
+    id INTEGER PRIMARY KEY,
     optionsFrameId INTEGER NOT NULL,
     priority INTEGER NOT NULL,
     textFrameId INTEGER,
     imageFrameId INTEGER,
     isKey INTEGER AS Boolean NOT NULL,
-    PRIMARY KEY (optionsFrameId, textFrameId, imageFrameId),
     FOREIGN KEY (optionsFrameId) REFERENCES optionsFrame(id),
     FOREIGN KEY (textFrameId) REFERENCES textFrame(id) ON DELETE CASCADE,
     FOREIGN KEY (imageFrameId) REFERENCES imageFrame(id) ON DELETE CASCADE,

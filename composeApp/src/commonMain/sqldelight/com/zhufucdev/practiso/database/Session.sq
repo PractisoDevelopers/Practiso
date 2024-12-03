@@ -38,12 +38,17 @@ CREATE TABLE quizBySession(
     FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
 );
 
-CREATE TABLE quizByTake(
+CREATE TABLE answer(
     takeId INTEGER NOT NULL,
     quizId INTEGER NOT NULL,
+    answerOptionId INTEGER,
+    answerText TEXT,
+    priority INTEGER NOT NULL,
     PRIMARY KEY (takeId, quizId),
+    FOREIGN KEY (answerOptionId) REFERENCES frameByOptionsFrame(id) ON DELETE CASCADE,
     FOREIGN KEY (takeId) REFERENCES take(id) ON DELETE CASCADE,
-    FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE
+    FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE,
+    CONSTRAINT integrity_chk CHECK (answerOptionId IS NOT NULL OR answerText IS NOT NULL)
 );
 
 CREATE VIEW takeStat AS
@@ -52,7 +57,7 @@ FROM session S
 JOIN take T ON T.sessionId = S.id
 LEFT JOIN (
     SELECT count(*) AS countQuizDone, takeId
-    FROM quizByTake
+    FROM answer
     GROUP BY takeId
 ) Q ON Q.takeId = T.id
 JOIN (
@@ -64,6 +69,11 @@ JOIN (
 getAllSessions:
 SELECT *
 FROM session;
+
+getSessionByTakeId:
+SELECT S.*
+FROM session S JOIN take T ON T.sessionId = S.id
+WHERE T.id = ?;
 
 insertSession:
 INSERT INTO session(name, creationTimeISO)
@@ -83,6 +93,10 @@ insertTake:
 INSERT INTO take(sessionId, creationTimeISO)
 VALUES (?, ?);
 
+getTakeById:
+SELECT *
+FROM take WHERE id = ?;
+
 associateTimerWithTake:
 INSERT INTO timerByTake(takeId, durationSeconds)
 VALUES (?, ?);
@@ -99,6 +113,11 @@ UPDATE take SET lastAccessTimeISO = ? WHERE id = ?;
 updateTakeVisibility:
 UPDATE take SET hidden = ? WHERE id = ?;
 
+getQuizzesByTakeId:
+SELECT Q.*
+FROM take T JOIN quizBySession S ON S.sessionId = T.sessionId JOIN quiz Q ON Q.id = S.quizId
+WHERE T.id = ?;
+
 getAllTakeStats:
 SELECT *
 FROM takeStat;
@@ -109,7 +128,7 @@ FROM takeStat
 ORDER BY COALESCE(takeStat.lastAccessTimeISO, takeStat.creationTimeISO) ASC
 LIMIT ?;
 
-getTakeStatsBySession:
+getTakeStatsBySessionId:
 SELECT *
 FROM takeStat
 WHERE sessionId = ?
@@ -118,3 +137,16 @@ ORDER BY id;
 getQuizCountBySession:
 SELECT count(*)
 FROM quizBySession WHERE sessionId = ?;
+
+setQuizTakeAnswer:
+INSERT OR REPLACE INTO answer(quizId, takeId, answerOptionId, answerText, priority)
+VALUES (?, ?, ?, ?, ?);
+
+getAnswersByTakeId:
+SELECT *
+FROM answer WHERE takeId = ?
+ORDER BY priority;
+
+removeAnswer:
+DELETE FROM answer WHERE quizId = ? AND takeId = ?;
+

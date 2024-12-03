@@ -82,6 +82,10 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.database.TakeStat
+import com.zhufucdev.practiso.platform.AppDestination
+import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationOption
+import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -205,8 +209,15 @@ fun SessionApp(
                             Spacer(Modifier)
                         }
                         takeStats?.let {
-                            items(it, TakeStat::id) { session ->
-                                Card { TakeContent(session) }
+                            items(it, TakeStat::id) { takeStat ->
+                                Card(onClick = {
+                                    coroutine.launch {
+                                        Navigator.navigate(
+                                            Navigation.Goto(AppDestination.Answer),
+                                            options = listOf(NavigationOption.OpenTake(takeStat.id))
+                                        )
+                                    }
+                                }) { TakeContent(takeStat) }
                             }
                         } ?: items(3) {
                             Card { TakeSkeleton() }
@@ -248,11 +259,13 @@ fun SessionApp(
                                     popup = {
                                         val tsModel: TakeStarterViewModel = viewModel(
                                             key = key,
-                                            factory = TakeStarterViewModel.factory(
-                                                option,
-                                                coroutine
-                                            )
+                                            factory = TakeStarterViewModel.Factory
                                         )
+
+                                        LaunchedEffect(option) {
+                                            tsModel.load(option, coroutine)
+                                        }
+
                                         FlipCard(
                                             modifier = Modifier.clickable(
                                                 interactionSource = remember { MutableInteractionSource() },
@@ -264,7 +277,9 @@ fun SessionApp(
                                             Column(Modifier.padding(PaddingBig).height(450.dp)) {
                                                 when (page) {
                                                     0 -> TakeStarterContent(model = tsModel)
-                                                    1 -> NewTakeContent(model = tsModel)
+                                                    1 -> NewTakeContent(
+                                                        model = tsModel
+                                                    )
                                                 }
                                             }
                                         }
@@ -574,9 +589,9 @@ private fun ColumnScope.TakeStarterContent(
         derivedStateOf { takes?.filter { it.hidden == 1L } }
     }
     val coroutine = rememberCoroutineScope()
-
+    val option by model.option.collectAsState()
     Text(
-        model.option.titleString(),
+        option?.titleString() ?: stringResource(Res.string.loading_takes_para),
         style = MaterialTheme.typography.titleLarge,
         textAlign = TextAlign.Center,
         modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -768,7 +783,7 @@ private fun ColumnScope.TakeStarterContent(
     Row(modifier = Modifier.align(Alignment.End)) {
         Button(
             onClick = {
-                coroutine.launch { model.event.start.send(Unit) }
+                coroutine.launch { model.event.start.send(model.currentTakeId) }
             },
             enabled = model.currentTakeId >= 0
         ) {
@@ -919,7 +934,9 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
         Spacer(Modifier.weight(1f))
         Button(
             onClick = {
-                coroutine.launch { model.event.create.send(Unit) }
+                coroutine.launch {
+                    model.event.createAndStart.send(Unit)
+                }
             }
         ) {
             Text(stringResource(Res.string.start_para))

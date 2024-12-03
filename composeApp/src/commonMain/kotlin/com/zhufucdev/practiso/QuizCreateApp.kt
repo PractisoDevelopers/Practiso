@@ -23,7 +23,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
@@ -70,6 +69,7 @@ import com.zhufucdev.practiso.composable.EditableOptionsFrame
 import com.zhufucdev.practiso.composable.EditableTextFrame
 import com.zhufucdev.practiso.composable.HorizontalPageIndicator
 import com.zhufucdev.practiso.composable.ImageFrameSkeleton
+import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
@@ -103,7 +103,6 @@ import practiso.composeapp.generated.resources.expand_para
 import practiso.composeapp.generated.resources.frame_type_span
 import practiso.composeapp.generated.resources.get_started_by_checking_sheet_para
 import practiso.composeapp.generated.resources.image_frame_span
-import practiso.composeapp.generated.resources.navigate_up_para
 import practiso.composeapp.generated.resources.new_question_para
 import practiso.composeapp.generated.resources.options_frame_span
 import practiso.composeapp.generated.resources.question_is_empty_para
@@ -146,31 +145,6 @@ fun QuizCreateApp(
                     }
                 }
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NavigateUpButton() {
-    val coroutine = rememberCoroutineScope()
-
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-        tooltip = { PlainTooltip { Text(stringResource(Res.string.navigate_up_para)) } },
-        state = rememberTooltipState()
-    ) {
-        IconButton(
-            onClick = {
-                coroutine.launch {
-                    Navigator.navigate(Navigation.Backward)
-                }
-            },
-        ) {
-            Icon(
-                Icons.AutoMirrored.Default.ArrowBack,
-                contentDescription = stringResource(Res.string.navigate_up_para)
-            )
         }
     }
 }

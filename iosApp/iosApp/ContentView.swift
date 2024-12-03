@@ -20,6 +20,17 @@ struct QuizCreateView: UIViewControllerRepresentable {
     }
 }
 
+struct AnswerView: UIViewControllerRepresentable {
+    var takeId: Int64
+    
+    func makeUIViewController(context: Context) -> UIViewController {
+        ViewControllerKt.AnswerAppViewController(darkMode: context.environment.colorScheme == .dark, takeId: takeId)
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+    }
+}
+
 extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
     override open func viewDidLoad() {
         super.viewDidLoad()
@@ -42,6 +53,10 @@ struct ContentView: View {
                     switch screen.destination {
                     case .quizCreate:
                         QuizCreateView()
+                            .ignoresSafeArea(.keyboard)
+                            .navigationBarBackButtonHidden()
+                    case .answer:
+                        AnswerView()
                             .ignoresSafeArea(.keyboard)
                             .navigationBarBackButtonHidden()
                     case .mainView:
