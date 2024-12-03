@@ -1,11 +1,13 @@
 package com.zhufucdev.practiso.platform
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 
 actual val Navigator: AppNavigator
     get() = UINavigator
 
-object UINavigator : StackNavigator() {
+object UINavigator : StackNavigator(CoroutineScope(Dispatchers.Default)) {
     val path = MutableStateFlow(emptyList<NavigatorStackItem>())
 
     override suspend fun onNavigate(model: NavigationStateSnapshot) {

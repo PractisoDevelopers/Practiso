@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.zhufucdev.practiso.platform.UINavigator
 import com.zhufucdev.practiso.style.AppTypography
+import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 
 fun MainViewController(darkMode: Boolean) = ComposeUIViewController {
@@ -33,10 +34,27 @@ fun QuizCreateViewController(darkMode: Boolean) = ComposeUIViewController {
             viewModel(factory = QuizCreateViewModel.Factory)
         val navState by UINavigator.current.collectAsState()
 
-        LaunchedEffect(appModel, navState) {
+        LaunchedEffect(appModel) {
             appModel.loadNavOptions(navState.options)
         }
 
         QuizCreateApp(appModel)
+    }
+}
+
+fun AnswerAppViewController(darkMode: Boolean) = ComposeUIViewController {
+    MaterialTheme(
+        colorScheme = if (darkMode) darkColorScheme() else lightColorScheme(),
+        typography = AppTypography
+    ) {
+        val navState by UINavigator.current.collectAsState()
+        val model =
+            viewModel<AnswerViewModel>(factory = AnswerViewModel.Factory)
+
+        LaunchedEffect(model) {
+            model.loadNavOptions(navState.options)
+        }
+
+        AnswerApp(model)
     }
 }

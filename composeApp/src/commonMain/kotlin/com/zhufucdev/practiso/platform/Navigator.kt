@@ -1,19 +1,28 @@
 package com.zhufucdev.practiso.platform
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.serialization.Serializable
 
 enum class AppDestination {
     MainView,
-    QuizCreate
+    QuizCreate,
+    Answer
 }
 
 @Serializable
 sealed interface NavigationOption {
     @Serializable
     data class OpenQuiz(val quizId: Long) : NavigationOption
+
+    @Serializable
+    data class OpenTake(val takeId: Long) : NavigationOption
 }
 
 sealed interface Navigation {
@@ -48,7 +57,7 @@ data class NavigatorStackItem(
     val options: List<NavigationOption>,
 )
 
-abstract class StackNavigator : AppNavigator {
+abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator {
     protected val state =
         MutableStateFlow(NavigationStateSnapshot(Navigation.Home, Navigation.Home.destination))
 
@@ -58,6 +67,21 @@ abstract class StackNavigator : AppNavigator {
         mutableListOf(NavigatorStackItem(Navigation.Home.destination, emptyList()))
     protected var pointer = 0
 
+    private val stateChannel = Channel<NavigationStateSnapshot>()
+
+    init {
+        coroutineScope.launch {
+            while (isActive) {
+                select {
+                    stateChannel.onReceive {
+                        state.emit(it)
+                        onNavigate(state.value)
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun navigate(navigation: Navigation, options: List<NavigationOption>) {
         when (navigation) {
             is Navigation.Backward -> {
@@ -65,7 +89,13 @@ abstract class StackNavigator : AppNavigator {
                     error("Backstack will become empty")
                 }
                 val dest = backstack[--pointer]
-                state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options + options))
+                stateChannel.send(
+                    NavigationStateSnapshot(
+                        navigation,
+                        dest.destination,
+                        dest.options + options
+                    )
+                )
             }
 
             is Navigation.Forward -> {
@@ -73,7 +103,13 @@ abstract class StackNavigator : AppNavigator {
                     error("Backstack is currently at the edge")
                 }
                 val dest = backstack[++pointer]
-                state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options + options))
+                stateChannel.send(
+                    NavigationStateSnapshot(
+                        navigation,
+                        dest.destination,
+                        dest.options + options
+                    )
+                )
             }
 
             is Navigation.WithDestination -> {
@@ -84,10 +120,9 @@ abstract class StackNavigator : AppNavigator {
                 }
                 backstack.add(NavigatorStackItem(navigation.destination, options))
                 pointer++
-                state.emit(NavigationStateSnapshot(navigation, navigation.destination, options))
+                stateChannel.send(NavigationStateSnapshot(navigation, navigation.destination, options))
             }
         }
-        onNavigate(state.value)
     }
 
     open suspend fun onNavigate(model: NavigationStateSnapshot) {

@@ -7,13 +7,18 @@ import androidx.lifecycle.lifecycleScope
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.AppNavigator
 import com.zhufucdev.practiso.platform.Navigation
-import com.zhufucdev.practiso.platform.NavigationStateSnapshot
 import com.zhufucdev.practiso.platform.NavigationOption
+import com.zhufucdev.practiso.platform.NavigationStateSnapshot
 import com.zhufucdev.practiso.platform.NavigatorStackItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.serializer
@@ -61,7 +66,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
     override fun finish() {
         pointer--
         lifecycleScope.launch {
-            state.emit(
+            stateChannel.send(
                 NavigationStateSnapshot(
                     Navigation.Backward,
                     backstack[pointer].destination
@@ -80,6 +85,20 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
             MutableStateFlow(NavigationStateSnapshot(Navigation.Home, Navigation.Home.destination))
         override val current: StateFlow<NavigationStateSnapshot> = state.asStateFlow()
 
+        private val stateChannel = Channel<NavigationStateSnapshot>()
+        val coroutineScope = CoroutineScope(Dispatchers.Default)
+        init {
+            coroutineScope.launch {
+                while (coroutineScope.isActive) {
+                    select<Unit> {
+                        stateChannel.onReceive {
+                            state.emit(it)
+                        }
+                    }
+                }
+            }
+        }
+
         override suspend fun navigate(navigation: Navigation, options: List<NavigationOption>) {
             when (navigation) {
                 is Navigation.Forward -> {
@@ -88,7 +107,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                     }
                     val dest = backstack[++pointer]
                     startActivity(dest.destination, dest.options + options)
-                    state.emit(NavigationStateSnapshot(navigation, dest.destination, dest.options + options))
+                    stateChannel.send(NavigationStateSnapshot(navigation, dest.destination, dest.options + options))
                 }
 
                 is Navigation.Backward -> {
@@ -108,6 +127,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
             when (destination) {
                 AppDestination.MainView -> MainActivity::class.java
                 AppDestination.QuizCreate -> QuizCreateActivity::class.java
+                AppDestination.Answer -> AnswerActivity::class.java
             }
 
         @OptIn(ExperimentalSerializationApi::class)

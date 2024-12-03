@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,11 +25,19 @@ import com.zhufucdev.practiso.platform.PlatformInstance
 import com.zhufucdev.practiso.style.AppTypography
 import com.zhufucdev.practiso.style.darkScheme
 import com.zhufucdev.practiso.style.lightScheme
+import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
+import kotlinx.coroutines.cancel
 
 fun main() = singleWindowApplication(title = "Practiso") {
     val navState by DesktopNavigator.current.collectAsState()
     val navController = rememberNavController()
+
+    DisposableEffect(true) {
+        onDispose {
+            DesktopNavigator.coroutineScope.cancel()
+        }
+    }
 
     MaterialTheme(
         colorScheme = if (PlatformInstance.isDarkModeEnabled) darkScheme else lightScheme,
@@ -45,11 +54,22 @@ fun main() = singleWindowApplication(title = "Practiso") {
                         val appModel: QuizCreateViewModel =
                             viewModel(factory = QuizCreateViewModel.Factory)
 
-                        LaunchedEffect(appModel, navState) {
+                        LaunchedEffect(appModel) {
                             appModel.loadNavOptions(navState.options)
                         }
 
                         QuizCreateApp(appModel)
+                    }
+
+                    AppDestination.Answer -> {
+                        val model =
+                            viewModel<AnswerViewModel>(factory = AnswerViewModel.Factory)
+
+                        LaunchedEffect(model) {
+                            model.loadNavOptions(navState.options)
+                        }
+
+                        AnswerApp(model)
                     }
                 }
             }
