@@ -36,7 +36,6 @@ import com.zhufucdev.practiso.copyFrom
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.randomUUID
-import com.zhufucdev.practiso.style.ImageFrameSize
 import com.zhufucdev.practiso.style.PaddingNormal
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
@@ -137,7 +136,7 @@ fun EditableImageFrame(
                         .combineClickable(onSecondaryClick = { masterMenu = true })
                 ) {
                     Box(Modifier.padding(PaddingNormal).fillMaxSize()) {
-                        imageContent(Modifier.align(Alignment.Center).size(ImageFrameSize))
+                        imageContent(Modifier.align(Alignment.Center).size(60.dp))
                         SmallFloatingActionButton(
                             onClick = pickerLauncher::launch,
                             elevation = FloatingActionButtonDefaults.elevation(0.dp),

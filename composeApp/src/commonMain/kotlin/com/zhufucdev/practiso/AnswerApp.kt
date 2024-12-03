@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,7 +42,6 @@ import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.platform.getPlatform
-import com.zhufucdev.practiso.style.ImageFrameSize
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
@@ -56,16 +56,6 @@ import practiso.composeapp.generated.resources.take_n_para
 fun AnswerApp(model: AnswerViewModel) {
     val quizzes by model.quizzes.collectAsState()
     val state by model.pagerState.collectAsState()
-    val currentQuiz by remember(quizzes, state) {
-        derivedStateOf {
-            quizzes?.let { q ->
-                state?.let { s ->
-                    q[s.currentPage]
-                }
-            }
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -100,10 +90,15 @@ fun AnswerApp(model: AnswerViewModel) {
                 HorizontalPager(
                     state = state!!,
                     modifier = Modifier.padding(padding)
-                ) {
+                ) { page ->
+                    val currentQuiz by remember(quizzes) {
+                        derivedStateOf {
+                            quizzes!![page]
+                        }
+                    }
                     Quiz(
                         modifier = Modifier.padding(horizontal = PaddingNormal).fillMaxSize(),
-                        quiz = currentQuiz!!,
+                        quiz = currentQuiz,
                         model = model
                     )
                 }
@@ -131,7 +126,10 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
         items(quiz.frames, { it.frame::class.simpleName + it.frame.id }) { frame ->
             when (frame.frame) {
                 is Frame.Image, is Frame.Text -> {
-                    SimpleFrame(frame = frame.frame, imageCache = model.imageCache)
+                    SimpleFrame(
+                        frame = frame.frame,
+                        imageCache = model.imageCache
+                    )
                 }
 
                 is Frame.Options -> {
@@ -207,15 +205,20 @@ private fun SimpleFrame(modifier: Modifier = Modifier, frame: Frame, imageCache:
                         cache = imageCache,
                         fileSystem = platform.filesystem,
                         state = rememberFileImageState(),
-                        modifier = Modifier.size(ImageFrameSize) then modifier
                     )
-                }
+                },
+                altText = {
+                    frame.imageFrame.altText?.let {
+                        Text(it)
+                    }
+                },
+                modifier = modifier.fillMaxWidth()
             )
         }
 
         is Frame.Text -> {
             TextFrameSkeleton {
-                Text(frame.textFrame.content)
+                Text(frame.textFrame.content, modifier)
             }
         }
 

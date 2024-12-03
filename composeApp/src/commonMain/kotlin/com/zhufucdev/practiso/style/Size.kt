@@ -5,4 +5,3 @@ import androidx.compose.ui.unit.dp
 val PaddingBig = 22.dp
 val PaddingNormal = 14.dp
 val PaddingSmall = 8.dp
-val ImageFrameSize = 60.dp
