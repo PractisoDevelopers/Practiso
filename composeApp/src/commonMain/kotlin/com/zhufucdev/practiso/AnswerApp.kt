@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,11 +16,13 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -29,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composable.BitmapRepository
 import com.zhufucdev.practiso.composable.FileImage
@@ -57,11 +61,12 @@ import practiso.composeapp.generated.resources.take_n_para
 fun AnswerApp(model: AnswerViewModel) {
     val quizzes by model.quizzes.collectAsState()
     val state by model.pagerState.collectAsState()
+    val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
+            Box {
+                TopAppBar(
+                    title = {
                         val takeNumber by model.takeNumber.collectAsState()
                         val session by model.session.collectAsState()
                         takeNumber?.let {
@@ -75,15 +80,26 @@ fun AnswerApp(model: AnswerViewModel) {
                                     )
                                 }
                             }
-
                         }
-                    }
-                },
-                navigationIcon = { NavigateUpButton() },
-                modifier = Modifier.drawBehind {
+                    },
+                    scrollBehavior = topBarScrollBehavior,
+                    navigationIcon = { NavigateUpButton() },
+                    modifier = Modifier.drawBehind {
 
+                    }
+                )
+
+                state?.let {
+                    val weight = 1f / it.pageCount
+                    LinearProgressIndicator(
+                        progress = {
+                            (it.currentPageOffsetFraction + it.currentPage + 1) * weight
+                        },
+                        drawStopIndicator = {},
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-            )
+            }
         }
     ) { padding ->
         AnimatedContent(state != null) { loaded ->
@@ -98,7 +114,9 @@ fun AnswerApp(model: AnswerViewModel) {
                         }
                     }
                     Quiz(
-                        modifier = Modifier.padding(horizontal = PaddingNormal).fillMaxSize(),
+                        modifier = Modifier.padding(horizontal = PaddingNormal)
+                            .fillMaxSize()
+                            .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
                         quiz = currentQuiz,
                         model = model
                     )
