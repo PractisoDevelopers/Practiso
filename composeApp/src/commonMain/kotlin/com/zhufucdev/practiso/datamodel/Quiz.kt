@@ -146,19 +146,19 @@ private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<
             .map { optionsFrame ->
                 async {
                     val textFrames =
-                        getTextFrameByOptionsFrameId(optionsFrame.id) { id, content, isKey, priority ->
+                        getTextFrameByOptionsFrameId(optionsFrame.id) { id, content, linkId, isKey, priority ->
                             KeyedPrioritizedFrame(
-                                frame = Frame.Text(optionsFrame.id, TextFrame(id, content)),
+                                frame = Frame.Text(linkId, TextFrame(id, content)),
                                 isKey = isKey,
                                 priority = priority.toInt()
                             )
                         }.executeAsList()
 
                     val imageFrames =
-                        getImageFramesByOptionsFrameId(optionsFrame.id) { id, filename, width, height, altText, isKey, priority ->
+                        getImageFramesByOptionsFrameId(optionsFrame.id) { id, filename, width, height, altText, linkId, isKey, priority ->
                             KeyedPrioritizedFrame(
                                 frame = Frame.Image(
-                                    optionsFrame.id,
+                                    linkId,
                                     ImageFrame(
                                         id,
                                         filename,

@@ -143,11 +143,11 @@ getQuizCountBySession:
 SELECT count(*)
 FROM quizBySession WHERE sessionId = ?;
 
-setQuizTakeTextAnswer:
+setTextAnswer:
 INSERT OR REPLACE INTO answer(quizId, takeId, textFrameId, answerText, priority)
 VALUES (?, ?, ?, ?, ?);
 
-setQuizTakeOptionAnswer:
+setOptionAnswer:
 INSERT OR REPLACE INTO answer(quizId, takeId, optionsFrameId, answerOptionId, priority)
 VALUES (?, ?, ?, ?, ?);
 
@@ -156,6 +156,8 @@ SELECT *
 FROM answer WHERE takeId = ?
 ORDER BY priority;
 
-removeAnswer:
-DELETE FROM answer WHERE quizId = ? AND takeId = ?;
+removeTextAnswer:
+DELETE FROM answer WHERE textFrameId = ? AND quizId = ? AND takeId = ?;
 
+removeOptionAnswer:
+DELETE FROM answer WHERE answerOptionId = ? AND optionsFrameId = ? AND quizId = ? AND takeId = ?;

@@ -143,7 +143,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                         content = {
                             val answerOptionIds by remember {
                                 derivedStateOf {
-                                    answers?.mapNotNull { it.takeIf { it.quizId == quiz.quiz.id }?.frameId }
+                                    answers?.mapNotNull { (it.takeIf { it is Answer.Option && it.quizId == quiz.quiz.id } as Answer.Option?)?.optionId }
                                         ?: emptyList()
                                 }
                             }
