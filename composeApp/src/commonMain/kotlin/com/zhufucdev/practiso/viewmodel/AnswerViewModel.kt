@@ -1,20 +1,19 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.runtime.saveable.autoSaver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
-import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import com.zhufucdev.practiso.Database
+import com.zhufucdev.practiso.composable.BitmapRepository
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Session
+import com.zhufucdev.practiso.database.Take
 import com.zhufucdev.practiso.datamodel.Answer
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.datamodel.getAnswersDataModel
@@ -29,7 +28,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -37,30 +35,15 @@ import kotlinx.coroutines.selects.select
 import kotlinx.datetime.Clock
 import kotlin.random.Random
 
-@OptIn(SavedStateHandleSaveableApi::class)
 class AnswerViewModel(
     private val db: AppDatabase,
     state: SavedStateHandle,
 ) : ViewModel() {
-    private val randomSeed by state.saveable(saver = autoSaver()) { Clock.System.now().epochSeconds }
-    private val random by lazy { Random(randomSeed) }
-
-    val session by lazy {
-        MutableStateFlow<Session?>(null).apply {
-            viewModelScope.launch {
-                takeId.filter { it >= 0 }.collectLatest {
-                    db.sessionQueries.getSessionByTakeId(it)
-                        .asFlow()
-                        .mapToOne(Dispatchers.IO)
-                        .collect(this@apply)
-                }
-            }
-        }
-    }
+    val session = MutableStateFlow<Session?>(null)
     val takeNumber by lazy {
         MutableStateFlow<Int?>(null).apply {
             viewModelScope.launch {
-                takeId.filter { it >= 0 }.collectLatest { takeId ->
+                takeId.collectLatest { takeId ->
                     session.filterNotNull().collectLatest {
                         db.sessionQueries
                             .getTakeStatsBySessionId(it.id)
@@ -77,9 +60,21 @@ class AnswerViewModel(
     val answers: StateFlow<List<Answer>?> by lazy {
         MutableStateFlow<List<Answer>?>(null).apply {
             viewModelScope.launch {
-                takeId.filter { it >= 0 }.collectLatest {
+                takeId.collectLatest {
                     db.sessionQueries
                         .getAnswersDataModel(it)
+                        .collect(this@apply)
+                }
+            }
+        }
+    }
+    val take by lazy {
+        MutableStateFlow<Take?>(null).apply {
+            viewModelScope.launch {
+                takeId.filter { it >= 0 }.collectLatest {
+                    db.sessionQueries.getTakeById(it)
+                        .asFlow()
+                        .mapToOne(Dispatchers.IO)
                         .collect(this@apply)
                 }
             }
@@ -88,22 +83,32 @@ class AnswerViewModel(
     val quizzes by lazy {
         MutableStateFlow<List<QuizFrames>?>(null).apply {
             viewModelScope.launch {
-                takeId.filter { it >= 0 }.collectLatest {
-                    db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(it))
-                        .map { frames -> frames.shuffled(random) }
-                        .collect(this@apply)
+                takeId.collectLatest { id ->
+                    session.filterNotNull().collectLatest { s ->
+                        take.filterNotNull().collectLatest { t ->
+                            db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(id))
+                                .map { frames -> frames.shuffled(Random(t.creationTimeISO.epochSeconds)) }
+                                .collect(this@apply)
+                        }
+                    }
                 }
             }
         }
     }
 
     val pagerState by lazy {
-        quizzes.map { it?.let { q -> PagerState { q.size } } }
+        MutableStateFlow<PagerState?>(null).apply {
+            viewModelScope.launch {
+                quizzes.map { it?.let { q -> PagerState { q.size } } }
+                    .collect(this@apply)
+            }
+        }
     }
+    val imageCache = BitmapRepository()
 
     data class Events(
-        val add: Channel<Answer> = Channel(),
-        val remove: Channel<Answer> = Channel(),
+        val answer: Channel<Answer> = Channel(),
+        val unanswer: Channel<Answer> = Channel(),
     )
 
     val event = Events()
@@ -113,10 +118,17 @@ class AnswerViewModel(
         val takeId =
             (options.lastOrNull { it is NavigationOption.OpenTake } as NavigationOption.OpenTake?)?.takeId
 
-        this.takeId.emit(takeId ?: -1L)
-        val session = session.filterNotNull().last()
-        db.transaction {
-            db.sessionQueries.updateSessionAccessTime(Clock.System.now(), session.id)
+        if (takeId != null) {
+            val session =
+                db.sessionQueries.getSessionByTakeId(takeId).executeAsOne()
+
+            this.session.emit(session)
+
+            db.transaction {
+                db.sessionQueries.updateSessionAccessTime(Clock.System.now(), session.id)
+                db.sessionQueries.updateTakeAccessTime(Clock.System.now(), takeId)
+            }
+            this.takeId.emit(takeId)
         }
     }
 
@@ -124,14 +136,14 @@ class AnswerViewModel(
         viewModelScope.launch {
             while (viewModelScope.isActive) {
                 select<Unit> {
-                    event.add.onReceive {
-                        val latestAnswers = answers.last()
+                    event.answer.onReceive {
+                        val priority = pagerState.value!!.currentPage
                         db.transaction {
-                            it.commit(db, takeId.value, latestAnswers?.size ?: 0)
+                            it.commit(db, takeId.value, priority)
                         }
                     }
 
-                    event.remove.onReceive {
+                    event.unanswer.onReceive {
                         db.transaction {
                             db.sessionQueries.removeAnswer(it.quizId, takeId.value)
                         }

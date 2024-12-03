@@ -7,21 +7,24 @@ import com.zhufucdev.practiso.database.SessionQueries
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface Answer {
     val quizId: Long
+    val frameId: Long
 
     fun commit(db: AppDatabase, takeId: Long, priority: Int)
 
     @Serializable
-    data class Text(val text: String, override val quizId: Long) : Answer {
+    data class Text(val text: String, override val frameId: Long, override val quizId: Long) :
+        Answer {
         override fun commit(db: AppDatabase, takeId: Long, priority: Int) {
-            db.sessionQueries.setQuizTakeAnswer(
+            db.sessionQueries.setQuizTakeTextAnswer(
                 quizId,
                 takeId,
-                answerOptionId = null,
+                textFrameId = frameId,
                 answerText = text,
                 priority = priority.toLong()
             )
@@ -29,13 +32,14 @@ sealed interface Answer {
     }
 
     @Serializable
-    data class Option(val optionId: Long, override val quizId: Long) : Answer {
+    data class Option(val optionId: Long, override val frameId: Long, override val quizId: Long) :
+        Answer {
         override fun commit(db: AppDatabase, takeId: Long, priority: Int) {
-            db.sessionQueries.setQuizTakeAnswer(
+            db.sessionQueries.setQuizTakeOptionAnswer(
                 quizId,
                 takeId,
                 answerOptionId = optionId,
-                answerText = null,
+                optionsFrameId = frameId,
                 priority = priority.toLong()
             )
         }
@@ -43,12 +47,27 @@ sealed interface Answer {
 }
 
 fun SessionQueries.getAnswersDataModel(takeId: Long): Flow<List<Answer>> =
-    getAnswersByTakeId(takeId) { _, quizId, answerOptionId, answerText, priority ->
-        when {
-            answerText != null -> Answer.Text(answerText, quizId)
-            answerOptionId != null -> Answer.Option(answerOptionId, quizId)
-            else -> error("Either answer option nor text is present. This database is so broken.")
-        }
-    }
+    getAnswersByTakeId(takeId)
         .asFlow()
         .mapToList(Dispatchers.IO)
+        .map { answers ->
+            answers
+                .sortedBy { it.priority }
+                .map {
+                    when {
+                        it.textFrameId != null -> Answer.Text(
+                            it.answerText!!,
+                            it.textFrameId,
+                            it.quizId
+                        )
+
+                        it.optionsFrameId != null -> Answer.Option(
+                            it.answerOptionId!!,
+                            it.optionsFrameId,
+                            it.quizId
+                        )
+
+                        else -> error("Either answer option nor text is present. This database is so broken.")
+                    }
+                }
+        }

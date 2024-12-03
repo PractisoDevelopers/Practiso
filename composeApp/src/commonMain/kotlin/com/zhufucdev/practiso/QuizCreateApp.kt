@@ -304,17 +304,18 @@ private fun Editor(model: QuizCreateViewModel) {
                 Button(
                     onClick = {
                         coroutine.launch {
+                            val id = ++model.lastFrameId
                             when (pagerState.currentPage) {
                                 0 -> model.event.add.send(
-                                    Frame.Text(TextFrame(++model.lastFrameId, ""))
+                                    Frame.Text(id, TextFrame(id, ""))
                                 )
 
                                 1 -> model.event.add.send(
-                                    Frame.Image(ImageFrame(++model.lastFrameId, "", 0, 0, null))
+                                    Frame.Image(id, ImageFrame(id, "", 0, 0, null))
                                 )
 
                                 2 -> model.event.add.send(
-                                    Frame.Options(OptionsFrame(++model.lastFrameId, null))
+                                    Frame.Options(OptionsFrame(id, null))
                                 )
                             }
                         }
