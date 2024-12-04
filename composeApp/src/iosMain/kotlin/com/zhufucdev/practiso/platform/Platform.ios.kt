@@ -3,6 +3,8 @@ package com.zhufucdev.practiso.platform
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import co.touchlab.sqliter.DatabaseConfiguration
+import com.russhwolf.settings.NSUserDefaultsSettings
+import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
 import okio.FileSystem
 import okio.Path
@@ -12,7 +14,7 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.UIKit.UIDevice
 
-class IOSPlatform : Platform {
+object IOSPlatform : Platform() {
     override val name: String =
         UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
 
@@ -29,6 +31,10 @@ class IOSPlatform : Platform {
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM
 
+    override val settingsFactory: Settings.Factory by lazy {
+        NSUserDefaultsSettings.Factory()
+    }
+
     override val resourcePath: Path by lazy {
         NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)
             .first()
@@ -37,6 +43,4 @@ class IOSPlatform : Platform {
     }
 }
 
-private object PlatformInstance : Platform by IOSPlatform()
-
-actual fun getPlatform(): Platform = PlatformInstance
+actual fun getPlatform(): Platform = IOSPlatform

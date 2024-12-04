@@ -14,6 +14,7 @@ kotlinx-datetime = "0.6.1"
 kotlinx-serialization = "1.7.3"
 okio = "3.9.1"
 adaptative = "1.0.1"
+multiplatform-settings = "1.2.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -35,6 +36,9 @@ nativeparameteraccess = { group = "com.github.tkuenneth", name = "nativeparamete
 filekit = { module = "io.github.vinceglb:filekit-compose", version = "0.8.7" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 humanreadable = { module = "nl.jacobras:Human-Readable", version = "1.10.0" }
+settings-core = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatform-settings" }
+settings-coroutine = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatform-settings" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

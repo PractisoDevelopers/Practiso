@@ -5,17 +5,20 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.github.tkuenneth.nativeparameterstoreaccess.Dconf
 import com.github.tkuenneth.nativeparameterstoreaccess.MacOSDefaults
 import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
+import com.russhwolf.settings.PreferencesSettings
+import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import java.util.Properties
+import java.util.prefs.Preferences
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectory
 import kotlin.io.path.exists
 import kotlin.io.path.notExists
 
-abstract class JVMPlatform : Platform {
+abstract class JVMPlatform : Platform() {
     override val name: String = "Java ${System.getProperty("java.version")}"
 
     abstract val isDarkModeEnabled: Boolean
@@ -41,6 +44,10 @@ abstract class JVMPlatform : Platform {
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM
+
+    override val settingsFactory: Settings.Factory by lazy {
+        PreferencesSettings.Factory(Preferences.userRoot().node("/practiso"))
+    }
 
     override val resourcePath: okio.Path by lazy {
         Path(dataPath, "resource").apply {

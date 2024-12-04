@@ -13,17 +13,28 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -31,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composable.BitmapRepository
@@ -45,22 +55,32 @@ import com.zhufucdev.practiso.composable.rememberFileImageState
 import com.zhufucdev.practiso.datamodel.Answer
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
+import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.QuizFrames
+import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
+import practiso.composeapp.generated.resources.baseline_flip_horizontal
+import practiso.composeapp.generated.resources.baseline_flip_vertical
+import practiso.composeapp.generated.resources.baseline_view_agenda_outline
+import practiso.composeapp.generated.resources.continuous_scrolling_para
+import practiso.composeapp.generated.resources.horizontal_pager_para
 import practiso.composeapp.generated.resources.loading_quizzes_para
 import practiso.composeapp.generated.resources.take_n_para
+import practiso.composeapp.generated.resources.vertical_pager_para
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnswerApp(model: AnswerViewModel) {
     val quizzes by model.quizzes.collectAsState()
-    val state by model.pagerState.collectAsState()
+    val state by model.pageState.collectAsState(null)
     val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         topBar = {
@@ -84,17 +104,15 @@ fun AnswerApp(model: AnswerViewModel) {
                     },
                     scrollBehavior = topBarScrollBehavior,
                     navigationIcon = { NavigateUpButton() },
-                    modifier = Modifier.drawBehind {
-
-                    }
+                    actions = { PagerStyleToggle(AppSettings) }
                 )
 
                 state?.let {
-                    val weight = 1f / it.pageCount
+                    LaunchedEffect(it.progress) {
+                        model.currentQuizIndex = (it.progress * quizzes!!.size).roundToInt()
+                    }
                     LinearProgressIndicator(
-                        progress = {
-                            (it.currentPageOffsetFraction + it.currentPage + 1) * weight
-                        },
+                        progress = { it.progress },
                         drawStopIndicator = {},
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -102,36 +120,83 @@ fun AnswerApp(model: AnswerViewModel) {
             }
         }
     ) { padding ->
-        AnimatedContent(state != null) { loaded ->
-            if (loaded) {
-                HorizontalPager(
-                    state = state!!,
-                    modifier = Modifier.padding(padding)
-                ) { page ->
-                    val currentQuiz by remember(quizzes) {
-                        derivedStateOf {
-                            quizzes!![page]
+        AnimatedContent(state) { wrap ->
+            when (wrap) {
+                is AnswerViewModel.PageState.Column -> {
+                    LazyColumn(
+                        Modifier.padding(padding).fillMaxSize()
+                            .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
+                        state = wrap.state
+                    ) {
+                        items(items = quizzes!!, key = { it.quiz.id }) {
+                            Quiz(
+                                modifier = Modifier.padding(horizontal = PaddingNormal)
+                                    .fillMaxSize(),
+                                quiz = it,
+                                model = model
+                            )
                         }
                     }
-                    Quiz(
-                        modifier = Modifier.padding(horizontal = PaddingNormal)
-                            .fillMaxSize()
-                            .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
-                        quiz = currentQuiz,
-                        model = model
-                    )
                 }
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(
-                        PaddingSmall,
-                        Alignment.CenterVertically
-                    ),
-                    modifier = Modifier.fillMaxSize().padding(padding)
-                ) {
-                    CircularProgressIndicator(Modifier.size(64.dp))
-                    Text(stringResource(Res.string.loading_quizzes_para))
+
+                is AnswerViewModel.PageState.Pager.Horizontal -> {
+                    HorizontalPager(
+                        state = wrap.state,
+                        modifier = Modifier.padding(padding)
+                    ) { page ->
+                        val currentQuiz by remember(quizzes) {
+                            derivedStateOf {
+                                quizzes!![page]
+                            }
+                        }
+                        Quiz(
+                            modifier = Modifier.padding(horizontal = PaddingNormal)
+                                .fillMaxSize()
+                                .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
+                                .verticalScroll(rememberScrollState()),
+                            quiz = currentQuiz,
+                            model = model
+                        )
+                    }
+                }
+
+                is AnswerViewModel.PageState.Pager.Vertical -> {
+                    VerticalPager(
+                        state = wrap.state,
+                        modifier = Modifier.padding(padding),
+                        pageNestedScrollConnection = topBarScrollBehavior.nestedScrollConnection,
+                        flingBehavior = PagerDefaults.flingBehavior(
+                            wrap.state,
+                            snapPositionalThreshold = 0.1f
+                        )
+                    ) { page ->
+                        val currentQuiz by remember(quizzes) {
+                            derivedStateOf {
+                                quizzes!![page]
+                            }
+                        }
+                        Quiz(
+                            modifier = Modifier.padding(horizontal = PaddingNormal)
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
+                            quiz = currentQuiz,
+                            model = model
+                        )
+                    }
+                }
+
+                null -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(
+                            PaddingSmall,
+                            Alignment.CenterVertically
+                        ),
+                        modifier = Modifier.fillMaxSize().padding(padding)
+                    ) {
+                        CircularProgressIndicator(Modifier.size(64.dp))
+                        Text(stringResource(Res.string.loading_quizzes_para))
+                    }
                 }
             }
         }
@@ -141,8 +206,8 @@ fun AnswerApp(model: AnswerViewModel) {
 @Composable
 private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerViewModel) {
     val answers by model.answers.collectAsState()
-    LazyColumn(modifier) {
-        items(quiz.frames, { it.frame::class.simpleName + it.frame.id }) { frame ->
+    Column(modifier) {
+        quiz.frames.forEach { frame ->
             when (frame.frame) {
                 is Frame.Image, is Frame.Text -> {
                     SimpleFrame(
@@ -288,5 +353,45 @@ private fun SimpleFrame(modifier: Modifier = Modifier, frame: Frame, imageCache:
         }
 
         else -> throw NotImplementedError("${frame::class.simpleName} is not simple")
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PagerStyleToggle(settings: SettingsModel) {
+    val current by settings.answerPageStyle.collectAsState()
+    val currentName = stringResource(
+        when (current) {
+            PageStyle.Horizontal -> Res.string.horizontal_pager_para
+            PageStyle.Vertical -> Res.string.vertical_pager_para
+            PageStyle.Column -> Res.string.continuous_scrolling_para
+        }
+    )
+    val coroutine = rememberCoroutineScope()
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = { PlainTooltip { Text(currentName) } },
+        state = rememberTooltipState(),
+    ) {
+        IconButton(
+            onClick = {
+                val next = PageStyle.entries[(current.ordinal + 1) % PageStyle.entries.size]
+                coroutine.launch {
+                    settings.answerPageStyle.emit(next)
+                }
+            }
+        ) {
+            Icon(
+                painterResource(
+                    when (current) {
+                        PageStyle.Horizontal -> Res.drawable.baseline_flip_horizontal
+                        PageStyle.Vertical -> Res.drawable.baseline_flip_vertical
+                        PageStyle.Column -> Res.drawable.baseline_view_agenda_outline
+                    }
+                ),
+                contentDescription = currentName
+            )
+        }
     }
 }

@@ -16,6 +16,7 @@ import com.zhufucdev.practiso.concat
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.datamodel.getQuizFrames
+import com.zhufucdev.practiso.protobufSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -46,7 +47,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
         val dimensionIds: Set<Long> = emptySet(),
     )
 
-    var selection by state.saveable { mutableStateOf(Selection()) }
+    var selection by state.saveable(stateSaver = protobufSaver()) { mutableStateOf(Selection()) }
         private set
 
     data class Events(
@@ -54,7 +55,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
         val removeCurrentItem: Channel<Long> = Channel(),
         val selectQuiz: Channel<Long> = Channel(),
         val deselectQuiz: Channel<Long> = Channel(),
-        val createSession: Channel<String> = Channel()
+        val createSession: Channel<String> = Channel(),
     )
 
     val event = Events()

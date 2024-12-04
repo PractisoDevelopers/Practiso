@@ -69,6 +69,8 @@ kotlin {
             implementation(libs.filekit)
             implementation(libs.okio)
             implementation(libs.humanreadable)
+            implementation(libs.settings.core)
+            implementation(libs.settings.coroutine)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
