@@ -92,4 +92,7 @@
     <string name="show_hidden_para">Show hidden</string>
     <string name="loading_quizzes_para">Loading questions…</string>
     <string name="missing_take_to_open_para">Missing take to open</string>
+    <string name="horizontal_pager_para">Horizontal pager</string>
+    <string name="vertical_pager_para">Vertical pager</string>
+    <string name="continuous_scrolling_para">Continuous scrolling</string>
 </resources>

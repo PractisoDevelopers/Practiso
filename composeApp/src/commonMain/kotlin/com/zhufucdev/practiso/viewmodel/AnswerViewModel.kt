@@ -1,6 +1,9 @@
 package com.zhufucdev.practiso.viewmodel
 
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,13 +12,16 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.composable.BitmapRepository
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.Take
 import com.zhufucdev.practiso.datamodel.Answer
+import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.QuizFrames
+import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.datamodel.getAnswersDataModel
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -38,6 +44,7 @@ import kotlin.random.Random
 class AnswerViewModel(
     private val db: AppDatabase,
     state: SavedStateHandle,
+    settings: SettingsModel,
 ) : ViewModel() {
     val session = MutableStateFlow<Session?>(null)
     val takeNumber by lazy {
@@ -96,11 +103,56 @@ class AnswerViewModel(
         }
     }
 
-    val pagerState by lazy {
-        MutableStateFlow<PagerState?>(null).apply {
+    sealed interface PageState {
+        val progress: Float
+
+        sealed class Pager : PageState {
+            abstract val state: PagerState
+            override val progress: Float by derivedStateOf {
+                (state.currentPageOffsetFraction + state.currentPage + 1) / state.pageCount
+            }
+
+            data class Horizontal(override val state: PagerState) : Pager()
+            data class Vertical(override val state: PagerState) : Pager()
+        }
+
+        data class Column(val state: LazyListState) : PageState {
+            override val progress: Float by derivedStateOf {
+                (state.firstVisibleItemIndex
+                        + state.firstVisibleItemScrollOffset * 1f / (state.layoutInfo.visibleItemsInfo.firstOrNull()?.size
+                    ?: 1)
+                        ) / state.layoutInfo.totalItemsCount
+            }
+        }
+    }
+
+    val pageState by lazy {
+        MutableStateFlow<PageState?>(null).apply {
             viewModelScope.launch {
-                quizzes.map { it?.let { q -> PagerState { q.size } } }
-                    .collect(this@apply)
+                settings.answerPageStyle.collectLatest { style ->
+                    quizzes.map {
+                        it?.let { q ->
+                            when (style) {
+                                PageStyle.Horizontal -> {
+                                    PageState.Pager.Horizontal(
+                                        PagerState(currentQuizIndex) { q.size }
+                                    )
+                                }
+
+                                PageStyle.Vertical -> {
+                                    PageState.Pager.Vertical(
+                                        PagerState(currentQuizIndex) { q.size }
+                                    )
+                                }
+
+                                PageStyle.Column -> {
+                                    PageState.Column(LazyListState(currentQuizIndex))
+                                }
+                            }
+                        }
+                    }
+                        .collect(this@apply)
+                }
             }
         }
     }
@@ -132,14 +184,15 @@ class AnswerViewModel(
         }
     }
 
+    var currentQuizIndex: Int = 0
+
     init {
         viewModelScope.launch {
             while (viewModelScope.isActive) {
                 select<Unit> {
                     event.answer.onReceive {
-                        val priority = pagerState.value!!.currentPage
                         db.transaction {
-                            it.commit(db, takeId.value, priority)
+                            it.commit(db, takeId.value, priority = currentQuizIndex)
                         }
                     }
 
@@ -156,7 +209,7 @@ class AnswerViewModel(
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                AnswerViewModel(Database.app, createPlatformSavedStateHandle())
+                AnswerViewModel(Database.app, createPlatformSavedStateHandle(), AppSettings)
             }
         }
     }

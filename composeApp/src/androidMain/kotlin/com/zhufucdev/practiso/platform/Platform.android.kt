@@ -4,13 +4,15 @@ import android.os.Build
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.SharedPreferencesSettings
 import com.zhufucdev.practiso.PractisoApplication
 import com.zhufucdev.practiso.database.AppDatabase
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toOkioPath
 
-class AndroidPlatform : Platform {
+class AndroidPlatform : Platform() {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
 
     override fun createDbDriver(): SqlDriver {
@@ -28,6 +30,10 @@ class AndroidPlatform : Platform {
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM
+
+    override val settingsFactory: Settings.Factory by lazy {
+        SharedPreferencesSettings.Factory(PractisoApplication.instance)
+    }
 
     override val resourcePath: Path by lazy {
         PractisoApplication.instance.filesDir.toOkioPath()
