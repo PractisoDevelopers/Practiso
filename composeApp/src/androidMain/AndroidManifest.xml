@@ -14,6 +14,10 @@
             android:exported="false"
             android:label="@string/title_activity_quiz_create" />
         <activity
+            android:name=".AnswerActivity"
+            android:exported="false"
+            android:label="@string/title_activity_answer" />
+        <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|mnc|colorMode|density|fontScale|fontWeightAdjustment|keyboard|layoutDirection|locale|mcc|navigation|smallestScreenSize|touchscreen|uiMode"
             android:exported="true">

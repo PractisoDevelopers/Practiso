@@ -5,6 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.style.PractisoTheme
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 
 class AnswerActivity : NavigatorComponentActivity() {
@@ -13,11 +14,13 @@ class AnswerActivity : NavigatorComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val model: AnswerViewModel = viewModel(factory = AnswerViewModel.Factory)
-            LaunchedEffect(model) {
-                model.loadNavOptions(navigationOptions)
+            PractisoTheme {
+                val model: AnswerViewModel = viewModel(factory = AnswerViewModel.Factory)
+                LaunchedEffect(model) {
+                    model.loadNavOptions(navigationOptions)
+                }
+                AnswerApp(model)
             }
-            AnswerApp(model)
         }
     }
 }

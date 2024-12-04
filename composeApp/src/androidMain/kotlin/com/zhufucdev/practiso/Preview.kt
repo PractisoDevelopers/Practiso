@@ -8,6 +8,7 @@ import androidx.compose.ui.tooling.preview.Wallpapers
 import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.page.TakeSkeleton
 import com.zhufucdev.practiso.page.TakeStatCardContent
+import kotlinx.datetime.Clock
 
 @Preview(
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_UNDEFINED,
@@ -23,7 +24,10 @@ fun SessionCardPreview() {
             durationSeconds = 114514,
             countQuizDone = 1,
             countQuizTotal = 20,
-            lastAccessTimeISO = null
+            sessionId = 1,
+            hidden = 0,
+            creationTimeISO = Clock.System.now(),
+            lastAccessTimeISO = Clock.System.now()
         ))
     }
 }
