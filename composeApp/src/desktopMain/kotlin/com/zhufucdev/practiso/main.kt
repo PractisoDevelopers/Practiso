@@ -28,53 +28,61 @@ import com.zhufucdev.practiso.style.lightScheme
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 
-fun main() = singleWindowApplication(title = "Practiso") {
-    val navState by DesktopNavigator.current.collectAsState()
-    val navController = rememberNavController()
-
-    DisposableEffect(true) {
-        onDispose {
-            DesktopNavigator.coroutineScope.cancel()
-        }
+fun main() {
+    runBlocking {
+        Database.migrate()
     }
 
-    MaterialTheme(
-        colorScheme = if (PlatformInstance.isDarkModeEnabled) darkScheme else lightScheme,
-        typography = AppTypography
-    ) {
-        Surface {
-            AnimatedContent(
-                targetState = navState,
-                transitionSpec = mainFrameTransitionSpec
-            ) { state ->
-                when (state.destination) {
-                    AppDestination.MainView -> PractisoApp(navController)
-                    AppDestination.QuizCreate -> {
-                        val appModel: QuizCreateViewModel =
-                            viewModel(factory = QuizCreateViewModel.Factory)
+    singleWindowApplication(title = "Practiso") {
+        val navState by DesktopNavigator.current.collectAsState()
+        val navController = rememberNavController()
 
-                        LaunchedEffect(appModel) {
-                            appModel.loadNavOptions(navState.options)
+        DisposableEffect(true) {
+            onDispose {
+                DesktopNavigator.coroutineScope.cancel()
+            }
+        }
+
+        MaterialTheme(
+            colorScheme = if (PlatformInstance.isDarkModeEnabled) darkScheme else lightScheme,
+            typography = AppTypography
+        ) {
+            Surface {
+                AnimatedContent(
+                    targetState = navState,
+                    transitionSpec = mainFrameTransitionSpec
+                ) { state ->
+                    when (state.destination) {
+                        AppDestination.MainView -> PractisoApp(navController)
+                        AppDestination.QuizCreate -> {
+                            val appModel: QuizCreateViewModel =
+                                viewModel(factory = QuizCreateViewModel.Factory)
+
+                            LaunchedEffect(appModel) {
+                                appModel.loadNavOptions(navState.options)
+                            }
+
+                            QuizCreateApp(appModel)
                         }
 
-                        QuizCreateApp(appModel)
-                    }
+                        AppDestination.Answer -> {
+                            val model =
+                                viewModel<AnswerViewModel>(factory = AnswerViewModel.Factory)
 
-                    AppDestination.Answer -> {
-                        val model =
-                            viewModel<AnswerViewModel>(factory = AnswerViewModel.Factory)
+                            LaunchedEffect(model, navState) {
+                                model.loadNavOptions(navState.options)
+                            }
 
-                        LaunchedEffect(model, navState) {
-                            model.loadNavOptions(navState.options)
+                            AnswerApp(model)
                         }
-
-                        AnswerApp(model)
                     }
                 }
             }
         }
     }
+
 }
 
 val mainFrameTransitionSpec: AnimatedContentTransitionScope<NavigationStateSnapshot>.() -> ContentTransform =

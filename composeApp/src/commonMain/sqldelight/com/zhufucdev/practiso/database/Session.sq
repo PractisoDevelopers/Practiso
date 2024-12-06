@@ -58,12 +58,13 @@ CREATE TABLE answer(
 
 CREATE VIEW takeStat AS
 SELECT T.id, QT.sessionId, S.name, T.hidden, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal
-FROM session S
-JOIN take T ON T.sessionId = S.id
-JOIN (
-    SELECT count(*) AS countQuizDone
-    FROM quizBySession Q WHERE EXISTS (SELECT * FROM answer A WHERE A.quizId = Q.quizId)
-) Q
+FROM take T
+JOIN session S ON T.sessionId = S.id
+LEFT JOIN (
+    SELECT count(quizId) AS countQuizDone, takeId
+    FROM (SELECT DISTINCT quizId, takeId FROM answer)
+    GROUP BY takeId
+) Q ON Q.takeId = T.id
 JOIN (
     SELECT count(*) AS countQuizTotal, sessionId
     FROM quizBySession

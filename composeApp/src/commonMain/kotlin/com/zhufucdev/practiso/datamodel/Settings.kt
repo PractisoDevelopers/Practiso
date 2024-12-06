@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 private const val KeyAnswerPageStyle = "answer_page_style"
 private const val KeyShowAnswerImmediately = "show_answer_immediately"
 private const val KeyQuizAutoplay = "quiz_autoplay"
+private const val KeyDbVersion = "db_version"
 
 enum class PageStyle {
     Horizontal,
@@ -26,6 +27,7 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
     val showAnswerImmediately =
         MutableStateFlow(settings.getBoolean(KeyShowAnswerImmediately, false))
     val showNextQuizAutomatically = MutableStateFlow(settings.getBoolean(KeyQuizAutoplay, false))
+    val databaseVersion = MutableStateFlow(settings.getLongOrNull(KeyDbVersion))
 
     init {
         coroutineScope.launch {
