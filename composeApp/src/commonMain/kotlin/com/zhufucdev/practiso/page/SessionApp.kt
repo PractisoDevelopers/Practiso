@@ -165,7 +165,7 @@ fun SessionApp(
             }
         },
         sharedElement = {
-            FabCreate(modifier = it, onClick = {})
+            FabCreate(modifier = it, onClick = {}, noShadow = true)
         }
     ) {
         composeFromBottomUp("fab") {
