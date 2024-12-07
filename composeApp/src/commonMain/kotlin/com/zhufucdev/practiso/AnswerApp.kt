@@ -2,6 +2,9 @@ package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -164,9 +168,11 @@ fun AnswerApp(model: AnswerViewModel) {
                     VerticalPager(
                         state = wrap.state,
                         modifier = Modifier.padding(padding),
-                        pageNestedScrollConnection = topBarScrollBehavior.nestedScrollConnection,
                         flingBehavior = PagerDefaults.flingBehavior(
                             wrap.state,
+                            pagerSnapDistance = PagerSnapDistance.atMost(0),
+                            snapAnimationSpec = spring(stiffness = Spring.StiffnessMedium),
+                            decayAnimationSpec = rememberSplineBasedDecay(),
                             snapPositionalThreshold = 0.1f
                         )
                     ) { page ->
