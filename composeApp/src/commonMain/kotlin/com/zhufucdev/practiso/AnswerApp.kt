@@ -113,7 +113,7 @@ fun AnswerApp(model: AnswerViewModel) {
 
                 state?.let {
                     LaunchedEffect(it.progress) {
-                        model.currentQuizIndex = (it.progress * quizzes!!.size).roundToInt()
+                        model.currentQuizIndex = maxOf(0, (it.progress * quizzes!!.size).roundToInt() - 1)
                     }
                     LinearProgressIndicator(
                         progress = { it.progress },

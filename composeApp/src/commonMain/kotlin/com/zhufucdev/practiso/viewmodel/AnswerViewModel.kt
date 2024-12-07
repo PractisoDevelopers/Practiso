@@ -4,9 +4,11 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
@@ -184,7 +186,7 @@ class AnswerViewModel(
         }
     }
 
-    var currentQuizIndex: Int = 0
+    var currentQuizIndex: Int by state.saveable { mutableIntStateOf(0) }
 
     init {
         viewModelScope.launch {
