@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
@@ -324,7 +325,13 @@ private fun QuizItem(
 
         QuizSkeleton(
             label = { Text(option.titleString()) },
-            preview = { Text(option.previewString()) },
+            preview = {
+                Text(
+                    option.previewString(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             tailingIcon = {
                 if (checked) {
                     Checkbox(
