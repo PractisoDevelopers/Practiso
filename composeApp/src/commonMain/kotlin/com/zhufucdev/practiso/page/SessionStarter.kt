@@ -262,7 +262,8 @@ fun SessionStarter(
                     OutlinedTextField(
                         value = model.newSessionName,
                         onValueChange = { model.newSessionName = it },
-                        label = { Text(stringResource(Res.string.session_name_para)) }
+                        label = { Text(stringResource(Res.string.session_name_para)) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(PaddingSmall, Alignment.End),
