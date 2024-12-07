@@ -17,6 +17,7 @@ object Database {
         val newVersion = AppDatabase.Schema.version
         val currentVersion = AppSettings.databaseVersion.value ?: newVersion
         if (currentVersion >= newVersion) {
+            AppSettings.databaseVersion.emit(newVersion)
             return false
         }
 
