@@ -38,6 +38,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -288,7 +289,9 @@ fun SessionApp(
                                         }
                                     },
                                     sharedElement = {
-                                        PractisoOptionView(option, modifier = it)
+                                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+                                            PractisoOptionView(option, modifier = it)
+                                        }
                                     }
                                 ) {
                                     PractisoOptionView(
