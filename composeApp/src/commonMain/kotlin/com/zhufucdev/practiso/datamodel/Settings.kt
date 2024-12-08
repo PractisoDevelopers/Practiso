@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 private const val KeyAnswerPageStyle = "answer_page_style"
-private const val KeyShowAnswerImmediately = "show_answer_immediately"
+private const val KeyShowAccuracy = "show_accuracy"
 private const val KeyQuizAutoplay = "quiz_autoplay"
 private const val KeyDbVersion = "db_version"
 
@@ -24,8 +24,8 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
             PageStyle.Horizontal.ordinal
         )]
     )
-    val showAnswerImmediately =
-        MutableStateFlow(settings.getBoolean(KeyShowAnswerImmediately, false))
+    val showAccuracy =
+        MutableStateFlow(settings.getBoolean(KeyShowAccuracy, false))
     val showNextQuizAutomatically = MutableStateFlow(settings.getBoolean(KeyQuizAutoplay, false))
     val databaseVersion = MutableStateFlow(settings.getLongOrNull(KeyDbVersion))
 
@@ -36,8 +36,8 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
             }
         }
         coroutineScope.launch {
-            showAnswerImmediately.collectLatest {
-                settings.putBoolean(KeyShowAnswerImmediately, it)
+            showAccuracy.collectLatest {
+                settings.putBoolean(KeyShowAccuracy, it)
             }
         }
         coroutineScope.launch {

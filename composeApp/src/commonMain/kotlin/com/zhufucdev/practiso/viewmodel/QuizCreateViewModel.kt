@@ -127,7 +127,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
                         if (targetId < 0) {
                             frames.insertInto(Database.app, name)
                         } else {
-                            history.optimized().also { println(it) }.applyTo(Database.app, targetId)
+                            history.optimized().applyTo(Database.app, targetId)
                         }
                     }
                 }

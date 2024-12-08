@@ -46,7 +46,7 @@ import kotlin.random.Random
 class AnswerViewModel(
     private val db: AppDatabase,
     state: SavedStateHandle,
-    settings: SettingsModel,
+    val settings: SettingsModel,
 ) : ViewModel() {
     val session = MutableStateFlow<Session?>(null)
     val takeNumber by lazy {

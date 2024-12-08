@@ -36,6 +36,12 @@ import practiso.composeapp.generated.resources.image_emoji
 @Serializable
 sealed interface Frame {
     suspend fun getPreviewText(): String
+
+    /**
+     * The identifier of the frame in **context**
+     * - Belonging to the quiz, it's the same as the underlying frame id
+     * - Belonging to one of the [Options] within quiz, the value is its link id
+     */
     val id: Long
 
     fun insertInto(db: AppDatabase, quizId: Long, priority: Long)
@@ -74,13 +80,22 @@ sealed interface Frame {
         }
     }
 
+    sealed interface Answerable<T : Answer> : Frame {
+        fun List<T>.isAdequateNecessary(): Boolean
+    }
+
     @Serializable(OptionsSerializer::class)
     data class Options(
         val optionsFrame: OptionsFrame = OptionsFrame(-1, null),
         val frames: List<KeyedPrioritizedFrame> = emptyList(),
-    ) : Frame {
+    ) : Answerable<Answer.Option> {
         override val id: Long
             get() = optionsFrame.id
+
+        override fun List<Answer.Option>.isAdequateNecessary(): Boolean {
+            val optionIds = map(Answer.Option::optionId)
+            return frames.all { !it.isKey || it.isKey && it.frame.id in optionIds }
+        }
 
         override suspend fun getPreviewText(): String {
             return optionsFrame.name
