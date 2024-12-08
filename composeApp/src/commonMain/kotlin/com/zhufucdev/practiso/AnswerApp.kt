@@ -498,7 +498,7 @@ private fun calculateErrorRanges(
         val quizAnswers = answers.filter { it.quizId == option.quiz.id }
         val answerables =
             option.frames.map(PrioritizedFrame::frame).filterIsInstance<Frame.Answerable<*>>()
-        val frameWeight = 1f / answerables.size
+        val frameWeight = quizWeight / answerables.size
         answerables.forEachIndexed { frameIndex, frame ->
             val current = quizAnswers.filter { a -> a.frameId == frame.id }
             if (current.isNotEmpty()) {
@@ -507,7 +507,7 @@ private fun calculateErrorRanges(
                         (current as List<Answer.Option>)
                         if (!with(frame) { current.isAdequateNecessary() }) {
                             add((quizWeight * quizIndex + frameWeight * frameIndex).let {
-                                it.rangeUntil(it + frameWeight * quizWeight)
+                                it.rangeUntil(it + frameWeight)
                             })
                         }
                     }
