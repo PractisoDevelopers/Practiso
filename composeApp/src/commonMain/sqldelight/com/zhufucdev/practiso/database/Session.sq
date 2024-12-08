@@ -109,6 +109,11 @@ VALUES (?, ?);
 disassociateTimerFromTake:
 DELETE FROM timerByTake WHERE id = ?;
 
+getTimersByTakeId:
+SELECT *
+FROM timerByTake
+WHERE takeId = ?;
+
 updateTakeDuration:
 UPDATE take SET durationSeconds = ? WHERE id = ?;
 
@@ -138,6 +143,11 @@ SELECT *
 FROM takeStat
 WHERE sessionId = ?
 ORDER BY id;
+
+getTakeDurationSeconds:
+SELECT durationSeconds
+FROM take
+WHERE id = ?;
 
 getQuizCountBySession:
 SELECT count(*)
