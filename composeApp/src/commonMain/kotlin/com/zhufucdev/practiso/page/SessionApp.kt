@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -47,6 +49,7 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -60,8 +63,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -113,6 +126,7 @@ import practiso.composeapp.generated.resources.edit_para
 import practiso.composeapp.generated.resources.get_started_by_para
 import practiso.composeapp.generated.resources.loading_recommendations_span
 import practiso.composeapp.generated.resources.loading_takes_para
+import practiso.composeapp.generated.resources.minutes_span
 import practiso.composeapp.generated.resources.n_percentage
 import practiso.composeapp.generated.resources.new_take_para
 import practiso.composeapp.generated.resources.new_timer_para
@@ -870,7 +884,7 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
     Spacer(Modifier.height(PaddingNormal))
     LazyColumn(Modifier.weight(1f)) {
         items(model.timers.size, { model.timers[it].id }) { index ->
-            val duration = HumanReadable.duration(model.timers[index].duration)
+            val timer = model.timers[index]
             val state = rememberSwipeToDismissBoxState()
             LaunchedEffect(state.currentValue) {
                 if (state.currentValue == SwipeToDismissBoxValue.EndToStart
@@ -879,38 +893,110 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
                     model.timers.removeAt(index)
                 }
             }
-            SwipeToDismissBox(
-                modifier = Modifier.animateItem(),
-                state = state,
-                backgroundContent = {
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                            .padding(horizontal = PaddingSmall),
-                        contentAlignment =
-                            if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart
-                            else Alignment.CenterEnd
+            val coroutine = rememberCoroutineScope()
+
+            AnimatedContent(model.currentTimer.id == timer.id) { active ->
+                if (!active) {
+                    SwipeToDismissBox(
+                        modifier = Modifier.animateItem(),
+                        state = state,
+                        backgroundContent = {
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                                    .padding(horizontal = PaddingSmall),
+                                contentAlignment =
+                                    if (state.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart
+                                    else Alignment.CenterEnd
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = stringResource(Res.string.remove_para),
+                                )
+                            }
+                        }
                     ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = stringResource(Res.string.remove_para),
+                        TimerSkeleton(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = CardDefaults.cardColors().containerColor,
+                            onClick = {
+                                coroutine.launch {
+                                    model.event.selectTimer.send(timer.id)
+                                }
+                            },
+                            content = {
+                                val duration = HumanReadable.duration(timer.duration)
+                                Text(duration)
+                            }
+                        )
+                    }
+                } else {
+                    val focusRequester = remember { FocusRequester() }
+                    var initialized by remember { mutableStateOf(false) }
+                    LaunchedEffect(true) {
+                        focusRequester.requestFocus()
+                        initialized = true
+                    }
+
+                    TimerSkeleton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = null
+                    ) {
+                        var buffer by remember {
+                            val text = (timer.duration.inWholeMilliseconds / 60000f).toString()
+                            mutableStateOf(
+                                TextFieldValue(
+                                    text = text,
+                                    selection = TextRange(0, text.length)
+                                )
+                            )
+                        }
+                        val fl by remember(buffer.text) {
+                            derivedStateOf {
+                                buffer.text.toFloatOrNull()
+                            }
+                        }
+                        TextField(
+                            value = buffer,
+                            onValueChange = {
+                                buffer = it
+                                fl?.let { f ->
+                                    model.currentTimer = timer.copy(duration = f.toDouble().minutes)
+                                }
+                            },
+                            suffix = {
+                                Text(stringResource(Res.string.minutes_span))
+                            },
+                            singleLine = true,
+                            isError = fl == null,
+                            keyboardActions = KeyboardActions(onDone = {
+                                coroutine.launch {
+                                    model.event.updateTimerAndClose.send(Unit)
+                                }
+                            }),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.None
+                            ),
+                            modifier = Modifier.focusRequester(focusRequester)
+                                .onFocusChanged {
+                                    if (initialized && !it.isFocused) {
+                                        coroutine.launch {
+                                            model.event.updateTimerAndClose.send(Unit)
+                                        }
+                                    }
+                                }
+                                .onKeyEvent {
+                                    if (it.key == Key.Enter) {
+                                        coroutine.launch {
+                                            model.event.updateTimerAndClose.send(Unit)
+                                        }
+                                        return@onKeyEvent true
+                                    }
+                                    false
+                                }
                         )
                     }
                 }
-            ) {
-                TimerSkeleton(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = CardDefaults.cardColors().containerColor,
-                    onClick = {},
-                    leadingIcon = {
-                        Icon(
-                            painterResource(Res.drawable.baseline_timer_outline),
-                            contentDescription = null
-                        )
-                    },
-                    content = {
-                        Text(duration)
-                    }
-                )
             }
         }
 
@@ -956,16 +1042,17 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
 private fun TimerSkeleton(
     modifier: Modifier = Modifier,
     color: Color = Color.Transparent,
-    onClick: () -> Unit,
-    leadingIcon: @Composable () -> Unit,
+    onClick: (() -> Unit)?,
+    leadingIcon: @Composable () -> Unit = {
+        Icon(
+            painterResource(Res.drawable.baseline_timer_outline),
+            contentDescription = null
+        )
+    },
     content: @Composable () -> Unit,
 ) {
-    Surface(
-        color = color,
-        shape = CardDefaults.shape,
-        onClick = onClick,
-        modifier = modifier
-    ) {
+    @Composable
+    fun Content() {
         Row(
             horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
             verticalAlignment = Alignment.CenterVertically,
@@ -973,6 +1060,25 @@ private fun TimerSkeleton(
         ) {
             leadingIcon()
             content()
+        }
+    }
+
+    if (onClick == null) {
+        Surface(
+            color = color,
+            shape = CardDefaults.shape,
+            modifier = modifier
+        ) {
+            Content()
+        }
+    } else {
+        Surface(
+            color = color,
+            shape = CardDefaults.shape,
+            onClick = onClick,
+            modifier = modifier
+        ) {
+            Content()
         }
     }
 }

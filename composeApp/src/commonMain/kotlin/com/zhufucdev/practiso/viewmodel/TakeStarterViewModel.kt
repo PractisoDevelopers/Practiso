@@ -23,6 +23,7 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.protoBufStateListSaver
+import com.zhufucdev.practiso.protobufSaver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -36,6 +37,7 @@ import kotlinx.coroutines.selects.select
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class TakeStarterViewModel(
@@ -62,11 +64,12 @@ class TakeStarterViewModel(
     val flipCardState = FlipCardState()
 
     @Serializable
-    data class Timer(val duration: Duration, val id: String = randomUUID())
+    data class Timer(val duration: Duration = 10.0.minutes, val id: String = randomUUID())
 
     val timers by state.saveable(saver = protoBufStateListSaver()) {
         mutableStateListOf<Timer>()
     }
+    var currentTimer by state.saveable(stateSaver = protobufSaver()) { mutableStateOf(Timer(id = "")) }
 
     var currentTakeId by state.saveable { mutableLongStateOf(-1) }
         private set
@@ -82,6 +85,8 @@ class TakeStarterViewModel(
         val unhide: Channel<Long> = Channel(),
         val toggleShowHidden: Channel<Unit> = Channel(),
         val createAndStart: Channel<Unit> = Channel(),
+        val selectTimer: Channel<String> = Channel(),
+        val updateTimerAndClose: Channel<Unit> = Channel()
     )
 
     val event = Events()
@@ -175,6 +180,23 @@ class TakeStarterViewModel(
                                 options = listOf(NavigationOption.OpenTake(id))
                             )
                         } ?: error("No ui coroutine scope specified")
+                    }
+
+                    event.selectTimer.onReceive { id ->
+                        val timer = timers.firstOrNull { it.id == id }
+                        if (timer != null) {
+                            currentTimer = timer
+                        }
+                    }
+
+                    event.updateTimerAndClose.onReceive {
+                        val index = timers.indexOfFirst { it.id == currentTimer.id }
+                        if (index >= 0) {
+                            timers.removeAt(index)
+                            timers.add(index, currentTimer)
+                        }
+                        currentTimer = Timer(id = "")
+                        Unit
                     }
                 }
             }
