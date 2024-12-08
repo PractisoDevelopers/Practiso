@@ -120,9 +120,10 @@ class AnswerViewModel(
 
         data class Column(val state: LazyListState) : PageState {
             override val progress: Float by derivedStateOf {
-                (state.firstVisibleItemIndex
-                        + state.firstVisibleItemScrollOffset * 1f / (state.layoutInfo.visibleItemsInfo.firstOrNull()?.size
-                    ?: 1)
+                (
+                        state.firstVisibleItemIndex
+                                + state.firstVisibleItemScrollOffset
+                                * 1f / (state.layoutInfo.visibleItemsInfo.firstOrNull()?.size ?: 1)
                         ) / state.layoutInfo.totalItemsCount
             }
         }
