@@ -20,6 +20,7 @@ import com.zhufucdev.practiso.composable.BitmapRepository
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.Take
+import com.zhufucdev.practiso.database.TimerByTake
 import com.zhufucdev.practiso.datamodel.Answer
 import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.QuizFrames
@@ -31,17 +32,21 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.datetime.Clock
 import kotlin.random.Random
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class AnswerViewModel(
     private val db: AppDatabase,
@@ -51,15 +56,15 @@ class AnswerViewModel(
     val session = MutableStateFlow<Session?>(null)
     val takeNumber by lazy {
         MutableStateFlow<Int?>(null).apply {
-            viewModelScope.launch {
-                takeId.collectLatest { takeId ->
+            viewModelScope.launch(Dispatchers.IO) {
+                take.filterNotNull().collectLatest { take ->
                     session.filterNotNull().collectLatest {
                         db.sessionQueries
                             .getTakeStatsBySessionId(it.id)
                             .asFlow()
                             .mapToList(Dispatchers.IO)
                             .collect { stats ->
-                                emit(stats.indexOfFirst { stat -> stat.id == takeId } + 1)
+                                emit(stats.indexOfFirst { stat -> stat.id == take.id } + 1)
                             }
                     }
                 }
@@ -68,10 +73,10 @@ class AnswerViewModel(
     }
     val answers: StateFlow<List<Answer>?> by lazy {
         MutableStateFlow<List<Answer>?>(null).apply {
-            viewModelScope.launch {
-                takeId.collectLatest {
+            viewModelScope.launch(Dispatchers.IO) {
+                take.filterNotNull().collectLatest {
                     db.sessionQueries
-                        .getAnswersDataModel(it)
+                        .getAnswersDataModel(it.id)
                         .collect(this@apply)
                 }
             }
@@ -79,7 +84,8 @@ class AnswerViewModel(
     }
     val take by lazy {
         MutableStateFlow<Take?>(null).apply {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
+                @Suppress("DEPRECATION") // take is derived from takeId
                 takeId.filter { it >= 0 }.collectLatest {
                     db.sessionQueries.getTakeById(it)
                         .asFlow()
@@ -91,15 +97,40 @@ class AnswerViewModel(
     }
     val quizzes by lazy {
         MutableStateFlow<List<QuizFrames>?>(null).apply {
+            viewModelScope.launch(Dispatchers.IO) {
+                take.filterNotNull().collectLatest { t ->
+                    db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(t.id))
+                        .map { frames -> frames.shuffled(Random(t.creationTimeISO.epochSeconds)) }
+                        .collect(this@apply)
+                }
+            }
+        }
+    }
+    val elapsed by lazy {
+        MutableStateFlow<Duration?>(null).apply {
             viewModelScope.launch {
-                takeId.collectLatest { id ->
-                    session.filterNotNull().collectLatest { s ->
-                        take.filterNotNull().collectLatest { t ->
-                            db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(id))
-                                .map { frames -> frames.shuffled(Random(t.creationTimeISO.epochSeconds)) }
-                                .collect(this@apply)
-                        }
+                take.filterNotNull().collectLatest {
+                    val startDuration = it.durationSeconds.seconds
+                    emit(startDuration)
+                    val startInstant = Clock.System.now()
+                    while (true) {
+                        delay(1.seconds)
+                        emit(startDuration + (Clock.System.now() - startInstant))
                     }
+                }
+            }
+        }
+    }
+    val timers by lazy {
+        MutableStateFlow<List<Double>>(emptyList()).apply {
+            viewModelScope.launch(Dispatchers.IO) {
+                take.filterNotNull().collectLatest {
+                    db.sessionQueries
+                        .getTimersByTakeId(it.id)
+                        .asFlow()
+                        .mapToList(Dispatchers.IO)
+                        .map { t -> t.map(TimerByTake::durationSeconds) }
+                        .collect(this@apply)
                 }
             }
         }
@@ -164,11 +195,19 @@ class AnswerViewModel(
     data class Events(
         val answer: Channel<Answer> = Channel(),
         val unanswer: Channel<Answer> = Channel(),
+        val updateDuration: Channel<Unit> = Channel(),
     )
 
     val event = Events()
 
-    val takeId = MutableStateFlow(-1L)
+    /**
+     * Avoid using this flow directly, use [take].id instead
+     */
+    @Deprecated(
+        message = " Avoid using this flow directly",
+        replaceWith = ReplaceWith("take.map { it?.id ?: -1 }")
+    )
+    private val takeId = MutableStateFlow(-1L)
     suspend fun loadNavOptions(options: List<NavigationOption>) {
         val takeId =
             (options.lastOrNull { it is NavigationOption.OpenTake } as NavigationOption.OpenTake?)?.takeId
@@ -183,6 +222,7 @@ class AnswerViewModel(
                 db.sessionQueries.updateSessionAccessTime(Clock.System.now(), session.id)
                 db.sessionQueries.updateTakeAccessTime(Clock.System.now(), takeId)
             }
+            @Suppress("DEPRECATION")
             this.takeId.emit(takeId)
         }
     }
@@ -194,14 +234,24 @@ class AnswerViewModel(
             while (viewModelScope.isActive) {
                 select<Unit> {
                     event.answer.onReceive {
+                        val take = take.filterNotNull().first()
                         db.transaction {
-                            it.commit(db, takeId.value, priority = currentQuizIndex)
+                            it.commit(db, take.id, priority = currentQuizIndex)
                         }
                     }
 
                     event.unanswer.onReceive {
+                        val take = take.filterNotNull().first()
                         db.transaction {
-                            it.rollback(db, takeId.value)
+                            it.rollback(db, take.id)
+                        }
+                    }
+
+                    event.updateDuration.onReceive {
+                        val take = take.filterNotNull().first()
+                        val elapsed = elapsed.filterNotNull().first()
+                        db.transaction {
+                            db.sessionQueries.updateTakeDuration(elapsed.inWholeSeconds, take.id)
                         }
                     }
                 }

@@ -4,11 +4,15 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RadioButton
@@ -38,8 +43,10 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -75,7 +82,9 @@ import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import nl.jacobras.humanreadable.HumanReadable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
@@ -90,6 +99,8 @@ import practiso.composeapp.generated.resources.show_accuracy_para
 import practiso.composeapp.generated.resources.take_n_para
 import practiso.composeapp.generated.resources.vertical_pager_para
 import kotlin.math.roundToInt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,33 +108,31 @@ fun AnswerApp(model: AnswerViewModel) {
     val quizzes by model.quizzes.collectAsState()
     val state by model.pageState.collectAsState(null)
     val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    LaunchedEffect(true) {
+        while (true) {
+            delay(10.seconds)
+            model.event.updateDuration.send(Unit)
+        }
+    }
+
     Scaffold(
         topBar = {
             Box {
-                TopAppBar(
-                    title = {
-                        val takeNumber by model.takeNumber.collectAsState()
-                        val session by model.session.collectAsState()
-                        takeNumber?.let {
-                            Column(Modifier.animateContentSize()) {
-                                Text(stringResource(Res.string.take_n_para, it))
-
-                                session?.let {
-                                    Text(
-                                        it.name,
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    scrollBehavior = topBarScrollBehavior,
-                    navigationIcon = { NavigateUpButton() },
-                    actions = {
-                        PagerStyleToggle(model.settings)
-                        Menu(model.settings)
-                    }
-                )
+                val takeNumber by model.takeNumber.collectAsState()
+                val session by model.session.collectAsState()
+                val elapsed by model.elapsed.collectAsState()
+                val timers by model.timers.collectAsState()
+                AppTopBar(
+                    takeNumber = takeNumber,
+                    sessionName = session?.name,
+                    elapsed = elapsed,
+                    timers = timers,
+                    scrollBehavior = topBarScrollBehavior
+                ) {
+                    PagerStyleToggle(model.settings)
+                    Menu(model.settings)
+                }
 
                 state?.let {
                     LaunchedEffect(it.progress) {
@@ -237,6 +246,56 @@ fun AnswerApp(model: AnswerViewModel) {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppTopBar(
+    takeNumber: Int?,
+    sessionName: String?,
+    elapsed: Duration?,
+    timers: List<Double>,
+    scrollBehavior: TopAppBarScrollBehavior,
+    actions: @Composable RowScope.() -> Unit,
+) {
+    var showTimer by remember { mutableStateOf(false) }
+    LaunchedEffect(sessionName, takeNumber) {
+        delay(3.seconds)
+        while (elapsed == null) {
+            delay(1.seconds)
+        }
+        showTimer = true
+    }
+
+    TopAppBar(
+        title = {
+            takeNumber?.let {
+                Column(Modifier.animateContentSize()) {
+                    Text(stringResource(Res.string.take_n_para, it))
+
+                    AnimatedContent(
+                        showTimer,
+                        transitionSpec = {
+                            fadeIn() togetherWith fadeOut()
+                        }
+                    ) { showTimer ->
+                        CompositionLocalProvider(LocalTextStyle provides  MaterialTheme.typography.bodySmall) {
+                            if (showTimer) {
+                                Text(HumanReadable.duration(elapsed!!))
+                            } else {
+                                sessionName?.let {
+                                    Text(it)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        scrollBehavior = scrollBehavior,
+        navigationIcon = { NavigateUpButton() },
+        actions = actions
+    )
 }
 
 @Composable
