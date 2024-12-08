@@ -47,6 +47,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -71,6 +72,8 @@ import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
 import com.zhufucdev.practiso.composable.rememberFileImageState
+import com.zhufucdev.practiso.composition.rememberClosestTimerAhead
+import com.zhufucdev.practiso.composition.toTimerPresentation
 import com.zhufucdev.practiso.datamodel.Answer
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
@@ -84,7 +87,7 @@ import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import nl.jacobras.humanreadable.HumanReadable
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
@@ -97,6 +100,7 @@ import practiso.composeapp.generated.resources.horizontal_pager_para
 import practiso.composeapp.generated.resources.loading_quizzes_para
 import practiso.composeapp.generated.resources.show_accuracy_para
 import practiso.composeapp.generated.resources.take_n_para
+import practiso.composeapp.generated.resources.time_is_up_para
 import practiso.composeapp.generated.resources.vertical_pager_para
 import kotlin.math.roundToInt
 import kotlin.time.Duration
@@ -115,6 +119,13 @@ fun AnswerApp(model: AnswerViewModel) {
             model.event.updateDuration.send(Unit)
         }
     }
+    DisposableEffect(true) {
+        onDispose {
+            runBlocking {
+                model.event.updateDuration.send(Unit)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -125,9 +136,12 @@ fun AnswerApp(model: AnswerViewModel) {
                 val timers by model.timers.collectAsState()
                 AppTopBar(
                     takeNumber = takeNumber,
-                    sessionName = session?.name,
+                    secondaryTextState = rememberSecondaryTextState(
+                        sessionName = session?.name,
+                        elapsed = elapsed,
+                        timers = timers.map { it.seconds }
+                    ),
                     elapsed = elapsed,
-                    timers = timers,
                     scrollBehavior = topBarScrollBehavior
                 ) {
                     PagerStyleToggle(model.settings)
@@ -248,25 +262,56 @@ fun AnswerApp(model: AnswerViewModel) {
     }
 }
 
+private sealed interface SecondaryText {
+    data class Timer(val closest: Duration) : SecondaryText
+    data object Timeout : SecondaryText
+    data class Text(val value: String) : SecondaryText
+    data object Hidden : SecondaryText
+}
+
+@Composable
+private fun rememberSecondaryTextState(
+    sessionName: String?,
+    elapsed: Duration?,
+    timers: List<Duration>,
+): SecondaryText {
+    val closest = rememberClosestTimerAhead(elapsed, timers)
+    var state by remember {
+        mutableStateOf<SecondaryText>(SecondaryText.Hidden)
+    }
+
+    LaunchedEffect(sessionName) {
+        state = if (sessionName != null) {
+            SecondaryText.Text(sessionName)
+        } else {
+            SecondaryText.Hidden
+        }
+    }
+
+    LaunchedEffect(closest) {
+        if (state !is SecondaryText.Timeout && state !is SecondaryText.Timeout) {
+            delay(3.seconds)
+        }
+
+        if (closest != null) {
+            state = SecondaryText.Timer(closest)
+        } else if (timers.isNotEmpty()) {
+            state = SecondaryText.Timeout
+        }
+    }
+
+    return state
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppTopBar(
     takeNumber: Int?,
-    sessionName: String?,
+    secondaryTextState: SecondaryText,
     elapsed: Duration?,
-    timers: List<Double>,
     scrollBehavior: TopAppBarScrollBehavior,
     actions: @Composable RowScope.() -> Unit,
 ) {
-    var showTimer by remember { mutableStateOf(false) }
-    LaunchedEffect(sessionName, takeNumber) {
-        delay(3.seconds)
-        while (elapsed == null) {
-            delay(1.seconds)
-        }
-        showTimer = true
-    }
-
     TopAppBar(
         title = {
             takeNumber?.let {
@@ -274,17 +319,31 @@ private fun AppTopBar(
                     Text(stringResource(Res.string.take_n_para, it))
 
                     AnimatedContent(
-                        showTimer,
+                        secondaryTextState,
                         transitionSpec = {
                             fadeIn() togetherWith fadeOut()
                         }
-                    ) { showTimer ->
-                        CompositionLocalProvider(LocalTextStyle provides  MaterialTheme.typography.bodySmall) {
-                            if (showTimer) {
-                                Text(HumanReadable.duration(elapsed!!))
-                            } else {
-                                sessionName?.let {
-                                    Text(it)
+                    ) { state ->
+                        CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodySmall) {
+                            when (state) {
+                                SecondaryText.Hidden -> {
+                                }
+
+                                SecondaryText.Timeout -> {
+                                    Text(
+                                        stringResource(Res.string.time_is_up_para),
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+
+                                is SecondaryText.Text -> {
+                                    Text(state.value)
+                                }
+
+                                is SecondaryText.Timer -> {
+                                    elapsed?.let {
+                                        Text((state.closest - it).toTimerPresentation())
+                                    }
                                 }
                             }
                         }

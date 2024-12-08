@@ -148,6 +148,7 @@ import practiso.composeapp.generated.resources.will_be_identified_as_x_para
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
 
 @Composable
 fun SessionApp(
@@ -942,7 +943,7 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
                         onClick = null
                     ) {
                         var buffer by remember {
-                            val text = (timer.duration.inWholeMilliseconds / 60000f).toString()
+                            val text = timer.duration.toDouble(DurationUnit.MINUTES).toString()
                             mutableStateOf(
                                 TextFieldValue(
                                     text = text,
