@@ -206,8 +206,5 @@ lastInsertRowId:
 SELECT last_insert_rowid();
 
 
-updateIsKeyTextFrameAssoicated:
-UPDATE frameByOptionsFrame SET isKey = ? WHERE textFrameId = ?;
-
-updateIsKeyImageFrameAssocicated:
-UPDATE frameByOptionsFrame SET isKey = ? WHERE imageFrameId = ?;
+updateIsKey:
+UPDATE frameByOptionsFrame SET isKey = ? WHERE id = ?;

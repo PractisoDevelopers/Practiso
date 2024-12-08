@@ -108,24 +108,10 @@ sealed interface Edit {
                                 Update(old.frame, new.frame).applyTo(db, quizId)
                             }
                             if (old.isKey != new.isKey) {
-                                when (new.frame) {
-                                    is Frame.Image -> db.transaction {
-                                        db.quizQueries.updateIsKeyImageFrameAssocicated(
-                                            imageFrameId = new.frame.id,
-                                            isKey = new.isKey
-                                        )
-                                    }
-
-                                    is Frame.Text ->
-                                        db.transaction {
-                                            db.quizQueries.updateIsKeyTextFrameAssoicated(
-                                                textFrameId = new.frame.id,
-                                                isKey = new.isKey
-                                            )
-                                        }
-
-                                    is Frame.Options -> throw UnsupportedOperationException(
-                                        "Option frame inception"
+                                db.transaction {
+                                    db.quizQueries.updateIsKey(
+                                        id = new.frame.id,
+                                        isKey = new.isKey
                                     )
                                 }
                             }
