@@ -169,7 +169,14 @@ fun AnswerApp(model: AnswerViewModel) {
                 is AnswerViewModel.PageState.Pager.Horizontal -> {
                     HorizontalPager(
                         state = wrap.state,
-                        modifier = Modifier.padding(padding)
+                        modifier = Modifier.padding(padding),
+                        flingBehavior = PagerDefaults.flingBehavior(
+                            wrap.state,
+                            pagerSnapDistance = PagerSnapDistance.atMost(0),
+                            snapAnimationSpec = spring(stiffness = Spring.StiffnessMedium),
+                            decayAnimationSpec = rememberSplineBasedDecay(),
+                            snapPositionalThreshold = 0.1f
+                        )
                     ) { page ->
                         val currentQuiz by remember(quizzes) {
                             derivedStateOf {
