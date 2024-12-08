@@ -114,7 +114,7 @@ class AnswerViewModel(
                     emit(startDuration)
                     val startInstant = Clock.System.now()
                     while (true) {
-                        delay(1.seconds)
+                        delay(0.5.seconds)
                         emit(startDuration + (Clock.System.now() - startInstant))
                     }
                 }
@@ -212,6 +212,7 @@ class AnswerViewModel(
         val takeId =
             (options.lastOrNull { it is NavigationOption.OpenTake } as NavigationOption.OpenTake?)?.takeId
 
+        elapsed.emit(null)
         if (takeId != null) {
             val session =
                 db.sessionQueries.getSessionByTakeId(takeId).executeAsOne()
