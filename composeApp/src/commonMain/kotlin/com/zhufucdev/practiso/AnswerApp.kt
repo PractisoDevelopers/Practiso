@@ -23,6 +23,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,10 +44,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composable.BitmapRepository
@@ -60,6 +68,7 @@ import com.zhufucdev.practiso.datamodel.Answer
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
 import com.zhufucdev.practiso.datamodel.PageStyle
+import com.zhufucdev.practiso.datamodel.PrioritizedFrame
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.platform.getPlatform
@@ -70,12 +79,14 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
+import practiso.composeapp.generated.resources.baseline_dots_vertical
 import practiso.composeapp.generated.resources.baseline_flip_horizontal
 import practiso.composeapp.generated.resources.baseline_flip_vertical
 import practiso.composeapp.generated.resources.baseline_view_agenda_outline
 import practiso.composeapp.generated.resources.continuous_scrolling_para
 import practiso.composeapp.generated.resources.horizontal_pager_para
 import practiso.composeapp.generated.resources.loading_quizzes_para
+import practiso.composeapp.generated.resources.show_accuracy_para
 import practiso.composeapp.generated.resources.take_n_para
 import practiso.composeapp.generated.resources.vertical_pager_para
 import kotlin.math.roundToInt
@@ -108,17 +119,29 @@ fun AnswerApp(model: AnswerViewModel) {
                     },
                     scrollBehavior = topBarScrollBehavior,
                     navigationIcon = { NavigateUpButton() },
-                    actions = { PagerStyleToggle(AppSettings) }
+                    actions = {
+                        PagerStyleToggle(model.settings)
+                        Menu(model.settings)
+                    }
                 )
 
                 state?.let {
                     LaunchedEffect(it.progress) {
-                        model.currentQuizIndex = maxOf(0, (it.progress * quizzes!!.size).roundToInt() - 1)
+                        model.currentQuizIndex =
+                            maxOf(0, (it.progress * quizzes!!.size).roundToInt() - 1)
                     }
-                    LinearProgressIndicator(
-                        progress = { it.progress },
-                        drawStopIndicator = {},
-                        modifier = Modifier.fillMaxWidth()
+                    val showAccuracy by model.settings.showAccuracy.collectAsState()
+                    val answers by model.answers.collectAsState()
+                    val errorRanges by remember(answers, quizzes, showAccuracy) {
+                        derivedStateOf {
+                            if (showAccuracy && answers != null && quizzes != null)
+                                calculateErrorRanges(answers!!, quizzes!!)
+                            else emptyList()
+                        }
+                    }
+                    AnswerProgressIndicator(
+                        progress = it.progress,
+                        errorRanges = errorRanges
                     )
                 }
             }
@@ -399,5 +422,97 @@ private fun PagerStyleToggle(settings: SettingsModel) {
                 contentDescription = currentName
             )
         }
+    }
+}
+
+@Composable
+private fun Menu(model: SettingsModel) {
+    val coroutine = rememberCoroutineScope()
+    Box {
+        var expanded by remember { mutableStateOf(false) }
+        IconButton(
+            onClick = { expanded = true },
+        ) {
+            Icon(painterResource(Res.drawable.baseline_dots_vertical), contentDescription = null)
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            val showAccuracy by model.showAccuracy.collectAsState()
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.show_accuracy_para)) },
+                leadingIcon = { Checkbox(checked = showAccuracy, onCheckedChange = null) },
+                onClick = {
+                    coroutine.launch {
+                        model.showAccuracy.emit(!showAccuracy)
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AnswerProgressIndicator(
+    modifier: Modifier = Modifier,
+    progress: Float,
+    errorRanges: List<OpenEndRange<Float>>,
+) {
+    val errorColor = MaterialTheme.colorScheme.error
+    LinearProgressIndicator(
+        progress = { progress },
+        drawStopIndicator = {},
+        modifier = Modifier.fillMaxWidth()
+            .drawWithContent {
+                drawContent()
+                errorRanges.forEach {
+                    drawRect(
+                        color = errorColor,
+                        topLeft = Offset(x = it.start * size.width, y = 0f),
+                        size = Size(
+                            width = (it.endExclusive - it.start) * size.width,
+                            height = size.height
+                        ),
+                        blendMode = BlendMode.Hue
+                    )
+                }
+            } then modifier
+    )
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun calculateErrorRanges(
+    answers: List<Answer>,
+    quizzes: List<QuizFrames>,
+): List<OpenEndRange<Float>> = buildList {
+    val quizWeight = 1f / quizzes.size
+    quizzes.forEachIndexed { quizIndex, option ->
+        val quizAnswers = answers.filter { it.quizId == option.quiz.id }
+        val answerables = option.frames.map(PrioritizedFrame::frame).filterIsInstance<Frame.Answerable<*>>()
+        val frameWeight = 1f / answerables.size
+        answerables.forEachIndexed { frameIndex, frame ->
+            val current = quizAnswers.filter { a -> a.frameId == frame.id }
+            when (frame) {
+                is Frame.Options -> {
+                    if (!with(frame) { (current as List<Answer.Option>).isAdequateNecessary() }) {
+                        add((quizWeight * quizIndex + frameWeight * frameIndex).let { it.rangeUntil(it + frameWeight * quizWeight) })
+                    }
+                }
+            }
+        }
+    }
+
+    // merge touching ranges
+    var i = 0
+    while (i < size - 1) {
+        val a = get(i)
+        val b = get(i + 1)
+        if (a.endExclusive == b.start) {
+            removeAt(i + 1)
+            removeAt(i)
+            add(i, a.start.rangeUntil(b.endExclusive))
+        }
+        i++
     }
 }

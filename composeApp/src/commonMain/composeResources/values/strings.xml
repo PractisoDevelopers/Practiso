@@ -95,4 +95,5 @@
     <string name="horizontal_pager_para">Horizontal pager</string>
     <string name="vertical_pager_para">Vertical pager</string>
     <string name="continuous_scrolling_para">Continuous scrolling</string>
+    <string name="show_accuracy_para">Show accuracy</string>
 </resources>
