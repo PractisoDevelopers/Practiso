@@ -28,7 +28,7 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
     val sessions by lazy {
         MutableStateFlow<List<PractisoOption.Session>?>(null).apply {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 db.sessionQueries.getAllSessions()
                     .asFlow()
                     .mapToList(Dispatchers.IO)
@@ -40,7 +40,7 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
 
     val recentTakeStats by lazy {
         MutableStateFlow<List<TakeStat>?>(null).apply {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 db.sessionQueries.getRecentTakeStats(5)
                     .asFlow()
                     .mapToList(Dispatchers.IO)

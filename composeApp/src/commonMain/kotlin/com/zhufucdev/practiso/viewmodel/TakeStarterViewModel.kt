@@ -50,7 +50,7 @@ class TakeStarterViewModel(
 
     val takeStats by lazy {
         MutableStateFlow<List<TakeStat>?>(null).apply {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 option.filterNotNull().collectLatest {
                     db.sessionQueries.getTakeStatsBySessionId(it.session.id)
                         .asFlow()
