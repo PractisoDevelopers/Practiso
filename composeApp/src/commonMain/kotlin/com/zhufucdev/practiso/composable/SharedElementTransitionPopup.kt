@@ -3,9 +3,11 @@ package com.zhufucdev.practiso.composable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
@@ -29,6 +33,7 @@ import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 const val SharedElementTransitionKey = "shared_element_transition"
 
@@ -80,6 +85,18 @@ fun SharedElementTransitionPopup(
                         model.expanded,
                         modifier = Modifier.align(Alignment.Center)
                     ) {
+                        val releaseAnimator = remember { Animatable(0f) }
+                        val localCoroutine = rememberCoroutineScope()
+
+                        suspend fun release(velocityTracker: VelocityTracker) {
+                            val velocity = velocityTracker.calculateVelocity().y
+                            if (abs(releaseAnimator.value) > 40 || velocity > 10) {
+                                model.collapse()
+                            } else {
+                                releaseAnimator.animateTo(0f)
+                            }
+                        }
+
                         Box(
                             modifier = Modifier
                                 .widthIn(max = 400.dp)
@@ -88,6 +105,34 @@ fun SharedElementTransitionPopup(
                                     sharedContentState = rememberSharedContentState(key),
                                     animatedVisibilityScope = this@AnimatedVisibility
                                 )
+                                .offset(y = releaseAnimator.value.dp)
+                                .pointerInput(true) {
+                                    val velocityTracker = VelocityTracker()
+                                    detectVerticalDragGestures(
+                                        onDragEnd = {
+                                            localCoroutine.launch {
+                                                release(velocityTracker)
+                                            }
+                                        },
+                                        onDragCancel = {
+                                            localCoroutine.launch {
+                                                release(velocityTracker)
+                                            }
+                                        },
+                                        onVerticalDrag = { change, amount ->
+                                            if (!change.isConsumed) {
+                                                change.consume()
+                                                localCoroutine.launch {
+                                                    releaseAnimator.snapTo(releaseAnimator.value + amount.toDp().value)
+                                                }
+                                                velocityTracker.addPosition(
+                                                    change.uptimeMillis,
+                                                    change.position
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
                         ) {
                             popup(scopeImpl)
                         }
