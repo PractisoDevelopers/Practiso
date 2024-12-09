@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlin.math.abs
 import kotlin.time.Duration
 
 @Composable
@@ -28,11 +29,15 @@ fun rememberClosestTimerAhead(elapsed: Duration?, timers: List<Duration>): Durat
 
 fun Duration.toTimerPresentation(): String = toComponents { hours, minutes, seconds, _ ->
     buildString {
+        if (hours < 0 || minutes < 0 || seconds < 0) {
+            append('-')
+        }
+
         fun appendComponent(value: Number) {
             if (value.toLong() < 10) {
                 append('0')
             }
-            append(value)
+            append(abs(value.toLong()))
         }
 
         if (hours > 0) {
