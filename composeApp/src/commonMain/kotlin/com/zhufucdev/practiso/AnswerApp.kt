@@ -263,7 +263,7 @@ fun AnswerApp(model: AnswerViewModel) {
 }
 
 private sealed interface SecondaryText {
-    data class Timer(val closest: Duration) : SecondaryText
+    data class Timer(val incoming: Duration) : SecondaryText
     data object Timeout : SecondaryText
     data class Text(val value: String) : SecondaryText
     data object Hidden : SecondaryText
@@ -275,7 +275,7 @@ private fun rememberSecondaryTextState(
     elapsed: Duration?,
     timers: List<Duration>,
 ): SecondaryText {
-    val closest = rememberClosestTimerAhead(elapsed, timers)
+    val incoming = rememberClosestTimerAhead(elapsed, timers)
     var state by remember {
         mutableStateOf<SecondaryText>(SecondaryText.Hidden)
     }
@@ -288,13 +288,13 @@ private fun rememberSecondaryTextState(
         }
     }
 
-    LaunchedEffect(closest) {
-        if (state !is SecondaryText.Timeout && state !is SecondaryText.Timeout) {
+    LaunchedEffect(incoming) {
+        if (state !is SecondaryText.Timeout && state !is SecondaryText.Timer) {
             delay(3.seconds)
         }
 
-        if (closest != null) {
-            state = SecondaryText.Timer(closest)
+        if (incoming != null) {
+            state = SecondaryText.Timer(incoming)
         } else if (timers.isNotEmpty()) {
             state = SecondaryText.Timeout
         }
@@ -342,7 +342,7 @@ private fun AppTopBar(
 
                                 is SecondaryText.Timer -> {
                                     elapsed?.let {
-                                        Text((state.closest - it).toTimerPresentation())
+                                        Text((state.incoming - it).toTimerPresentation())
                                     }
                                 }
                             }
