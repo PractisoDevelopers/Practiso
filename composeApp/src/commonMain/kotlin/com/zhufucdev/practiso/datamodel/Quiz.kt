@@ -94,7 +94,7 @@ sealed interface Frame {
 
         override fun List<Answer.Option>.isAdequateNecessary(): Boolean {
             val optionIds = map(Answer.Option::optionId)
-            return frames.all { !it.isKey || it.isKey && it.frame.id in optionIds }
+            return frames.all { !it.isKey && it.frame.id !in optionIds || it.isKey && it.frame.id in optionIds }
         }
 
         override suspend fun getPreviewText(): String {
