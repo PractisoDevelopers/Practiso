@@ -91,7 +91,7 @@ updateQuizName:
 UPDATE quiz SET name = ?
 WHERE id = ?;
 
-updateQuizModificationTimeISO:
+updateQuizModificationTime:
 UPDATE quiz SET modificationTimeISO = ?
 WHERE id = ?;
 

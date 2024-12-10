@@ -18,6 +18,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -152,7 +153,11 @@ data class KeyedPrioritizedFrame(val frame: Frame, val isKey: Boolean, val prior
 @Serializable
 data class PrioritizedFrame(val frame: Frame, val priority: Int)
 
-data class QuizFrames(val quiz: Quiz, val frames: List<PrioritizedFrame>)
+@Serializable
+data class QuizFrames(
+    @Serializable(QuizSerializer::class) val quiz: Quiz,
+    val frames: List<PrioritizedFrame>,
+)
 
 private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<PrioritizedFrame> =
     coroutineScope {
@@ -238,9 +243,13 @@ fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
             }
         }
 
+const val TextFrameSerialName = "text"
+const val ImageFrameSerialName = "image"
+const val OptionsFrameSerialName = "options"
+
 private class TextSerializer : KSerializer<Frame.Text> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("frame_text") {
-        element("external_id", serialDescriptor<Long>())
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor(TextFrameSerialName) {
+        element("link_id", serialDescriptor<Long>())
         element("id", serialDescriptor<Long>())
         element("content", serialDescriptor<String>())
     }
@@ -267,14 +276,15 @@ private class TextSerializer : KSerializer<Frame.Text> {
 
     override fun serialize(encoder: Encoder, value: Frame.Text) =
         encoder.encodeStructure(descriptor) {
-            encodeLongElement(descriptor, 0, value.textFrame.id)
-            encodeStringElement(descriptor, 1, value.textFrame.content)
+            encodeLongElement(descriptor, 0, value.id)
+            encodeLongElement(descriptor, 1, value.textFrame.id)
+            encodeStringElement(descriptor, 2, value.textFrame.content)
         }
 }
 
 private class ImageSerializer : KSerializer<Frame.Image> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("frame_image") {
-        element("external_id", serialDescriptor<Long>())
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor(ImageFrameSerialName) {
+        element("link_id", serialDescriptor<Long>())
         element("id", serialDescriptor<Long>())
         element("filename", serialDescriptor<String>())
         element("width", serialDescriptor<Long>())
@@ -313,18 +323,19 @@ private class ImageSerializer : KSerializer<Frame.Image> {
 
     override fun serialize(encoder: Encoder, value: Frame.Image) =
         encoder.encodeStructure(descriptor) {
-            encodeLongElement(descriptor, 0, value.imageFrame.id)
-            encodeStringElement(descriptor, 1, value.imageFrame.filename)
-            encodeLongElement(descriptor, 2, value.imageFrame.width)
-            encodeLongElement(descriptor, 3, value.imageFrame.height)
+            encodeLongElement(descriptor, 0, value.id)
+            encodeLongElement(descriptor, 1, value.imageFrame.id)
+            encodeStringElement(descriptor, 2, value.imageFrame.filename)
+            encodeLongElement(descriptor, 3, value.imageFrame.width)
+            encodeLongElement(descriptor, 4, value.imageFrame.height)
             if (value.imageFrame.altText != null) {
-                encodeStringElement(descriptor, 4, value.imageFrame.altText)
+                encodeStringElement(descriptor, 5, value.imageFrame.altText)
             }
         }
 }
 
 private class OptionsSerializer : KSerializer<Frame.Options> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("frame_options") {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor(OptionsFrameSerialName) {
         element("id", serialDescriptor<Long>())
         element("name", serialDescriptor<String>(), isOptional = true)
         element("frames", serialDescriptor<KeyedPrioritizedFrame>(), isOptional = true)
@@ -357,6 +368,44 @@ private class OptionsSerializer : KSerializer<Frame.Options> {
             }
             encodeSerializableElement(descriptor, 2, serializer(), value.frames)
         }
+}
+
+private class QuizSerializer : KSerializer<Quiz> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("quiz") {
+        element("id", serialDescriptor<Long>())
+        element("name", serialDescriptor<String>())
+        element("creationTime", serialDescriptor<Instant>())
+        element("modificationTime", serialDescriptor<Instant>())
+    }
+
+    override fun deserialize(decoder: Decoder): Quiz = decoder.decodeStructure(descriptor) {
+        var id = -1L
+        var name: String? = null
+        var creationTime = Instant.DISTANT_FUTURE
+        var modificationTime: Instant? = null
+        while (true) {
+            when (val index = decodeElementIndex(descriptor)) {
+                CompositeDecoder.DECODE_DONE -> break
+                0 -> id = decodeLongElement(descriptor, index)
+                1 -> name = decodeStringElement(descriptor, index)
+                2 -> creationTime = decodeSerializableElement(descriptor, index, serializer())
+                3 -> modificationTime = decodeSerializableElement(descriptor, index, serializer())
+            }
+        }
+        if (id < 0 || name == null || creationTime == Instant.DISTANT_FUTURE) {
+            error("Missing elements when decoding")
+        }
+        Quiz(id, name, creationTime, modificationTime)
+    }
+
+    override fun serialize(encoder: Encoder, value: Quiz) = encoder.encodeStructure(descriptor) {
+        encodeLongElement(descriptor, 0, value.id)
+        encodeStringElement(descriptor, 1, value.name ?: "")
+        encodeSerializableElement(descriptor, 2, serializer(), value.creationTimeISO)
+        if (value.modificationTimeISO != null) {
+            encodeSerializableElement(descriptor, 3, serializer(), value.modificationTimeISO)
+        }
+    }
 }
 
 fun List<Frame>.insertInto(db: AppDatabase, name: String?) {
