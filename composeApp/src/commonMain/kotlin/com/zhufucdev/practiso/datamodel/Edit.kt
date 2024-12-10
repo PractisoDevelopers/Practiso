@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.datamodel
 
 import com.zhufucdev.practiso.database.AppDatabase
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -179,6 +180,7 @@ fun List<Edit>.optimized(): List<Edit> {
 }
 
 fun List<Edit>.applyTo(db: AppDatabase, quizId: Long) {
+    db.quizQueries.updateQuizModificationTime(Clock.System.now(), quizId)
     forEach {
         it.applyTo(db, quizId)
     }
