@@ -71,6 +71,12 @@ kotlin {
             implementation(libs.humanreadable)
             implementation(libs.settings.core)
             implementation(libs.settings.coroutine)
+            implementation(libs.xmlutil.core)
+            implementation(libs.xmlutil.serialization)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.okio.fakefs)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
