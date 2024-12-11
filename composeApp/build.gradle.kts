@@ -148,7 +148,8 @@ compose.desktop {
 sqldelight {
     databases {
         create("AppDatabase") {
-            packageName.set("com.zhufucdev.practiso.database")
+            packageName = "com.zhufucdev.practiso.database"
+            generateAsync = true
         }
     }
     linkSqlite = true

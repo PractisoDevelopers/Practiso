@@ -98,4 +98,26 @@
     <string name="show_accuracy_para">Show accuracy</string>
     <string name="minutes_span">minutes</string>
     <string name="time_is_up_para">Time is up</string>
+    <string name="import_from_practiso_archive_para">Import from Practiso archive</string>
+    <string name="library_intent_model_span">library intent model</string>
+    <string name="error_at_n_para">Error at %1$s</string>
+    <string name="untracked_error_para">Untracked error</string>
+    <string name="internal_message_n_para">Internal message: %1$s</string>
+    <string name="invalid_file_format_para">Invalid file format</string>
+    <string name="resource_x_for_quiz_y_was_not_found_para">Resource %1$s for quiz %2$s was not found</string>
+    <string name="failed_to_copy_resource_x_for_quiz_y_para">Failed to copy resource %1$s for quiz %2$s</string>
+    <plurals name="importing_x_items_y_done">
+        <item quantity="one">Importing %1$d item, %2$d done</item>
+        <item quantity="other">Importing %1$d items, %2$d done</item>
+    </plurals>
+    <plurals name="will_import_n_items_to_library">
+        <item quantity="one">Will import %1$d new item to the library</item>
+        <item quantity="other">Will import %1$d new items to the library</item>
+    </plurals>
+    <string name="continue_para">Continue</string>
+    <string name="dismiss_para">Dismiss</string>
+    <string name="skip_para">Skip</string>
+    <string name="ignore_para">Ignore</string>
+    <string name="retry_para">Retry</string>
+    <string name="unarchiving_this_file_ellipsis_para">Unarchiving this file…</string>
 </resources>

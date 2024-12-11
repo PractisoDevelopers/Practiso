@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
+import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.DimensionSkeleton
 import com.zhufucdev.practiso.composable.QuizSkeleton
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
@@ -245,20 +246,21 @@ fun SessionStarter(
                         onClick = {}
                     )
             ) {
-                Column(
-                    Modifier.padding(PaddingBig).fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(PaddingNormal)
+                DialogContentSkeleton(
+                    modifier = Modifier.padding(PaddingBig).fillMaxWidth(),
+                    icon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.baseline_flag_checkered),
+                            contentDescription = null
+                        )
+                    },
+                    title = {
+                        Text(
+                            stringResource(Res.string.create_session_para),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.baseline_flag_checkered),
-                        contentDescription = null
-                    )
-
-                    Text(
-                        stringResource(Res.string.create_session_para),
-                        style = MaterialTheme.typography.titleMedium
-                    )
                     OutlinedTextField(
                         value = model.newSessionName,
                         onValueChange = { model.newSessionName = it },

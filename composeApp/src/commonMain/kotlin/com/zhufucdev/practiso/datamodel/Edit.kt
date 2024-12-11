@@ -6,18 +6,18 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface Edit {
-    fun applyTo(db: AppDatabase, quizId: Long)
+    suspend fun applyTo(db: AppDatabase, quizId: Long)
 
     @Serializable
     data class Append(val frame: Frame, val insertIndex: Int) : Edit {
-        override fun applyTo(db: AppDatabase, quizId: Long) {
+        override suspend fun applyTo(db: AppDatabase, quizId: Long) {
             frame.toArchive().insertInto(db, quizId, insertIndex.toLong())
         }
     }
 
     @Serializable
     data class Remove(val frame: Frame, val oldIndex: Int) : Edit {
-        override fun applyTo(db: AppDatabase, quizId: Long) {
+        override suspend fun applyTo(db: AppDatabase, quizId: Long) {
             when (frame) {
                 is Frame.Image ->
                     db.transaction {
@@ -44,7 +44,7 @@ sealed interface Edit {
 
     @Serializable
     data class Update(val old: Frame, val new: Frame) : Edit {
-        override fun applyTo(db: AppDatabase, quizId: Long) {
+        override suspend fun applyTo(db: AppDatabase, quizId: Long) {
             when (new) {
                 is Frame.Image -> db.transaction {
                     val oldFrame = (old as Frame.Image).imageFrame
@@ -128,7 +128,7 @@ sealed interface Edit {
 
     @Serializable
     data class Rename(val old: String, val new: String) : Edit {
-        override fun applyTo(db: AppDatabase, quizId: Long) {
+        override suspend fun applyTo(db: AppDatabase, quizId: Long) {
             db.transaction {
                 db.quizQueries.updateQuizName(new.takeIf(String::isNotEmpty), quizId)
             }
@@ -179,7 +179,7 @@ fun List<Edit>.optimized(): List<Edit> {
     } ?: emptyList())
 }
 
-fun List<Edit>.applyTo(db: AppDatabase, quizId: Long) {
+suspend fun List<Edit>.applyTo(db: AppDatabase, quizId: Long) {
     db.quizQueries.updateQuizModificationTime(Clock.System.now(), quizId)
     forEach {
         it.applyTo(db, quizId)
