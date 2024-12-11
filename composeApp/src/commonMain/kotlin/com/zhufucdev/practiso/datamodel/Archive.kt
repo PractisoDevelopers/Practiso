@@ -1,12 +1,11 @@
 package com.zhufucdev.practiso.datamodel
 
+import androidx.compose.ui.util.fastForEachIndexed
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
-import com.zhufucdev.practiso.database.ImageFrame
-import com.zhufucdev.practiso.database.OptionsFrame
-import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.readDouble
 import com.zhufucdev.practiso.writeDouble
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -58,40 +57,40 @@ fun QuizArchive.importTo(db: AppDatabase, resourceSink: (String) -> Sink) {
 }
 
 @Serializable(FrameContainerSerializer::class)
-data class FrameContainer(val data: List<Frame> = emptyList())
+data class FrameArchiveContainer(val data: List<FrameArchive> = emptyList())
 
-class FrameContainerSerializer : KSerializer<FrameContainer> {
-    private val elementSerializer by lazy { serializer<Frame>() }
+class FrameContainerSerializer : KSerializer<FrameArchiveContainer> {
+    private val elementSerializer by lazy { serializer<FrameArchive>() }
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("frame_container") {
         element("data", ListSerializer(elementSerializer).descriptor)
     }
 
-    override fun deserialize(decoder: Decoder): FrameContainer =
+    override fun deserialize(decoder: Decoder): FrameArchiveContainer =
         if (decoder is XML.XmlInput) {
             decodeXml(decoder.input)
         } else {
             val data = decoder.decodeStructure(descriptor) {
                 decodeSerializableElement(descriptor, 0, ListSerializer(elementSerializer))
             }
-            FrameContainer(data)
+            FrameArchiveContainer(data)
         }
 
-    private fun decodeTextFrame(reader: XmlReader): Frame.Text {
+    private fun decodeTextFrame(reader: XmlReader): FrameArchive.Text {
         reader.next()
-        return Frame.Text(textFrame = TextFrame(-1, reader.text))
+        return FrameArchive.Text(reader.text)
     }
 
-    private fun decodeImageFrame(reader: XmlReader): Frame.Image {
+    private fun decodeImageFrame(reader: XmlReader): FrameArchive.Image {
         val width = reader.getAttributeValue(QName("width"))!!.toLong()
         val height = reader.getAttributeValue(QName("height"))!!.toLong()
         val alt = reader.getAttributeValue(QName("alt"))
         val src = reader.getAttributeValue(QName("src"))!!
-        return Frame.Image(imageFrame = ImageFrame(-1, src, width, height, alt))
+        return FrameArchive.Image(src, width, height, alt)
     }
 
-    private fun decodeOptionsFrame(reader: XmlReader): Frame.Options {
+    private fun decodeOptionsFrame(reader: XmlReader): FrameArchive.Options {
         val name = reader.getAttributeValue(QName("name"))
-        val frames = mutableListOf<KeyedPrioritizedFrame>()
+        val options = mutableListOf<FrameArchive.Option>()
         while (reader.hasNext()) {
             reader.nextTag()
             if (reader.name.localPart != "option") {
@@ -104,20 +103,21 @@ class FrameContainerSerializer : KSerializer<FrameContainer> {
                 EventType.START_ELEMENT -> {
                     when (reader.name.localPart) {
                         TextFrameSerialName -> {
-                            frames.add(
-                                KeyedPrioritizedFrame(
-                                    decodeTextFrame(reader),
+                            options.add(
+                                FrameArchive.Option(
                                     isKey,
-                                    priority
+                                    priority,
+                                    decodeTextFrame(reader)
                                 )
                             )
                         }
 
-                        ImageFrameSerialName -> frames.add(
-                            KeyedPrioritizedFrame(
+                        ImageFrameSerialName -> options.add(
+                            FrameArchive.Option(
+                                isKey, priority,
                                 decodeImageFrame(
                                     reader
-                                ), isKey, priority
+                                )
                             )
                         )
 
@@ -129,11 +129,11 @@ class FrameContainerSerializer : KSerializer<FrameContainer> {
                 else -> error("Unexpected tag ${tag.name}")
             }
         }
-        return Frame.Options(optionsFrame = OptionsFrame(-1, name), frames)
+        return FrameArchive.Options(name, options)
     }
 
-    private fun decodeXml(reader: XmlReader): FrameContainer {
-        val frames = mutableListOf<Frame>()
+    private fun decodeXml(reader: XmlReader): FrameArchiveContainer {
+        val frames = mutableListOf<FrameArchive>()
         while (reader.hasNext()) {
             when (reader.nextTag()) {
                 EventType.START_ELEMENT -> {
@@ -159,10 +159,10 @@ class FrameContainerSerializer : KSerializer<FrameContainer> {
                 EventType.PROCESSING_INSTRUCTION -> error("Unexpected processing instruction")
             }
         }
-        return FrameContainer(frames)
+        return FrameArchiveContainer(frames)
     }
 
-    override fun serialize(encoder: Encoder, value: FrameContainer) {
+    override fun serialize(encoder: Encoder, value: FrameArchiveContainer) {
         if (encoder is XML.XmlOutput) {
             encodeXml(encoder.target, value.data)
         } else {
@@ -177,45 +177,45 @@ class FrameContainerSerializer : KSerializer<FrameContainer> {
         }
     }
 
-    private fun encodeFrame(target: XmlWriter, frame: Frame) {
+    private fun encodeFrame(target: XmlWriter, frame: FrameArchive) {
         when (frame) {
-            is Frame.Options -> {
+            is FrameArchive.Options -> {
                 target.startTag(null, OptionsFrameSerialName, null)
-                if (frame.optionsFrame.name != null) {
-                    target.writeAttribute("name", frame.optionsFrame.name)
+                if (frame.name != null) {
+                    target.writeAttribute("name", frame.name)
                 }
-                frame.frames.forEach {
+                frame.content.forEach {
                     target.startTag(null, "option", null)
                     if (it.isKey) {
                         target.writeAttribute("key", true)
                     }
                     target.writeAttribute("priority", it.priority)
-                    encodeFrame(target, it.frame)
+                    encodeFrame(target, it.content)
                     target.endTag(null, "option", null)
                 }
                 target.endTag(null, OptionsFrameSerialName, null)
             }
 
-            is Frame.Text -> {
+            is FrameArchive.Text -> {
                 target.startTag(null, TextFrameSerialName, null)
-                target.text(frame.textFrame.content)
+                target.text(frame.content)
                 target.endTag(null, TextFrameSerialName, null)
             }
 
-            is Frame.Image -> {
+            is FrameArchive.Image -> {
                 target.startTag(null, ImageFrameSerialName, null)
-                target.writeAttribute("width", frame.imageFrame.width)
-                target.writeAttribute("height", frame.imageFrame.height)
-                target.writeAttribute("src", frame.imageFrame.filename)
-                if (frame.imageFrame.altText != null) {
-                    target.writeAttribute("alt", frame.imageFrame.altText)
+                target.writeAttribute("width", frame.width)
+                target.writeAttribute("height", frame.height)
+                target.writeAttribute("src", frame.filename)
+                if (frame.altText != null) {
+                    target.writeAttribute("alt", frame.altText)
                 }
                 target.endTag(null, ImageFrameSerialName, null)
             }
         }
     }
 
-    private fun encodeXml(target: XmlWriter, data: List<Frame>) {
+    private fun encodeXml(target: XmlWriter, data: List<FrameArchive>) {
         target.startTag(null, "frame_container", "")
         data.forEach {
             encodeFrame(target, it)
@@ -224,11 +224,103 @@ class FrameContainerSerializer : KSerializer<FrameContainer> {
     }
 }
 
+fun FrameArchive.Image.insertTo(db: AppDatabase) {
+    db.quizQueries.insertImageFrame(filename, altText, width, height)
+}
+
+@Serializable
+sealed interface FrameArchive {
+    fun insertInto(db: AppDatabase, quizId: Long, priority: Long)
+
+    @Serializable
+    data class Text(val content: String) : FrameArchive {
+        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+            db.transaction {
+                db.quizQueries.insertTextFrame(content)
+                db.quizQueries.associateLastTextFrameWithQuiz(quizId, priority)
+            }
+        }
+    }
+
+    @Serializable
+    data class Image(
+        val filename: String,
+        val width: Long,
+        val height: Long,
+        val altText: String?,
+    ) : FrameArchive {
+        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+            db.transaction {
+                insertTo(db)
+                db.quizQueries.associateLastImageFrameWithQuiz(quizId, priority)
+            }
+        }
+    }
+
+    @Serializable
+    data class Option(val isKey: Boolean, val priority: Int, val content: FrameArchive)
+
+    @Serializable
+    data class Options(val name: String?, val content: List<Option>) : FrameArchive {
+        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+            val frameId = db.transactionWithResult {
+                db.quizQueries.insertOptionsFrame(name)
+                val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
+                db.quizQueries.associateOptionsFrameWithQuiz(
+                    quizId,
+                    frameId,
+                    priority
+                )
+                frameId
+            }
+
+            content.forEach { option ->
+                when (option.content) {
+                    is Image -> {
+                        db.transaction {
+                            option.content.insertTo(db)
+                            db.quizQueries.assoicateLastImageFrameWithOption(
+                                frameId,
+                                maxOf(option.priority, 0).toLong(),
+                                option.isKey
+                            )
+                        }
+                    }
+
+                    is Text -> {
+                        db.transaction {
+                            db.quizQueries.insertTextFrame(option.content.content)
+                            db.quizQueries.assoicateLastTextFrameWithOption(
+                                frameId,
+                                option.isKey,
+                                maxOf(option.priority, 0).toLong()
+                            )
+                        }
+                    }
+
+                    is Options -> throw UnsupportedOperationException("Options frame inception")
+                }
+            }
+        }
+    }
+}
+
+fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?) {
+    val quizId = db.transactionWithResult {
+        db.quizQueries.insertQuiz(name, Clock.System.now(), null)
+        db.quizQueries.lastInsertRowId().executeAsOne()
+    }
+
+    fastForEachIndexed { index, frame ->
+        frame.insertInto(db, quizId, index.toLong())
+    }
+}
+
 data class QuizArchive(
     val name: String,
     val creationTime: Instant,
     val modificationTime: Instant? = null,
-    val frames: FrameContainer = FrameContainer(),
+    val frames: FrameArchiveContainer = FrameArchiveContainer(),
     val dimensions: List<DimensionIntensity> = emptyList(),
     val resources: Map<String, () -> Source> = emptyMap(),
 )
@@ -304,7 +396,7 @@ fun Source.unarchive(): List<QuizArchive> = buildList {
             if (i < 0) buf.readUtf8()
             else buf.readUtf8(i).also { buf.skip(1) }
 
-        val frames: FrameContainer =
+        val frames: FrameArchiveContainer =
             xml.decodeFromString(serializer(), frameXmlContent)
         add(QuizArchive(name, creationTime, modTime, frames, dimensions, resources))
         if (i < 0) {
