@@ -54,6 +54,7 @@ import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
+import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel.Item
@@ -237,6 +238,10 @@ fun SessionStarter(
                                 )
                             }
                         }
+                    }
+
+                    item("space") {
+                        Spacer(Modifier.height(PaddingSpace))
                     }
                 }
             }

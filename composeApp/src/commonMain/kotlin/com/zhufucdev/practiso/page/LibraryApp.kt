@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -51,6 +52,7 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
+import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.PractisoOption
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
@@ -205,6 +207,10 @@ fun LibraryApp(
                     },
                     id = { "quiz_" + it.quiz.id }
                 )
+
+                item("space") {
+                    Spacer(Modifier.height(PaddingSpace))
+                }
             }
         }
     }
