@@ -44,7 +44,6 @@ import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composition.composeFromBottomUp
-import com.zhufucdev.practiso.database.Template
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -165,7 +164,7 @@ fun LibraryApp(
                             }
                         )
                     },
-                    id = Template::id
+                    id = { "template_" + it.id }
                 )
 
                 flatContent(
@@ -176,7 +175,7 @@ fun LibraryApp(
                     content = {
                         PractisoOptionView(option = it)
                     },
-                    id = { it.dimension.id }
+                    id = { "dimension_" + it.dimension.id }
                 )
 
                 flatContent(
@@ -204,7 +203,7 @@ fun LibraryApp(
                             }
                         )
                     },
-                    id = { it.quiz.id }
+                    id = { "quiz_" + it.quiz.id }
                 )
             }
         }

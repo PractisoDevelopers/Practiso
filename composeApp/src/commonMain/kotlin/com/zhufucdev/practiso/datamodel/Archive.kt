@@ -43,6 +43,21 @@ suspend fun QuizArchive.importTo(db: AppDatabase) {
     frames.forEachIndexed { index, frame ->
         frame.insertInto(db, quizId, index.toLong())
     }
+
+    dimensions.forEach {
+        val existing =
+            db.dimensionQueries
+                .getDimensionByName(it.name)
+                .executeAsOneOrNull()
+        val dimensionId = existing?.id
+            ?: db.transactionWithResult {
+                db.dimensionQueries.insertDimension(it.name)
+                db.quizQueries.lastInsertRowId().executeAsOne()
+            }
+        db.transaction {
+            db.dimensionQueries.associateQuizWithDimension(quizId, dimensionId, it.intensity)
+        }
+    }
 }
 
 suspend fun ArchivePack.importAll(db: AppDatabase, resourceSink: (String) -> Sink) {
@@ -114,6 +129,7 @@ class FrameContainerSerializer : KSerializer<List<FrameArchive>> {
                     if (reader.name.localPart != "item") {
                         error("Unexpected tag ${reader.name.localPart} at the start of an options frame item")
                     }
+
                 else -> error("Unexpected tag at the start of an options frame item")
             }
 
@@ -289,7 +305,8 @@ sealed interface FrameArchive {
     }
 
     @Serializable
-    data class Options(override val name: String?, @XmlValue val content: List<Item>) : FrameArchive {
+    data class Options(override val name: String?, @XmlValue val content: List<Item>) :
+        FrameArchive {
         @Serializable
         data class Item(val isKey: Boolean, val priority: Int, @XmlValue val content: FrameArchive)
 
