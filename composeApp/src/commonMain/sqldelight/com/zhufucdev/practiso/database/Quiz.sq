@@ -75,7 +75,7 @@ WHERE D.dimensionId = ?;
 getStrandedQuiz:
 SELECT Q.*
 FROM quiz Q
-WHERE Q.id NOT IN (SELECT id FROM quizByDimension);
+WHERE Q.id NOT IN (SELECT quizId FROM quizByDimension);
 
 getQuizCountByDimension:
 SELECT count(*)
