@@ -1,7 +1,6 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
@@ -281,11 +280,9 @@ fun <T> LazyListScope.flatContent(
 private fun ImportDialog(state: LibraryAppViewModel.ImportState) {
     val coroutine = rememberCoroutineScope()
     BasicAlertDialog(
-        onDismissRequest = {}
+        onDismissRequest = {},
     ) {
-        Card(
-            modifier = Modifier.animateContentSize()
-        ) {
+        Card {
             if (state !is LibraryAppViewModel.ImportState.Error) {
                 DialogContentSkeleton(
                     modifier = Modifier.fillMaxWidth().padding(PaddingBig),
