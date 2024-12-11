@@ -20,7 +20,7 @@ import com.zhufucdev.practiso.style.PaddingSmall
 private fun DimensionContent(label: @Composable () -> Unit, tailingIcon: @Composable () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(PaddingNormal),
-        modifier = Modifier.padding(PaddingSmall)
+        modifier = Modifier.padding(vertical = PaddingSmall, horizontal = PaddingNormal)
     ) {
         CompositionLocalProvider(
             LocalTextStyle provides MaterialTheme.typography.labelLarge
