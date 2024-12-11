@@ -358,7 +358,7 @@ data class QuizArchive(
 )
 
 @Serializable
-@XmlSerialName(value = "archive")
+@XmlSerialName(value = "archive", namespace = "http://schema.zhufucdev.com/practiso")
 data class QuizArchiveContainer(
     @XmlSerialName("creation")
     val creationTime: Instant,
