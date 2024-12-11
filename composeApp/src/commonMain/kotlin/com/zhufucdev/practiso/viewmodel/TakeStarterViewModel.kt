@@ -91,7 +91,7 @@ class TakeStarterViewModel(
 
     val event = Events()
 
-    private fun createTake(): Long {
+    private suspend fun createTake(): Long {
         val takeId = db.transactionWithResult {
             db.sessionQueries.updateSessionAccessTime(
                 Clock.System.now(),

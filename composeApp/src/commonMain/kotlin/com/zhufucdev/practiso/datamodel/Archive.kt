@@ -34,7 +34,7 @@ private val xml = XML {
     recommended_0_90_2()
 }
 
-fun QuizArchive.importTo(db: AppDatabase) {
+suspend fun QuizArchive.importTo(db: AppDatabase) {
     val quizId = db.transactionWithResult {
         db.quizQueries.insertQuiz(name, creationTime, null)
         db.quizQueries.lastInsertRowId().executeAsOne()
@@ -45,7 +45,7 @@ fun QuizArchive.importTo(db: AppDatabase) {
     }
 }
 
-fun ArchivePack.importAll(db: AppDatabase, resourceSink: (String) -> Sink) {
+suspend fun ArchivePack.importAll(db: AppDatabase, resourceSink: (String) -> Sink) {
     resources.forEach { (name, sink) ->
         sink().buffer().readAll(resourceSink(name))
     }
@@ -248,22 +248,26 @@ class FrameContainerSerializer : KSerializer<List<FrameArchive>> {
     }
 }
 
-fun FrameArchive.Image.insertTo(db: AppDatabase) {
+suspend fun FrameArchive.Image.insertTo(db: AppDatabase) {
     db.quizQueries.insertImageFrame(filename, altText, width, height)
 }
 
 @Serializable
 sealed interface FrameArchive {
-    fun insertInto(db: AppDatabase, quizId: Long, priority: Long)
+    suspend fun insertInto(db: AppDatabase, quizId: Long, priority: Long)
+    val name: String?
 
     @Serializable
     data class Text(@XmlValue val content: String) : FrameArchive {
-        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+        override suspend fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
             db.transaction {
                 db.quizQueries.insertTextFrame(content)
                 db.quizQueries.associateLastTextFrameWithQuiz(quizId, priority)
             }
         }
+
+        override val name: String?
+            get() = null
     }
 
     @Serializable
@@ -273,20 +277,23 @@ sealed interface FrameArchive {
         val height: Long,
         val altText: String?,
     ) : FrameArchive {
-        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+        override suspend fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
             db.transaction {
                 insertTo(db)
                 db.quizQueries.associateLastImageFrameWithQuiz(quizId, priority)
             }
         }
+
+        override val name: String?
+            get() = altText
     }
 
     @Serializable
-    data class Options(val name: String?, @XmlValue val content: List<Item>) : FrameArchive {
+    data class Options(override val name: String?, @XmlValue val content: List<Item>) : FrameArchive {
         @Serializable
         data class Item(val isKey: Boolean, val priority: Int, @XmlValue val content: FrameArchive)
 
-        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
+        override suspend fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
             val frameId = db.transactionWithResult {
                 db.quizQueries.insertOptionsFrame(name)
                 val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
@@ -329,7 +336,7 @@ sealed interface FrameArchive {
     }
 }
 
-fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?) {
+suspend fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?) {
     val quizId = db.transactionWithResult {
         db.quizQueries.insertQuiz(name, Clock.System.now(), null)
         db.quizQueries.lastInsertRowId().executeAsOne()
@@ -371,10 +378,12 @@ data class ArchivePack(
     val resources: Map<String, () -> Source>,
 )
 
-fun <T : FrameArchive> List<T>.resources(): List<String> = buildList {
+data class ArchiveResourceRequester(val name: String, val requester: FrameArchive)
+
+fun <T : FrameArchive> List<T>.resources(): List<ArchiveResourceRequester> = buildList {
     this@resources.forEach {
         when (it) {
-            is FrameArchive.Image -> add(it.filename)
+            is FrameArchive.Image -> add(ArchiveResourceRequester(it.filename, it))
             is FrameArchive.Options -> addAll(
                 it.content.map(FrameArchive.Options.Item::content).resources()
             )
@@ -391,7 +400,7 @@ fun List<QuizArchive>.archive(resourceSource: (String) -> Source): Source = Buff
     writeByte(0)
     this@archive
         .map(QuizArchive::frames)
-        .map { it.resources().map { n -> n to resourceSource(n) } }
+        .map { it.resources().map { n -> n.name to resourceSource(n.name) } }
         .flatten()
         .forEach { (name, source) ->
             writeUtf8(name)

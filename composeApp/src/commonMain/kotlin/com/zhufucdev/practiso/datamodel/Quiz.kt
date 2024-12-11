@@ -198,6 +198,22 @@ fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
             }
         }
 
+data class ResourceRequester(val name: String, val frame: Frame)
+
+fun List<Frame>.resources(): List<ResourceRequester> = buildList {
+    this@resources.forEach {
+        when (it) {
+            is Frame.Options -> {
+                addAll(it.frames.map(KeyedPrioritizedFrame::frame).resources())
+            }
+            is Frame.Image -> {
+                add(ResourceRequester(it.imageFrame.filename, it))
+            }
+            is Frame.Text -> {}
+        }
+    }
+}
+
 const val TextFrameSerialName = "text"
 const val ImageFrameSerialName = "image"
 const val OptionsFrameSerialName = "options"

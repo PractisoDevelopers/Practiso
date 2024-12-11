@@ -32,7 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composition.combineClickable
-import com.zhufucdev.practiso.copyFrom
+import com.zhufucdev.practiso.copyTo
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.randomUUID
@@ -81,10 +81,11 @@ fun EditableImageFrame(
         val name = randomUUID() + "." + file.name.split(".").last()
         coroutine.launch {
             withContext(Dispatchers.IO) {
-                platform
-                    .filesystem
-                    .sink(platform.resourcePath.resolve(name))
-                    .copyFrom(file)
+                file.copyTo(
+                    platform
+                        .filesystem
+                        .sink(platform.resourcePath.resolve(name))
+                )
             }
 
             onValueChange(value.copy(imageFrame = value.imageFrame.copy(filename = name)))
