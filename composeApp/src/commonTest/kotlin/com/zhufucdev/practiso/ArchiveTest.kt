@@ -8,7 +8,7 @@ import com.zhufucdev.practiso.datamodel.FrameContainer
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
 import com.zhufucdev.practiso.datamodel.QuizArchive
 import com.zhufucdev.practiso.datamodel.archive
-import com.zhufucdev.practiso.datamodel.readArchive
+import com.zhufucdev.practiso.datamodel.unarchive
 import com.zhufucdev.practiso.platform.randomUUID
 import kotlinx.datetime.Clock
 import okio.FileSystem
@@ -99,7 +99,7 @@ class ArchiveTest {
     @Test
     fun shouldRead() {
         fileSystem.source(name.toPath()).use { source ->
-            val archive = source.gzip().readArchive()
+            val archive = source.gzip().unarchive()
             assertSame(sampleQuizSet.size, archive.size, "size")
         }
     }

@@ -1,9 +1,12 @@
 package com.zhufucdev.practiso.datamodel
 
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.TextFrame
+import com.zhufucdev.practiso.readDouble
+import com.zhufucdev.practiso.writeDouble
 import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -38,44 +41,6 @@ private val xml = XML {
     isInlineCollapsed = true
     indent = 4
 }
-
-fun Source.readArchive(): List<QuizArchive> = buildList {
-    val buf = buffer()
-    while (!buf.exhausted()) {
-        var i = buf.indexOf(0)
-        val name = buf.readUtf8(i)
-        buf.skip(1)
-        i = buf.indexOf(0)
-        val creationTime = Instant.parse(buf.readUtf8(i))
-        buf.skip(1)
-        i = buf.indexOf(0)
-        val modTime = if (i > 0) Instant.parse(buf.readUtf8(i)) else null
-        buf.skip(1)
-        val resourceCount = buf.readInt()
-        i = buf.indexOf(0)
-        val resources: Map<String, () -> Source> = buildMap {
-            repeat(resourceCount) {
-                val resName = buf.readUtf8(i)
-                buf.skip(1)
-                val size = buf.readInt()
-                val content = buf.readByteString(size.toLong())
-                put(resName) { Buffer().write(content) }
-                i = buf.indexOf(0)
-            }
-        }
-        val frameXmlContent =
-            if (i < 0) buf.readUtf8()
-            else buf.readUtf8(i).also { buf.skip(1) }
-
-        val frames: FrameContainer =
-            xml.decodeFromString(serializer(), frameXmlContent)
-        add(QuizArchive(name, creationTime, modTime, frames, resources))
-        if (i < 0) {
-            break
-        }
-    }
-}
-
 
 fun QuizArchive.importTo(db: AppDatabase, resourceSink: (String) -> Sink) {
     val quizId = db.transactionWithResult {
@@ -259,12 +224,12 @@ class FrameContainerSerializer : KSerializer<FrameContainer> {
     }
 }
 
-
 data class QuizArchive(
     val name: String,
     val creationTime: Instant,
     val modificationTime: Instant? = null,
     val frames: FrameContainer = FrameContainer(),
+    val dimensions: List<DimensionIntensity> = emptyList(),
     val resources: Map<String, () -> Source> = emptyMap(),
 )
 
@@ -286,10 +251,64 @@ fun List<QuizArchive>.archive(): Source = Buffer().apply {
             writeInt(bs.size)
             write(bs)
         }
+        writeInt(a.dimensions.size)
+        a.dimensions.forEach {
+            writeUtf8(it.dimension.name)
+            writeByte(0)
+            writeDouble(it.intensity)
+        }
         val frames = xml.encodeToString(serializer(), a.frames).encodeToByteArray()
         write(frames)
         if (index < lastIndex) {
             writeByte(0)
+        }
+    }
+}
+
+fun Source.unarchive(): List<QuizArchive> = buildList {
+    val buf = buffer()
+    while (!buf.exhausted()) {
+        var i = buf.indexOf(0)
+        val name = buf.readUtf8(i)
+        buf.skip(1)
+        i = buf.indexOf(0)
+        val creationTime = Instant.parse(buf.readUtf8(i))
+        buf.skip(1)
+        i = buf.indexOf(0)
+        val modTime = if (i > 0) Instant.parse(buf.readUtf8(i)) else null
+        buf.skip(1)
+        val resources: Map<String, () -> Source> = buildMap {
+            val resourceCount = buf.readInt()
+            repeat(resourceCount) {
+                i = buf.indexOf(0)
+                val resName = buf.readUtf8(i)
+                buf.skip(1)
+                val size = buf.readInt()
+                val content = buf.readByteString(size.toLong())
+                put(resName) { Buffer().write(content) }
+            }
+        }
+        val dimensions: List<DimensionIntensity> = buildList {
+            val dimensionCount = buf.readInt()
+            repeat(dimensionCount) {
+                i = buf.indexOf(0)
+                val dimenName = buf.readUtf8(i)
+                buf.skip(0)
+                val intensity = buf.readDouble()
+                add(DimensionIntensity(Dimension(-1, dimenName), intensity))
+            }
+        }
+
+        i = buf.indexOf(0)
+        val frameXmlContent =
+            if (i < 0) buf.readUtf8()
+            else buf.readUtf8(i).also { buf.skip(1) }
+
+        val frames: FrameContainer =
+            xml.decodeFromString(serializer(), frameXmlContent)
+        add(QuizArchive(name, creationTime, modTime, frames, dimensions, resources))
+        if (i < 0) {
+            break
         }
     }
 }

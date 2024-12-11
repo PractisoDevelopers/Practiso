@@ -5,6 +5,7 @@ import app.cash.sqldelight.Query
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.Quiz
@@ -23,6 +24,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.descriptors.serialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
@@ -148,6 +150,12 @@ sealed interface Frame {
 }
 
 @Serializable
+data class DimensionIntensity(
+    @Serializable(DimensionSerializer::class) val dimension: Dimension,
+    val intensity: Double,
+)
+
+@Serializable
 data class KeyedPrioritizedFrame(val frame: Frame, val isKey: Boolean, val priority: Int)
 
 @Serializable
@@ -157,6 +165,13 @@ data class PrioritizedFrame(val frame: Frame, val priority: Int)
 data class QuizFrames(
     @Serializable(QuizSerializer::class) val quiz: Quiz,
     val frames: List<PrioritizedFrame>,
+)
+
+@Serializable
+data class QuizDimensionsFrames(
+    @Serializable(QuizSerializer::class) val quiz: Quiz,
+    val frames: List<PrioritizedFrame>,
+    val dimensions: List<DimensionIntensity>,
 )
 
 private suspend fun QuizQueries.getPrioritizedOptionsFrames(quizId: Long): List<PrioritizedFrame> =
@@ -404,6 +419,36 @@ private class QuizSerializer : KSerializer<Quiz> {
         encodeSerializableElement(descriptor, 2, serializer(), value.creationTimeISO)
         if (value.modificationTimeISO != null) {
             encodeSerializableElement(descriptor, 3, serializer(), value.modificationTimeISO)
+        }
+    }
+}
+
+private class DimensionSerializer : KSerializer<Dimension> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("dimension") {
+        element<Long>("id")
+        element<String>("name")
+    }
+
+    override fun deserialize(decoder: Decoder): Dimension = decoder.decodeStructure(descriptor) {
+        var name: String? = null
+        var id = -1L
+        while (true) {
+            when (val index = decodeElementIndex(descriptor)) {
+                CompositeDecoder.DECODE_DONE -> break
+                0 -> name = decodeStringElement(descriptor, index)
+                1 -> id = decodeLongElement(descriptor, index)
+            }
+        }
+        if (id < 0 || name == null) {
+            error("Missing element when decoding")
+        }
+        Dimension(id, name)
+    }
+
+    override fun serialize(encoder: Encoder, value: Dimension) {
+        encoder.encodeStructure(descriptor) {
+            encodeLongElement(descriptor, 0, value.id)
+            encodeStringElement(descriptor, 1, value.name)
         }
     }
 }
