@@ -85,9 +85,9 @@ fun SessionStarter(
             items?.filter { it.id in model.currentItemIds }
         }
     }
-    val quizzes: List<PractisoOption.Quiz>? by remember(currentItems) {
+    val quizzes: Set<PractisoOption.Quiz>? by remember(currentItems) {
         derivedStateOf {
-            currentItems?.takeIf { it.isNotEmpty() }?.flatMap(Item::quizzes)
+            currentItems?.takeIf { it.isNotEmpty() }?.flatMap(Item::quizzes)?.toSet()
         }
     }
     val selectedQuizzes: List<PractisoOption.Quiz>? by remember(model.selection, quizzes) {
