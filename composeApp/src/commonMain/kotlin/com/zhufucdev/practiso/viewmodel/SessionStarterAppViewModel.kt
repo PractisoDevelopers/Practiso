@@ -52,6 +52,8 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
         val removeCurrentItem: Channel<Long> = Channel(),
         val selectQuiz: Channel<Long> = Channel(),
         val deselectQuiz: Channel<Long> = Channel(),
+        val selectCategory: Channel<Long> = Channel(),
+        val deselectCategory: Channel<Long> = Channel(),
         val createSession: Channel<String> = Channel(),
     )
 
@@ -78,6 +80,16 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
 
                     event.deselectQuiz.onReceive {
                         selection = selection.copy(quizIds = selection.quizIds - it)
+                        Unit
+                    }
+
+                    event.selectCategory.onReceive {
+                        selection = selection.copy(dimensionIds = selection.dimensionIds + it)
+                        Unit
+                    }
+
+                    event.deselectCategory.onReceive {
+                        selection = selection.copy(dimensionIds = selection.dimensionIds - it)
                         Unit
                     }
 

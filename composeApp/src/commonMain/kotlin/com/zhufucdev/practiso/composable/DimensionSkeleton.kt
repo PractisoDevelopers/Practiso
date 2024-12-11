@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -33,6 +34,7 @@ private fun DimensionContent(label: @Composable () -> Unit, tailingIcon: @Compos
 
 @Composable
 fun DimensionSkeleton(
+    modifier: Modifier = Modifier,
     selected: Boolean = false,
     label: @Composable () -> Unit = {
         Spacer(
@@ -41,15 +43,14 @@ fun DimensionSkeleton(
         )
     },
     tailingIcon: @Composable () -> Unit = {},
-    onClick: (() -> Unit)? = null,
 ) {
     val cardColors =
         if (selected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         else CardDefaults.cardColors()
-    if (onClick != null) {
-        Card(onClick, colors = cardColors) { DimensionContent(label, tailingIcon) }
-    } else {
-        Card(colors = cardColors) { DimensionContent(label, tailingIcon) }
-    }
+    Card(
+        colors = cardColors,
+        elevation = CardDefaults.cardElevation(0.dp),
+        modifier = Modifier.clip(CardDefaults.shape) then modifier
+    ) { DimensionContent(label, tailingIcon) }
 }
 
