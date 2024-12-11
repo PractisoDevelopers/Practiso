@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
@@ -339,7 +341,6 @@ private fun ImportDialog(state: LibraryAppViewModel.ImportState) {
                 }
                 if (state is LibraryAppViewModel.ImportState.Confirmation) {
                     Column {
-                        HorizontalSeparator()
                         PrimaryButton(
                             onClick = {
                                 coroutine.launch {
@@ -349,7 +350,6 @@ private fun ImportDialog(state: LibraryAppViewModel.ImportState) {
                         ) {
                             Text(stringResource(Res.string.continue_para))
                         }
-                        HorizontalSeparator()
                         PrimaryButton(
                             onClick = {
                                 coroutine.launch {
@@ -428,7 +428,7 @@ private fun ImportDialog(state: LibraryAppViewModel.ImportState) {
 
 @Composable
 private fun PrimaryButton(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
-    HorizontalSeparator()
+    HorizontalSeparator(Modifier.height(2.dp))
     TextButton(
         onClick = onClick,
         shape = RectangleShape,

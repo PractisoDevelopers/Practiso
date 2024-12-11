@@ -17,7 +17,7 @@ fun DialogContentSkeleton(
     modifier: Modifier = Modifier,
     icon: @Composable ColumnScope.() -> Unit,
     title: @Composable ColumnScope.() -> Unit,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -30,6 +30,8 @@ fun DialogContentSkeleton(
         CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.titleMedium) {
             title()
         }
-        content()
+        CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyMedium) {
+            content()
+        }
     }
 }
