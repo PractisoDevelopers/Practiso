@@ -16,6 +16,11 @@ getAllDimensions:
 SELECT *
 FROM dimension;
 
+getDimensionByName:
+SELECT *
+FROM dimension
+WHERE name = ?;
+
 insertDimension:
 INSERT INTO dimension(name)
 VALUES (?);
