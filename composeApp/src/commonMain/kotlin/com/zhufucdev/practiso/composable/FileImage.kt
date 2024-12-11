@@ -66,14 +66,16 @@ fun FileImage(
         val imState = state.image
         if (imState !is ImageLoaderState.Loaded || imState.path != path) {
             val bm = withContext(Dispatchers.IO) {
-                cache.map.getOrPut(path) {
-                    path.takeIf { fileSystem.exists(it) }
-                        ?.let { fileSystem.source(it) }
-                        ?.buffer()
-                        ?.readByteArray()
-                        ?.let(BitmapLoader::from)
-                        ?: return@withContext null
-                }
+                runCatching {
+                    cache.map.getOrPut(path) {
+                        path.takeIf { fileSystem.exists(it) }
+                            ?.let { fileSystem.source(it) }
+                            ?.buffer()
+                            ?.readByteArray()
+                            ?.let(BitmapLoader::from)
+                            ?: return@withContext null
+                    }
+                }.getOrNull()
             }
             state.image = if (bm == null) {
                 ImageLoaderState.Corrupt
