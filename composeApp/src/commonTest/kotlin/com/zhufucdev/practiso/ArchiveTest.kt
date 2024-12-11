@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso
 
+import com.zhufucdev.practiso.datamodel.DimensionArchive
 import com.zhufucdev.practiso.datamodel.FrameArchive
 import com.zhufucdev.practiso.datamodel.QuizArchive
 import com.zhufucdev.practiso.datamodel.archive
@@ -34,6 +35,10 @@ class ArchiveTest {
                         content = "Hi I am another text frame by test quiz 1"
                     )
                 ),
+                dimensions = listOf(
+                    DimensionArchive("test quiz", 1.0),
+                    DimensionArchive("test item", 1.0)
+                )
             ),
             QuizArchive(
                 name = "Test quiz 2",
