@@ -1,10 +1,8 @@
 package com.zhufucdev.practiso.datamodel
 
-import androidx.compose.ui.util.fastForEachIndexed
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
@@ -18,7 +16,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -47,7 +44,7 @@ sealed interface Frame {
      */
     val id: Long
 
-    fun insertInto(db: AppDatabase, quizId: Long, priority: Long)
+    fun toArchive(): FrameArchive
 
     @Serializable(TextSerializer::class)
     data class Text(
@@ -58,12 +55,7 @@ sealed interface Frame {
             return textFrame.content
         }
 
-        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
-            db.transaction {
-                db.quizQueries.insertTextFrame(textFrame.content)
-                db.quizQueries.associateLastTextFrameWithQuiz(quizId, priority)
-            }
-        }
+        override fun toArchive() = FrameArchive.Text(textFrame.content)
     }
 
     @Serializable(ImageSerializer::class)
@@ -75,12 +67,12 @@ sealed interface Frame {
             return imageFrame.altText ?: getString(Res.string.image_emoji)
         }
 
-        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
-            db.transaction {
-                insertTo(db)
-                db.quizQueries.associateLastImageFrameWithQuiz(quizId, priority)
-            }
-        }
+        override fun toArchive() = FrameArchive.Image(
+            imageFrame.filename,
+            imageFrame.width,
+            imageFrame.height,
+            imageFrame.altText
+        )
     }
 
     sealed interface Answerable<T : Answer> : Frame {
@@ -106,46 +98,9 @@ sealed interface Frame {
                     .joinToString(" ")
         }
 
-        override fun insertInto(db: AppDatabase, quizId: Long, priority: Long) {
-            val frameId = db.transactionWithResult {
-                db.quizQueries.insertOptionsFrame(optionsFrame.name)
-                val frameId = db.quizQueries.lastInsertRowId().executeAsOne()
-                db.quizQueries.associateOptionsFrameWithQuiz(
-                    quizId,
-                    frameId,
-                    priority
-                )
-                frameId
-            }
-
-            frames.forEach { optionFrame ->
-                when (optionFrame.frame) {
-                    is Image -> {
-                        db.transaction {
-                            optionFrame.frame.insertTo(db)
-                            db.quizQueries.assoicateLastImageFrameWithOption(
-                                frameId,
-                                maxOf(optionFrame.priority, 0).toLong(),
-                                optionFrame.isKey
-                            )
-                        }
-                    }
-
-                    is Text -> {
-                        db.transaction {
-                            db.quizQueries.insertTextFrame(optionFrame.frame.textFrame.content)
-                            db.quizQueries.assoicateLastTextFrameWithOption(
-                                frameId,
-                                optionFrame.isKey,
-                                maxOf(optionFrame.priority, 0).toLong()
-                            )
-                        }
-                    }
-
-                    is Options -> throw UnsupportedOperationException("Options frame inception")
-                }
-            }
-        }
+        override fun toArchive() = FrameArchive.Options(
+            optionsFrame.name,
+            frames.map { FrameArchive.Option(it.isKey, it.priority, it.frame.toArchive()) })
     }
 }
 
@@ -451,24 +406,4 @@ private class DimensionSerializer : KSerializer<Dimension> {
             encodeStringElement(descriptor, 1, value.name)
         }
     }
-}
-
-fun List<Frame>.insertInto(db: AppDatabase, name: String?) {
-    val quizId = db.transactionWithResult {
-        db.quizQueries.insertQuiz(name, Clock.System.now(), null)
-        db.quizQueries.lastInsertRowId().executeAsOne()
-    }
-
-    fastForEachIndexed { index, frame ->
-        frame.insertInto(db, quizId, index.toLong())
-    }
-}
-
-fun Frame.Image.insertTo(db: AppDatabase) {
-    db.quizQueries.insertImageFrame(
-        imageFrame.filename,
-        imageFrame.altText,
-        imageFrame.width,
-        imageFrame.height
-    )
 }

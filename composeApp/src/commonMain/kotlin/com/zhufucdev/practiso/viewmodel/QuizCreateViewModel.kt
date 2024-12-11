@@ -89,7 +89,8 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
                     }
 
                     event.update.onReceive { new ->
-                        val oldIndex = _frames.indexOfFirst { it::class == new::class && it.id == new.id }
+                        val oldIndex =
+                            _frames.indexOfFirst { it::class == new::class && it.id == new.id }
                         val old = _frames[oldIndex]
                         _frames[oldIndex] = new
                         addEdit(Edit.Update(old, new))
@@ -125,7 +126,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
 
                     event.save.onReceive {
                         if (targetId < 0) {
-                            frames.insertInto(Database.app, name)
+                            frames.map(Frame::toArchive).insertInto(Database.app, name)
                         } else {
                             history.optimized().applyTo(Database.app, targetId)
                         }

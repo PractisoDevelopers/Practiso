@@ -11,7 +11,7 @@ sealed interface Edit {
     @Serializable
     data class Append(val frame: Frame, val insertIndex: Int) : Edit {
         override fun applyTo(db: AppDatabase, quizId: Long) {
-            frame.insertInto(db, quizId, insertIndex.toLong())
+            frame.toArchive().insertInto(db, quizId, insertIndex.toLong())
         }
     }
 
@@ -80,7 +80,7 @@ sealed interface Edit {
                             val keyedPrioritizedFrame = new.frames[index]
                             when (val frame = keyedPrioritizedFrame.frame) {
                                 is Frame.Image -> db.transaction {
-                                    frame.insertTo(db)
+                                    frame.toArchive().insertTo(db)
                                     db.quizQueries.assoicateLastImageFrameWithOption(
                                         new.id,
                                         index.toLong(),
