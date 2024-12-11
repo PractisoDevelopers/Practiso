@@ -41,7 +41,7 @@ data class ErrorModel(
                     stringResource(
                         Res.string.internal_message_n_para,
                     (e::class.simpleName ?: e::class.qualifiedName)?.let { name ->
-                        "$name:$message"
+                        "[$name] $message"
                     } ?: message
                 ))
             }
