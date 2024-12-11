@@ -49,6 +49,7 @@ import com.zhufucdev.practiso.composable.DimensionSkeleton
 import com.zhufucdev.practiso.composable.QuizSkeleton
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composition.LocalNavController
+import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
@@ -150,15 +151,27 @@ fun SessionStarter(
                                         }
                                     )
                                 },
-                                onClick = {
-                                    coroutine.launch {
-                                        if (currentItems!!.contains(d)) {
-                                            model.event.removeCurrentItem.send(d.id)
-                                        } else {
+                                modifier = Modifier.combineClickable(
+                                    onClick = {
+                                        coroutine.launch {
+                                            if (currentItems!!.contains(d)) {
+                                                model.event.removeCurrentItem.send(d.id)
+                                            } else {
+                                                model.event.addCurrentItem.send(d.id)
+                                            }
+                                        }
+                                    },
+                                    onSecondaryClick = {
+                                        coroutine.launch {
+                                            if (model.selection.dimensionIds.contains(d.id)) {
+                                                model.event.deselectCategory.send(d.id)
+                                            } else {
+                                                model.event.selectCategory.send(d.id)
+                                            }
                                             model.event.addCurrentItem.send(d.id)
                                         }
                                     }
-                                }
+                                )
                             )
                         }
                     } ?: items(4) {
