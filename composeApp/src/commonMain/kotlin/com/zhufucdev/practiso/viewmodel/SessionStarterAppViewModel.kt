@@ -19,13 +19,10 @@ import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.protobufSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -127,24 +124,24 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
     }
 
     val items by lazy {
-        val categorizedFlow: Flow<List<Item>> = db.dimensionQueries.getAllDimensions()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map {
-                coroutineScope {
+        val categorizedFlow: Flow<List<Item>> =
+            db.dimensionQueries.getAllDimensions()
+                .asFlow()
+                .mapToList(Dispatchers.IO)
+                .map {
                     it.map { dimension ->
-                        async {
-                            Item.Categorized(
-                                dimension = dimension,
-                                quizzes = db.quizQueries
-                                    .getQuizFrames(db.quizQueries.getQuizByDimension(dimension.id))
-                                    .toOptionFlow()
-                                    .last()
-                            )
-                        }
-                    }.awaitAll()
+                        db.quizQueries
+                            .getQuizFrames(db.quizQueries.getQuizByDimension(dimension.id))
+                            .toOptionFlow()
+                            .map { options ->
+                                Item.Categorized(
+                                    dimension = dimension,
+                                    quizzes = options
+                                )
+                            }
+                            .first()
+                    }
                 }
-            }
         val stranded: Flow<List<Item>> =
             db.quizQueries.getQuizFrames(db.quizQueries.getStrandedQuiz())
                 .toOptionFlow()
