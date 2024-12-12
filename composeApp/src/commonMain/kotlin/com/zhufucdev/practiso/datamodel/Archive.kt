@@ -430,8 +430,7 @@ fun List<QuizArchive>.archive(resourceSource: (String) -> Source): Source = Buff
 
 fun BufferedSource.unarchive(): ArchivePack {
     var i = indexOf(0)
-    val xmlText = readUtf8(i)
-    skip(1)
+    val xmlText = if (i < 0) readUtf8() else readUtf8(i).also { skip(1) }
 
     val archives: QuizArchiveContainer = xml.decodeFromString(serializer(), xmlText)
     val resourcePool: Map<String, () -> Source> = buildMap {
