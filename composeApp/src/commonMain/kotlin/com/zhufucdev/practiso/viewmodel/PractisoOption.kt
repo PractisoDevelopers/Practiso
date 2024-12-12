@@ -99,8 +99,8 @@ fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<PractisoOpt
                 async {
                     PractisoOption.Dimension(
                         dimension = it,
-                        quizCount = db.getQuizCountByDimension(it.id)
-                            .executeAsOne()
+                        quizCount = (db.getQuizCountByDimension(it.id)
+                            .executeAsOneOrNull() ?: 0)
                             .toInt()
                     )
                 }

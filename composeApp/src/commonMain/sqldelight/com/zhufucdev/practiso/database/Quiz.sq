@@ -78,7 +78,7 @@ FROM quiz Q
 WHERE Q.id NOT IN (SELECT quizId FROM quizByDimension);
 
 getQuizCountByDimension:
-SELECT count(*)
+SELECT coalesce(count(*), 0)
 FROM quizByDimension
 WHERE dimensionId = ?
 GROUP BY dimensionId;
