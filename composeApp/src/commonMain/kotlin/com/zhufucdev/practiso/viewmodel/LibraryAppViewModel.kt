@@ -14,7 +14,7 @@ import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
 import com.zhufucdev.practiso.platform.getPlatform
-import com.zhufucdev.practiso.source
+import com.zhufucdev.practiso.platform.source
 import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -121,6 +121,7 @@ class LibraryAppViewModel(private val db: AppDatabase) : ViewModel() {
         val cancelChannel = Channel<Unit>()
         val pack = withContext(Dispatchers.IO) {
             try {
+                println(it.source().buffer().readByteString().sha256().hex())
                 it.source().gzip().buffer().unarchive()
             } catch (e: Exception) {
                 importState.emit(
