@@ -230,6 +230,14 @@ class AnswerViewModel(
 
     var currentQuizIndex: Int by state.saveable { mutableIntStateOf(0) }
 
+    suspend fun updateDurationDb() {
+        val take = take.filterNotNull().first()
+        val elapsed = elapsed.filterNotNull().first()
+        db.transaction {
+            db.sessionQueries.updateTakeDuration(elapsed.inWholeSeconds, take.id)
+        }
+    }
+
     init {
         viewModelScope.launch {
             while (viewModelScope.isActive) {
@@ -249,11 +257,7 @@ class AnswerViewModel(
                     }
 
                     event.updateDuration.onReceive {
-                        val take = take.filterNotNull().first()
-                        val elapsed = elapsed.filterNotNull().first()
-                        db.transaction {
-                            db.sessionQueries.updateTakeDuration(elapsed.inWholeSeconds, take.id)
-                        }
+                        updateDurationDb()
                     }
                 }
             }
