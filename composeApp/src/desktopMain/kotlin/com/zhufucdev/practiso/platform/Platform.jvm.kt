@@ -8,6 +8,7 @@ import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
+import kotlinx.coroutines.runBlocking
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import java.util.Properties
@@ -26,7 +27,7 @@ abstract class JVMPlatform : Platform() {
 
     override fun createDbDriver(): SqlDriver {
         val dataPath = Path(dataPath)
-        val dbPath = dataPath.resolve( "app.db")
+        val dbPath = dataPath.resolve("app.db")
         if (dataPath.notExists()) {
             dataPath.createDirectory()
         }
@@ -36,8 +37,10 @@ abstract class JVMPlatform : Platform() {
             properties = Properties().apply {
                 put("foreign_keys", "true")
             }).apply {
-            if (!dbExits) {
-                AppDatabase.Schema.create(this)
+            runBlocking {
+                if (!dbExits) {
+                    AppDatabase.Schema.create(this@apply).await()
+                }
             }
         }
     }

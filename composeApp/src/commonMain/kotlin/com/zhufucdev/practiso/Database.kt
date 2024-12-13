@@ -5,7 +5,7 @@ import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.platform.getPlatform
 
 object Database {
-    private val driver: SqlDriver by lazy {
+    val driver: SqlDriver by lazy {
         getPlatform().createDbDriver()
     }
 

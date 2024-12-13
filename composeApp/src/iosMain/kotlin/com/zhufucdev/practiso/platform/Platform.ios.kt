@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.platform
 
+import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import co.touchlab.sqliter.DatabaseConfiguration
@@ -20,7 +21,7 @@ object IOSPlatform : Platform() {
 
     override fun createDbDriver(): SqlDriver {
         return NativeSqliteDriver(
-            schema = AppDatabase.Schema,
+            schema = AppDatabase.Schema.synchronous(),
             name = "practiso.db",
             onConfiguration = {
                 it.copy(extendedConfig = DatabaseConfiguration.Extended(foreignKeyConstraints = true))
