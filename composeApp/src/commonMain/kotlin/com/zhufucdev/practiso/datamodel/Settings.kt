@@ -45,5 +45,12 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
                 settings.putBoolean(KeyQuizAutoplay, it)
             }
         }
+        coroutineScope.launch {
+            databaseVersion.collectLatest {
+                if (it != null) {
+                    settings.putLong(KeyDbVersion, it)
+                }
+            }
+        }
     }
 }

@@ -335,7 +335,6 @@ private fun ImportDialog(state: LibraryAppViewModel.ImportState) {
                         is LibraryAppViewModel.ImportState.Unarchiving -> {
                             Text(
                                 stringResource(Res.string.unarchiving_this_file_ellipsis_para),
-                                modifier = Modifier.fillMaxWidth()
                             )
                         }
 
