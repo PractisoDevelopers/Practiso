@@ -122,7 +122,7 @@ fun AnswerApp(model: AnswerViewModel) {
     DisposableEffect(true) {
         onDispose {
             runBlocking {
-                model.event.updateDuration.send(Unit)
+                model.updateDurationDb()
             }
         }
     }
