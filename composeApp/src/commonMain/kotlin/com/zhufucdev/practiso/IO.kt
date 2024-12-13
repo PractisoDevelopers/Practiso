@@ -73,6 +73,7 @@ private class PlatformBufferSource(private val file: PlatformFile) : Source {
 fun PlatformFile.source(): Source =
     if (supportsStreams()) {
         PlatformFileStreamSource(getStream())
+        PlatformBufferSource(this)
     } else {
         PlatformBufferSource(this)
     }

@@ -21,22 +21,25 @@ private object DateTimeAdapter : ColumnAdapter<Instant, String> {
     }
 }
 
-fun SqlDriver.toDatabase() = AppDatabase(
-    driver = this,
-    quizAdapter = Quiz.Adapter(
-        creationTimeISOAdapter = DateTimeAdapter,
-        modificationTimeISOAdapter = DateTimeAdapter
-    ),
-    sessionAdapter = Session.Adapter(
-        creationTimeISOAdapter = DateTimeAdapter,
-        lastAccessTimeISOAdapter = DateTimeAdapter
-    ),
-    templateAdapter = Template.Adapter(
-        creationTimeISOAdapter = DateTimeAdapter,
-        modificationTimeISOAdapter = DateTimeAdapter
-    ),
-    takeAdapter = Take.Adapter(
-        creationTimeISOAdapter = DateTimeAdapter,
-        lastAccessTimeISOAdapter = DateTimeAdapter
+fun SqlDriver.toDatabase(): AppDatabase {
+    AppDatabase.Schema.create(this)
+    return AppDatabase(
+        driver = this,
+        quizAdapter = Quiz.Adapter(
+            creationTimeISOAdapter = DateTimeAdapter,
+            modificationTimeISOAdapter = DateTimeAdapter
+        ),
+        sessionAdapter = Session.Adapter(
+            creationTimeISOAdapter = DateTimeAdapter,
+            lastAccessTimeISOAdapter = DateTimeAdapter
+        ),
+        templateAdapter = Template.Adapter(
+            creationTimeISOAdapter = DateTimeAdapter,
+            modificationTimeISOAdapter = DateTimeAdapter
+        ),
+        takeAdapter = Take.Adapter(
+            creationTimeISOAdapter = DateTimeAdapter,
+            lastAccessTimeISOAdapter = DateTimeAdapter
+        )
     )
-)
+}
