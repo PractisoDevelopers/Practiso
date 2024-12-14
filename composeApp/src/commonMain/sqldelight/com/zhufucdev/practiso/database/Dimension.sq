@@ -39,4 +39,4 @@ dissoicateQuizFromDimension:
 DELETE FROM quizByDimension WHERE quizId = ? AND dimensionId = ?;
 
 removeDimension:
-DELETE FROM quizByDimension WHERE quizId = ? AND dimensionId = ?;
+DELETE FROM dimension WHERE id = ?;

@@ -120,4 +120,10 @@
     <string name="ignore_para">Ignore</string>
     <string name="retry_para">Retry</string>
     <string name="unarchiving_this_file_ellipsis_para">Unarchiving this file…</string>
+    <string name="removing_x_para">Removing %1$s</string>
+    <plurals name="n_questions_are_within_this_dimension_what_to_do_with_it_para">
+        <item quantity="one">%1$d question is within this dimension. What do you want to do with it?</item>
+        <item quantity="other">%1$d questions are within this dimension. What do you want to do with them?</item>
+    </plurals>
+    <string name="keep_para">Keep</string>
 </resources>
