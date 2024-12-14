@@ -59,6 +59,8 @@ class LibraryAppViewModel(private val db: AppDatabase) : ViewModel() {
     data class Events(
         val removeQuiz: Channel<Long> = Channel(),
         val import: Channel<PlatformFile> = Channel(),
+        val removeDimensionWithQuizzes: Channel<Long> = Channel(),
+        val removeDimensionKeepQuizzes: Channel<Long> = Channel()
     )
 
     val event = Events()
@@ -299,6 +301,19 @@ class LibraryAppViewModel(private val db: AppDatabase) : ViewModel() {
 
                     event.import.onReceive {
                         import(it)
+                    }
+
+                    event.removeDimensionKeepQuizzes.onReceive {
+                        db.transaction {
+                            db.dimensionQueries.removeDimension(it)
+                        }
+                    }
+
+                    event.removeDimensionWithQuizzes.onReceive {
+                        db.transaction {
+                            db.quizQueries.removeQuizWithinDimension(it)
+                            db.dimensionQueries.removeDimension(it)
+                        }
                     }
                 }
             }

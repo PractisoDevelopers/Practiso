@@ -3,6 +3,7 @@ package com.zhufucdev.practiso.page
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,9 +75,12 @@ import practiso.composeapp.generated.resources.ignore_para
 import practiso.composeapp.generated.resources.import_from_practiso_archive_para
 import practiso.composeapp.generated.resources.import_para
 import practiso.composeapp.generated.resources.importing_x_items_y_done
+import practiso.composeapp.generated.resources.keep_para
 import practiso.composeapp.generated.resources.library_is_empty_para
+import practiso.composeapp.generated.resources.n_questions_are_within_this_dimension_what_to_do_with_it_para
 import practiso.composeapp.generated.resources.questions_para
 import practiso.composeapp.generated.resources.remove_para
+import practiso.composeapp.generated.resources.removing_x_para
 import practiso.composeapp.generated.resources.retry_para
 import practiso.composeapp.generated.resources.skip_para
 import practiso.composeapp.generated.resources.templates_para
@@ -175,7 +179,37 @@ fun LibraryApp(
                         SectionCaption(stringResource(Res.string.dimensions_para))
                     },
                     content = {
-                        PractisoOptionView(option = it)
+                        var removalDialogExpanded by remember { mutableStateOf(false) }
+                        ListItem(
+                            option = it,
+                            onDelete = {
+                                if (it.quizCount > 0) {
+                                    removalDialogExpanded = true
+                                } else {
+                                    coroutine.launch {
+                                        model.event.removeDimensionKeepQuizzes.send(it.dimension.id)
+                                    }
+                                }
+                            }
+                        )
+                        if (removalDialogExpanded) {
+                            DimensionRemovalDialog(
+                                target = it,
+                                onDeleteAll = {
+                                    coroutine.launch {
+                                        model.event.removeDimensionWithQuizzes.send(it.dimension.id)
+                                    }
+                                },
+                                onDeleteSelfOnly = {
+                                    coroutine.launch {
+                                        model.event.removeDimensionKeepQuizzes.send(it.dimension.id)
+                                    }
+                                },
+                                onDismiss = {
+                                    removalDialogExpanded = false
+                                }
+                            )
+                        }
                     },
                     id = { "dimension_" + it.dimension.id }
                 )
@@ -439,4 +473,49 @@ private fun PrimaryButton(onClick: () -> Unit, content: @Composable RowScope.() 
         modifier = Modifier.fillMaxWidth(),
         content = content
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DimensionRemovalDialog(
+    target: PractisoOption.Dimension,
+    onDeleteAll: () -> Unit,
+    onDeleteSelfOnly: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    BasicAlertDialog(onDismiss) {
+        Card {
+            Column {
+                DialogContentSkeleton(
+                    modifier = Modifier.padding(PaddingBig),
+                    icon = {
+                        Icon(Icons.Default.Delete, contentDescription = null)
+                    },
+                    title = {
+                        Text(stringResource(Res.string.removing_x_para, target.dimension.name))
+                    }
+                ) {
+                    Text(
+                        pluralStringResource(
+                            Res.plurals.n_questions_are_within_this_dimension_what_to_do_with_it_para,
+                            target.quizCount,
+                            target.quizCount
+                        )
+                    )
+                }
+                Row(Modifier.fillMaxWidth().padding(horizontal = PaddingNormal).padding(bottom = PaddingNormal)) {
+                    TextButton(onDismiss) {
+                        Text(stringResource(Res.string.cancel_para))
+                    }
+                    Spacer(Modifier.weight(1f))
+                    TextButton(onDeleteAll) {
+                        Text(stringResource(Res.string.remove_para))
+                    }
+                    TextButton(onDeleteSelfOnly) {
+                        Text(stringResource(Res.string.keep_para))
+                    }
+                }
+            }
+        }
+    }
 }

@@ -98,6 +98,12 @@ WHERE id = ?;
 removeQuiz:
 DELETE FROM quiz WHERE id = ?;
 
+removeQuizWithinDimension:
+DELETE FROM quiz WHERE id IN (
+SELECT quizId
+FROM quizByDimension
+WHERE dimensionId = ?
+);
 
 getTextFramesByQuizId:
 SELECT T.*, priority
