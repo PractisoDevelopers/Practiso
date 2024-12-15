@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
@@ -65,6 +67,7 @@ import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.add_item_to_get_started_para
 import practiso.composeapp.generated.resources.baseline_alert_box_outline
+import practiso.composeapp.generated.resources.baseline_chevron_down
 import practiso.composeapp.generated.resources.baseline_import
 import practiso.composeapp.generated.resources.cancel_para
 import practiso.composeapp.generated.resources.continue_para
@@ -82,6 +85,7 @@ import practiso.composeapp.generated.resources.questions_para
 import practiso.composeapp.generated.resources.remove_para
 import practiso.composeapp.generated.resources.removing_x_para
 import practiso.composeapp.generated.resources.retry_para
+import practiso.composeapp.generated.resources.show_more_para
 import practiso.composeapp.generated.resources.skip_para
 import practiso.composeapp.generated.resources.templates_para
 import practiso.composeapp.generated.resources.unarchiving_this_file_ellipsis_para
@@ -152,7 +156,7 @@ fun LibraryApp(
             )
         } else {
             LazyColumn(
-                modifier = Modifier.padding(start = PaddingNormal, top = PaddingNormal)
+                modifier = Modifier.padding(top = PaddingNormal)
                     .fillMaxWidth(),
             ) {
                 flatContent(
@@ -169,6 +173,10 @@ fun LibraryApp(
                                 }
                             }
                         )
+                    },
+                    limit = model.limits[0],
+                    onIncreaseLimit = {
+                        model.limits[0] = it
                     },
                     id = { "template_" + it.id }
                 )
@@ -211,6 +219,10 @@ fun LibraryApp(
                             )
                         }
                     },
+                    limit = model.limits[1],
+                    onIncreaseLimit = {
+                        model.limits[1] = it
+                    },
                     id = { "dimension_" + it.dimension.id }
                 )
 
@@ -238,6 +250,10 @@ fun LibraryApp(
                                 }
                             }
                         )
+                    },
+                    limit = model.limits[2],
+                    onIncreaseLimit = {
+                        model.limits[2] = it
                     },
                     id = { "quiz_" + it.quiz.id }
                 )
@@ -278,7 +294,9 @@ private fun LazyItemScope.ListItem(
             }
         },
         content = {
-            PractisoOptionView(option, modifier = modifier)
+            Box(modifier) {
+                PractisoOptionView(option, modifier = Modifier.padding(PaddingNormal))
+            }
         }
     )
 }
@@ -289,6 +307,8 @@ fun <T> LazyListScope.flatContent(
     content: @Composable LazyItemScope.(T) -> Unit,
     id: (T) -> Any,
     skeleton: @Composable () -> Unit = { PractisoOptionSkeleton() },
+    limit: Int,
+    onIncreaseLimit: (Int) -> Unit,
     skeletonsCount: Int = 3,
 ) {
     if (value?.isEmpty() == true) {
@@ -300,11 +320,29 @@ fun <T> LazyListScope.flatContent(
     }
 
     value?.let { t ->
-        t.forEachIndexed { index, v ->
+        val hasShowMoreItem = limit < t.size
+        t.subList(0, minOf(limit, t.size)).forEachIndexed { index, v ->
             item(id(v)) {
                 content(v)
-                if (index < t.lastIndex) {
+                if (index < t.lastIndex || hasShowMoreItem) {
                     HorizontalSeparator()
+                }
+            }
+        }
+
+        if (hasShowMoreItem) {
+            item {
+                Box(
+                    Modifier.fillMaxWidth()
+                        .clickable { onIncreaseLimit(limit * 2) }) {
+                    Row(Modifier.padding(PaddingNormal)) {
+                        Icon(
+                            painterResource(Res.drawable.baseline_chevron_down),
+                            contentDescription = null
+                        )
+                        Spacer(Modifier.width(PaddingNormal))
+                        Text(stringResource(Res.string.show_more_para))
+                    }
                 }
             }
         }
@@ -503,7 +541,10 @@ private fun DimensionRemovalDialog(
                         )
                     )
                 }
-                Row(Modifier.fillMaxWidth().padding(horizontal = PaddingNormal).padding(bottom = PaddingNormal)) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = PaddingNormal)
+                        .padding(bottom = PaddingNormal)
+                ) {
                     TextButton(onDismiss) {
                         Text(stringResource(Res.string.cancel_para))
                     }

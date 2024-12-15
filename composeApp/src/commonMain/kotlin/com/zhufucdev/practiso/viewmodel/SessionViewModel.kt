@@ -82,7 +82,7 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
 
     // TODO: recommend based on error rates, quiz legitimacy, etc
     val smartRecommendations by lazy {
-        db.quizQueries.getQuizFrames(db.quizQueries.getAllQuiz())
+        db.quizQueries.getQuizFrames(db.quizQueries.getRecentQuiz(5))
             .toOptionFlow()
     }
 

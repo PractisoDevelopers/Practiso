@@ -267,7 +267,7 @@ fun SessionApp(
                                         model.event.deleteSession.send(option.session.id)
                                     }
                                 },
-                                modifier = Modifier.padding(start = PaddingNormal).animateItem()
+                                modifier = Modifier.animateItem()
                             ) {
                                 val key = "session_" + option.session.id
                                 SharedElementTransitionPopup(
@@ -306,15 +306,15 @@ fun SessionApp(
                                     },
                                     sharedElement = {
                                         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                                            PractisoOptionView(option, modifier = it)
+                                            PractisoOptionView(option, modifier = it.padding(PaddingNormal))
                                         }
                                     }
                                 ) {
-                                    PractisoOptionView(
-                                        option,
-                                        modifier = Modifier.sharedElement()
-                                            .clickable { coroutine.launch { expand() } }
-                                    )
+                                    Box(Modifier.sharedElement()
+                                        .clickable { coroutine.launch { expand() } }
+                                    ) {
+                                        PractisoOptionView(option, modifier = Modifier.padding(PaddingNormal))
+                                    }
                                 }
                             }
                         }
@@ -325,7 +325,7 @@ fun SessionApp(
                         swipable = false,
                         modifier = Modifier.animateItem()
                     ) {
-                        PractisoOptionSkeleton()
+                        PractisoOptionSkeleton(modifier = Modifier.padding(PaddingNormal))
                     }
                 }
 
@@ -603,7 +603,7 @@ private fun ListItem(
         )
 
         if (separator) {
-            HorizontalSeparator()
+            HorizontalSeparator(Modifier.padding(start = PaddingNormal))
         }
     }
 }

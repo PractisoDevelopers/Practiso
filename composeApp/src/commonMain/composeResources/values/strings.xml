@@ -126,4 +126,5 @@
         <item quantity="other">%1$d questions are within this dimension. What do you want to do with them?</item>
     </plurals>
     <string name="keep_para">Keep</string>
+    <string name="show_more_para">Show more</string>
 </resources>
