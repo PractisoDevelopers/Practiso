@@ -127,4 +127,15 @@
     </plurals>
     <string name="keep_para">Keep</string>
     <string name="show_more_para">Show more</string>
+    <string name="created_x_para">Created %1$s</string>
+    <string name="spent_x_para">Spent %1$s</string>
+    <string name="accuracy_slash_completeness_para">Accuracy / completeness</string>
+    <plurals name="n_questions_correct_span">
+        <item quantity="other">%1$d questions correct</item>
+        <item quantity="one">%1$d question correct</item>
+    </plurals>
+    <plurals name="n_questions_incorrect_span">
+        <item quantity="other">%1$d questions incorrect</item>
+        <item quantity="one">%1$d question incorrect</item>
+    </plurals>
 </resources>
