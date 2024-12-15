@@ -1,7 +1,6 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -261,8 +260,10 @@ fun SessionApp(
                                             model.db, takeStat.id
                                         ).collectAsState(null, Dispatchers.IO)
 
-                                        Card(modifier = Modifier.clickable(false) {},
-                                            shape = FloatingActionButtonDefaults.extendedFabShape) {
+                                        Card(
+                                            modifier = Modifier.clickable(false) {},
+                                            shape = FloatingActionButtonDefaults.extendedFabShape
+                                        ) {
                                             TakeStatExtensionCardContent(
                                                 takeStat,
                                                 takeNumber,
@@ -531,23 +532,45 @@ private fun TakeStatExtensionCardContent(
         )
 
         Column {
+            val coroutine = rememberCoroutineScope()
             Text(stringResource(Res.string.accuracy_slash_completeness_para))
             Spacer(Modifier.height(PaddingSmall))
-            Surface(shape = CardDefaults.shape) {
+
+            var targetScale by remember { mutableStateOf(1f) }
+            Surface(
+                shape = CardDefaults.shape,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    targetScale = 1f
+                }) {
+                val scale by animateFloatAsState(targetScale)
+
                 Row(Modifier.fillMaxWidth().height(26.dp)) {
+                    val properScale by remember(correctQuizCount, model) {
+                        derivedStateOf {
+                            if (model.countQuizTotal > model.countQuizDone * 10) {
+                                model.countQuizTotal * 0.618f / model.countQuizDone
+                            } else {
+                                1f
+                            }
+                        }
+                    }
                     val correctRatio by remember(correctQuizCount, model) {
                         derivedStateOf {
-                            (correctQuizCount ?: 0) * 1f / model.countQuizTotal
+                            (correctQuizCount ?: 0) * 1f / model.countQuizTotal * scale
                         }
                     }
                     val incorrectRatio by remember(correctQuizCount, model) {
                         derivedStateOf {
                             (correctQuizCount?.let {
                                 (model.countQuizDone - it)
-                            } ?: 0) * 1f / model.countQuizTotal
+                            } ?: 0) * 1f / model.countQuizTotal * scale
                         }
                     }
 
+                    val correctTooltipState = rememberTooltipState()
                     TooltipBox(
                         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                         tooltip = {
@@ -561,14 +584,24 @@ private fun TakeStatExtensionCardContent(
                                 }
                             }
                         },
-                        state = rememberTooltipState()
+                        state = correctTooltipState
                     ) {
                         Spacer(
                             Modifier.fillMaxWidth(correctRatio).fillMaxHeight()
                                 .background(MaterialTheme.colorScheme.primary)
-                                .animateContentSize()
+                                .clickable {
+                                    targetScale = if (scale <= 1) {
+                                        properScale
+                                    } else {
+                                        1f
+                                    }
+                                    coroutine.launch {
+                                        correctTooltipState.show()
+                                    }
+                                }
                         )
                     }
+                    val incorrectTooltipState = rememberTooltipState()
                     TooltipBox(
                         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                         tooltip = {
@@ -582,12 +615,21 @@ private fun TakeStatExtensionCardContent(
                                 }
                             }
                         },
-                        state = rememberTooltipState()
+                        state = incorrectTooltipState
                     ) {
                         Spacer(
                             Modifier.fillMaxWidth(incorrectRatio).fillMaxHeight()
                                 .background(MaterialTheme.colorScheme.error)
-                                .animateContentSize()
+                                .clickable {
+                                    targetScale = if (scale <= 1) {
+                                        properScale
+                                    } else {
+                                        1f
+                                    }
+                                    coroutine.launch {
+                                        correctTooltipState.show()
+                                    }
+                                }
                         )
                     }
                 }
