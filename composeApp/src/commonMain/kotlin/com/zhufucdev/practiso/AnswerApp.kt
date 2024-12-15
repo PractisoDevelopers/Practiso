@@ -2,6 +2,7 @@ package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -85,6 +87,7 @@ import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -360,6 +363,7 @@ private fun AppTopBar(
 @Composable
 private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerViewModel) {
     val answers by model.answers.collectAsState()
+    val showAccuracy by model.settings.showAccuracy.collectAsState()
     Column(modifier) {
         quiz.frames.forEach { frame ->
             when (frame.frame) {
@@ -395,6 +399,18 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
 
                             frame.frame.frames.forEachIndexed { index, option ->
                                 val checked = option.frame.id in answerOptionIds
+                                val wiggler = remember { Animatable(0f) }
+                                val wiggleOffset by wiggler.asState()
+
+                                suspend fun animateIncorrectness() {
+                                    if (!option.isKey) {
+                                        wiggler.animateTo(
+                                            0f, initialVelocity = 2000f, animationSpec = spring(
+                                                Spring.DampingRatioHighBouncy
+                                            )
+                                        )
+                                    }
+                                }
 
                                 suspend fun selectOnly() {
                                     if (checked) {
@@ -402,14 +418,24 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                             answerModel(option)
                                         )
                                     } else {
-                                        model.event.answer.send(
-                                            answerModel(option)
-                                        )
-                                        frame.frame.frames.forEachIndexed { i, f ->
-                                            if (i != index) {
-                                                model.event.unanswer.send(
-                                                    answerModel(f)
+                                        coroutineScope {
+                                            launch {
+                                                model.event.answer.send(
+                                                    answerModel(option)
                                                 )
+                                                frame.frame.frames.forEachIndexed { i, f ->
+                                                    if (i != index) {
+                                                        model.event.unanswer.send(
+                                                            answerModel(f)
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            launch {
+                                                if (showAccuracy) {
+                                                    animateIncorrectness()
+                                                }
                                             }
                                         }
                                     }
@@ -421,9 +447,19 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                             answerModel(option)
                                         )
                                     } else {
-                                        model.event.answer.send(
-                                            answerModel(option)
-                                        )
+                                        coroutineScope {
+                                            launch {
+                                                model.event.answer.send(
+                                                    answerModel(option)
+                                                )
+                                            }
+
+                                            launch {
+                                                if (showAccuracy) {
+                                                    animateIncorrectness()
+                                                }
+                                            }
+                                        }
                                     }
                                 }
 
@@ -453,7 +489,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                     content = {
                                         SimpleFrame(
                                             frame = option.frame,
-                                            imageCache = model.imageCache
+                                            imageCache = model.imageCache,
                                         )
                                     },
                                     modifier = Modifier.clickable(enabled = correctChoices > 0) {
@@ -464,7 +500,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                                 selectOnly()
                                             }
                                         }
-                                    }
+                                    } then Modifier.offset(wiggleOffset.dp)
                                 )
                             }
                         }
