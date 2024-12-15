@@ -325,7 +325,9 @@ fun <T> LazyListScope.flatContent(
             item(id(v)) {
                 content(v)
                 if (index < t.lastIndex || hasShowMoreItem) {
-                    HorizontalSeparator()
+                    Box(Modifier.padding(start = PaddingNormal)) {
+                        HorizontalSeparator()
+                    }
                 }
             }
         }

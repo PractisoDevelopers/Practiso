@@ -306,14 +306,21 @@ fun SessionApp(
                                     },
                                     sharedElement = {
                                         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                                            PractisoOptionView(option, modifier = it.padding(PaddingNormal))
+                                            PractisoOptionView(
+                                                option,
+                                                modifier = it.padding(PaddingNormal)
+                                            )
                                         }
                                     }
                                 ) {
-                                    Box(Modifier.sharedElement()
-                                        .clickable { coroutine.launch { expand() } }
+                                    Box(
+                                        Modifier.sharedElement()
+                                            .clickable { coroutine.launch { expand() } }
                                     ) {
-                                        PractisoOptionView(option, modifier = Modifier.padding(PaddingNormal))
+                                        PractisoOptionView(
+                                            option,
+                                            modifier = Modifier.padding(PaddingNormal)
+                                        )
                                     }
                                 }
                             }
@@ -603,7 +610,9 @@ private fun ListItem(
         )
 
         if (separator) {
-            HorizontalSeparator(Modifier.padding(start = PaddingNormal))
+            Box(Modifier.padding(start = PaddingNormal)) {
+                HorizontalSeparator()
+            }
         }
     }
 }
