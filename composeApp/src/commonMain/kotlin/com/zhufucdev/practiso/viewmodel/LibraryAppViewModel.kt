@@ -1,7 +1,11 @@
 package com.zhufucdev.practiso.viewmodel
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
+import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
@@ -13,8 +17,10 @@ import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
+import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.source
+import com.zhufucdev.practiso.protoBufStateListSaver
 import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -37,7 +43,7 @@ import practiso.composeapp.generated.resources.failed_to_copy_resource_x_for_qui
 import practiso.composeapp.generated.resources.invalid_file_format_para
 import practiso.composeapp.generated.resources.resource_x_for_quiz_y_was_not_found_para
 
-class LibraryAppViewModel(private val db: AppDatabase) : ViewModel() {
+class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) : ViewModel() {
     val templates by lazy {
         db.templateQueries.getAllTemplates()
             .asFlow()
@@ -55,6 +61,9 @@ class LibraryAppViewModel(private val db: AppDatabase) : ViewModel() {
             .mapToList(Dispatchers.IO)
             .toOptionFlow(db.quizQueries)
     }
+
+    @OptIn(SavedStateHandleSaveableApi::class)
+    val limits by state.saveable(saver = protoBufStateListSaver<Int>()) { mutableStateListOf<Int>(5, 5, 5) }
 
     data class Events(
         val removeQuiz: Channel<Long> = Channel(),
@@ -324,7 +333,7 @@ class LibraryAppViewModel(private val db: AppDatabase) : ViewModel() {
         val Factory
             get() = viewModelFactory {
                 initializer {
-                    LibraryAppViewModel(Database.app)
+                    LibraryAppViewModel(Database.app, createPlatformSavedStateHandle())
                 }
             }
     }

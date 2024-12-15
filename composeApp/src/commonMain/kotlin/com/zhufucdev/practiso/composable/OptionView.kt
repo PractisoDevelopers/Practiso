@@ -13,7 +13,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.PractisoOption
 
@@ -39,8 +38,6 @@ fun PractisoOptionSkeleton(
         verticalArrangement = Arrangement.spacedBy(PaddingSmall),
         modifier = modifier
     ) {
-        Spacer(Modifier.height(PaddingNormal - PaddingSmall))
-
         CompositionLocalProvider(
             LocalTextStyle provides MaterialTheme.typography.titleMedium
         ) {
@@ -53,7 +50,6 @@ fun PractisoOptionSkeleton(
             preview?.invoke()
         }
 
-        Spacer(Modifier.height(PaddingNormal - PaddingSmall))
     }
 }
 
