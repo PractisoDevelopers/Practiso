@@ -25,6 +25,7 @@ import com.zhufucdev.practiso.datamodel.Answer
 import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.datamodel.SettingsModel
+import com.zhufucdev.practiso.datamodel.calculateTakeNumber
 import com.zhufucdev.practiso.datamodel.getAnswersDataModel
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -58,14 +59,8 @@ class AnswerViewModel(
         MutableStateFlow<Int?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
                 take.filterNotNull().collectLatest { take ->
-                    session.filterNotNull().collectLatest {
-                        db.sessionQueries
-                            .getTakeStatsBySessionId(it.id)
-                            .asFlow()
-                            .mapToList(Dispatchers.IO)
-                            .collect { stats ->
-                                emit(stats.indexOfFirst { stat -> stat.id == take.id } + 1)
-                            }
+                    calculateTakeNumber(db, take.id).collectLatest {
+                        emit(it)
                     }
                 }
             }
