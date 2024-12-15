@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -36,6 +37,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -44,13 +46,17 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -63,6 +69,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -93,9 +100,12 @@ import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopupScope
 import com.zhufucdev.practiso.composable.shimmerBackground
+import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.database.TakeStat
+import com.zhufucdev.practiso.datamodel.calculateTakeCorrectQuizCount
+import com.zhufucdev.practiso.datamodel.calculateTakeNumber
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -107,12 +117,16 @@ import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.SessionViewModel
 import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
 import com.zhufucdev.practiso.viewmodel.TakeStarterViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import nl.jacobras.humanreadable.HumanReadable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
+import practiso.composeapp.generated.resources.accuracy_slash_completeness_para
 import practiso.composeapp.generated.resources.baseline_arrow_collapse_up
 import practiso.composeapp.generated.resources.baseline_check_circle_outline
 import practiso.composeapp.generated.resources.baseline_chevron_down
@@ -122,6 +136,7 @@ import practiso.composeapp.generated.resources.baseline_timelapse
 import practiso.composeapp.generated.resources.baseline_timer_outline
 import practiso.composeapp.generated.resources.cancel_para
 import practiso.composeapp.generated.resources.continue_or_start_new_take_para
+import practiso.composeapp.generated.resources.created_x_para
 import practiso.composeapp.generated.resources.done_questions_completed_in_total
 import practiso.composeapp.generated.resources.edit_para
 import practiso.composeapp.generated.resources.get_started_by_para
@@ -129,6 +144,8 @@ import practiso.composeapp.generated.resources.loading_recommendations_span
 import practiso.composeapp.generated.resources.loading_takes_para
 import practiso.composeapp.generated.resources.minutes_span
 import practiso.composeapp.generated.resources.n_percentage
+import practiso.composeapp.generated.resources.n_questions_correct_span
+import practiso.composeapp.generated.resources.n_questions_incorrect_span
 import practiso.composeapp.generated.resources.new_take_para
 import practiso.composeapp.generated.resources.new_timer_para
 import practiso.composeapp.generated.resources.no_recommendations_span
@@ -140,6 +157,7 @@ import practiso.composeapp.generated.resources.see_all_options_para
 import practiso.composeapp.generated.resources.session_para
 import practiso.composeapp.generated.resources.sessions_para
 import practiso.composeapp.generated.resources.show_hidden_para
+import practiso.composeapp.generated.resources.spent_x_para
 import practiso.composeapp.generated.resources.start_para
 import practiso.composeapp.generated.resources.take_completeness
 import practiso.composeapp.generated.resources.take_n_para
@@ -149,6 +167,7 @@ import practiso.composeapp.generated.resources.will_be_identified_as_x_para
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
 @Composable
@@ -227,17 +246,69 @@ fun SessionApp(
                         }
                         takeStats?.let {
                             items(it, TakeStat::id) { takeStat ->
-                                Card(
-                                    onClick = {
-                                        coroutine.launch {
-                                            Navigator.navigate(
-                                                Navigation.Goto(AppDestination.Answer),
-                                                options = listOf(NavigationOption.OpenTake(takeStat.id))
+                                val key = "take_" + takeStat.id
+                                SharedElementTransitionPopup(
+                                    model = viewModel(
+                                        key = key,
+                                        factory = SharedElementTransitionPopupViewModel.Factory
+                                    ),
+                                    key = key,
+                                    popup = {
+                                        val takeNumber by calculateTakeNumber(
+                                            model.db, takeStat.id
+                                        ).collectAsState(null, Dispatchers.IO)
+                                        val quizzesDoneCorrect by calculateTakeCorrectQuizCount(
+                                            model.db, takeStat.id
+                                        ).collectAsState(null, Dispatchers.IO)
+
+                                        Card(modifier = Modifier.clickable(false) {},
+                                            shape = FloatingActionButtonDefaults.extendedFabShape) {
+                                            TakeStatExtensionCardContent(
+                                                takeStat,
+                                                takeNumber,
+                                                quizzesDoneCorrect,
+                                                onStart = {
+                                                    coroutine.launch {
+                                                        model.event.startTake.send(takeStat.id)
+                                                    }
+                                                },
+                                                onDismiss = {
+                                                    coroutine.launch {
+                                                        collapse()
+                                                    }
+                                                }
                                             )
                                         }
                                     },
-                                    modifier = Modifier.animateItem()
-                                ) { TakeStatCardContent(takeStat) }
+                                    sharedElement = {
+                                        Card(modifier = it) { TakeStatCardContent(takeStat) }
+                                    }
+                                ) {
+                                    Card(
+                                        modifier = Modifier.animateItem()
+                                            .sharedElement()
+                                            .clip(CardDefaults.shape)
+                                            .combineClickable(
+                                                onClick = {
+                                                    coroutine.launch {
+                                                        Navigator.navigate(
+                                                            Navigation.Goto(AppDestination.Answer),
+                                                            options = listOf(
+                                                                NavigationOption.OpenTake(
+                                                                    takeStat.id
+                                                                )
+                                                            )
+                                                        )
+                                                    }
+                                                },
+                                                onSecondaryClick = {
+                                                    coroutine.launch {
+                                                        expand()
+                                                    }
+                                                }
+                                            )
+                                    ) { TakeStatCardContent(takeStat) }
+                                }
                             }
                         } ?: items(3) {
                             Card { TakeSkeleton() }
@@ -359,7 +430,7 @@ private fun TakeStatIcon(model: TakeStat) {
 }
 
 @Composable
-fun TakeStatCardContent(model: TakeStat) {
+private fun TakeStatCardContent(model: TakeStat) {
     TakeSkeleton(
         icon = {
             TakeStatIcon(model)
@@ -385,7 +456,7 @@ fun TakeStatCardContent(model: TakeStat) {
 }
 
 @Composable
-fun TakeSkeleton(
+private fun TakeSkeleton(
     icon: @Composable () -> Unit = {
         Box(Modifier.size(32.dp).shimmerBackground(CircleShape))
     },
@@ -421,6 +492,115 @@ fun TakeSkeleton(
                 LocalTextStyle provides MaterialTheme.typography.labelMedium
             ) {
                 content()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TakeStatExtensionCardContent(
+    model: TakeStat,
+    takeNumber: Int?,
+    correctQuizCount: Int?,
+    onStart: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Column(
+        Modifier.padding(PaddingBig).fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(PaddingNormal)
+    ) {
+        Text(model.name, style = MaterialTheme.typography.titleLarge)
+        takeNumber?.let {
+            Text(stringResource(Res.string.take_n_para, it))
+        } ?: Spacer(Modifier.height(LocalTextStyle.current.lineHeight.value.dp).width(40.dp))
+        Text(
+            stringResource(
+                Res.string.created_x_para,
+                HumanReadable.timeAgo(
+                    model.creationTimeISO,
+                    Clock.System.now()
+                )
+            )
+        )
+        Text(
+            stringResource(
+                Res.string.spent_x_para,
+                HumanReadable.duration(model.durationSeconds.seconds)
+            )
+        )
+
+        Column {
+            Text(stringResource(Res.string.accuracy_slash_completeness_para))
+            Spacer(Modifier.height(PaddingSmall))
+            Surface(shape = CardDefaults.shape) {
+                Row(Modifier.fillMaxWidth().height(26.dp)) {
+                    val correctRatio by remember(correctQuizCount, model) {
+                        derivedStateOf {
+                            (correctQuizCount ?: 0) * 1f / model.countQuizTotal
+                        }
+                    }
+                    val incorrectRatio by remember(correctQuizCount, model) {
+                        derivedStateOf {
+                            (correctQuizCount?.let {
+                                (model.countQuizDone - it)
+                            } ?: 0) * 1f / model.countQuizTotal
+                        }
+                    }
+
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        tooltip = {
+                            correctQuizCount?.let {
+                                PlainTooltip {
+                                    Text(
+                                        pluralStringResource(
+                                            Res.plurals.n_questions_correct_span, it, it
+                                        )
+                                    )
+                                }
+                            }
+                        },
+                        state = rememberTooltipState()
+                    ) {
+                        Spacer(
+                            Modifier.fillMaxWidth(correctRatio).fillMaxHeight()
+                                .background(MaterialTheme.colorScheme.primary)
+                                .animateContentSize()
+                        )
+                    }
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        tooltip = {
+                            correctQuizCount?.let { (model.countQuizDone - it).toInt() }?.let {
+                                PlainTooltip {
+                                    Text(
+                                        pluralStringResource(
+                                            Res.plurals.n_questions_incorrect_span, it, it
+                                        )
+                                    )
+                                }
+                            }
+                        },
+                        state = rememberTooltipState()
+                    ) {
+                        Spacer(
+                            Modifier.fillMaxWidth(incorrectRatio).fillMaxHeight()
+                                .background(MaterialTheme.colorScheme.error)
+                                .animateContentSize()
+                        )
+                    }
+                }
+            }
+        }
+
+        Row(Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.cancel_para))
+            }
+            Spacer(Modifier.weight(1f))
+            Button(onClick = onStart) {
+                Text(stringResource(Res.string.start_para))
             }
         }
     }

@@ -14,6 +14,10 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.datamodel.getQuizFrames
+import com.zhufucdev.practiso.platform.AppDestination
+import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationOption
+import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -24,7 +28,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 
-class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
+class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
     val sessions by lazy {
         MutableStateFlow<List<PractisoOption.Session>?>(null).apply {
@@ -58,6 +62,7 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
     data class Events(
         val toggleRecommendations: Channel<Boolean> = Channel(),
         val deleteSession: Channel<Long> = Channel(),
+        val startTake: Channel<Long> = Channel()
     )
 
     val event = Events()
@@ -74,6 +79,13 @@ class SessionViewModel(private val db: AppDatabase, state: SavedStateHandle) :
                         db.transaction {
                             db.sessionQueries.removeSession(it)
                         }
+                    }
+
+                    event.startTake.onReceive {
+                        Navigator.navigate(
+                            Navigation.Goto(AppDestination.Answer),
+                            options = listOf(NavigationOption.OpenTake(it))
+                        )
                     }
                 }
             }
