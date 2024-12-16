@@ -27,15 +27,9 @@ import com.zhufucdev.practiso.style.darkScheme
 import com.zhufucdev.practiso.style.lightScheme
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.runBlocking
 
 fun main() {
-    runBlocking(Dispatchers.IO) {
-        Database.migrate()
-    }
-
     singleWindowApplication(title = "Practiso") {
         val navState by DesktopNavigator.current.collectAsState()
         val navController = rememberNavController()
