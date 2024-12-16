@@ -550,7 +550,7 @@ private fun TakeStatExtensionCardContent(
                 Row(Modifier.fillMaxWidth().height(26.dp)) {
                     val properScale by remember(correctQuizCount, model) {
                         derivedStateOf {
-                            if (model.countQuizTotal > model.countQuizDone * 10) {
+                            if (model.countQuizDone > 0 && model.countQuizTotal > model.countQuizDone * 10) {
                                 model.countQuizTotal * 0.618f / model.countQuizDone
                             } else {
                                 1f
