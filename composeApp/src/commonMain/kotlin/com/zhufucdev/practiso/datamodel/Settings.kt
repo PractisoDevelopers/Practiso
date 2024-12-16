@@ -27,7 +27,6 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
     val showAccuracy =
         MutableStateFlow(settings.getBoolean(KeyShowAccuracy, false))
     val showNextQuizAutomatically = MutableStateFlow(settings.getBoolean(KeyQuizAutoplay, false))
-    val databaseVersion = MutableStateFlow(settings.getLongOrNull(KeyDbVersion))
 
     init {
         coroutineScope.launch {
@@ -43,13 +42,6 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
         coroutineScope.launch {
             showNextQuizAutomatically.collectLatest {
                 settings.putBoolean(KeyQuizAutoplay, it)
-            }
-        }
-        coroutineScope.launch {
-            databaseVersion.collectLatest {
-                if (it != null) {
-                    settings.putLong(KeyDbVersion, it)
-                }
             }
         }
     }
