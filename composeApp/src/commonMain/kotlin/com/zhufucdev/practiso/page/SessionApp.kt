@@ -173,8 +173,8 @@ import kotlin.time.DurationUnit
 fun SessionApp(
     model: SessionViewModel = viewModel(factory = SessionViewModel.Factory),
 ) {
-    val takeStats by model.recentTakeStats.collectAsState()
-    val sessions by model.sessions.collectAsState()
+    val takeStats by model.recentTakeStats.collectAsState(Dispatchers.IO)
+    val sessions by model.sessions.collectAsState(Dispatchers.IO)
     val coroutine = rememberCoroutineScope()
 
     SharedElementTransitionPopup(
