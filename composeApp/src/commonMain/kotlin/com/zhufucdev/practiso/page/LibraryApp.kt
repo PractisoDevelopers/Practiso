@@ -308,10 +308,12 @@ fun <T> LazyListScope.flatContent(
     caption: @Composable () -> Unit,
     content: @Composable LazyItemScope.(T) -> Unit,
     id: (T) -> Any,
-    skeleton: @Composable () -> Unit = { PractisoOptionSkeleton() },
+    skeleton: @Composable () -> Unit = {
+        PractisoOptionSkeleton(modifier = Modifier.padding(PaddingNormal))
+    },
     limit: Int,
     onIncreaseLimit: (Int) -> Unit,
-    skeletonsCount: Int = 3,
+    skeletonsCount: Int = 5,
 ) {
     if (value?.isEmpty() == true) {
         return
