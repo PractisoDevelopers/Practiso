@@ -60,6 +60,8 @@ import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.PractisoOption
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -143,9 +145,9 @@ fun LibraryApp(
         }
     }
 
-    val templates by model.templates.collectAsState(null)
-    val dimensions by model.dimensions.collectAsState(null)
-    val quizzes by model.quiz.collectAsState(null)
+    val templates by model.templates.collectAsState(null, Dispatchers.IO)
+    val dimensions by model.dimensions.collectAsState(null, Dispatchers.IO)
+    val quizzes by model.quiz.collectAsState(null, Dispatchers.IO)
 
     AnimatedContent(templates?.isEmpty() == true && dimensions?.isEmpty() == true && quizzes?.isEmpty() == true) { empty ->
         if (empty) {
