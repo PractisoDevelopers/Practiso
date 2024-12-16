@@ -318,7 +318,9 @@ fun <T> LazyListScope.flatContent(
     }
 
     item {
-        caption()
+        Box(Modifier.padding(start = PaddingNormal)) {
+            caption()
+        }
     }
 
     value?.let { t ->
