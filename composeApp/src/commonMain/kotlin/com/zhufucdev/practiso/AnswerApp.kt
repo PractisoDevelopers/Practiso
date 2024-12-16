@@ -153,8 +153,8 @@ fun AnswerApp(model: AnswerViewModel) {
 
                 state?.let {
                     LaunchedEffect(it.progress) {
-                        model.currentQuizIndex =
-                            maxOf(0, (it.progress * quizzes!!.size).roundToInt() - 1)
+                        val index = maxOf(0, (it.progress * quizzes!!.size).roundToInt() - 1)
+                        model.event.updateCurrentQuizIndex.send(index)
                     }
                     val showAccuracy by model.settings.showAccuracy.collectAsState()
                     val answers by model.answers.collectAsState()
