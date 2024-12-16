@@ -4,11 +4,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
@@ -137,7 +135,11 @@ class AnswerViewModel(
         sealed class Pager : PageState {
             abstract val state: PagerState
             override val progress: Float by derivedStateOf {
-                (state.currentPageOffsetFraction + state.currentPage + 1) / state.pageCount
+                if (state.pageCount > 0) {
+                    (state.currentPageOffsetFraction + state.currentPage + 1) / state.pageCount
+                } else {
+                    0f
+                }
             }
 
             data class Horizontal(override val state: PagerState) : Pager()
@@ -146,11 +148,14 @@ class AnswerViewModel(
 
         data class Column(val state: LazyListState) : PageState {
             override val progress: Float by derivedStateOf {
-                (
-                        state.firstVisibleItemIndex
-                                + state.firstVisibleItemScrollOffset
-                                * 1f / (state.layoutInfo.visibleItemsInfo.firstOrNull()?.size ?: 1)
-                        ) / state.layoutInfo.totalItemsCount
+                if (state.layoutInfo.totalItemsCount > 0) {
+                    (state.firstVisibleItemIndex
+                            + state.firstVisibleItemScrollOffset
+                            * 1f / (state.layoutInfo.visibleItemsInfo.firstOrNull()?.size
+                        ?: 1)) / state.layoutInfo.totalItemsCount
+                } else {
+                    0f
+                }
             }
         }
     }
@@ -164,18 +169,18 @@ class AnswerViewModel(
                             when (style) {
                                 PageStyle.Horizontal -> {
                                     PageState.Pager.Horizontal(
-                                        PagerState(currentQuizIndex) { q.size }
+                                        PagerState(getCurrentQuizIndex()) { q.size }
                                     )
                                 }
 
                                 PageStyle.Vertical -> {
                                     PageState.Pager.Vertical(
-                                        PagerState(currentQuizIndex) { q.size }
+                                        PagerState(getCurrentQuizIndex()) { q.size }
                                     )
                                 }
 
                                 PageStyle.Column -> {
-                                    PageState.Column(LazyListState(currentQuizIndex))
+                                    PageState.Column(LazyListState(getCurrentQuizIndex()))
                                 }
                             }
                         }
@@ -191,6 +196,7 @@ class AnswerViewModel(
         val answer: Channel<Answer> = Channel(),
         val unanswer: Channel<Answer> = Channel(),
         val updateDuration: Channel<Unit> = Channel(),
+        val updateCurrentQuizIndex: Channel<Int> = Channel(),
     )
 
     val event = Events()
@@ -223,7 +229,20 @@ class AnswerViewModel(
         }
     }
 
-    var currentQuizIndex: Int by state.saveable { mutableIntStateOf(0) }
+    suspend fun getCurrentQuizIndex(): Int {
+        val take = take.filterNotNull().first()
+        val quizzes = quizzes.filterNotNull().first()
+        val targetId = db.transactionWithResult {
+            db.sessionQueries.getCurrentQuizIdByTakeId(take.id)
+                .executeAsOne()
+                .currentQuizId
+        }
+        return if (targetId != null) {
+            quizzes.indexOfFirst { it.quiz.id == targetId }
+        } else {
+            0
+        }
+    }
 
     suspend fun updateDurationDb() {
         val take = take.filterNotNull().first()
@@ -240,7 +259,7 @@ class AnswerViewModel(
                     event.answer.onReceive {
                         val take = take.filterNotNull().first()
                         db.transaction {
-                            it.commit(db, take.id, priority = currentQuizIndex)
+                            it.commit(db, take.id, priority = getCurrentQuizIndex())
                         }
                     }
 
@@ -253,6 +272,19 @@ class AnswerViewModel(
 
                     event.updateDuration.onReceive {
                         updateDurationDb()
+                    }
+
+                    event.updateCurrentQuizIndex.onReceive {
+                        val quizzes = quizzes.filterNotNull().first()
+                        if (it >= quizzes.size || it < 0) {
+                            return@onReceive
+                        }
+                        val takeId = take.filterNotNull().first().id
+                        db.transaction {
+                            db.sessionQueries.updateCurrentQuizId(
+                                currentQuizId = quizzes[it].quiz.id, id = takeId
+                            )
+                        }
                     }
                 }
             }

@@ -14,6 +14,7 @@ CREATE TABLE take(
     lastAccessTimeISO TEXT AS Instant,
     durationSeconds INTEGER NOT NULL DEFAULT 0,
     hidden INTEGER NOT NULL DEFAULT 0,
+    currentQuizId INTEGER,
     UNIQUE (id, sessionId)
 );
 
@@ -171,3 +172,11 @@ DELETE FROM answer WHERE textFrameId = ? AND quizId = ? AND takeId = ?;
 
 removeOptionAnswer:
 DELETE FROM answer WHERE answerOptionId = ? AND optionsFrameId = ? AND quizId = ? AND takeId = ?;
+
+getCurrentQuizIdByTakeId:
+SELECT currentQuizId
+FROM take
+WHERE id = ?;
+
+updateCurrentQuizId:
+UPDATE take SET currentQuizId = ? WHERE id = ?;
