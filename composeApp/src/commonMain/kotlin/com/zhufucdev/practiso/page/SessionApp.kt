@@ -1093,6 +1093,7 @@ private fun TakeStatItem(
 private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
     val takes by model.takeStats.collectAsState()
     val number by remember(takes) { derivedStateOf { takes?.let { it.size + 1 } } }
+    val coroutine = rememberCoroutineScope()
 
     Icon(
         painterResource(Res.drawable.baseline_flag_checkered),
@@ -1119,7 +1120,16 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
         textAlign = TextAlign.Center
     )
     Spacer(Modifier.height(PaddingNormal))
-    LazyColumn(Modifier.weight(1f)) {
+    LazyColumn(
+        Modifier.weight(1f).clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }) {
+            if (model.currentTimer.id.isNotEmpty()) {
+                coroutine.launch {
+                    model.event.updateTimerAndClose.send(Unit)
+                }
+            }
+        }) {
         items(model.timers.size, { model.timers[it].id }) { index ->
             val timer = model.timers[index]
             val state = rememberSwipeToDismissBoxState()
@@ -1130,7 +1140,6 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
                     model.timers.removeAt(index)
                 }
             }
-            val coroutine = rememberCoroutineScope()
 
             AnimatedContent(model.currentTimer.id == timer.id) { active ->
                 if (!active) {
@@ -1179,7 +1188,8 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
                         onClick = null
                     ) {
                         var buffer by remember {
-                            val text = timer.duration.toDouble(DurationUnit.MINUTES).toString()
+                            val text =
+                                ((timer.duration.toDouble(DurationUnit.MINUTES) * 100).roundToInt() / 100f).toString()
                             mutableStateOf(
                                 TextFieldValue(
                                     text = text,
@@ -1212,11 +1222,11 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
                             }),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.None
+                                imeAction = ImeAction.Done
                             ),
                             modifier = Modifier.focusRequester(focusRequester)
                                 .onFocusChanged {
-                                    if (initialized && !it.isFocused) {
+                                    if (initialized && !it.hasFocus) {
                                         coroutine.launch {
                                             model.event.updateTimerAndClose.send(Unit)
                                         }
@@ -1253,7 +1263,6 @@ private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
         }
     }
 
-    val coroutine = rememberCoroutineScope()
     Row(Modifier.fillMaxWidth()) {
         OutlinedButton(
             onClick = {
