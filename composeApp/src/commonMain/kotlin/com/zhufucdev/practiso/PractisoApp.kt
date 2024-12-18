@@ -1,16 +1,21 @@
 package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -18,6 +23,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
@@ -33,9 +39,9 @@ import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -46,6 +52,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
+import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
@@ -56,6 +64,7 @@ import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -229,29 +238,44 @@ private fun NavigatedApp() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopSearchBar(searchViewModel: SearchViewModel) {
-    val padding = remember { Animatable(PaddingNormal.value) }
-    LaunchedEffect(searchViewModel.active) {
-        padding.animateTo(
-            if (searchViewModel.active) 0f else PaddingNormal.value
-        )
-    }
+private fun TopSearchBar(model: SearchViewModel) {
+    val query by model.query.collectAsState()
+    val active by model.active.collectAsState()
+
+    val padding = animateFloatAsState(if (active) 0f else PaddingNormal.value)
+    val coroutine = rememberCoroutineScope()
 
     SearchBar(
         inputField = {
             SearchBarDefaults.InputField(
-                query = searchViewModel.query,
-                onSearch = { },
-                onQueryChange = { searchViewModel.query = it },
-                expanded = searchViewModel.active,
-                onExpandedChange = { searchViewModel.active = it },
+                query = query,
+                onSearch = {},
+                onQueryChange = {
+                    coroutine.launch {
+                        model.event.updateQuery.send(it)
+                    }
+                },
+                expanded = active,
+                onExpandedChange = { expand ->
+                    coroutine.launch {
+                        if (expand) {
+                            model.event.open.send(Unit)
+                        } else {
+                            model.event.close.send(Unit)
+                        }
+                    }
+                },
                 leadingIcon = {
-                    AnimatedContent(searchViewModel.active) { active ->
+                    AnimatedContent(active) { active ->
                         if (!active) {
                             Icon(Icons.Default.Search, "")
                         } else {
                             IconButton(
-                                onClick = { searchViewModel.active = false },
+                                onClick = {
+                                    coroutine.launch {
+                                        model.event.close.send(Unit)
+                                    }
+                                },
                             ) {
                                 Icon(
                                     Icons.AutoMirrored.Default.ArrowBack,
@@ -266,15 +290,51 @@ private fun TopSearchBar(searchViewModel: SearchViewModel) {
                 },
             )
         },
-        expanded = searchViewModel.active,
-        onExpandedChange = { searchViewModel.active = it },
+        expanded = active,
+        onExpandedChange = { expand ->
+            coroutine.launch {
+                if (expand) {
+                    model.event.open.send(Unit)
+                } else {
+                    model.event.close.send(Unit)
+                }
+            }
+        },
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = padding.value.dp)
     ) {
         BackHandlerOrIgnored {
-            searchViewModel.active = false
+            coroutine.launch {
+                model.event.close.send(Unit)
+            }
+        }
+
+        val options by model.result.collectAsState()
+        val searching by model.searching.collectAsState()
+        AnimatedVisibility(visible = searching, enter = fadeIn(), exit = fadeOut()) {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
+        }
+        LazyColumn(Modifier.fillMaxWidth()) {
+            items(
+                count = options.size,
+                key = { i -> options[i]::class.simpleName!! + options[i].id }
+            ) { index ->
+                val option = options[index]
+
+                Box(Modifier.clickable {
+
+                }) {
+                    PractisoOptionView(option, modifier = Modifier.padding(PaddingNormal))
+                }
+
+                if (index < options.lastIndex) {
+                    Box(Modifier.padding(start = PaddingNormal)) {
+                        HorizontalSeparator()
+                    }
+                }
+            }
         }
     }
 }
