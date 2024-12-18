@@ -23,6 +23,8 @@ private typealias DbDimension = com.zhufucdev.practiso.database.Dimension
 private typealias DbSession = com.zhufucdev.practiso.database.Session
 
 sealed interface PractisoOption {
+    val id: Long
+
     @Composable
     fun titleString(): String
 
@@ -30,6 +32,9 @@ sealed interface PractisoOption {
     fun previewString(): String
 
     data class Quiz(val quiz: DbQuiz, val preview: String?) : PractisoOption {
+        override val id: Long
+            get() = quiz.id
+
         @Composable
         override fun titleString(): String {
             return quiz.name?.takeIf(String::isNotEmpty)
@@ -43,6 +48,9 @@ sealed interface PractisoOption {
     }
 
     data class Dimension(val dimension: DbDimension, val quizCount: Int) : PractisoOption {
+        override val id: Long
+            get() = dimension.id
+
         @Composable
         override fun titleString(): String {
             return dimension.name
@@ -60,6 +68,9 @@ sealed interface PractisoOption {
     }
 
     data class Session(val session: DbSession, val quizCount: Int) : PractisoOption {
+        override val id: Long
+            get() = session.id
+
         @Composable
         override fun titleString(): String {
             return session.name
