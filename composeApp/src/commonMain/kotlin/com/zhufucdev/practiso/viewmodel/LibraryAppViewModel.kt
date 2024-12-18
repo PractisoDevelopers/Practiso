@@ -63,13 +63,19 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
     }
 
     @OptIn(SavedStateHandleSaveableApi::class)
-    val limits by state.saveable(saver = protoBufStateListSaver<Int>()) { mutableStateListOf<Int>(5, 5, 5) }
+    val limits by state.saveable(saver = protoBufStateListSaver<Int>()) {
+        mutableStateListOf<Int>(
+            5,
+            5,
+            5
+        )
+    }
 
     data class Events(
         val removeQuiz: Channel<Long> = Channel(),
         val import: Channel<PlatformFile> = Channel(),
         val removeDimensionWithQuizzes: Channel<Long> = Channel(),
-        val removeDimensionKeepQuizzes: Channel<Long> = Channel()
+        val removeDimensionKeepQuizzes: Channel<Long> = Channel(),
     )
 
     val event = Events()
@@ -181,79 +187,33 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
             }
         }
 
-        for (index in pack.archives.quizzes.indices) {
-            val quizArchive = pack.archives.quizzes[index]
-            importState.emit(
-                ImportState.Importing(
-                    total = pack.archives.quizzes.size,
-                    done = index
+        withContext(Dispatchers.IO) {
+            for (index in pack.archives.quizzes.indices) {
+                val quizArchive = pack.archives.quizzes[index]
+                importState.emit(
+                    ImportState.Importing(
+                        total = pack.archives.quizzes.size,
+                        done = index
+                    )
                 )
-            )
 
-            var shouldBreak = false
+                var shouldBreak = false
 
-            db.transaction {
-                quizArchive.importTo(db)
-                val resources = quizArchive.frames.resources().toList()
-                val platform = getPlatform()
-                resources.forEachIndexed { i, (name, requester) ->
-                    val source = pack.resources[name]
-                    if (source == null) {
-                        val skipChannel = Channel<Unit>()
-                        val ignoreChannel = Channel<Unit>()
-                        importState.emit(
-                            ImportState.Error(
-                                model = ErrorModel(
-                                    scope = AppScope.LibraryIntentModel,
-                                    message = ErrorMessage.Localized(
-                                        resource = Res.string.resource_x_for_quiz_y_was_not_found_para,
-                                        args = listOf(
-                                            requester.name ?: name,
-                                            quizArchive.name
-                                        )
-                                    )
-                                ),
-                                cancel = cancelChannel,
-                                skip = skipChannel,
-                                ignore = ignoreChannel
-                            )
-                        )
-
-                        select<Unit> {
-                            skipChannel.onReceive {
-                                resources.subList(0, i).forEach { (name) ->
-                                    platform.filesystem
-                                        .delete(platform.resourcePath.resolve(name))
-                                }
-                                rollback()
-                            }
-
-                            cancelChannel.onReceive {
-                                shouldBreak = true
-                                rollback()
-                            }
-
-                            ignoreChannel.onReceive {
-                            }
-                        }
-                    } else {
-                        val skipChannel = Channel<Unit>()
-                        val ignoreChannel = Channel<Unit>()
-                        try {
-                            platform.filesystem
-                                .sink(platform.resourcePath.resolve(name))
-                                .buffer()
-                                .use { b ->
-                                    b.writeAll(source())
-                                }
-                        } catch (e: Exception) {
+                db.transaction {
+                    quizArchive.importTo(db)
+                    val resources = quizArchive.frames.resources().toList()
+                    val platform = getPlatform()
+                    resources.forEachIndexed { i, (name, requester) ->
+                        val source = pack.resources[name]
+                        if (source == null) {
+                            val skipChannel = Channel<Unit>()
+                            val ignoreChannel = Channel<Unit>()
                             importState.emit(
                                 ImportState.Error(
                                     model = ErrorModel(
                                         scope = AppScope.LibraryIntentModel,
-                                        exception = e,
                                         message = ErrorMessage.Localized(
-                                            resource = Res.string.failed_to_copy_resource_x_for_quiz_y_para,
+                                            resource = Res.string.resource_x_for_quiz_y_was_not_found_para,
                                             args = listOf(
                                                 requester.name ?: name,
                                                 quizArchive.name
@@ -270,30 +230,78 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
                                 skipChannel.onReceive {
                                     resources.subList(0, i).forEach { (name) ->
                                         platform.filesystem
-                                            .delete(
-                                                platform.resourcePath.resolve(
-                                                    name
-                                                )
-                                            )
+                                            .delete(platform.resourcePath.resolve(name))
                                     }
                                     rollback()
-                                }
-
-                                ignoreChannel.onReceive {
                                 }
 
                                 cancelChannel.onReceive {
                                     shouldBreak = true
                                     rollback()
                                 }
+
+                                ignoreChannel.onReceive {
+                                }
+                            }
+                        } else {
+                            val skipChannel = Channel<Unit>()
+                            val ignoreChannel = Channel<Unit>()
+                            try {
+                                platform.filesystem
+                                    .sink(platform.resourcePath.resolve(name))
+                                    .buffer()
+                                    .use { b ->
+                                        b.writeAll(source())
+                                    }
+                            } catch (e: Exception) {
+                                importState.emit(
+                                    ImportState.Error(
+                                        model = ErrorModel(
+                                            scope = AppScope.LibraryIntentModel,
+                                            exception = e,
+                                            message = ErrorMessage.Localized(
+                                                resource = Res.string.failed_to_copy_resource_x_for_quiz_y_para,
+                                                args = listOf(
+                                                    requester.name ?: name,
+                                                    quizArchive.name
+                                                )
+                                            )
+                                        ),
+                                        cancel = cancelChannel,
+                                        skip = skipChannel,
+                                        ignore = ignoreChannel
+                                    )
+                                )
+
+                                select<Unit> {
+                                    skipChannel.onReceive {
+                                        resources.subList(0, i).forEach { (name) ->
+                                            platform.filesystem
+                                                .delete(
+                                                    platform.resourcePath.resolve(
+                                                        name
+                                                    )
+                                                )
+                                        }
+                                        rollback()
+                                    }
+
+                                    ignoreChannel.onReceive {
+                                    }
+
+                                    cancelChannel.onReceive {
+                                        shouldBreak = true
+                                        rollback()
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if (shouldBreak) {
-                break
+                if (shouldBreak) {
+                    break
+                }
             }
         }
 
