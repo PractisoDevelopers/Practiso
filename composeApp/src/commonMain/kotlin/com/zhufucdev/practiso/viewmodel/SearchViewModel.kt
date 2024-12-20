@@ -54,7 +54,7 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                             }
                         mutex.lock()
                         options.addAll(quizFrames)
-                        emit(options)
+                        emit(options.toList())
                         mutex.unlock()
                     }
 
@@ -68,7 +68,7 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                             .filter { query in it.dimension.name }
                         mutex.lock()
                         options.addAll(dimensions)
-                        emit(options)
+                        emit(options.toList())
                         mutex.unlock()
                     }
                 }

@@ -39,6 +39,7 @@ import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,10 +47,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.toRoute
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.HorizontalSeparator
@@ -63,6 +67,8 @@ import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.style.PaddingNormal
+import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
+import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
@@ -74,6 +80,7 @@ import practiso.composeapp.generated.resources.deactivate_global_search_span
 import practiso.composeapp.generated.resources.library_para
 import practiso.composeapp.generated.resources.search_app_para
 import practiso.composeapp.generated.resources.session_para
+import kotlin.reflect.typeOf
 
 @Composable
 fun PractisoApp(
@@ -97,9 +104,7 @@ fun PractisoApp(
                         Spacer(Modifier.padding(top = PaddingNormal))
                         TopLevelDestination.entries.forEach {
                             NavigationRailItem(
-                                selected = navBackStackEntry?.destination?.route?.startsWith(
-                                    it.route
-                                ) == true,
+                                selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
                                 onClick = {
                                     if (navBackStackEntry?.destination?.route != it.route) {
                                         navController.navigate(it.route) {
@@ -120,9 +125,7 @@ fun PractisoApp(
                         Spacer(Modifier.padding(top = PaddingNormal))
                         TopLevelDestination.entries.forEach {
                             NavigationDrawerItem(
-                                selected = navBackStackEntry?.destination?.route?.startsWith(
-                                    it.route
-                                ) == true,
+                                selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
                                 onClick = {
                                     if (navBackStackEntry?.destination?.route != it.route) {
                                         navController.navigate(it.route) {
@@ -157,7 +160,19 @@ private fun ScaffoldedApp(
 
     Scaffold(
         topBar = {
-            TopSearchBar(searchViewModel)
+            TopSearchBar(searchViewModel) {
+                navController.navigate(
+                    LibraryAppViewModel.Revealable(
+                        id = it.id,
+                        type =
+                            when (it) {
+                                is PractisoOption.Dimension -> LibraryAppViewModel.RevealableType.Dimension
+                                is PractisoOption.Quiz -> LibraryAppViewModel.RevealableType.Quiz
+                                is PractisoOption.Session -> error("Unsupported revealing type: Session")
+                            }
+                    )
+                )
+            }
         },
         bottomBar = {
             when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
@@ -165,9 +180,7 @@ private fun ScaffoldedApp(
                     NavigationBar {
                         TopLevelDestination.entries.forEach {
                             NavigationBarItem(
-                                selected = navBackStackEntry?.destination?.route?.startsWith(
-                                    it.route
-                                ) == true,
+                                selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
                                 onClick = {
                                     if (navBackStackEntry?.destination?.route != it.route) {
                                         navController.navigate(it.route) {
@@ -205,16 +218,23 @@ internal enum class TopLevelDestination(
     val nameRes: StringResource,
     val icon: @Composable () -> Unit,
     val route: String,
+    val isCurrent: (NavDestination) -> Boolean,
 ) {
     Session(
         nameRes = Res.string.session_para,
         icon = { Icon(Icons.Default.Star, "") },
-        route = "session"
+        route = "session",
+        isCurrent = {
+            it.route?.startsWith("session") == true
+        }
     ),
     Library(
         nameRes = Res.string.library_para,
         icon = { Icon(painterResource(Res.drawable.baseline_library_books), "") },
-        route = "library"
+        route = "library",
+        isCurrent = {
+            it.route?.startsWith("library") == true || it.hasRoute(LibraryAppViewModel.Revealable::class)
+        }
     ),
 }
 
@@ -230,6 +250,18 @@ private fun NavigatedApp() {
         composable(TopLevelDestination.Library.route) {
             LibraryApp()
         }
+        composable<LibraryAppViewModel.Revealable>(
+            typeMap = mapOf(
+                typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
+                typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
+            )
+        ) { backtrace ->
+            val model: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory)
+            LaunchedEffect(backtrace) {
+                model.event.reveal.send(backtrace.toRoute())
+            }
+            LibraryApp(model)
+        }
         composable("${TopLevelDestination.Session.route}/new") {
             SessionStarter()
         }
@@ -238,7 +270,7 @@ private fun NavigatedApp() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopSearchBar(model: SearchViewModel) {
+private fun TopSearchBar(model: SearchViewModel, onSearchResultClick: (PractisoOption) -> Unit) {
     val query by model.query.collectAsState()
     val active by model.active.collectAsState()
 
@@ -316,15 +348,18 @@ private fun TopSearchBar(model: SearchViewModel) {
         AnimatedVisibility(visible = searching, enter = fadeIn(), exit = fadeOut()) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
         }
-        LazyColumn(Modifier.fillMaxWidth()) {
+        LazyColumn {
             items(
                 count = options.size,
                 key = { i -> options[i]::class.simpleName!! + options[i].id }
             ) { index ->
                 val option = options[index]
 
-                Box(Modifier.clickable {
-
+                Box(Modifier.fillMaxWidth().animateItem().clickable {
+                    coroutine.launch {
+                        model.event.close.send(Unit)
+                    }
+                    onSearchResultClick(option)
                 }) {
                     PractisoOptionView(option, modifier = Modifier.padding(PaddingNormal))
                 }

@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.core.bundle.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavType
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
@@ -21,6 +23,7 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.source
 import com.zhufucdev.practiso.protoBufStateListSaver
+import com.zhufucdev.practiso.protobufMutableStateFlowSaver
 import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -30,11 +33,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import okio.buffer
 import okio.gzip
 import okio.use
@@ -64,18 +69,68 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
 
     @OptIn(SavedStateHandleSaveableApi::class)
     val limits by state.saveable(saver = protoBufStateListSaver<Int>()) {
-        mutableStateListOf<Int>(
-            5,
-            5,
-            5
-        )
+        mutableStateListOf<Int>(5, 5, 5)
     }
+
+    @OptIn(SavedStateHandleSaveableApi::class)
+    private val _revealing by state.saveable(saver = protobufMutableStateFlowSaver()) {
+        MutableStateFlow<Revealable?>(null)
+    }
+
+    @Serializable
+    data class Revealable(val id: Long, val type: RevealableType)
+
+    @Serializable
+    enum class RevealableType {
+        Dimension, Quiz
+    }
+
+    object RevealableNavType : NavType<Revealable>(isNullableAllowed = false) {
+        override fun get(bundle: Bundle, key: String): Revealable? =
+            bundle.getString(key)?.let(::parseValue)
+
+        override fun parseValue(value: String): Revealable =
+            value.split("_").let {
+                Revealable(
+                    type = RevealableType.valueOf(it[0]),
+                    id = it[1].toLong()
+                )
+            }
+
+        override fun put(
+            bundle: Bundle,
+            key: String,
+            value: Revealable,
+        ) {
+            bundle.putString(key, "${value.type.name}_${value.id}")
+        }
+    }
+
+    object RevealableTypeNavType : NavType<RevealableType>(isNullableAllowed = false) {
+        override fun get(
+            bundle: Bundle,
+            key: String,
+        ): RevealableType? = bundle.getString(key)?.let(RevealableType::valueOf)
+
+        override fun parseValue(value: String): RevealableType = RevealableType.valueOf(value)
+
+        override fun put(
+            bundle: Bundle,
+            key: String,
+            value: RevealableType,
+        ) {
+            bundle.putString(key, value.name)
+        }
+    }
+
+    val revealing: StateFlow<Revealable?> get() = _revealing
 
     data class Events(
         val removeQuiz: Channel<Long> = Channel(),
         val import: Channel<PlatformFile> = Channel(),
         val removeDimensionWithQuizzes: Channel<Long> = Channel(),
         val removeDimensionKeepQuizzes: Channel<Long> = Channel(),
+        val reveal: Channel<Revealable> = Channel(),
     )
 
     val event = Events()
@@ -331,6 +386,10 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
                             db.quizQueries.removeQuizWithinDimension(it)
                             db.dimensionQueries.removeDimension(it)
                         }
+                    }
+
+                    event.reveal.onReceive {
+                        _revealing.emit(it)
                     }
                 }
             }
