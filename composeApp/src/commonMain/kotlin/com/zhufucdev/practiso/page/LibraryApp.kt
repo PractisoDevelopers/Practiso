@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -25,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +35,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -148,6 +155,7 @@ fun LibraryApp(
     val templates by model.templates.collectAsState(null, Dispatchers.IO)
     val dimensions by model.dimensions.collectAsState(null, Dispatchers.IO)
     val quizzes by model.quiz.collectAsState(null, Dispatchers.IO)
+    val revealing by model.revealing.collectAsState()
 
     AnimatedContent(templates?.isEmpty() == true && dimensions?.isEmpty() == true && quizzes?.isEmpty() == true) { empty ->
         if (empty) {
@@ -157,7 +165,37 @@ fun LibraryApp(
                 helper = { Text(stringResource(Res.string.add_item_to_get_started_para)) }
             )
         } else {
+            val listState = rememberLazyListState()
+
+            LaunchedEffect(revealing, templates, quizzes, dimensions) {
+                if (templates == null || quizzes == null || dimensions == null) {
+                    return@LaunchedEffect
+                }
+
+                val offsets = buildList {
+                    add(0)
+                    add(last() + (templates?.size ?: 0) + 1)
+                    add(last() + (dimensions?.size ?: 0) + 1)
+                }
+                revealing?.let {
+                    when (it.type) {
+                        LibraryAppViewModel.RevealableType.Dimension -> {
+                            val localIndex = dimensions!!.indexOfFirst { d -> d.id == it.id }
+                            model.limits[1] = maxOf(model.limits[1], localIndex + 1)
+                            listState.animateScrollToItem(offsets[1] + localIndex)
+                        }
+
+                        LibraryAppViewModel.RevealableType.Quiz -> {
+                            val localIndex = quizzes!!.indexOfFirst { q -> q.id == it.id }
+                            model.limits[2] = maxOf(model.limits[2], localIndex + 1)
+                            listState.animateScrollToItem(offsets[2] + localIndex)
+                        }
+                    }
+                }
+            }
+
             LazyColumn(
+                state = listState,
                 modifier = Modifier.padding(top = PaddingNormal)
                     .fillMaxWidth(),
             ) {
@@ -180,7 +218,7 @@ fun LibraryApp(
                     onIncreaseLimit = {
                         model.limits[0] = it
                     },
-                    id = { "template_" + it.id }
+                    id = { "template_" + it.id },
                 )
 
                 flatContent(
@@ -225,7 +263,11 @@ fun LibraryApp(
                     onIncreaseLimit = {
                         model.limits[1] = it
                     },
-                    id = { "dimension_" + it.dimension.id }
+                    id = { "dimension_" + it.dimension.id },
+                    revealingIndex =
+                        revealing
+                            ?.takeIf { it.type == LibraryAppViewModel.RevealableType.Dimension }
+                            ?.let { r -> dimensions?.indexOfFirst { it.id == r.id } }
                 )
 
                 flatContent(
@@ -257,7 +299,11 @@ fun LibraryApp(
                     onIncreaseLimit = {
                         model.limits[2] = it
                     },
-                    id = { "quiz_" + it.quiz.id }
+                    id = { "quiz_" + it.quiz.id },
+                    revealingIndex =
+                        revealing
+                            ?.takeIf { it.type == LibraryAppViewModel.RevealableType.Quiz }
+                            ?.let { r -> quizzes?.indexOfFirst { it.id == r.id } }
                 )
 
                 item("space") {
@@ -314,6 +360,7 @@ fun <T> LazyListScope.flatContent(
     limit: Int,
     onIncreaseLimit: (Int) -> Unit,
     skeletonsCount: Int = 5,
+    revealingIndex: Int? = null,
 ) {
     if (value?.isEmpty() == true) {
         return
@@ -329,7 +376,26 @@ fun <T> LazyListScope.flatContent(
         val hasShowMoreItem = limit < t.size
         t.subList(0, minOf(limit, t.size)).forEachIndexed { index, v ->
             item(id(v)) {
-                content(v)
+                val animator = remember { Animatable(Color.Transparent) }
+                val foreground by animator.asState()
+                val highlightColor = MaterialTheme.colorScheme.primaryContainer
+                LaunchedEffect(v, index, revealingIndex) {
+                    if (index == revealingIndex) {
+                        repeat(3) {
+                            animator.animateTo(highlightColor)
+                            animator.animateTo(Color.Transparent)
+                        }
+                    }
+                }
+                Box(Modifier.drawWithContent {
+                    drawContent()
+                    drawRect(
+                        foreground, Offset.Zero, size,
+                        alpha = 0.5f, blendMode = BlendMode.Lighten
+                    )
+                }) {
+                    content(v)
+                }
                 if (index < t.lastIndex || hasShowMoreItem) {
                     Box(Modifier.padding(start = PaddingNormal)) {
                         HorizontalSeparator()

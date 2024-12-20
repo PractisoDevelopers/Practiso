@@ -21,19 +21,35 @@ inline fun <reified T> protoBufStateListSaver() = listSaver(
 @OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T> protobufSaver() = Saver<T, ByteArray>(
     save = {
-        ProtoBuf.encodeToByteArray(serializer<T>(), it)
+        if (it == null) {
+            byteArrayOf()
+        } else {
+            ProtoBuf.encodeToByteArray(serializer<T>(), it)
+        }
     },
     restore = {
-        ProtoBuf.decodeFromByteArray(serializer<T>(), it)
+        if (it.isEmpty()) {
+            null
+        } else {
+            ProtoBuf.decodeFromByteArray(serializer<T>(), it)
+        }
     }
 )
 
 @OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T> protobufMutableStateFlowSaver() = Saver<MutableStateFlow<T>, ByteArray>(
     save = {
-        ProtoBuf.encodeToByteArray(serializer<T>(), it.value)
+        if (it.value == null) {
+            byteArrayOf()
+        } else {
+            ProtoBuf.encodeToByteArray(serializer<T>(), it.value)
+        }
     },
     restore = {
-        MutableStateFlow(ProtoBuf.decodeFromByteArray(serializer<T>(), it))
+        if (it.isEmpty()) {
+            null
+        } else {
+            MutableStateFlow(ProtoBuf.decodeFromByteArray(serializer<T>(), it))
+        }
     }
 )
