@@ -103,12 +103,18 @@ class AnswerViewModel(
         MutableStateFlow<Duration?>(null).apply {
             viewModelScope.launch {
                 take.filterNotNull().collectLatest {
-                    val startDuration = it.durationSeconds.seconds
-                    emit(startDuration)
-                    val startInstant = Clock.System.now()
+                    var currentDuration = it.durationSeconds.seconds
+                    emit(currentDuration)
+                    var startInstant = Clock.System.now()
                     while (true) {
                         delay(0.5.seconds)
-                        emit(startDuration + (Clock.System.now() - startInstant))
+                        val deltaT = Clock.System.now() - startInstant
+                        if (deltaT > 10.seconds) {
+                            continue
+                        }
+                        currentDuration += deltaT
+                        emit(currentDuration)
+                        startInstant = Clock.System.now()
                     }
                 }
             }
