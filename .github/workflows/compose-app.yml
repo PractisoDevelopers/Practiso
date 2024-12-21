@@ -18,12 +18,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-  
+      - name: Extract Android Keystore
+        run: echo "$ks" > keystore_android
+        env:
+          ks: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Extract Android Keystore Properties
+        run: echo "$ksp" > keystore.properties
+        env:
+          ksp: ${{ secrets.KEYSTORE_PROPERTIES }}
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew composeApp:assembleRelease
-        
+
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
@@ -42,11 +50,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+      - name: Extract Android Keystore
+        run: echo "$ks" > keystore_android
+        env:
+          ks: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Extract Android Keystore Properties
+        run: echo "$ksp" > keystore.properties
+        env:
+          ksp: ${{ secrets.KEYSTORE_PROPERTIES }}
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew composeApp:packageReleaseDistributionForCurrentOS
-      
+
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
@@ -65,11 +82,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+      - name: Extract Android Keystore
+        run: echo "$ks" > keystore_android
+        env:
+          ks: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Extract Android Keystore Properties
+        run: echo "$ksp" > keystore.properties
+        env:
+          ksp: ${{ secrets.KEYSTORE_PROPERTIES }}
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew composeApp:packageReleaseDistributionForCurrentOS
-      
+
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
@@ -88,11 +114,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+      - name: Extract Android Keystore
+        run: echo "$ks" > keystore_android
+        env:
+          ks: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Extract Android Keystore Properties
+        run: echo "$ksp" > keystore.properties
+        env:
+          ksp: ${{ secrets.KEYSTORE_PROPERTIES }}
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew composeApp:packageReleaseDistributionForCurrentOS
-      
+
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
@@ -101,7 +136,7 @@ jobs:
 
   publish:
     name: Publish Release
-    needs: [build-android, build-desktop-linux, build-desktop-macos, build-desktop-windows]
+    needs: [ build-android, build-desktop-linux, build-desktop-macos, build-desktop-windows ]
     runs-on: ubuntu-latest
 
     permissions:
