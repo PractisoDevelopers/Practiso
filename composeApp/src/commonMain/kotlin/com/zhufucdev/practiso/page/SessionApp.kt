@@ -744,7 +744,7 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
                     Surface(
                         shape = CardDefaults.shape,
                         color =
-                            if (index == currentIndex) MaterialTheme.colorScheme.primaryContainer
+                            if (index == currentIndex) MaterialTheme.colorScheme.secondaryContainer
                             else Color.Transparent,
                         onClick = {
                             coroutine.launch {
