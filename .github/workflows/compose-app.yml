@@ -101,8 +101,10 @@ jobs:
           path: composeApp/build/compose/binaries/main-release/exe/*.exe
 
   publish:
-    name: Publish release
+    name: Publish Release
+    needs: [build-android, build-desktop-linux, build-desktop-macos, build-desktop-windows]
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
     steps:
