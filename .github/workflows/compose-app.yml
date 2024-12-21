@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+  workflow_dispatch:
+
+
 jobs:
   build-android:
 
