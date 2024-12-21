@@ -1,6 +1,10 @@
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -12,9 +16,10 @@ plugins {
     alias(libs.plugins.skie)
 }
 
+val appVersion = "1.0.0-alpha"
+
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -33,7 +38,7 @@ kotlin {
         }
     }
 
-    targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().forEach{
+    targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().forEach {
         it.binaries.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.Framework>()
             .forEach { lib ->
                 lib.isStatic = false
@@ -90,6 +95,10 @@ kotlin {
     }
 }
 
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+
 android {
     namespace = "com.zhufucdev.practiso"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -98,12 +107,21 @@ android {
     sourceSets["main"].res.srcDirs("src/androidMain/res")
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+    }
+
     defaultConfig {
         applicationId = "com.zhufucdev.practiso"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = appVersion
     }
     packaging {
         resources {
@@ -112,7 +130,12 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules-android.pro"
+            )
         }
     }
     compileOptions {
@@ -132,15 +155,27 @@ compose.desktop {
         mainClass = "com.zhufucdev.practiso.MainKt"
 
         nativeDistributions {
+            packageName = rootProject.name
+            packageVersion =
+                appVersion
+                    .takeIf { it.endsWith("-alpha") }
+                    ?.let { it.substring(0, it.indexOf('-')) }
+                    ?: appVersion
+
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            modules("java.sql")
+
             linux {
                 modules("jdk.security.auth")
             }
             macOS {
                 jvmArgs("-Dapple.awt.application.appearance=system")
             }
-            packageName = "com.zhufucdev.practiso"
-            packageVersion = "1.0.0"
+        }
+
+        buildTypes.release.proguard {
+            version.set("7.6.1")
+            configurationFiles.from(project.file("proguard-rules-desktop.pro"))
         }
     }
 }
