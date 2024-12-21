@@ -244,7 +244,7 @@ class AnswerViewModel(
                 .currentQuizId
         }
         return if (targetId != null) {
-            quizzes.indexOfFirst { it.quiz.id == targetId }
+            maxOf(0, quizzes.indexOfFirst { it.quiz.id == targetId })
         } else {
             0
         }
