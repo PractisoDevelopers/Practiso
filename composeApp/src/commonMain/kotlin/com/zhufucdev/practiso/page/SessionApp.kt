@@ -103,8 +103,11 @@ import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.database.TakeStat
+import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.calculateTakeCorrectQuizCount
 import com.zhufucdev.practiso.datamodel.calculateTakeNumber
+import com.zhufucdev.practiso.datamodel.createSession
+import com.zhufucdev.practiso.datamodel.createTake
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -121,6 +124,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import nl.jacobras.humanreadable.HumanReadable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -145,6 +149,7 @@ import practiso.composeapp.generated.resources.minutes_span
 import practiso.composeapp.generated.resources.n_percentage
 import practiso.composeapp.generated.resources.n_questions_correct_span
 import practiso.composeapp.generated.resources.n_questions_incorrect_span
+import practiso.composeapp.generated.resources.new_session_para
 import practiso.composeapp.generated.resources.new_take_para
 import practiso.composeapp.generated.resources.new_timer_para
 import practiso.composeapp.generated.resources.no_recommendations_span
@@ -194,7 +199,21 @@ fun SessionApp(
                         model = model,
                         columnScope = this,
                         popupScope = this@SharedElementTransitionPopup,
-                        onCreate = {}
+                        onCreate = {
+                            coroutine.launch {
+                                val sessionId = createSession(
+                                    name = it.sessionName ?: getString(Res.string.new_session_para),
+                                    selection = it.selection,
+                                    db = model.db
+                                )
+                                val takeId = createTake(
+                                    sessionId = sessionId,
+                                    timers = listOf(),
+                                    db = model.db
+                                )
+                                model.event.startTake.send(takeId)
+                            }
+                        }
                     )
                 }
             }
@@ -653,9 +672,19 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
     model: SessionViewModel,
     columnScope: ColumnScope,
     popupScope: SharedElementTransitionPopupScope,
-    onCreate: () -> Unit,
+    onCreate: (SessionCreator) -> Unit,
 ) {
-    var loadingRecommendations by remember { mutableStateOf(true) }
+    val useRecommendations by model.useRecommendations.collectAsState()
+    val items by (
+            if (useRecommendations) model.smartRecommendations
+            else model.recentRecommendations
+            ).collectAsState(null, Dispatchers.IO)
+
+    val loadingRecommendations by remember {
+        derivedStateOf {
+            items == null
+        }
+    }
 
     Text(
         stringResource(Res.string.session_para),
@@ -696,44 +725,41 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
         )
         val coroutine = rememberCoroutineScope()
         Switch(
-            checked = model.useRecommendations,
+            checked = useRecommendations,
             onCheckedChange = { coroutine.launch { model.event.toggleRecommendations.send(it) } }
         )
     }
 
     Spacer(Modifier.height(PaddingNormal))
 
-    val items by (
-            if (model.useRecommendations) model.smartRecommendations
-            else model.recentRecommendations
-            ).collectAsState(null)
-
-    LaunchedEffect(items) {
-        loadingRecommendations = items == null
-    }
-
+    val currentIndex by model.currentCreatorIndex.collectAsState()
     items.let {
         if (it?.isNotEmpty() == true) {
+            val coroutine = rememberCoroutineScope()
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()).weight(1f)
                     .fillMaxWidth()
             ) {
-                it.forEach {
+                it.forEachIndexed { index, option ->
                     Surface(
                         shape = CardDefaults.shape,
-                        color = Color.Transparent,
+                        color =
+                            if (index == currentIndex) MaterialTheme.colorScheme.primaryContainer
+                            else Color.Transparent,
                         onClick = {
-
+                            coroutine.launch {
+                                model.event.toggleCreator.send(index)
+                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(Modifier.padding(PaddingSmall)) {
                             Text(
-                                it.titleString(),
+                                option.titleString(),
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                it.previewString(),
+                                option.previewString(),
                                 style = MaterialTheme.typography.labelMedium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -784,7 +810,12 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
 
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         FilledTonalButton(
-            onClick = {},
+            enabled = currentIndex >= 0,
+            onClick = {
+                items?.let {
+                    onCreate(it[currentIndex])
+                }
+            },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             content = { Text(stringResource(Res.string.start_para)) }
         )

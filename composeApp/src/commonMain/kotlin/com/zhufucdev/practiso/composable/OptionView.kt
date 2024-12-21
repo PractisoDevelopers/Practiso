@@ -13,8 +13,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.style.PaddingSmall
-import com.zhufucdev.practiso.viewmodel.PractisoOption
 
 @Composable
 fun PractisoOptionSkeleton(

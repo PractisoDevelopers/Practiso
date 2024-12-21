@@ -16,6 +16,8 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.composable.FlipCardState
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.TakeStat
+import com.zhufucdev.practiso.datamodel.PractisoOption
+import com.zhufucdev.practiso.datamodel.createTake
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -34,7 +36,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -86,35 +87,20 @@ class TakeStarterViewModel(
         val toggleShowHidden: Channel<Unit> = Channel(),
         val createAndStart: Channel<Unit> = Channel(),
         val selectTimer: Channel<String> = Channel(),
-        val updateTimerAndClose: Channel<Unit> = Channel()
+        val updateTimerAndClose: Channel<Unit> = Channel(),
     )
 
     val event = Events()
 
-    private suspend fun createTake(): Long {
-        val takeId = db.transactionWithResult {
-            db.sessionQueries.updateSessionAccessTime(
-                Clock.System.now(),
-                option.value!!.session.id
-            )
-            db.sessionQueries.insertTake(
-                sessionId = option.value!!.session.id,
-                creationTimeISO = Clock.System.now(),
-            )
-            db.quizQueries.lastInsertRowId().executeAsOne()
-        }
-
-        db.transaction {
-            timers.forEach { d ->
-                db.sessionQueries.associateTimerWithTake(
-                    takeId,
-                    durationSeconds = d.duration.inWholeMilliseconds / 1000.0
-                )
-            }
-        }
-
+    private suspend fun newTake(): Long {
+        val takeId = createTake(
+            sessionId = option.value!!.session.id,
+            timers = timers.map(
+                Timer::duration
+            ),
+            db = db
+        )
         timers.clear()
-
         return takeId
     }
 
@@ -123,7 +109,7 @@ class TakeStarterViewModel(
             while (viewModelScope.isActive) {
                 select {
                     event.create.onReceive {
-                        createTake()
+                        newTake()
                     }
 
                     event.flip.onReceive {
@@ -171,7 +157,7 @@ class TakeStarterViewModel(
                     }
 
                     event.createAndStart.onReceive {
-                        val id = createTake()
+                        val id = newTake()
                         currentTakeId = id
                         uiCoroutineScope?.launch {
                             flipCardState.flip(0)

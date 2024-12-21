@@ -1,9 +1,11 @@
-package com.zhufucdev.practiso.viewmodel
+package com.zhufucdev.practiso.datamodel
 
 import androidx.compose.runtime.Composable
+import com.zhufucdev.practiso.database.Dimension
+import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.QuizQueries
+import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.SessionQueries
-import com.zhufucdev.practiso.datamodel.QuizFrames
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -18,9 +20,9 @@ import practiso.composeapp.generated.resources.n_questions_dot_created_date_para
 import practiso.composeapp.generated.resources.n_questions_span
 import practiso.composeapp.generated.resources.new_question_para
 
-private typealias DbQuiz = com.zhufucdev.practiso.database.Quiz
-private typealias DbDimension = com.zhufucdev.practiso.database.Dimension
-private typealias DbSession = com.zhufucdev.practiso.database.Session
+private typealias DbQuiz = Quiz
+private typealias DbDimension = Dimension
+private typealias DbSession = Session
 
 sealed interface PractisoOption {
     val id: Long
@@ -47,7 +49,8 @@ sealed interface PractisoOption {
         }
     }
 
-    data class Dimension(val dimension: DbDimension, val quizCount: Int) : PractisoOption {
+    data class Dimension(val dimension: DbDimension, val quizCount: Int) : PractisoOption,
+        SessionCreator {
         override val id: Long
             get() = dimension.id
 
@@ -65,6 +68,11 @@ sealed interface PractisoOption {
                     quizCount
                 )
             else stringResource(Res.string.empty_span)
+
+        override val selection: Selection
+            get() = Selection(dimensionIds = setOf(id))
+        override val sessionName: String?
+            get() = dimension.name
     }
 
     data class Session(val session: DbSession, val quizCount: Int) : PractisoOption {
@@ -86,6 +94,7 @@ sealed interface PractisoOption {
             )
         }
     }
+
 }
 
 fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
