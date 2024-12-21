@@ -63,12 +63,12 @@ import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.currentNavController
+import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
-import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
@@ -168,7 +168,7 @@ private fun ScaffoldedApp(
                             when (it) {
                                 is PractisoOption.Dimension -> LibraryAppViewModel.RevealableType.Dimension
                                 is PractisoOption.Quiz -> LibraryAppViewModel.RevealableType.Quiz
-                                is PractisoOption.Session -> error("Unsupported revealing type: Session")
+                                else -> error("Unsupported revealing type: ${it::class.simpleName}")
                             }
                     )
                 )

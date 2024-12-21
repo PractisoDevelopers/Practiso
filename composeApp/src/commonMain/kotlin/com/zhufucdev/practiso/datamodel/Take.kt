@@ -9,6 +9,8 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.datetime.Clock
+import kotlin.time.Duration
 
 fun calculateTakeNumber(db: AppDatabase, takeId: Long): Flow<Int> = channelFlow {
     db.sessionQueries.getTakeById(takeId)
@@ -49,3 +51,28 @@ private fun calculateCorrectness(quizzes: List<QuizFrames>, answers: List<Answer
             }
         }
     }
+
+suspend fun createTake(sessionId: Long, timers: List<Duration>, db: AppDatabase): Long {
+    val takeId = db.transactionWithResult {
+        db.sessionQueries.updateSessionAccessTime(
+            Clock.System.now(),
+            sessionId
+        )
+        db.sessionQueries.insertTake(
+            sessionId = sessionId,
+            creationTimeISO = Clock.System.now(),
+        )
+        db.quizQueries.lastInsertRowId().executeAsOne()
+    }
+
+    db.transaction {
+        timers.forEach { d ->
+            db.sessionQueries.associateTimerWithTake(
+                takeId,
+                durationSeconds = d.inWholeMilliseconds / 1000.0
+            )
+        }
+    }
+
+    return takeId
+}

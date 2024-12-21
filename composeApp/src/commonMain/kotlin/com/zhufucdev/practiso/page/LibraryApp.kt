@@ -55,6 +55,7 @@ import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
@@ -64,7 +65,6 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
-import com.zhufucdev.practiso.viewmodel.PractisoOption
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
 import kotlinx.coroutines.Dispatchers

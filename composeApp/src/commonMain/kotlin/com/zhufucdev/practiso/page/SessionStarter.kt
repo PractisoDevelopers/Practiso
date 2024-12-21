@@ -51,11 +51,11 @@ import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
-import com.zhufucdev.practiso.viewmodel.PractisoOption
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel.Item
 import kotlinx.coroutines.launch

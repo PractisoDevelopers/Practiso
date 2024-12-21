@@ -16,6 +16,12 @@ getAllDimensions:
 SELECT *
 FROM dimension;
 
+getRecentDimensions:
+SELECT *
+FROM dimension
+ORDER BY id
+LIMIT ?;
+
 getDimensionByName:
 SELECT *
 FROM dimension

@@ -15,7 +15,10 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.concat
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
+import com.zhufucdev.practiso.datamodel.PractisoOption
+import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.getQuizFrames
+import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.protobufSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -29,7 +32,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.Serializable
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateHandle) :
@@ -37,12 +39,6 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
     var newSessionName by state.saveable { mutableStateOf("") }
     var currentItemIds by state.saveable { mutableStateOf(emptySet<Long>()) }
         private set
-
-    @Serializable
-    data class Selection(
-        val quizIds: Set<Long> = emptySet(),
-        val dimensionIds: Set<Long> = emptySet(),
-    )
 
     var selection by state.saveable(stateSaver = protobufSaver()) { mutableStateOf(Selection()) }
         private set

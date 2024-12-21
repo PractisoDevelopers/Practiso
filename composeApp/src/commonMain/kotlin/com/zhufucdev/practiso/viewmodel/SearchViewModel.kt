@@ -11,7 +11,9 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.getQuizFrames
+import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.protobufMutableStateFlowSaver
 import kotlinx.coroutines.Dispatchers

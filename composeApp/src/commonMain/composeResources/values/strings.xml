@@ -138,4 +138,14 @@
         <item quantity="other">%1$d questions incorrect</item>
         <item quantity="one">%1$d question incorrect</item>
     </plurals>
+    <string name="x_and_more_span">%1$s and more</string>
+    <string name="recently_created_para">Recently created</string>
+    <string name="least_accessed_para">Least accessed</string>
+    <string name="recommended_for_you_para">Recommended for you</string>
+    <string name="new_session_para">New session</string>
+    <string name="x_and_n_more_para">%1$s and %2$d more</string>
+    <plurals name="n_questions_in_dimension">
+        <item quantity="one">%1$d question in %2$s</item>
+        <item quantity="other">%1$d questions in %2$s</item>
+    </plurals>
 </resources>
