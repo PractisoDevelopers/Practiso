@@ -22,7 +22,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: Extract Android Keystore
-        run: echo "$ks" > keystore_android
+        run: echo "$ks" | base64 -d > keystore_android
         env:
           ks: ${{ secrets.KEYSTORE_BASE64 }}
       - name: Extract Android Keystore Properties
@@ -53,10 +53,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-      - name: Extract Android Keystore
-        run: echo "$ks" > keystore_android
-        env:
-          ks: ${{ secrets.KEYSTORE_BASE64 }}
       - name: Extract Android Keystore Properties
         run: echo "$ksp" > keystore.properties
         env:
@@ -85,10 +81,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-      - name: Extract Android Keystore
-        run: echo "$ks" > keystore_android
-        env:
-          ks: ${{ secrets.KEYSTORE_BASE64 }}
       - name: Extract Android Keystore Properties
         run: echo "$ksp" > keystore.properties
         env:
@@ -117,12 +109,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-      - name: Extract Android Keystore
-        run: echo "$ks" > keystore_android
-        env:
-          ks: ${{ secrets.KEYSTORE_BASE64 }}
       - name: Extract Android Keystore Properties
         run: echo "$ksp" > keystore.properties
+        shell: bash
         env:
           ksp: ${{ secrets.KEYSTORE_PROPERTIES }}
 
