@@ -41,6 +41,8 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                     searching.emit(false)
                     return@collectLatest
                 }
+                val tokens = query.split(Regex(" +"))
+
                 searching.emit(true)
                 coroutineScope {
                     val options = mutableListOf<PractisoOption>()
@@ -51,9 +53,10 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                             .toOptionFlow()
                             .first()
                             .filter {
-                                it.quiz.name?.contains(query) == true
-                                        || it.preview?.contains(query) == true
+                                it.quiz.name?.let { name -> tokens.any { t -> t in name } } == true
+                                        || it.preview?.let { preview -> tokens.any { t -> t in preview } } == true
                             }
+
                         mutex.lock()
                         options.addAll(quizFrames)
                         emit(options.toList())
@@ -67,7 +70,7 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                             .mapToList(Dispatchers.IO)
                             .toOptionFlow(db.quizQueries)
                             .first()
-                            .filter { query in it.dimension.name }
+                            .filter { tokens.any { t -> t in it.dimension.name } }
                         mutex.lock()
                         options.addAll(dimensions)
                         emit(options.toList())
