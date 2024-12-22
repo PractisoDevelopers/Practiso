@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -45,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
@@ -348,7 +350,16 @@ private fun TopSearchBar(model: SearchViewModel, onSearchResultClick: (PractisoO
         AnimatedVisibility(visible = searching, enter = fadeIn(), exit = fadeOut()) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
         }
-        LazyColumn {
+
+        val listState = rememberLazyListState()
+        val keyboard = LocalSoftwareKeyboardController.current
+        LaunchedEffect(listState.lastScrolledForward) {
+            if (listState.lastScrolledForward) {
+                keyboard?.hide()
+            }
+        }
+
+        LazyColumn(state = listState) {
             items(
                 count = options.size,
                 key = { i -> options[i]::class.simpleName!! + options[i].id }
