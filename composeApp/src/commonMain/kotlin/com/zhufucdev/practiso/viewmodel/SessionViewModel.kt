@@ -126,7 +126,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     }
 
     val recentRecommendations = MutableStateFlow<List<SessionCreator>?>(null).apply {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             db.quizQueries.getQuizFrames(db.quizQueries.getRecentQuiz())
                 .toOptionFlow()
                 .collectLatest { quizzes ->

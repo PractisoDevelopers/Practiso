@@ -19,7 +19,7 @@ FROM dimension;
 getRecentDimensions:
 SELECT *
 FROM dimension
-ORDER BY id
+ORDER BY id DESC
 LIMIT ?;
 
 getDimensionByName:

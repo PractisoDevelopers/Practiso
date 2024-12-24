@@ -64,10 +64,10 @@ WHERE id = ?;
 getRecentQuiz:
 SELECT Q1.*
 FROM quiz Q1
-WHERE strftime('%s', Q1.creationTimeISO) - strftime('%s', (SELECT creationTimeISO
-FROM quiz
-ORDER BY creationTimeISO
-LIMIT 1)) < 60 * 60;
+WHERE (SELECT strftime('%s', creationTimeISO) AS time
+      FROM quiz
+      ORDER BY time DESC
+      LIMIT 1) - strftime('%s', Q1.creationTimeISO) < 60;
 
 getQuizByDimension:
 SELECT Q.*
