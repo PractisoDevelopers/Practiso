@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +56,7 @@ import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
+import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.platform.AppDestination
@@ -78,6 +81,7 @@ import practiso.composeapp.generated.resources.add_item_to_get_started_para
 import practiso.composeapp.generated.resources.baseline_alert_box_outline
 import practiso.composeapp.generated.resources.baseline_chevron_down
 import practiso.composeapp.generated.resources.baseline_import
+import practiso.composeapp.generated.resources.baseline_timelapse
 import practiso.composeapp.generated.resources.cancel_para
 import practiso.composeapp.generated.resources.continue_para
 import practiso.composeapp.generated.resources.create_para
@@ -90,6 +94,7 @@ import practiso.composeapp.generated.resources.importing_x_items_y_done
 import practiso.composeapp.generated.resources.keep_para
 import practiso.composeapp.generated.resources.library_is_empty_para
 import practiso.composeapp.generated.resources.n_questions_are_within_this_dimension_what_to_do_with_it_para
+import practiso.composeapp.generated.resources.new_take_from_x_para
 import practiso.composeapp.generated.resources.questions_para
 import practiso.composeapp.generated.resources.remove_para
 import practiso.composeapp.generated.resources.removing_x_para
@@ -205,14 +210,16 @@ fun LibraryApp(
                         SectionCaption(stringResource(Res.string.templates_para))
                     },
                     content = {
-                        PractisoOptionSkeleton(
-                            label = { Text(it.name) },
-                            preview = {
-                                it.description?.let { p ->
-                                    Text(p, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-                            }
-                        )
+                        Box {
+                            PractisoOptionSkeleton(
+                                label = { Text(it.name) },
+                                preview = {
+                                    it.description?.let { p ->
+                                        Text(p, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
+                                },
+                            )
+                        }
                     },
                     limit = model.limits[0],
                     onIncreaseLimit = {
@@ -228,18 +235,53 @@ fun LibraryApp(
                     },
                     content = {
                         var removalDialogExpanded by remember { mutableStateOf(false) }
-                        ListItem(
-                            option = it,
-                            onDelete = {
-                                if (it.quizCount > 0) {
-                                    removalDialogExpanded = true
-                                } else {
-                                    coroutine.launch {
-                                        model.event.removeDimensionKeepQuizzes.send(it.dimension.id)
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        Box {
+                            ListItem(
+                                option = it,
+                                onDelete = {
+                                    if (it.quizCount > 0) {
+                                        removalDialogExpanded = true
+                                    } else {
+                                        coroutine.launch {
+                                            model.event.removeDimensionKeepQuizzes.send(it.dimension.id)
+                                        }
                                     }
-                                }
+                                },
+                                modifier = Modifier.combineClickable(
+                                    onSecondaryClick = {
+                                        menuExpanded = true
+                                    }
+                                )
+                            )
+
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    leadingIcon = {
+                                        Icon(
+                                            painterResource(Res.drawable.baseline_timelapse),
+                                            contentDescription = null
+                                        )
+                                    },
+                                    text = {
+                                        Text(
+                                            stringResource(
+                                                Res.string.new_take_from_x_para,
+                                                it.dimension.name
+                                            )
+                                        )
+                                    },
+                                    onClick = {
+                                        coroutine.launch {
+                                            model.event.newTakeFromDimension.send(it.id)
+                                        }
+                                    }
+                                )
                             }
-                        )
+                        }
                         if (removalDialogExpanded) {
                             DimensionRemovalDialog(
                                 target = it,
