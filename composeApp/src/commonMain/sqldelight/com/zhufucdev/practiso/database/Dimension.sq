@@ -22,6 +22,11 @@ FROM dimension
 ORDER BY id DESC
 LIMIT ?;
 
+getDimensionById:
+SELECT *
+FROM dimension
+WHERE id = ?;
+
 getDimensionByName:
 SELECT *
 FROM dimension

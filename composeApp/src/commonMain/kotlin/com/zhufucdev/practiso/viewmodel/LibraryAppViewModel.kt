@@ -16,11 +16,18 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.PrioritizedFrame
+import com.zhufucdev.practiso.datamodel.Selection
+import com.zhufucdev.practiso.datamodel.createSession
+import com.zhufucdev.practiso.datamodel.createTake
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.datamodel.unarchive
+import com.zhufucdev.practiso.platform.AppDestination
+import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationOption
+import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.source
@@ -133,6 +140,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
         val removeDimensionWithQuizzes: Channel<Long> = Channel(),
         val removeDimensionKeepQuizzes: Channel<Long> = Channel(),
         val reveal: Channel<Revealable> = Channel(),
+        val newTakeFromDimension: Channel<Long> = Channel(),
     )
 
     val event = Events()
@@ -392,6 +400,22 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
 
                     event.reveal.onReceive {
                         _revealing.emit(it)
+                    }
+
+                    event.newTakeFromDimension.onReceive {
+                        val dimension =
+                            db.dimensionQueries.getDimensionById(it).executeAsOneOrNull()
+                        if (dimension == null) {
+                            return@onReceive
+                        }
+                        val sessionId =
+                            createSession(dimension.name, Selection(dimensionIds = setOf(it)), db)
+                        val takeId = createTake(sessionId, emptyList(), db)
+                        Navigator.navigate(
+                            Navigation.Goto(AppDestination.Answer), options = listOf(
+                                NavigationOption.OpenTake(takeId)
+                            )
+                        )
                     }
                 }
             }
