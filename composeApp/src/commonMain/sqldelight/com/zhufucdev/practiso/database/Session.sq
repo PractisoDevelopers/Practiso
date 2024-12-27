@@ -14,6 +14,7 @@ CREATE TABLE take(
     lastAccessTimeISO TEXT AS Instant,
     durationSeconds INTEGER NOT NULL DEFAULT 0,
     hidden INTEGER NOT NULL DEFAULT 0,
+    pinned INTEGER NOT NULL DEFAULT 0,
     currentQuizId INTEGER,
     UNIQUE (id, sessionId)
 );
@@ -58,7 +59,7 @@ CREATE TABLE answer(
 );
 
 CREATE VIEW takeStat AS
-SELECT T.id, QT.sessionId, S.name, T.hidden, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal
+SELECT T.id, QT.sessionId, S.name, T.hidden, T.pinned, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal
 FROM take T
 JOIN session S ON T.sessionId = S.id
 LEFT JOIN (
@@ -124,6 +125,14 @@ UPDATE take SET lastAccessTimeISO = ? WHERE id = ?;
 updateTakeVisibility:
 UPDATE take SET hidden = ? WHERE id = ?;
 
+getTakePinnedById:
+SELECT pinned
+FROM take
+WHERE id = ?;
+
+updateTakePin:
+UPDATE take SET pinned = ? WHERE id = ?;
+
 getQuizzesByTakeId:
 SELECT Q.*
 FROM take T JOIN quizBySession S ON S.sessionId = T.sessionId JOIN quiz Q ON Q.id = S.quizId
@@ -136,6 +145,7 @@ FROM takeStat;
 getRecentTakeStats:
 SELECT *
 FROM takeStat
+WHERE hidden == 0
 ORDER BY COALESCE(takeStat.lastAccessTimeISO, takeStat.creationTimeISO) DESC
 LIMIT ?;
 

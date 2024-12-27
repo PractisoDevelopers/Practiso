@@ -59,7 +59,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
                 db.sessionQueries.getRecentTakeStats(5)
                     .asFlow()
                     .mapToList(Dispatchers.IO)
-                    .map { it.filterNot { stat -> stat.hidden == 1L } }
+                    .map { it.filter { it.pinned == 1L } + it.filter { it.pinned == 0L } }
                     .collect(this@apply)
             }
         }
@@ -82,6 +82,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
         val toggleCreator: Channel<Int> = Channel(),
         val deleteSession: Channel<Long> = Channel(),
         val startTake: Channel<Long> = Channel(),
+        val toggleTakePin: Channel<Long> = Channel(),
     )
 
     val event = Events()
@@ -106,6 +107,13 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
                     event.deleteSession.onReceive {
                         db.transaction {
                             db.sessionQueries.removeSession(it)
+                        }
+                    }
+
+                    event.toggleTakePin.onReceive {
+                        db.transaction {
+                            val pinned = db.sessionQueries.getTakePinnedById(it).executeAsOne()
+                            db.sessionQueries.updateTakePin(pinned xor 1, it)
                         }
                     }
 
