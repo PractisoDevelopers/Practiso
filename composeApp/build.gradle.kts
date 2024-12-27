@@ -161,6 +161,11 @@ compose.desktop {
                     .takeIf { it.endsWith("-alpha") }
                     ?.let { it.substring(0, it.indexOf('-')) }
                     ?: appVersion
+            fileAssociation(
+                mimeType = "application/gzip",
+                extension = "psarchive",
+                description = "Practiso Archive"
+            )
 
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             modules("java.sql")
