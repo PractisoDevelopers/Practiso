@@ -40,6 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -135,6 +136,8 @@ import practiso.composeapp.generated.resources.baseline_check_circle_outline
 import practiso.composeapp.generated.resources.baseline_chevron_down
 import practiso.composeapp.generated.resources.baseline_eye_off_outline
 import practiso.composeapp.generated.resources.baseline_flag_checkered
+import practiso.composeapp.generated.resources.baseline_pin
+import practiso.composeapp.generated.resources.baseline_pin_outline
 import practiso.composeapp.generated.resources.baseline_timelapse
 import practiso.composeapp.generated.resources.baseline_timer_outline
 import practiso.composeapp.generated.resources.cancel_para
@@ -154,6 +157,7 @@ import practiso.composeapp.generated.resources.new_take_para
 import practiso.composeapp.generated.resources.new_timer_para
 import practiso.composeapp.generated.resources.no_recommendations_span
 import practiso.composeapp.generated.resources.no_take_available_span
+import practiso.composeapp.generated.resources.pin_para
 import practiso.composeapp.generated.resources.quickly_start_new_session_para
 import practiso.composeapp.generated.resources.recently_used_para
 import practiso.composeapp.generated.resources.remove_para
@@ -290,6 +294,11 @@ fun SessionApp(
                                                 onStart = {
                                                     coroutine.launch {
                                                         model.event.startTake.send(takeStat.id)
+                                                    }
+                                                },
+                                                onClickPin = {
+                                                    coroutine.launch {
+                                                        model.event.toggleTakePin.send(takeStat.id)
                                                     }
                                                 },
                                                 onDismiss = {
@@ -525,143 +534,166 @@ private fun TakeStatExtensionCardContent(
     correctQuizCount: Int?,
     onStart: () -> Unit,
     onDismiss: () -> Unit,
+    onClickPin: () -> Unit,
 ) {
-    Column(
-        Modifier.padding(PaddingBig).fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(PaddingNormal)
-    ) {
-        Text(model.name, style = MaterialTheme.typography.titleLarge)
-        takeNumber?.let {
-            Text(stringResource(Res.string.take_n_para, it))
-        } ?: Spacer(Modifier.height(LocalTextStyle.current.lineHeight.value.dp).width(40.dp))
-        Text(
-            stringResource(
-                Res.string.created_x_para,
-                HumanReadable.timeAgo(
-                    model.creationTimeISO,
-                    Clock.System.now()
+    Box {
+        IconButton(
+            content = {
+                val pinned = model.pinned == 1L
+                Icon(
+                    painter = painterResource(if (pinned) Res.drawable.baseline_pin else Res.drawable.baseline_pin_outline),
+                    contentDescription = stringResource(Res.string.pin_para),
+                    tint = if (pinned) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                )
+            },
+            onClick = onClickPin,
+            modifier = Modifier.align(Alignment.TopEnd).padding(PaddingNormal)
+        )
+
+        Column(
+            Modifier.padding(PaddingBig).fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(PaddingNormal)
+        ) {
+            Row {
+                Text(
+                    model.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(36.dp))
+            }
+            takeNumber?.let {
+                Text(stringResource(Res.string.take_n_para, it))
+            } ?: Spacer(Modifier.height(LocalTextStyle.current.lineHeight.value.dp).width(40.dp))
+            Text(
+                stringResource(
+                    Res.string.created_x_para,
+                    HumanReadable.timeAgo(
+                        model.creationTimeISO,
+                        Clock.System.now()
+                    )
                 )
             )
-        )
-        Text(
-            stringResource(
-                Res.string.spent_x_para,
-                HumanReadable.duration(model.durationSeconds.seconds)
+            Text(
+                stringResource(
+                    Res.string.spent_x_para,
+                    HumanReadable.duration(model.durationSeconds.seconds)
+                )
             )
-        )
 
-        Column {
-            val coroutine = rememberCoroutineScope()
-            Text(stringResource(Res.string.accuracy_slash_completeness_para))
-            Spacer(Modifier.height(PaddingSmall))
+            Column {
+                val coroutine = rememberCoroutineScope()
+                Text(stringResource(Res.string.accuracy_slash_completeness_para))
+                Spacer(Modifier.height(PaddingSmall))
 
-            var targetScale by remember { mutableStateOf(1f) }
-            Surface(
-                shape = CardDefaults.shape,
-                modifier = Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    targetScale = 1f
-                }) {
-                val scale by animateFloatAsState(targetScale)
-
-                Row(Modifier.fillMaxWidth().height(26.dp)) {
-                    val properScale by remember(correctQuizCount, model) {
-                        derivedStateOf {
-                            if (model.countQuizDone > 0 && model.countQuizTotal > model.countQuizDone * 10) {
-                                model.countQuizTotal * 0.618f / model.countQuizDone
-                            } else {
-                                1f
-                            }
-                        }
-                    }
-                    val correctRatio by remember(correctQuizCount, model) {
-                        derivedStateOf {
-                            (correctQuizCount ?: 0) * 1f / model.countQuizTotal * scale
-                        }
-                    }
-                    val incorrectRatio by remember(correctQuizCount, model) {
-                        derivedStateOf {
-                            (correctQuizCount?.let {
-                                (model.countQuizDone - it)
-                            } ?: 0) * 1f / model.countQuizTotal * scale
-                        }
-                    }
-
-                    val correctTooltipState = rememberTooltipState()
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip = {
-                            correctQuizCount?.let {
-                                PlainTooltip {
-                                    Text(
-                                        pluralStringResource(
-                                            Res.plurals.n_questions_correct_span, it, it
-                                        )
-                                    )
-                                }
-                            }
-                        },
-                        state = correctTooltipState
+                var targetScale by remember { mutableStateOf(1f) }
+                Surface(
+                    shape = CardDefaults.shape,
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
                     ) {
-                        Spacer(
-                            Modifier.fillMaxWidth(correctRatio).fillMaxHeight()
-                                .background(MaterialTheme.colorScheme.primary)
-                                .clickable {
-                                    targetScale = if (scale <= 1) {
-                                        properScale
-                                    } else {
-                                        1f
-                                    }
-                                    coroutine.launch {
-                                        correctTooltipState.show()
-                                    }
-                                }
-                        )
-                    }
-                    val incorrectTooltipState = rememberTooltipState()
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip = {
-                            correctQuizCount?.let { (model.countQuizDone - it).toInt() }?.let {
-                                PlainTooltip {
-                                    Text(
-                                        pluralStringResource(
-                                            Res.plurals.n_questions_incorrect_span, it, it
-                                        )
-                                    )
+                        targetScale = 1f
+                    }) {
+                    val scale by animateFloatAsState(targetScale)
+
+                    Row(Modifier.fillMaxWidth().height(26.dp)) {
+                        val properScale by remember(correctQuizCount, model) {
+                            derivedStateOf {
+                                if (model.countQuizDone > 0 && model.countQuizTotal > model.countQuizDone * 10) {
+                                    model.countQuizTotal * 0.618f / model.countQuizDone
+                                } else {
+                                    1f
                                 }
                             }
-                        },
-                        state = incorrectTooltipState
-                    ) {
-                        Spacer(
-                            Modifier.fillMaxWidth(incorrectRatio).fillMaxHeight()
-                                .background(MaterialTheme.colorScheme.error)
-                                .clickable {
-                                    targetScale = if (scale <= 1) {
-                                        properScale
-                                    } else {
-                                        1f
-                                    }
-                                    coroutine.launch {
-                                        correctTooltipState.show()
+                        }
+                        val correctRatio by remember(correctQuizCount, model) {
+                            derivedStateOf {
+                                (correctQuizCount ?: 0) * 1f / model.countQuizTotal * scale
+                            }
+                        }
+                        val incorrectRatio by remember(correctQuizCount, model) {
+                            derivedStateOf {
+                                (correctQuizCount?.let {
+                                    (model.countQuizDone - it)
+                                } ?: 0) * 1f / model.countQuizTotal * scale
+                            }
+                        }
+
+                        val correctTooltipState = rememberTooltipState()
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                            tooltip = {
+                                correctQuizCount?.let {
+                                    PlainTooltip {
+                                        Text(
+                                            pluralStringResource(
+                                                Res.plurals.n_questions_correct_span, it, it
+                                            )
+                                        )
                                     }
                                 }
-                        )
+                            },
+                            state = correctTooltipState
+                        ) {
+                            Spacer(
+                                Modifier.fillMaxWidth(correctRatio).fillMaxHeight()
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .clickable {
+                                        targetScale = if (scale <= 1) {
+                                            properScale
+                                        } else {
+                                            1f
+                                        }
+                                        coroutine.launch {
+                                            correctTooltipState.show()
+                                        }
+                                    }
+                            )
+                        }
+                        val incorrectTooltipState = rememberTooltipState()
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                            tooltip = {
+                                correctQuizCount?.let { (model.countQuizDone - it).toInt() }?.let {
+                                    PlainTooltip {
+                                        Text(
+                                            pluralStringResource(
+                                                Res.plurals.n_questions_incorrect_span, it, it
+                                            )
+                                        )
+                                    }
+                                }
+                            },
+                            state = incorrectTooltipState
+                        ) {
+                            Spacer(
+                                Modifier.fillMaxWidth(incorrectRatio).fillMaxHeight()
+                                    .background(MaterialTheme.colorScheme.error)
+                                    .clickable {
+                                        targetScale = if (scale <= 1) {
+                                            properScale
+                                        } else {
+                                            1f
+                                        }
+                                        coroutine.launch {
+                                            correctTooltipState.show()
+                                        }
+                                    }
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        Row(Modifier.fillMaxWidth()) {
-            OutlinedButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.cancel_para))
-            }
-            Spacer(Modifier.weight(1f))
-            Button(onClick = onStart) {
-                Text(stringResource(Res.string.start_para))
+            Row(Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = onDismiss) {
+                    Text(stringResource(Res.string.cancel_para))
+                }
+                Spacer(Modifier.weight(1f))
+                Button(onClick = onStart) {
+                    Text(stringResource(Res.string.start_para))
+                }
             }
         }
     }

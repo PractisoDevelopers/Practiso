@@ -1,0 +1,17 @@
+ALTER TABLE take ADD pinned INTEGER NOT NULL DEFAULT 0;
+DROP VIEW takeStat;
+CREATE VIEW takeStat AS
+SELECT T.id, QT.sessionId, S.name, T.hidden, T.pinned, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal
+FROM take T
+JOIN session S ON T.sessionId = S.id
+LEFT JOIN (
+    SELECT count(quizId) AS countQuizDone, takeId
+    FROM (SELECT DISTINCT quizId, takeId FROM answer)
+    GROUP BY takeId
+) Q ON Q.takeId = T.id
+JOIN (
+    SELECT count(*) AS countQuizTotal, sessionId
+    FROM quizBySession
+    GROUP BY sessionId
+) QT ON QT.sessionId = S.id;
+
