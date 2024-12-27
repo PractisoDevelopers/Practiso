@@ -59,6 +59,8 @@ import androidx.navigation.toRoute
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.ImportDialog
+import com.zhufucdev.practiso.composable.ImportState
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
@@ -70,6 +72,7 @@ import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.style.PaddingNormal
+import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
@@ -88,6 +91,7 @@ import kotlin.reflect.typeOf
 fun PractisoApp(
     navController: NavHostController,
     searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
+    importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val windowAdaptiveInfo = currentWindowAdaptiveInfo()
@@ -99,7 +103,12 @@ fun PractisoApp(
         ) {
             when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
                 WindowWidthSizeClass.COMPACT ->
-                    ScaffoldedApp(searchViewModel, windowAdaptiveInfo, navController)
+                    ScaffoldedApp(
+                        importViewModel,
+                        searchViewModel,
+                        windowAdaptiveInfo,
+                        navController
+                    )
 
                 WindowWidthSizeClass.MEDIUM -> Row {
                     NavigationRail {
@@ -119,7 +128,12 @@ fun PractisoApp(
                             )
                         }
                     }
-                    ScaffoldedApp(searchViewModel, windowAdaptiveInfo, navController)
+                    ScaffoldedApp(
+                        importViewModel,
+                        searchViewModel,
+                        windowAdaptiveInfo,
+                        navController
+                    )
                 }
 
                 WindowWidthSizeClass.EXPANDED -> Row {
@@ -140,7 +154,12 @@ fun PractisoApp(
                             )
                         }
                     }
-                    ScaffoldedApp(searchViewModel, windowAdaptiveInfo, navController)
+                    ScaffoldedApp(
+                        importViewModel,
+                        searchViewModel,
+                        windowAdaptiveInfo,
+                        navController
+                    )
                 }
             }
 
@@ -152,6 +171,7 @@ fun PractisoApp(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScaffoldedApp(
+    importViewModel: ImportViewModel,
     searchViewModel: SearchViewModel,
     windowAdaptiveInfo: WindowAdaptiveInfo,
     navController: NavHostController,
@@ -211,8 +231,13 @@ private fun ScaffoldedApp(
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            NavigatedApp()
+            NavigatedApp(importViewModel)
         }
+    }
+
+    val state by importViewModel.state.collectAsState()
+    if (state != ImportState.Idle) {
+        ImportDialog(state)
     }
 }
 
@@ -241,7 +266,7 @@ internal enum class TopLevelDestination(
 }
 
 @Composable
-private fun NavigatedApp() {
+private fun NavigatedApp(importer: ImportViewModel) {
     NavHost(
         navController = currentNavController(),
         startDestination = TopLevelDestination.Session.route,
@@ -250,7 +275,7 @@ private fun NavigatedApp() {
             SessionApp()
         }
         composable(TopLevelDestination.Library.route) {
-            LibraryApp()
+            LibraryApp(importer = importer)
         }
         composable<LibraryAppViewModel.Revealable>(
             typeMap = mapOf(
@@ -262,7 +287,7 @@ private fun NavigatedApp() {
             LaunchedEffect(backtrace) {
                 model.event.reveal.send(backtrace.toRoute())
             }
-            LibraryApp(model)
+            LibraryApp(model, importer)
         }
         composable("${TopLevelDestination.Session.route}/new") {
             SessionStarter()

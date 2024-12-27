@@ -149,4 +149,5 @@
         <item quantity="other">%1$d questions in %2$s</item>
     </plurals>
     <string name="new_take_from_x_para">New take from %1$s</string>
+    <string name="generic_file_para">Generic file</string>
 </resources>

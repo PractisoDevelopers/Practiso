@@ -2,4 +2,5 @@
     <string name="app_name">Practiso</string>
     <string name="title_activity_quiz_create">Quiz creator</string>
     <string name="title_activity_answer">Answer</string>
+    <string name="generic_file_para">Generic file</string>
 </resources>

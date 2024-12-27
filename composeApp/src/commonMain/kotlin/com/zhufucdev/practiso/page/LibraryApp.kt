@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,10 +40,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
@@ -58,6 +54,7 @@ import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
@@ -67,6 +64,7 @@ import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
+import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
@@ -78,19 +76,14 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import practiso.composeapp.generated.resources.Res
 import practiso.composeapp.generated.resources.add_item_to_get_started_para
-import practiso.composeapp.generated.resources.baseline_alert_box_outline
 import practiso.composeapp.generated.resources.baseline_chevron_down
 import practiso.composeapp.generated.resources.baseline_import
 import practiso.composeapp.generated.resources.baseline_timelapse
 import practiso.composeapp.generated.resources.cancel_para
-import practiso.composeapp.generated.resources.continue_para
 import practiso.composeapp.generated.resources.create_para
 import practiso.composeapp.generated.resources.dimensions_para
-import practiso.composeapp.generated.resources.dismiss_para
-import practiso.composeapp.generated.resources.ignore_para
 import practiso.composeapp.generated.resources.import_from_practiso_archive_para
 import practiso.composeapp.generated.resources.import_para
-import practiso.composeapp.generated.resources.importing_x_items_y_done
 import practiso.composeapp.generated.resources.keep_para
 import practiso.composeapp.generated.resources.library_is_empty_para
 import practiso.composeapp.generated.resources.n_questions_are_within_this_dimension_what_to_do_with_it_para
@@ -98,16 +91,13 @@ import practiso.composeapp.generated.resources.new_take_from_x_para
 import practiso.composeapp.generated.resources.questions_para
 import practiso.composeapp.generated.resources.remove_para
 import practiso.composeapp.generated.resources.removing_x_para
-import practiso.composeapp.generated.resources.retry_para
 import practiso.composeapp.generated.resources.show_more_para
-import practiso.composeapp.generated.resources.skip_para
 import practiso.composeapp.generated.resources.templates_para
-import practiso.composeapp.generated.resources.unarchiving_this_file_ellipsis_para
-import practiso.composeapp.generated.resources.will_import_n_items_to_library
 
 @Composable
 fun LibraryApp(
     model: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
+    importer: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
 ) {
     var showActions by remember {
         mutableStateOf(false)
@@ -125,7 +115,7 @@ fun LibraryApp(
                 }
 
                 coroutine.launch {
-                    model.event.import.send(file)
+                    importer.event.import.send(Importable.fromFile(file))
                 }
             }
         FloatingPopupButton(
@@ -354,11 +344,6 @@ fun LibraryApp(
             }
         }
     }
-
-    val importState by model.importState.collectAsState()
-    if (importState !is LibraryAppViewModel.ImportState.Idle) {
-        ImportDialog(importState)
-    }
 }
 
 @Composable
@@ -468,165 +453,6 @@ fun <T> LazyListScope.flatContent(
             HorizontalSeparator()
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ImportDialog(state: LibraryAppViewModel.ImportState) {
-    val coroutine = rememberCoroutineScope()
-    BasicAlertDialog(
-        onDismissRequest = {},
-    ) {
-        Card {
-            if (state !is LibraryAppViewModel.ImportState.Error) {
-                DialogContentSkeleton(
-                    modifier = Modifier.fillMaxWidth().padding(PaddingBig),
-                    icon = {
-                        Icon(
-                            painterResource(Res.drawable.baseline_import),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    title = {
-                        Text(
-                            stringResource(Res.string.import_from_practiso_archive_para),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                ) {
-                    when (state) {
-                        is LibraryAppViewModel.ImportState.Confirmation -> {
-                            Text(
-                                pluralStringResource(
-                                    Res.plurals.will_import_n_items_to_library,
-                                    state.total,
-                                    state.total
-                                ),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        is LibraryAppViewModel.ImportState.Importing -> {
-                            Text(
-                                pluralStringResource(
-                                    Res.plurals.importing_x_items_y_done,
-                                    state.total,
-                                    state.total,
-                                    state.done
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-
-                        is LibraryAppViewModel.ImportState.Unarchiving -> {
-                            Text(
-                                stringResource(Res.string.unarchiving_this_file_ellipsis_para),
-                            )
-                        }
-
-                        is LibraryAppViewModel.ImportState.Error,
-                        LibraryAppViewModel.ImportState.Idle,
-                            -> error("Should never reach here")
-                    }
-                }
-                if (state is LibraryAppViewModel.ImportState.Confirmation) {
-                    Column {
-                        PrimaryButton(
-                            onClick = {
-                                coroutine.launch {
-                                    state.ok.send(Unit)
-                                }
-                            },
-                        ) {
-                            Text(stringResource(Res.string.continue_para))
-                        }
-                        PrimaryButton(
-                            onClick = {
-                                coroutine.launch {
-                                    state.dismiss.send(Unit)
-                                }
-                            },
-                        ) {
-                            Text(stringResource(Res.string.dismiss_para))
-                        }
-                    }
-                }
-            } else {
-                val error = state.model
-                DialogContentSkeleton(
-                    modifier = Modifier.fillMaxWidth().padding(PaddingBig),
-                    icon = {
-                        Icon(
-                            painterResource(Res.drawable.baseline_alert_box_outline),
-                            contentDescription = null
-                        )
-                    },
-                    title = {
-                        Text(error.stringTitle())
-                    }
-                ) {
-                    Text(error.stringContent())
-                }
-                Column {
-                    if (state.skip != null) {
-                        PrimaryButton(
-                            onClick = {
-                                coroutine.launch {
-                                    state.skip.send(Unit)
-                                }
-                            },
-                        ) {
-                            Text(stringResource(Res.string.skip_para))
-                        }
-                    }
-                    if (state.ignore != null) {
-                        PrimaryButton(
-                            onClick = {
-                                coroutine.launch {
-                                    state.ignore.send(Unit)
-                                }
-                            },
-                        ) {
-                            Text(stringResource(Res.string.ignore_para))
-                        }
-                    }
-                    if (state.retry != null) {
-                        PrimaryButton(
-                            onClick = {
-                                coroutine.launch {
-                                    state.retry.send(Unit)
-                                }
-                            },
-                        ) {
-                            Text(stringResource(Res.string.retry_para))
-                        }
-                    }
-                    PrimaryButton(
-                        onClick = {
-                            coroutine.launch {
-                                state.cancel.send(Unit)
-                            }
-                        },
-                    ) {
-                        Text(stringResource(Res.string.cancel_para))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PrimaryButton(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
-    HorizontalSeparator(Modifier.height(2.dp))
-    TextButton(
-        onClick = onClick,
-        shape = RectangleShape,
-        modifier = Modifier.fillMaxWidth(),
-        content = content
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
