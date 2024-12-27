@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.singleWindowApplication
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
 import com.zhufucdev.practiso.platform.Navigation
@@ -26,17 +27,56 @@ import com.zhufucdev.practiso.style.AppTypography
 import com.zhufucdev.practiso.style.darkScheme
 import com.zhufucdev.practiso.style.lightScheme
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
+import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.selects.select
+import okio.source
+import java.awt.Desktop
+import java.io.File
 
-fun main() {
+fun main(args: Array<String>) {
+    val openFileChannel = Channel<List<File>>(capacity = 1)
+    if (Desktop.isDesktopSupported()
+        && Desktop.getDesktop().isSupported(Desktop.Action.APP_OPEN_FILE)
+    ) {
+        Desktop.getDesktop().setOpenFileHandler { event ->
+            openFileChannel.trySend(event.files)
+        }
+    }
+
+    if (args.isNotEmpty()) {
+        openFileChannel.trySend(args.map(::File))
+    }
+
     singleWindowApplication(title = "Practiso") {
         val navState by DesktopNavigator.current.collectAsState()
         val navController = rememberNavController()
+        val importer: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
 
         DisposableEffect(true) {
             onDispose {
                 DesktopNavigator.coroutineScope.cancel()
+            }
+        }
+
+        LaunchedEffect(importer) {
+            while (true) {
+                select {
+                    openFileChannel.onReceive { file ->
+                        file.forEach { file ->
+                            file.inputStream().use { ips ->
+                                val target = Importable(
+                                    name = file.name,
+                                    source = ips.source()
+                                )
+
+                                importer.import(target)
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -50,7 +90,11 @@ fun main() {
                     transitionSpec = mainFrameTransitionSpec
                 ) { state ->
                     when (state.destination) {
-                        AppDestination.MainView -> PractisoApp(navController)
+                        AppDestination.MainView -> PractisoApp(
+                            navController,
+                            importViewModel = importer
+                        )
+
                         AppDestination.QuizCreate -> {
                             val appModel: QuizCreateViewModel =
                                 viewModel(factory = QuizCreateViewModel.Factory)
@@ -77,7 +121,6 @@ fun main() {
             }
         }
     }
-
 }
 
 val mainFrameTransitionSpec: AnimatedContentTransitionScope<NavigationStateSnapshot>.() -> ContentTransform =
