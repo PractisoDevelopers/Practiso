@@ -437,8 +437,9 @@ fun BufferedSource.unarchive(): ArchivePack {
         while (!exhausted()) {
             i = indexOf(0)
             val name = readUtf8(i)
-            skip(0)
-            val bs = readByteString()
+            skip(1)
+            val size = readInt().toLong()
+            val bs = readByteString(size)
             put(name) { Buffer().write(bs) }
         }
     }
