@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.composable
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +54,7 @@ fun FileImage(
     state: FileImageState = rememberFileImageState(),
     modifier: Modifier = Modifier,
     alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
+    contentScale: ContentScale = ContentScale.FillHeight,
     alpha: Float = DefaultAlpha,
     colorFilter: ColorFilter? = null,
 ) {
@@ -94,7 +95,12 @@ fun FileImage(
         is ImageLoaderState.Loaded ->
             Image(
                 bitmap = s.bitmap,
-                contentDescription, modifier, alignment, contentScale, alpha, colorFilter
+                contentDescription,
+                Modifier.fillMaxHeight() then modifier,
+                alignment,
+                contentScale,
+                alpha,
+                colorFilter
             )
 
         ImageLoaderState.Pending -> Icon(
