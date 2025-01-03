@@ -2,7 +2,7 @@
 
 Personal, offline and intelligent study & practice utility. Learn smarter, not more.
 
-[![Build and Release](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml/badge.svg?branch=main)](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml)
+[![Build and Release](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml/badge.svg)](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml)
 [![GitHub Tag](https://img.shields.io/github/v/tag/zhufucdev/Practiso)](https://github.com/zhufucdev/Practiso/tags)
 [![GitHub Release](https://img.shields.io/github/v/release/zhufucdev/Practiso)](https://github.com/zhufucdev/Practiso/releases)
 
@@ -29,8 +29,7 @@ This is a Kotlin Multiplatform project targeting Android, iOS, Desktop.
     For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
     `iosMain` would be the right folder for such calls.
 
-* `/iosApp` contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform, 
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+* `/iosApp` contains iOS applications.
 
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
