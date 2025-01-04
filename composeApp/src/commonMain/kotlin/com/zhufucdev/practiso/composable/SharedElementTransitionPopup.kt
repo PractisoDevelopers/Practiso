@@ -62,9 +62,13 @@ fun SharedElementTransitionPopup(
             }
                 .alpha(if (model.visible) 0f else 1f)
 
-        override suspend fun expand() = model.expand()
+        override suspend fun expand() {
+            model.event.expand.send(Unit)
+        }
 
-        override suspend fun collapse() = model.collapse()
+        override suspend fun collapse() {
+            model.event.collapse.send(Unit)
+        }
     }
 
     if (model.visible) {
@@ -78,7 +82,7 @@ fun SharedElementTransitionPopup(
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
-                            onClick = { coroutine.launch { model.collapse() } }
+                            onClick = { coroutine.launch { model.event.collapse.send(Unit) } }
                         )
                 ) {
                     AnimatedVisibility(
@@ -91,7 +95,7 @@ fun SharedElementTransitionPopup(
                         suspend fun release(velocityTracker: VelocityTracker) {
                             val velocity = velocityTracker.calculateVelocity().y
                             if (abs(releaseAnimator.value) > 40 || velocity > 10) {
-                                model.collapse()
+                                model.event.collapse.send(Unit)
                             } else {
                                 releaseAnimator.animateTo(0f)
                             }

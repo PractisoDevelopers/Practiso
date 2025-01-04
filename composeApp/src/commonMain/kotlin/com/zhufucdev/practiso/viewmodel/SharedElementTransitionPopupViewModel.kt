@@ -6,12 +6,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class SharedElementTransitionPopupViewModel(state: SavedStateHandle) : ViewModel() {
@@ -22,16 +27,30 @@ class SharedElementTransitionPopupViewModel(state: SavedStateHandle) : ViewModel
 
     var transitionStart: Rect by mutableStateOf(Rect.Zero)
 
-    suspend fun expand() {
-        visible = true
-        delay(20)
-        expanded = true
-    }
+    data class Events(
+        val expand: Channel<Unit> = Channel(),
+        val collapse: Channel<Unit> = Channel()
+    )
+    val event = Events()
 
-    suspend fun collapse() {
-        expanded = false
-        delay(500)
-        visible = false
+    init {
+        viewModelScope.launch {
+            while (viewModelScope.isActive) {
+                select {
+                    event.expand.onReceive {
+                        visible = true
+                        delay(50)
+                        expanded = true
+                    }
+
+                    event.collapse.onReceive {
+                        expanded = false
+                        delay(500)
+                        visible = false
+                    }
+                }
+            }
+        }
     }
 
     companion object {
