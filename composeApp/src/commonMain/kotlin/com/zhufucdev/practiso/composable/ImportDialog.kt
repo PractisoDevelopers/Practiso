@@ -63,6 +63,9 @@ sealed interface ImportState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImportDialog(state: ImportState) {
+    if (state is ImportState.Idle) {
+        return
+    }
     val coroutine = rememberCoroutineScope()
     BasicAlertDialog(
         onDismissRequest = {},
