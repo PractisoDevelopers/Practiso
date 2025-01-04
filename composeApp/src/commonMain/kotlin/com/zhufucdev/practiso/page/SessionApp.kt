@@ -668,7 +668,7 @@ private fun TakeStatExtensionCardContent(
                             state = incorrectTooltipState
                         ) {
                             Spacer(
-                                Modifier.fillMaxWidth(incorrectRatio).fillMaxHeight()
+                                Modifier.fillMaxWidth(incorrectRatio / (1 - correctRatio)).fillMaxHeight()
                                     .background(MaterialTheme.colorScheme.error)
                                     .clickable {
                                         targetScale = if (scale <= 1) {
