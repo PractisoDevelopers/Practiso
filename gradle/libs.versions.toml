@@ -43,6 +43,7 @@ settings-coroutine = { module = "com.russhwolf:multiplatform-settings-coroutines
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version = "2.1.0" }
+materialkolor = { module = "com.materialkolor:material-kolor", version = "2.0.0" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

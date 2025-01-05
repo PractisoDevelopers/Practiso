@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.platform
 
+import androidx.compose.ui.graphics.Color
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.github.tkuenneth.nativeparameterstoreaccess.Dconf
@@ -23,6 +24,7 @@ abstract class JVMPlatform : Platform() {
     override val name: String = "Java ${System.getProperty("java.version")}"
 
     abstract val isDarkModeEnabled: Boolean
+    abstract val accentColor: Color?
     abstract val dataPath: String
 
     override fun createDbDriver(): SqlDriver {
@@ -73,20 +75,55 @@ class MacOSPlatform : JVMPlatform() {
 
     override val isDarkModeEnabled: Boolean
         get() = MacOSDefaults.getDefaultsEntry("AppleInterfaceStyle") == "Dark"
+
+    override val accentColor: Color?
+        get() = MacOSDefaults.getDefaultsEntry("AppleAccentColor")?.let {
+            val colors = listOf(
+                Color(153, 152, 152),
+                Color(207, 71, 69),
+                Color(232, 136, 58),
+                Color(247, 201, 78),
+                Color(120, 184, 86),
+                Color(53, 120, 247),
+                Color(139, 66, 146),
+                Color(229, 92, 156)
+            )
+            colors[it.toInt() + 1]
+        }
 }
 
 class WindowsPlatform : JVMPlatform() {
     override val isDarkModeEnabled: Boolean
-        get() = WindowsRegistry.getWindowsRegistryEntry(
-            "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-            "AppsUseLightTheme"
-        ) == 0x0
+        get() = runCatching {
+            WindowsRegistry.getWindowsRegistryEntry(
+                """HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize""",
+                "AppsUseLightTheme"
+            ) == 0x0
+        }.getOrDefault(false)
+
     override val dataPath: String by lazy {
         Path(
             System.getenv("APPDATA"),
             "Practiso"
         ).absolutePathString()
     }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    override val accentColor: Color?
+        get() = runCatching {
+                WindowsRegistry.getWindowsRegistryEntry(
+                    """HKCU\Software\Microsoft\Windows\DWM""",
+                    "AccentColor",
+                    WindowsRegistry.REG_TYPE.REG_DWORD
+                ).hexToInt(HexFormat { number.prefix = "0x" })
+            }.getOrNull()?.let {
+            Color(
+                alpha = it shr (24) and (0xFF),
+                blue = it shr (16) and (0xFF),
+                green = it shr (8) and (0xFF),
+                red = it and 0xFF
+            )
+        }
 }
 
 class LinuxPlatform : JVMPlatform() {
@@ -103,11 +140,17 @@ class LinuxPlatform : JVMPlatform() {
             "Practiso"
         ).absolutePathString()
     }
+
+    override val accentColor: Color?
+        get() = null
 }
 
 class OtherPlatform : JVMPlatform() {
     override val isDarkModeEnabled: Boolean
         get() = false
+
+    override val accentColor: Color?
+        get() = null
 
     override val dataPath: String by lazy { Path(getUserHome(), ".practiso").absolutePathString() }
 }

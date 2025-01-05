@@ -8,7 +8,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -17,15 +16,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.singleWindowApplication
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.zhufucdev.practiso.composable.SystemColorTheme
 import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationStateSnapshot
-import com.zhufucdev.practiso.platform.PlatformInstance
-import com.zhufucdev.practiso.style.AppTypography
-import com.zhufucdev.practiso.style.darkScheme
-import com.zhufucdev.practiso.style.lightScheme
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
@@ -80,10 +76,7 @@ fun main(args: Array<String>) {
             }
         }
 
-        MaterialTheme(
-            colorScheme = if (PlatformInstance.isDarkModeEnabled) darkScheme else lightScheme,
-            typography = AppTypography
-        ) {
+        SystemColorTheme(animate = true) {
             Surface {
                 AnimatedContent(
                     targetState = navState,

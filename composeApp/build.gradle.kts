@@ -88,6 +88,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.sqldelight.jvm.driver)
             implementation(libs.nativeparameteraccess)
+            implementation(libs.materialkolor)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native.driver)
