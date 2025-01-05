@@ -16,7 +16,7 @@ plugins {
     alias(libs.plugins.skie)
 }
 
-val appVersion = "1.0.5-alpha"
+val appVersion = "1.0.6-alpha"
 
 kotlin {
     androidTarget {
@@ -121,7 +121,7 @@ android {
         applicationId = "com.zhufucdev.practiso"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 6
+        versionCode = 7
         versionName = appVersion
     }
     packaging {
