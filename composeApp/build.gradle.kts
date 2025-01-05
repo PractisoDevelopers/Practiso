@@ -16,7 +16,7 @@ plugins {
     alias(libs.plugins.skie)
 }
 
-val appVersion = "1.0.5-alpha"
+val appVersion = "1.0.6-alpha"
 
 kotlin {
     androidTarget {
