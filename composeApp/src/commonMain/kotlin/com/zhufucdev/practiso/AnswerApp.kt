@@ -84,6 +84,7 @@ import com.zhufucdev.practiso.datamodel.PrioritizedFrame
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.platform.wobbleHapticFeedback
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
@@ -402,14 +403,13 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                 val wiggler = remember { Animatable(0f) }
                                 val wiggleOffset by wiggler.asState()
 
-                                suspend fun animateIncorrectness() {
-                                    if (!option.isKey) {
-                                        wiggler.animateTo(
-                                            0f, initialVelocity = 2000f, animationSpec = spring(
-                                                Spring.DampingRatioHighBouncy
-                                            )
+                                suspend fun feedbackIncorrectness() {
+                                    wobbleHapticFeedback()
+                                    wiggler.animateTo(
+                                        0f, initialVelocity = 2000f, animationSpec = spring(
+                                            Spring.DampingRatioHighBouncy
                                         )
-                                    }
+                                    )
                                 }
 
                                 suspend fun selectOnly() {
@@ -433,8 +433,8 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                             }
 
                                             launch {
-                                                if (showAccuracy) {
-                                                    animateIncorrectness()
+                                                if (showAccuracy && !option.isKey) {
+                                                    feedbackIncorrectness()
                                                 }
                                             }
                                         }
@@ -455,8 +455,8 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                             }
 
                                             launch {
-                                                if (showAccuracy) {
-                                                    animateIncorrectness()
+                                                if (showAccuracy && !option.isKey) {
+                                                    feedbackIncorrectness()
                                                 }
                                             }
                                         }
