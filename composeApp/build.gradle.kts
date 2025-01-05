@@ -170,6 +170,10 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             modules("java.sql")
 
+            windows {
+                upgradeUuid = "0744E069-28F6-42BD-97B5-E99E02001A53"
+                menu = true
+            }
             linux {
                 modules("jdk.security.auth")
             }
