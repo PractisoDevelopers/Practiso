@@ -108,13 +108,15 @@ class WindowsPlatform : JVMPlatform() {
         ).absolutePathString()
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     override val accentColor: Color?
         get() = runCatching {
-            WindowsRegistry.getWindowsRegistryEntry(
-                """HKCU\Software\Microsoft\Windows\DWM""",
-                "AccentColor"
-            )
-        }.getOrNull()?.let {
+                WindowsRegistry.getWindowsRegistryEntry(
+                    """HKCU\Software\Microsoft\Windows\DWM""",
+                    "AccentColor",
+                    WindowsRegistry.REG_TYPE.REG_DWORD
+                ).hexToInt(HexFormat { number.prefix = "0x" })
+            }.getOrNull()?.let {
             Color(
                 alpha = it shr (24) and (0xFF),
                 blue = it shr (16) and (0xFF),
