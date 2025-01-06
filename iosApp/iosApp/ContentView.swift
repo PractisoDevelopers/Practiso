@@ -5,7 +5,7 @@ import Combine
 
 struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        ViewControllerKt.MainViewController(darkMode: context.environment.colorScheme == .dark)
+        ViewControllerKt.MainViewController()
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
@@ -13,7 +13,7 @@ struct ComposeView: UIViewControllerRepresentable {
 
 struct QuizCreateView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        ViewControllerKt.QuizCreateViewController(darkMode: context.environment.colorScheme == .dark)
+        ViewControllerKt.QuizCreateViewController()
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
@@ -22,7 +22,7 @@ struct QuizCreateView: UIViewControllerRepresentable {
 
 struct AnswerView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        ViewControllerKt.AnswerAppViewController(darkMode: context.environment.colorScheme == .dark)
+        ViewControllerKt.AnswerAppViewController()
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
