@@ -1,6 +1,6 @@
 package com.zhufucdev.practiso.style
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
@@ -42,7 +42,7 @@ val lightScheme = lightColorScheme(
     surfaceContainerHighest = surfaceContainerHighestLight,
 )
 
-val darkScheme = darkColorScheme(
+ val darkScheme = darkColorScheme(
     primary = primaryDark,
     onPrimary = onPrimaryDark,
     primaryContainer = primaryContainerDark,
@@ -80,7 +80,7 @@ val darkScheme = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighestDark,
 )
 
-val mediumContrastLightColorScheme = lightColorScheme(
+ val mediumContrastLightColorScheme = lightColorScheme(
     primary = primaryLightMediumContrast,
     onPrimary = onPrimaryLightMediumContrast,
     primaryContainer = primaryContainerLightMediumContrast,
@@ -118,7 +118,7 @@ val mediumContrastLightColorScheme = lightColorScheme(
     surfaceContainerHighest = surfaceContainerHighestLightMediumContrast,
 )
 
-val highContrastLightColorScheme = lightColorScheme(
+ val highContrastLightColorScheme = lightColorScheme(
     primary = primaryLightHighContrast,
     onPrimary = onPrimaryLightHighContrast,
     primaryContainer = primaryContainerLightHighContrast,
@@ -156,7 +156,7 @@ val highContrastLightColorScheme = lightColorScheme(
     surfaceContainerHighest = surfaceContainerHighestLightHighContrast,
 )
 
-val mediumContrastDarkColorScheme = darkColorScheme(
+ val mediumContrastDarkColorScheme = darkColorScheme(
     primary = primaryDarkMediumContrast,
     onPrimary = onPrimaryDarkMediumContrast,
     primaryContainer = primaryContainerDarkMediumContrast,
@@ -194,7 +194,7 @@ val mediumContrastDarkColorScheme = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighestDarkMediumContrast,
 )
 
-val highContrastDarkColorScheme = darkColorScheme(
+ val highContrastDarkColorScheme = darkColorScheme(
     primary = primaryDarkHighContrast,
     onPrimary = onPrimaryDarkHighContrast,
     primaryContainer = primaryContainerDarkHighContrast,
@@ -238,8 +238,4 @@ data class ColorFamily(
     val onColor: Color,
     val colorContainer: Color,
     val onColorContainer: Color
-)
-
-val unspecified_scheme = ColorFamily(
-    Color.Unspecified, Color.Unspecified, Color.Unspecified, Color.Unspecified
 )

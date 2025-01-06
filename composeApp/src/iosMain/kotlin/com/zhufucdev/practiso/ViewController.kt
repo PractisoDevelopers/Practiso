@@ -1,7 +1,6 @@
 package com.zhufucdev.practiso
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -9,14 +8,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.ComposeUIViewController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.zhufucdev.practiso.composable.isSystemInDarkTheme
 import com.zhufucdev.practiso.platform.UINavigator
 import com.zhufucdev.practiso.style.AppTypography
+import com.zhufucdev.practiso.style.darkScheme
+import com.zhufucdev.practiso.style.lightScheme
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 
-fun MainViewController(darkMode: Boolean) = ComposeUIViewController {
+fun MainViewController() = ComposeUIViewController {
     MaterialTheme(
-        colorScheme = if (darkMode) darkColorScheme() else lightColorScheme(),
+        colorScheme = if (isSystemInDarkTheme()) darkScheme else lightScheme,
         typography = AppTypography
     ) {
         PractisoApp(
@@ -25,9 +27,9 @@ fun MainViewController(darkMode: Boolean) = ComposeUIViewController {
     }
 }
 
-fun QuizCreateViewController(darkMode: Boolean) = ComposeUIViewController {
+fun QuizCreateViewController() = ComposeUIViewController {
     MaterialTheme(
-        colorScheme = if (darkMode) darkColorScheme() else lightColorScheme(),
+        colorScheme = if (isSystemInDarkTheme()) darkScheme else lightColorScheme(),
         typography = AppTypography
     ) {
         val appModel: QuizCreateViewModel =
@@ -42,9 +44,9 @@ fun QuizCreateViewController(darkMode: Boolean) = ComposeUIViewController {
     }
 }
 
-fun AnswerAppViewController(darkMode: Boolean) = ComposeUIViewController {
+fun AnswerAppViewController() = ComposeUIViewController {
     MaterialTheme(
-        colorScheme = if (darkMode) darkColorScheme() else lightColorScheme(),
+        colorScheme = if (isSystemInDarkTheme()) darkScheme else lightScheme,
         typography = AppTypography
     ) {
         val navState by UINavigator.current.collectAsState()
