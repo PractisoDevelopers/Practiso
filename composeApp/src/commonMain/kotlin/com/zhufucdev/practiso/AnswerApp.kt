@@ -113,7 +113,6 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnswerApp(model: AnswerViewModel) {
-    val quizzes by model.quizzes.collectAsState()
     val state by model.pageState.collectAsState(null)
     val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -154,15 +153,15 @@ fun AnswerApp(model: AnswerViewModel) {
 
                 state?.let {
                     LaunchedEffect(it.progress) {
-                        val index = maxOf(0, (it.progress * quizzes!!.size).roundToInt() - 1)
+                        val index = maxOf(0, (it.progress * it.quizzes.size).roundToInt() - 1)
                         model.event.updateCurrentQuizIndex.send(index)
                     }
                     val showAccuracy by model.settings.showAccuracy.collectAsState()
                     val answers by model.answers.collectAsState()
-                    val errorRanges by remember(answers, quizzes, showAccuracy) {
+                    val errorRanges by remember(answers, it.quizzes, showAccuracy) {
                         derivedStateOf {
-                            if (showAccuracy && answers != null && quizzes != null)
-                                calculateErrorRanges(answers!!, quizzes!!)
+                            if (showAccuracy && answers != null)
+                                calculateErrorRanges(answers!!, it.quizzes)
                             else emptyList()
                         }
                     }
@@ -182,7 +181,7 @@ fun AnswerApp(model: AnswerViewModel) {
                             .nestedScroll(topBarScrollBehavior.nestedScrollConnection),
                         state = wrap.state
                     ) {
-                        items(items = quizzes!!, key = { it.quiz.id }) {
+                        items(items = wrap.quizzes, key = { it.quiz.id }) {
                             Quiz(
                                 modifier = Modifier.padding(horizontal = PaddingNormal)
                                     .fillMaxSize(),
@@ -205,17 +204,12 @@ fun AnswerApp(model: AnswerViewModel) {
                             snapPositionalThreshold = 0.1f
                         )
                     ) { page ->
-                        val currentQuiz by remember(quizzes) {
-                            derivedStateOf {
-                                quizzes!![page]
-                            }
-                        }
                         Quiz(
                             modifier = Modifier.padding(horizontal = PaddingNormal)
                                 .fillMaxSize()
                                 .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
                                 .verticalScroll(rememberScrollState()),
-                            quiz = currentQuiz,
+                            quiz = wrap.quizzes[page],
                             model = model
                         )
                     }
@@ -233,16 +227,11 @@ fun AnswerApp(model: AnswerViewModel) {
                             snapPositionalThreshold = 0.1f
                         )
                     ) { page ->
-                        val currentQuiz by remember(quizzes) {
-                            derivedStateOf {
-                                quizzes!![page]
-                            }
-                        }
                         Quiz(
                             modifier = Modifier.padding(horizontal = PaddingNormal)
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState()),
-                            quiz = currentQuiz,
+                            quiz = wrap.quizzes[page],
                             model = model
                         )
                     }

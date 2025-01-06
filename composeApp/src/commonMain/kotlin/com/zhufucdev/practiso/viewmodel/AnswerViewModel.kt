@@ -136,6 +136,7 @@ class AnswerViewModel(
     }
 
     sealed interface PageState {
+        val quizzes: List<QuizFrames>
         val progress: Float
 
         sealed class Pager : PageState {
@@ -148,11 +149,19 @@ class AnswerViewModel(
                 }
             }
 
-            data class Horizontal(override val state: PagerState) : Pager()
-            data class Vertical(override val state: PagerState) : Pager()
+            data class Horizontal(
+                override val quizzes: List<QuizFrames>,
+                override val state: PagerState,
+            ) : Pager()
+
+            data class Vertical(
+                override val quizzes: List<QuizFrames>,
+                override val state: PagerState,
+            ) : Pager()
         }
 
-        data class Column(val state: LazyListState) : PageState {
+        data class Column(override val quizzes: List<QuizFrames>, val state: LazyListState) :
+            PageState {
             override val progress: Float by derivedStateOf {
                 if (state.layoutInfo.totalItemsCount > 0) {
                     (state.firstVisibleItemIndex
@@ -175,18 +184,23 @@ class AnswerViewModel(
                             when (style) {
                                 PageStyle.Horizontal -> {
                                     PageState.Pager.Horizontal(
-                                        PagerState(getCurrentQuizIndex()) { q.size }
+                                        quizzes = q,
+                                        state = PagerState(getCurrentQuizIndex()) { q.size }
                                     )
                                 }
 
                                 PageStyle.Vertical -> {
                                     PageState.Pager.Vertical(
-                                        PagerState(getCurrentQuizIndex()) { q.size }
+                                        quizzes =  q,
+                                        state = PagerState(getCurrentQuizIndex()) { q.size }
                                     )
                                 }
 
                                 PageStyle.Column -> {
-                                    PageState.Column(LazyListState(getCurrentQuizIndex()))
+                                    PageState.Column(
+                                        quizzes = q,
+                                        state = LazyListState(getCurrentQuizIndex())
+                                    )
                                 }
                             }
                         }
@@ -216,6 +230,7 @@ class AnswerViewModel(
     )
     private val takeId = MutableStateFlow(-1L)
     suspend fun loadNavOptions(options: List<NavigationOption>) {
+        pageState.emit(null)
         val takeId =
             (options.lastOrNull { it is NavigationOption.OpenTake } as NavigationOption.OpenTake?)?.takeId
 
