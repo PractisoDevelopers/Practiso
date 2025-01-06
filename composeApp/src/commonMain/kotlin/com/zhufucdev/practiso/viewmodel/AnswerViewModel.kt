@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
+import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
@@ -28,6 +30,7 @@ import com.zhufucdev.practiso.datamodel.getAnswersDataModel
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.protobufMutableStateFlowSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
@@ -35,6 +38,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -56,9 +60,12 @@ class AnswerViewModel(
     val takeNumber by lazy {
         MutableStateFlow<Int?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
-                take.filterNotNull().collectLatest { take ->
-                    calculateTakeNumber(db, take.id).collectLatest {
-                        emit(it)
+                take.map { it?.id }.distinctUntilChanged().collectLatest { id ->
+                    if (id != null) {
+                        calculateTakeNumber(db, id)
+                            .collect(this@apply)
+                    } else {
+                        emit(null)
                     }
                 }
             }
@@ -67,10 +74,14 @@ class AnswerViewModel(
     val answers: StateFlow<List<Answer>?> by lazy {
         MutableStateFlow<List<Answer>?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
-                take.filterNotNull().collectLatest {
-                    db.sessionQueries
-                        .getAnswersDataModel(it.id)
-                        .collect(this@apply)
+                take.map { it?.id }.distinctUntilChanged().collectLatest {
+                    if (it != null) {
+                        db.sessionQueries
+                            .getAnswersDataModel(it)
+                            .collect(this@apply)
+                    } else {
+                        emit(null)
+                    }
                 }
             }
         }
@@ -79,7 +90,7 @@ class AnswerViewModel(
         MutableStateFlow<Take?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
                 @Suppress("DEPRECATION") // take is derived from takeId
-                takeId.filter { it >= 0 }.collectLatest {
+                takeId.filter { it >= 0 }.distinctUntilChanged().collectLatest {
                     db.sessionQueries.getTakeById(it)
                         .asFlow()
                         .mapToOne(Dispatchers.IO)
@@ -91,19 +102,28 @@ class AnswerViewModel(
     val quizzes by lazy {
         MutableStateFlow<List<QuizFrames>?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
-                take.filterNotNull().collectLatest { t ->
-                    db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(t.id))
-                        .map { frames -> frames.shuffled(Random(t.creationTimeISO.epochSeconds)) }
-                        .collect(this@apply)
-                }
+                take.map { it?.id to it?.creationTimeISO }
+                    .distinctUntilChanged()
+                    .collectLatest { (id, creationTime) ->
+                        emit(null)
+                        if (id != null && creationTime != null) {
+                            db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(id))
+                                .map { frames -> frames.shuffled(Random(creationTime.epochSeconds)) }
+                                .collect(this@apply)
+                        }
+                    }
             }
         }
     }
     val elapsed by lazy {
         MutableStateFlow<Duration?>(null).apply {
             viewModelScope.launch {
-                take.filterNotNull().collectLatest {
-                    var currentDuration = it.durationSeconds.seconds
+                take.map { it?.durationSeconds }.distinctUntilChanged().collectLatest {
+                    if (it == null) {
+                        emit(null)
+                        return@collectLatest
+                    }
+                    var currentDuration = it.seconds
                     emit(currentDuration)
                     var startInstant = Clock.System.now()
                     while (true) {
@@ -191,7 +211,7 @@ class AnswerViewModel(
 
                                 PageStyle.Vertical -> {
                                     PageState.Pager.Vertical(
-                                        quizzes =  q,
+                                        quizzes = q,
                                         state = PagerState(getCurrentQuizIndex()) { q.size }
                                     )
                                 }
@@ -224,13 +244,15 @@ class AnswerViewModel(
     /**
      * Avoid using this flow directly, use [take].id instead
      */
+    @OptIn(SavedStateHandleSaveableApi::class)
     @Deprecated(
         message = " Avoid using this flow directly",
         replaceWith = ReplaceWith("take.map { it?.id ?: -1 }")
     )
-    private val takeId = MutableStateFlow(-1L)
+    private val takeId
+            by state.saveable(saver = protobufMutableStateFlowSaver<Long>()) { MutableStateFlow(-1L) }
+
     suspend fun loadNavOptions(options: List<NavigationOption>) {
-        pageState.emit(null)
         val takeId =
             (options.lastOrNull { it is NavigationOption.OpenTake } as NavigationOption.OpenTake?)?.takeId
 
