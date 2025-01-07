@@ -31,8 +31,8 @@ actual fun wobbleHapticFeedback() {
             VibrationEffect.Composition.PRIMITIVE_SPIN.takeIf(supported)
                 ?: VibrationEffect.Composition.PRIMITIVE_CLICK.takeIf(supported)
         if (primitive != null) {
-            repeat(5) {
-                composition.addPrimitive(primitive, 1f / (it + 1), 70)
+            repeat(4) {
+                composition.addPrimitive(primitive, 0.8f / (it + 1))
             }
             vibrator.vibrate(composition.compose())
         } else {
