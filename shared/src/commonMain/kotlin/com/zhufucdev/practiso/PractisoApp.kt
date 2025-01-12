@@ -111,12 +111,16 @@ fun PractisoApp(
                     )
 
                 WindowWidthSizeClass.MEDIUM -> Row {
+                    val coroutine = rememberCoroutineScope()
                     NavigationRail {
                         Spacer(Modifier.padding(top = PaddingNormal))
                         TopLevelDestination.entries.forEach {
                             NavigationRailItem(
                                 selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
                                 onClick = {
+                                    coroutine.launch {
+                                        searchViewModel.event.close.send(Unit)
+                                    }
                                     if (navBackStackEntry?.destination?.route != it.route) {
                                         navController.navigate(it.route) {
                                             launchSingleTop = true
@@ -138,11 +142,15 @@ fun PractisoApp(
 
                 WindowWidthSizeClass.EXPANDED -> Row {
                     PermanentDrawerSheet {
+                        val coroutine = rememberCoroutineScope()
                         Spacer(Modifier.padding(top = PaddingNormal))
                         TopLevelDestination.entries.forEach {
                             NavigationDrawerItem(
                                 selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
                                 onClick = {
+                                    coroutine.launch {
+                                        searchViewModel.event.close.send(Unit)
+                                    }
                                     if (navBackStackEntry?.destination?.route != it.route) {
                                         navController.navigate(it.route) {
                                             launchSingleTop = true
@@ -200,10 +208,14 @@ private fun ScaffoldedApp(
             when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
                 WindowWidthSizeClass.COMPACT -> {
                     NavigationBar {
+                        val coroutine = rememberCoroutineScope()
                         TopLevelDestination.entries.forEach {
                             NavigationBarItem(
                                 selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
                                 onClick = {
+                                    coroutine.launch {
+                                        searchViewModel.event.close.send(Unit)
+                                    }
                                     if (navBackStackEntry?.destination?.route != it.route) {
                                         navController.navigate(it.route) {
                                             launchSingleTop = true
