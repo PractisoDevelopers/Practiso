@@ -104,9 +104,9 @@ sqldelight {
 
 android {
     namespace = "com.zhufucdev.practiso"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = androidApp.sdk.target
     defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = androidApp.sdk.min
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
