@@ -1,10 +1,13 @@
 # Practiso
-
-Personal, offline and intelligent study & practice utility. Learn smarter, not more.
-
+    
 [![Build and Release](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml/badge.svg)](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml)
 [![GitHub Tag](https://img.shields.io/github/v/tag/zhufucdev/Practiso)](https://github.com/zhufucdev/Practiso/tags)
 [![GitHub Release](https://img.shields.io/github/v/release/zhufucdev/Practiso)](https://github.com/zhufucdev/Practiso/releases)
+
+Personal, offline and intelligent study & practice utility. Learn smarter, not more.
+
+<p align="center"><img src="desktopApp/icons/icon.png" alt="Practiso logo" width="200px" /></p>
+
 
 
 ##  Screenshots
