@@ -22,7 +22,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: Extract Android Keystore
-        run: echo "$ks" | base64 -d > composeApp/keystore_android
+        run: echo "$ks" | base64 -d > androidApp/keystore_android
         env:
           ks: ${{ secrets.KEYSTORE_BASE64 }}
       - name: Extract Android Keystore Properties
@@ -33,13 +33,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew composeApp:assembleRelease
+        run: ./gradlew androidApp:assembleRelease
 
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
           name: android-apk
-          path: composeApp/build/outputs/apk/release/*.apk
+          path: androidApp/build/outputs/apk/release/*.apk
 
   build-desktop-linux:
 
@@ -61,13 +61,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew composeApp:packageReleaseDistributionForCurrentOS
+        run: ./gradlew desktopApp:packageReleaseDistributionForCurrentOS
 
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
           name: debian-deb
-          path: composeApp/build/compose/binaries/main-release/deb/*.deb
+          path: desktopApp/build/compose/binaries/main-release/deb/*.deb
 
   build-desktop-macos:
 
@@ -89,13 +89,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew composeApp:packageReleaseDistributionForCurrentOS
+        run: ./gradlew desktopApp:packageReleaseDistributionForCurrentOS
 
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
           name: macos-dmg
-          path: composeApp/build/compose/binaries/main-release/dmg/*.dmg
+          path: desktopApp/build/compose/binaries/main-release/dmg/*.dmg
 
   build-desktop-windows:
 
@@ -118,13 +118,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew composeApp:packageReleaseDistributionForCurrentOS
+        run: ./gradlew desktopApp:packageReleaseDistributionForCurrentOS
 
       - name: Upload the Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
           name: windows-msi
-          path: composeApp/build/compose/binaries/main-release/msi/*.msi
+          path: desktopApp/build/compose/binaries/main-release/msi/*.msi
 
   publish:
     name: Publish Release
