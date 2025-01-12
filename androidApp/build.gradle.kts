@@ -30,7 +30,7 @@ android {
         applicationId = "com.zhufucdev.practiso"
         minSdk = androidApp.sdk.min
         targetSdk = androidApp.sdk.target
-        versionCode = 9
+        versionCode = androidApp.versionCode
         versionName = appVersion
     }
     packaging {
