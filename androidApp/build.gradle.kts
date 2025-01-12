@@ -8,7 +8,7 @@ plugins {
 }
 android {
     namespace = "com.zhufucdev.practiso"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = androidApp.sdk.target
 
     signingConfigs {
         create("release") {
@@ -28,8 +28,8 @@ android {
 
     defaultConfig {
         applicationId = "com.zhufucdev.practiso"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        minSdk = androidApp.sdk.min
+        targetSdk = androidApp.sdk.target
         versionCode = 9
         versionName = appVersion
     }
