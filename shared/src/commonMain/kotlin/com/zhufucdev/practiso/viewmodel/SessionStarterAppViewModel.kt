@@ -12,14 +12,14 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
-import com.zhufucdev.practiso.concat
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.toOptionFlow
-import com.zhufucdev.practiso.protobufSaver
+import com.zhufucdev.practiso.helper.concat
+import com.zhufucdev.practiso.helper.protobufSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel

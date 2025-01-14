@@ -32,8 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composition.combineClickable
-import com.zhufucdev.practiso.copyTo
 import com.zhufucdev.practiso.datamodel.Frame
+import com.zhufucdev.practiso.helper.copyTo
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.style.PaddingNormal

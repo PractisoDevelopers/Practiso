@@ -1,4 +1,4 @@
-ALTER TABLE take ADD pinned INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE take ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0;
 DROP VIEW takeStat;
 CREATE VIEW takeStat AS
 SELECT T.id, QT.sessionId, S.name, T.hidden, T.pinned, T.durationSeconds, T.creationTimeISO, T.lastAccessTimeISO, COALESCE(Q.countQuizDone, 0) AS countQuizDone, QT.countQuizTotal

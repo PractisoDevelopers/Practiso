@@ -5,6 +5,14 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinxSerialization)
+    id("java")
+    id("kotlin-kapt")
+    id("io.objectbox")
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 compose.desktop {

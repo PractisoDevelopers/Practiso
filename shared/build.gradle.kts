@@ -11,6 +11,8 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.skie)
+    id("kotlin-kapt")
+    id("io.objectbox")
 }
 
 kotlin {

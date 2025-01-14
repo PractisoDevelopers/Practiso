@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import com.materialkolor.DynamicMaterialTheme
-import com.zhufucdev.practiso.platform.PlatformInstance
+import com.zhufucdev.practiso.platform.JvmPlatform
 import com.zhufucdev.practiso.style.AppTypography
 import com.zhufucdev.practiso.style.primaryDark
 import com.zhufucdev.practiso.style.primaryLight
@@ -27,11 +27,11 @@ fun SystemColorTheme(animate: Boolean = false, content: @Composable () -> Unit) 
             poolingContext.cancel()
         }
     }
-    val color by produceState(PlatformInstance.accentColor to PlatformInstance.isDarkModeEnabled) {
+    val color by produceState(JvmPlatform.accentColor to JvmPlatform.isDarkModeEnabled) {
         withContext(poolingContext) {
             while (true) {
                 delay(0.5.seconds)
-                value = PlatformInstance.accentColor to PlatformInstance.isDarkModeEnabled
+                value = JvmPlatform.accentColor to JvmPlatform.isDarkModeEnabled
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.platform
 
 import androidx.compose.ui.graphics.Color
+import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.github.tkuenneth.nativeparameterstoreaccess.Dconf
@@ -9,7 +10,8 @@ import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
-import kotlinx.coroutines.runBlocking
+import com.zhufucdev.practiso.datamodel.VectorDatabaseDriver
+import com.zhufucdev.practiso.helper.ChannelVectorDbDriver
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import java.util.Properties
@@ -17,7 +19,6 @@ import java.util.prefs.Preferences
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectory
-import kotlin.io.path.exists
 import kotlin.io.path.notExists
 
 abstract class JVMPlatform : Platform() {
@@ -33,19 +34,17 @@ abstract class JVMPlatform : Platform() {
         if (dataPath.notExists()) {
             dataPath.createDirectory()
         }
-        val dbExits = dbPath.exists()
         return JdbcSqliteDriver(
             "jdbc:sqlite:${dbPath}",
+            schema = AppDatabase.Schema.synchronous(),
             properties = Properties().apply {
                 put("foreign_keys", "true")
-            }).apply {
-            runBlocking {
-                if (!dbExits) {
-                    AppDatabase.Schema.create(this@apply).await()
-                }
             }
-        }
+        )
     }
+
+    val channelVectorDbDriver = ChannelVectorDbDriver()
+    override fun createVectorDbDriver(): VectorDatabaseDriver = channelVectorDbDriver
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM
@@ -111,12 +110,12 @@ class WindowsPlatform : JVMPlatform() {
     @OptIn(ExperimentalStdlibApi::class)
     override val accentColor: Color?
         get() = runCatching {
-                WindowsRegistry.getWindowsRegistryEntry(
-                    """HKCU\Software\Microsoft\Windows\DWM""",
-                    "AccentColor",
-                    WindowsRegistry.REG_TYPE.REG_DWORD
-                ).hexToInt(HexFormat { number.prefix = "0x" })
-            }.getOrNull()?.let {
+            WindowsRegistry.getWindowsRegistryEntry(
+                """HKCU\Software\Microsoft\Windows\DWM""",
+                "AccentColor",
+                WindowsRegistry.REG_TYPE.REG_DWORD
+            ).hexToInt(HexFormat { number.prefix = "0x" })
+        }.getOrNull()?.let {
             Color(
                 alpha = it shr (24) and (0xFF),
                 blue = it shr (16) and (0xFF),
@@ -155,7 +154,7 @@ class OtherPlatform : JVMPlatform() {
     override val dataPath: String by lazy { Path(getUserHome(), ".practiso").absolutePathString() }
 }
 
-val PlatformInstance by lazy {
+val JvmPlatform by lazy {
     System.getProperty("os.name").lowercase().let { os ->
         when {
             os.startsWith("mac") -> MacOSPlatform()
@@ -166,4 +165,4 @@ val PlatformInstance by lazy {
     }
 }
 
-actual fun getPlatform(): Platform = PlatformInstance
+actual fun getPlatform(): Platform = JvmPlatform

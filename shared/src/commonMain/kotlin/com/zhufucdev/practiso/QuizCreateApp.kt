@@ -307,11 +307,11 @@ private fun Editor(model: QuizCreateViewModel) {
                             val id = ++model.lastFrameId
                             when (pagerState.currentPage) {
                                 0 -> model.event.add.send(
-                                    Frame.Text(id, TextFrame(id, ""))
+                                    Frame.Text(id, TextFrame(id, null, ""))
                                 )
 
                                 1 -> model.event.add.send(
-                                    Frame.Image(id, ImageFrame(id, "", 0, 0, null))
+                                    Frame.Image(id, ImageFrame(id, null, "", 0, 0, null))
                                 )
 
                                 2 -> model.event.add.send(

@@ -9,11 +9,13 @@ import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
 import com.zhufucdev.practiso.PractisoApp
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.datamodel.VectorDatabaseDriver
+import com.zhufucdev.practiso.helper.ChannelVectorDbDriver
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toOkioPath
 
-class AndroidPlatform : Platform() {
+object AndroidPlatform : Platform() {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
 
     override fun createDbDriver(): SqlDriver {
@@ -29,6 +31,9 @@ class AndroidPlatform : Platform() {
         )
     }
 
+    val channelVectorDbDriver = ChannelVectorDbDriver()
+    override fun createVectorDbDriver(): VectorDatabaseDriver = channelVectorDbDriver
+
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM
 
@@ -41,4 +46,4 @@ class AndroidPlatform : Platform() {
     }
 }
 
-actual fun getPlatform(): Platform = AndroidPlatform()
+actual fun getPlatform(): Platform = AndroidPlatform

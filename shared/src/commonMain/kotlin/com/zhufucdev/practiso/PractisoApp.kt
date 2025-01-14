@@ -34,8 +34,8 @@ import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -43,6 +43,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,13 +61,16 @@ import androidx.navigation.toRoute
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.BackdropKey
+import com.zhufucdev.practiso.composable.ExtensiveSnackbar
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.ImportDialog
 import com.zhufucdev.practiso.composable.ImportState
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
+import com.zhufucdev.practiso.composition.ExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
+import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.datamodel.PractisoOption
@@ -97,11 +101,13 @@ fun PractisoApp(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+    val snackbars = remember { ExtensiveSnackbarState() }
 
     BottomUpComposableScope { buc ->
         CompositionLocalProvider(
             LocalNavController provides navController,
-            LocalBottomUpComposable provides buc
+            LocalBottomUpComposable provides buc,
+            LocalExtensiveSnackbarState provides snackbars
         ) {
             when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
                 WindowWidthSizeClass.COMPACT ->
@@ -187,8 +193,8 @@ private fun ScaffoldedApp(
     navController: NavHostController,
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val topBarBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val buc = LocalBottomUpComposable.current
+    val snackbars = LocalExtensiveSnackbarState.current
 
     Scaffold(
         topBar = {
@@ -241,6 +247,11 @@ private fun ScaffoldedApp(
                 }
             ) { content ->
                 content?.invoke()
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbars.host) {
+                ExtensiveSnackbar(state = snackbars, data = it)
             }
         }
     ) { padding ->

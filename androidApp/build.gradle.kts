@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinxSerialization)
+    id("kotlin-kapt")
+    id("io.objectbox")
 }
 
 android {
