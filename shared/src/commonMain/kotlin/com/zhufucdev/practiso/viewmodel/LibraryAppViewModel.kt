@@ -1,6 +1,5 @@
 package com.zhufucdev.practiso.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.core.bundle.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -28,7 +27,6 @@ import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.getPlatform
-import com.zhufucdev.practiso.protoBufStateListSaver
 import com.zhufucdev.practiso.protobufMutableStateFlowSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -64,9 +62,11 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
             .toOptionFlow(db.quizQueries)
     }
 
+    data class Caps(val template: Int = 5, val quiz: Int = 5, val dimension: Int = 5)
+
     @OptIn(SavedStateHandleSaveableApi::class)
-    val limits by state.saveable(saver = protoBufStateListSaver<Int>()) {
-        mutableStateListOf<Int>(5, 5, 5)
+    private val _caps by state.saveable(saver = protobufMutableStateFlowSaver<Caps>()) {
+        MutableStateFlow(Caps())
     }
 
     @OptIn(SavedStateHandleSaveableApi::class)
@@ -121,6 +121,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
     }
 
     val revealing: StateFlow<Revealable?> get() = _revealing
+    val caps: StateFlow<Caps> get() = _caps
 
     data class Events(
         val removeQuiz: Channel<Long> = Channel(),
@@ -128,6 +129,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
         val removeDimensionKeepQuizzes: Channel<Long> = Channel(),
         val reveal: Channel<Revealable> = Channel(),
         val newTakeFromDimension: Channel<Long> = Channel(),
+        val updateCaps: Channel<Caps> = Channel(),
     )
 
     val event = Events()
@@ -201,6 +203,16 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
                         Navigator.navigate(
                             Navigation.Goto(AppDestination.Answer), options = listOf(
                                 NavigationOption.OpenTake(takeId)
+                            )
+                        )
+                    }
+
+                    event.updateCaps.onReceive {
+                        _caps.emit(
+                            Caps(
+                                template = maxOf(_caps.value.template, it.template),
+                                quiz = maxOf(_caps.value.quiz, it.quiz),
+                                dimension = maxOf(_caps.value.dimension, it.dimension)
                             )
                         )
                     }

@@ -97,7 +97,7 @@ import resources.templates_para
 @Composable
 fun LibraryApp(
     model: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
-    importer: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
+    importer: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
 ) {
     var showActions by remember {
         mutableStateOf(false)
@@ -161,29 +161,35 @@ fun LibraryApp(
             )
         } else {
             val listState = rememberLazyListState()
+            val caps by model.caps.collectAsState()
 
             LaunchedEffect(revealing, templates, quizzes, dimensions) {
                 if (templates == null || quizzes == null || dimensions == null) {
                     return@LaunchedEffect
                 }
 
-                val offsets = buildList {
-                    add(0)
-                    add(last() + (templates?.size ?: 0) + 1)
-                    add(last() + (dimensions?.size ?: 0) + 1)
-                }
                 revealing?.let {
+                    val offsets = buildList {
+                        add(0)
+                        add(last() + (templates?.size ?: 0) + 1)
+                        add(last() + (dimensions?.size ?: 0) + 1)
+                    }
+
                     when (it.type) {
                         LibraryAppViewModel.RevealableType.Dimension -> {
-                            val localIndex = dimensions!!.indexOfFirst { d -> d.id == it.id }
-                            model.limits[1] = maxOf(model.limits[1], localIndex + 1)
-                            listState.animateScrollToItem(offsets[1] + localIndex)
+                            coroutine.launch {
+                                val localIndex = dimensions!!.indexOfFirst { d -> d.id == it.id }
+                                model.event.updateCaps.send(LibraryAppViewModel.Caps(dimension = localIndex + 1))
+                                listState.animateScrollToItem(offsets[1] + localIndex)
+                            }
                         }
 
                         LibraryAppViewModel.RevealableType.Quiz -> {
-                            val localIndex = quizzes!!.indexOfFirst { q -> q.id == it.id }
-                            model.limits[2] = maxOf(model.limits[2], localIndex + 1)
-                            listState.animateScrollToItem(offsets[2] + localIndex)
+                            coroutine.launch {
+                                val localIndex = quizzes!!.indexOfFirst { q -> q.id == it.id }
+                                model.event.updateCaps.send(LibraryAppViewModel.Caps(quiz = localIndex + 1))
+                                listState.animateScrollToItem(offsets[2] + localIndex)
+                            }
                         }
                     }
                 }
@@ -211,9 +217,11 @@ fun LibraryApp(
                             )
                         }
                     },
-                    limit = model.limits[0],
+                    limit = caps.template,
                     onIncreaseLimit = {
-                        model.limits[0] = it
+                        coroutine.launch {
+                            model.event.updateCaps.send(LibraryAppViewModel.Caps(template = it))
+                        }
                     },
                     id = { "template_" + it.id },
                 )
@@ -291,9 +299,11 @@ fun LibraryApp(
                             )
                         }
                     },
-                    limit = model.limits[1],
+                    limit = caps.dimension,
                     onIncreaseLimit = {
-                        model.limits[1] = it
+                        coroutine.launch {
+                            model.event.updateCaps.send(LibraryAppViewModel.Caps(dimension = it))
+                        }
                     },
                     id = { "dimension_" + it.dimension.id },
                     revealingIndex =
@@ -327,9 +337,11 @@ fun LibraryApp(
                             }
                         )
                     },
-                    limit = model.limits[2],
+                    limit = caps.quiz,
                     onIncreaseLimit = {
-                        model.limits[2] = it
+                        coroutine.launch {
+                            model.event.updateCaps.send(LibraryAppViewModel.Caps(quiz = it))
+                        }
                     },
                     id = { "quiz_" + it.quiz.id },
                     revealingIndex =

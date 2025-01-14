@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -279,6 +280,7 @@ internal enum class TopLevelDestination(
 
 @Composable
 private fun NavigatedApp(importer: ImportViewModel) {
+    val rootOwner = LocalViewModelStoreOwner.current
     NavHost(
         navController = currentNavController(),
         startDestination = TopLevelDestination.Session.route,
@@ -295,7 +297,8 @@ private fun NavigatedApp(importer: ImportViewModel) {
                 typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
             )
         ) { backtrace ->
-            val model: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory)
+            val model: LibraryAppViewModel =
+                viewModel(factory = LibraryAppViewModel.Factory, viewModelStoreOwner = rootOwner!!)
             LaunchedEffect(backtrace) {
                 model.event.reveal.send(backtrace.toRoute())
             }
