@@ -59,6 +59,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
+import com.zhufucdev.practiso.composable.BackdropKey
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.ImportDialog
 import com.zhufucdev.practiso.composable.ImportState
@@ -246,6 +247,7 @@ private fun ScaffoldedApp(
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             NavigatedApp(importViewModel)
         }
+        buc?.compose(BackdropKey)
     }
 
     val state by importViewModel.state.collectAsState()

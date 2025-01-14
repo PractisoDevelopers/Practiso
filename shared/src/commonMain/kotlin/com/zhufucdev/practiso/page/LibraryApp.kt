@@ -43,6 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
+import com.zhufucdev.practiso.composable.Backdrop
+import com.zhufucdev.practiso.composable.BackdropKey
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.FloatingPopupButton
 import com.zhufucdev.practiso.composable.HorizontalControl
@@ -144,6 +146,11 @@ fun LibraryApp(
                     }
                 }
             )
+        }
+    }
+    composeFromBottomUp(BackdropKey) {
+        if (showActions) {
+            Backdrop { showActions = false }
         }
     }
 
