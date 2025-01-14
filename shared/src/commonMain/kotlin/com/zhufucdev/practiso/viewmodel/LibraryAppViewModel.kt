@@ -62,6 +62,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
             .toOptionFlow(db.quizQueries)
     }
 
+    @Serializable
     data class Caps(val template: Int = 5, val quiz: Int = 5, val dimension: Int = 5)
 
     @OptIn(SavedStateHandleSaveableApi::class)
