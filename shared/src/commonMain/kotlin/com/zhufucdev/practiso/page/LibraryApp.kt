@@ -54,6 +54,7 @@ import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
+import com.zhufucdev.practiso.composable.SharedHorizontalDraggableExclusionLock
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.datamodel.Importable
@@ -122,7 +123,14 @@ fun LibraryApp(
             }
         FloatingPopupButton(
             expanded = showActions,
-            onExpandedChange = { showActions = it },
+            onExpandedChange = {
+                showActions = it
+                if (showActions) {
+                    coroutine.launch {
+                        SharedHorizontalDraggableExclusionLock.current.emit(null)
+                    }
+                }
+            },
             autoCollapse = true
         ) {
             item(
