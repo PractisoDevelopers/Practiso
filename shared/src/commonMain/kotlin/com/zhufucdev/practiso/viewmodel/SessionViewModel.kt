@@ -15,6 +15,7 @@ import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.SessionCreator
+import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
@@ -42,7 +43,7 @@ import resources.x_and_n_more_para
 class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
     val sessions by lazy {
-        MutableStateFlow<List<PractisoOption.Session>?>(null).apply {
+        MutableStateFlow<List<SessionOption>?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
                 db.sessionQueries.getAllSessions()
                     .asFlow()

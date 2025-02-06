@@ -43,7 +43,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,12 +67,13 @@ import com.zhufucdev.practiso.composable.ImportState
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
-import com.zhufucdev.practiso.composition.ExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.currentNavController
+import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
+import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
@@ -101,13 +101,11 @@ fun PractisoApp(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val windowAdaptiveInfo = currentWindowAdaptiveInfo()
-    val snackbars = remember { ExtensiveSnackbarState() }
 
     BottomUpComposableScope { buc ->
         CompositionLocalProvider(
             LocalNavController provides navController,
             LocalBottomUpComposable provides buc,
-            LocalExtensiveSnackbarState provides snackbars
         ) {
             when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
                 WindowWidthSizeClass.COMPACT ->
@@ -204,8 +202,8 @@ private fun ScaffoldedApp(
                         id = it.id,
                         type =
                             when (it) {
-                                is PractisoOption.Dimension -> LibraryAppViewModel.RevealableType.Dimension
-                                is PractisoOption.Quiz -> LibraryAppViewModel.RevealableType.Quiz
+                                is DimensionOption -> LibraryAppViewModel.RevealableType.Dimension
+                                is QuizOption -> LibraryAppViewModel.RevealableType.Quiz
                                 else -> error("Unsupported revealing type: ${it::class.simpleName}")
                             }
                     )

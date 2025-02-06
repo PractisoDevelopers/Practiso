@@ -16,7 +16,7 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.composable.FlipCardState
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.TakeStat
-import com.zhufucdev.practiso.datamodel.PractisoOption
+import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.datamodel.createTake
 import com.zhufucdev.practiso.helper.protoBufStateListSaver
 import com.zhufucdev.practiso.helper.protobufSaver
@@ -45,7 +45,7 @@ class TakeStarterViewModel(
     val db: AppDatabase,
     state: SavedStateHandle,
 ) : ViewModel() {
-    val option = MutableStateFlow<PractisoOption.Session?>(null)
+    val option = MutableStateFlow<SessionOption?>(null)
     var uiCoroutineScope: CoroutineScope? = null
         private set
 
@@ -189,7 +189,7 @@ class TakeStarterViewModel(
         }
     }
 
-    suspend fun load(option: PractisoOption.Session, coroutineScope: CoroutineScope) {
+    suspend fun load(option: SessionOption, coroutineScope: CoroutineScope) {
         uiCoroutineScope = coroutineScope
         this.option.emit(option)
     }

@@ -14,7 +14,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
-import com.zhufucdev.practiso.datamodel.PractisoOption
+import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.toOptionFlow
@@ -112,19 +112,19 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
     }
 
     interface Item {
-        val quizzes: List<PractisoOption.Quiz>
+        val quizzes: List<QuizOption>
         val id: Long
 
         data class Categorized(
             val dimension: Dimension,
-            override val quizzes: List<PractisoOption.Quiz>,
+            override val quizzes: List<QuizOption>,
         ) : Item {
             override val id: Long
                 get() = dimension.id
         }
 
         data class Stranded(
-            override val quizzes: List<PractisoOption.Quiz>,
+            override val quizzes: List<QuizOption>,
         ) : Item {
             override val id: Long
                 get() = 0

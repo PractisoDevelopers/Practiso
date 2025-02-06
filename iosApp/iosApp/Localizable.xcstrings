@@ -1,0 +1,24 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "derived" : {
+
+    },
+    "Hello there" : {
+
+    },
+    "Library" : {
+
+    },
+    "Sessions" : {
+      "extractionState" : "manual"
+    },
+    "should never reach here" : {
+
+    },
+    "source" : {
+
+    }
+  },
+  "version" : "1.0"
+}

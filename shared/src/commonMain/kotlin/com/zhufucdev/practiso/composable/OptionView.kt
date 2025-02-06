@@ -61,10 +61,10 @@ fun PractisoOptionView(
     modifier: Modifier = Modifier,
 ) {
     PractisoOptionSkeleton(
-        label = { Text(option.titleString()) },
+        label = { Text(option.view.title()) },
         preview = {
             Text(
-                text = option.previewString(),
+                text = option.view.preview(),
                 maxLines = previewMaxLines,
                 overflow = previewOverflow
             )

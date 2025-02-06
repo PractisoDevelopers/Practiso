@@ -225,14 +225,14 @@ private class TextSerializer : KSerializer<Frame.Text> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor(TextFrameSerialName) {
         element("link_id", serialDescriptor<Long>())
         element("id", serialDescriptor<Long>())
-        element("embeddings_id", serialDescriptor<Long?>())
+        element("embeddings_id", serialDescriptor<String?>())
         element("content", serialDescriptor<String>())
     }
 
     override fun deserialize(decoder: Decoder): Frame.Text = decoder.decodeStructure(descriptor) {
         var exId = -1L
         var id = -1L
-        var eId: Long? = -1L
+        var eId: String? = ""
         var content = ""
         while (true) {
             when (val index = decodeElementIndex(descriptor)) {
@@ -244,7 +244,7 @@ private class TextSerializer : KSerializer<Frame.Text> {
             }
         }
 
-        if (id < 0 || eId?.let { it < 0 } == true || content.isEmpty()) {
+        if (id < 0 || eId?.isEmpty() == true || content.isEmpty()) {
             error("Missing id or content while deserializing Frame.Text")
         }
 
@@ -264,7 +264,7 @@ private class ImageSerializer : KSerializer<Frame.Image> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor(ImageFrameSerialName) {
         element("link_id", serialDescriptor<Long>())
         element("id", serialDescriptor<Long>())
-        element("embeddings_id", serialDescriptor<Long>())
+        element("embeddings_id", serialDescriptor<String?>())
         element("filename", serialDescriptor<String>())
         element("width", serialDescriptor<Long>())
         element("height", serialDescriptor<Long>())
@@ -274,7 +274,7 @@ private class ImageSerializer : KSerializer<Frame.Image> {
     override fun deserialize(decoder: Decoder): Frame.Image = decoder.decodeStructure(descriptor) {
         var exId = -1L
         var id = -1L
-        var eId: Long? = null
+        var eId: String? = ""
         var filename = ""
         var width = 0L
         var height = 0L
@@ -291,7 +291,7 @@ private class ImageSerializer : KSerializer<Frame.Image> {
                 6 -> altText = decodeSerializableElement(descriptor, index, serializer<String>())
             }
         }
-        if (id < 0 || eId?.let { it < 0 } == true || width <= 0 || height <= 0) {
+        if (id < 0 || eId?.isEmpty() == true || width <= 0 || height <= 0) {
             error("Missing elements when decoding")
         }
         Frame.Image(

@@ -787,11 +787,11 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
                     ) {
                         Column(Modifier.padding(PaddingSmall)) {
                             Text(
-                                option.titleString(),
+                                option.view.title(),
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                option.previewString(),
+                                option.view.preview(),
                                 style = MaterialTheme.typography.labelMedium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -916,7 +916,7 @@ private fun ColumnScope.TakeStarterContent(
     val coroutine = rememberCoroutineScope()
     val option by model.option.collectAsState()
     Text(
-        option?.titleString() ?: stringResource(Res.string.loading_takes_para),
+        option?.view?.title() ?: stringResource(Res.string.loading_takes_para),
         style = MaterialTheme.typography.titleLarge,
         textAlign = TextAlign.Center,
         modifier = Modifier.align(Alignment.CenterHorizontally)
