@@ -1,2 +1,2 @@
-ALTER TABLE imageFrame ADD COLUMN embeddingsId INTEGER;
-ALTER TABLE textFrame ADD COLUMN embeddingsId INTEGER;
+ALTER TABLE imageFrame ADD COLUMN embeddingsId TEXT;
+ALTER TABLE textFrame ADD COLUMN embeddingsId TEXT;

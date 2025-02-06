@@ -9,8 +9,6 @@ import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
 import com.zhufucdev.practiso.PractisoApp
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.datamodel.VectorDatabaseDriver
-import com.zhufucdev.practiso.helper.ChannelVectorDbDriver
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toOkioPath
@@ -30,9 +28,6 @@ object AndroidPlatform : Platform() {
             }
         )
     }
-
-    val channelVectorDbDriver = ChannelVectorDbDriver()
-    override fun createVectorDbDriver(): VectorDatabaseDriver = channelVectorDbDriver
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM

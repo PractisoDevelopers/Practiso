@@ -6,6 +6,7 @@ import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.QuizQueries
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.SessionQueries
+import com.zhufucdev.practiso.datamodel.PractisoOption.View
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -26,83 +27,76 @@ private typealias DbSession = Session
 
 sealed interface PractisoOption {
     val id: Long
+    val view: View
 
-    @Composable
-    fun titleString(): String
-
-    @Composable
-    fun previewString(): String
-
-    data class Quiz(val quiz: DbQuiz, val preview: String?) : PractisoOption {
-        override val id: Long
-            get() = quiz.id
-
-        @Composable
-        override fun titleString(): String {
-            return quiz.name?.takeIf(String::isNotEmpty)
-                ?: stringResource(Res.string.new_question_para)
-        }
-
-        @Composable
-        override fun previewString(): String {
-            return preview ?: stringResource(Res.string.empty_span)
-        }
-    }
-
-    data class Dimension(val dimension: DbDimension, val quizCount: Int) : PractisoOption,
-        SessionCreator {
-        override val id: Long
-            get() = dimension.id
-
-        @Composable
-        override fun titleString(): String {
-            return dimension.name
-        }
-
-        @Composable
-        override fun previewString(): String =
-            if (quizCount > 0)
-                pluralStringResource(
-                    Res.plurals.n_questions_span,
-                    quizCount,
-                    quizCount
-                )
-            else stringResource(Res.string.empty_span)
-
-        override val selection: Selection
-            get() = Selection(dimensionIds = setOf(id))
-        override val sessionName: String?
-            get() = dimension.name
-    }
-
-    data class Session(val session: DbSession, val quizCount: Int) : PractisoOption {
-        override val id: Long
-            get() = session.id
-
-        @Composable
-        override fun titleString(): String {
-            return session.name
-        }
-
-        @Composable
-        override fun previewString(): String {
-            return pluralStringResource(
-                Res.plurals.n_questions_dot_created_date_para,
-                quizCount,
-                quizCount,
-                HumanReadable.timeAgo(session.creationTimeISO)
-            )
-        }
-    }
-
+    data class View(val title: @Composable () -> String, val preview: @Composable () -> String)
 }
 
-fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
+data class QuizOption(val quiz: DbQuiz, val preview: String?) : PractisoOption {
+    override val id: Long
+        get() = quiz.id
+
+    override val view: View
+        get() = View(
+            title = {
+                quiz.name?.takeIf(String::isNotEmpty)
+                    ?: stringResource(Res.string.new_question_para)
+            },
+            preview = {
+                preview ?: stringResource(Res.string.empty_span)
+            }
+        )
+}
+
+data class DimensionOption(val dimension: DbDimension, val quizCount: Int) : PractisoOption,
+    SessionCreator {
+    override val id: Long
+        get() = dimension.id
+
+    override val view: View
+        get() = View(
+            title = { dimension.name },
+            preview = {
+                if (quizCount > 0)
+                    pluralStringResource(
+                        Res.plurals.n_questions_span,
+                        quizCount,
+                        quizCount
+                    )
+                else stringResource(Res.string.empty_span)
+            }
+        )
+
+    override val selection: Selection
+        get() = Selection(dimensionIds = setOf(id))
+    override val sessionName: String?
+        get() = dimension.name
+}
+
+data class SessionOption(val session: DbSession, val quizCount: Int) : PractisoOption {
+    override val id: Long
+        get() = session.id
+
+    override val view: View
+        get() = View(
+            title = { session.name },
+            preview = {
+                pluralStringResource(
+                    Res.plurals.n_questions_dot_created_date_para,
+                    quizCount,
+                    quizCount,
+                    HumanReadable.timeAgo(session.creationTimeISO)
+                )
+            }
+        )
+}
+
+fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<QuizOption>> =
     map { frames ->
         coroutineScope {
             frames.map {
                 async {
-                    PractisoOption.Quiz(
+                    QuizOption(
                         quiz = it.quiz,
                         preview = it.frames.map { async { it.frame.getPreviewText() } }.awaitAll()
                             .joinToString("  ")
@@ -112,12 +106,12 @@ fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<PractisoOption.Quiz>> =
         }
     }
 
-fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<PractisoOption.Dimension>> =
+fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<DimensionOption>> =
     map { dimensions ->
         coroutineScope {
             dimensions.map {
                 async {
-                    PractisoOption.Dimension(
+                    DimensionOption(
                         dimension = it,
                         quizCount = (db.getQuizCountByDimension(it.id)
                             .executeAsOneOrNull() ?: 0)
@@ -128,12 +122,12 @@ fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<PractisoOpt
         }
     }
 
-fun Flow<List<DbSession>>.toOptionFlow(db: SessionQueries): Flow<List<PractisoOption.Session>> =
+fun Flow<List<DbSession>>.toOptionFlow(db: SessionQueries): Flow<List<SessionOption>> =
     map { sessions ->
         coroutineScope {
             sessions.map {
                 async {
-                    PractisoOption.Session(
+                    SessionOption(
                         session = it,
                         quizCount = db.getQuizCountBySession(it.id)
                             .executeAsOne()

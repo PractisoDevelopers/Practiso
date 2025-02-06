@@ -13,8 +13,8 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.PrioritizedFrame
+import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.createSession
 import com.zhufucdev.practiso.datamodel.createTake
@@ -50,7 +50,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
             .mapToList(Dispatchers.IO)
     }
 
-    val quiz: Flow<List<PractisoOption.Quiz>> by lazy {
+    val quiz: Flow<List<QuizOption>> by lazy {
         db.quizQueries.getQuizFrames(db.quizQueries.getAllQuiz())
             .toOptionFlow()
     }

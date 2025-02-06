@@ -13,8 +13,4 @@ object Database {
     val app: AppDatabase by lazy {
         driver.toDatabase()
     }
-
-    val vectorDriver by lazy {
-        getPlatform().createVectorDbDriver()
-    }
 }

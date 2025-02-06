@@ -17,12 +17,8 @@ import androidx.compose.ui.window.singleWindowApplication
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.zhufucdev.practiso.datamodel.Importable
-import com.zhufucdev.practiso.embeddings.Frame
-import com.zhufucdev.practiso.embeddings.MyObjectBox
-import com.zhufucdev.practiso.helper.ChannelVectorDbDriver
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
-import com.zhufucdev.practiso.platform.JvmPlatform
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationStateSnapshot
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
@@ -55,16 +51,7 @@ private fun handleFileAssociations(args: Array<String>): ReceiveChannel<List<Fil
     }
 }
 
-private fun initializeVectorDb(dbPath: String, channelDriver: ChannelVectorDbDriver) {
-    val store = MyObjectBox.builder()
-        .baseDirectory(File(dbPath))
-        .name("vector")
-        .build()
-    channelDriver.frameChannel.trySend(Frame(store))
-}
-
 fun main(args: Array<String>) {
-    initializeVectorDb(JvmPlatform.dataPath, JvmPlatform.channelVectorDbDriver)
     val openFileChannel = handleFileAssociations(args)
 
     singleWindowApplication(title = "Practiso") {

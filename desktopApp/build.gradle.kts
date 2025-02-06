@@ -5,9 +5,6 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinxSerialization)
-    id("java")
-    id("kotlin-kapt")
-    id("io.objectbox")
 }
 
 java {

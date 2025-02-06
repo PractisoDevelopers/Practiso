@@ -10,7 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.StateFlow
 
-val LocalExtensiveSnackbarState = compositionLocalOf { ExtensiveSnackbarState() }
+val SharedExtensiveSnackbarState = ExtensiveSnackbarState()
+val LocalExtensiveSnackbarState = compositionLocalOf { SharedExtensiveSnackbarState }
 
 @Stable
 class ExtensiveSnackbarState(
@@ -33,5 +34,6 @@ class ExtensiveSnackbarState(
 }
 
 sealed interface SnackbarExtension {
-    data class ProgressBar(val progress: StateFlow<Float>, val animated: Boolean = true) : SnackbarExtension
+    data class ProgressBar(val progress: StateFlow<Float>, val animated: Boolean = true) :
+        SnackbarExtension
 }

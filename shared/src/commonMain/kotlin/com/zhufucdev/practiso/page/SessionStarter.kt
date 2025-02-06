@@ -51,7 +51,7 @@ import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
-import com.zhufucdev.practiso.datamodel.PractisoOption
+import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -87,12 +87,12 @@ fun SessionStarter(
             items?.filter { it.id in model.currentItemIds }
         }
     }
-    val quizzes: Set<PractisoOption.Quiz>? by remember(currentItems) {
+    val quizzes: Set<QuizOption>? by remember(currentItems) {
         derivedStateOf {
             currentItems?.takeIf { it.isNotEmpty() }?.flatMap(Item::quizzes)?.toSet()
         }
     }
-    val selectedQuizzes: List<PractisoOption.Quiz>? by remember(model.selection, quizzes) {
+    val selectedQuizzes: List<QuizOption>? by remember(model.selection, quizzes) {
         derivedStateOf {
             quizzes?.filter {
                 it.quiz.id in model.selection.quizIds || it in model.selection.dimensionIds.flatMap { i ->
@@ -101,7 +101,7 @@ fun SessionStarter(
             }
         }
     }
-    val unselectedQuizzes: List<PractisoOption.Quiz>? by remember(model.selection, quizzes) {
+    val unselectedQuizzes: List<QuizOption>? by remember(model.selection, quizzes) {
         derivedStateOf {
             quizzes?.filter {
                 it.quiz.id !in model.selection.quizIds && it !in model.selection.dimensionIds.flatMap { i ->
@@ -331,7 +331,7 @@ fun SessionStarter(
 
 @Composable
 private fun QuizItem(
-    option: PractisoOption.Quiz,
+    option: QuizOption,
     hasSeparator: Boolean,
     checked: Boolean,
     onClick: () -> Unit,
@@ -345,10 +345,10 @@ private fun QuizItem(
         Spacer(Modifier.height(PaddingNormal))
 
         QuizSkeleton(
-            label = { Text(option.titleString()) },
+            label = { Text(option.view.title()) },
             preview = {
                 Text(
-                    option.previewString(),
+                    option.view.preview(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

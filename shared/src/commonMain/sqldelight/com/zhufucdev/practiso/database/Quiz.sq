@@ -3,13 +3,13 @@ import kotlinx.datetime.Instant;
 
 CREATE TABLE textFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    embeddingsId INTEGER,
+    embeddingsId TEXT,
     content TEXT NOT NULL
 );
 
 CREATE TABLE imageFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    embeddingsId INTEGER,
+    embeddingsId TEXT,
     filename TEXT NOT NULL,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,

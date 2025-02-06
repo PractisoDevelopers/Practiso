@@ -11,8 +11,6 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.skie)
-    id("kotlin-kapt")
-    id("io.objectbox")
 }
 
 kotlin {
@@ -53,6 +51,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.sqldelight.android.driver)
+            implementation(libs.onnx.runtime.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -87,6 +86,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.sqldelight.jvm.driver)
             implementation(libs.nativeparameteraccess)
+            implementation(libs.onnx.runtime.jvm)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native.driver)

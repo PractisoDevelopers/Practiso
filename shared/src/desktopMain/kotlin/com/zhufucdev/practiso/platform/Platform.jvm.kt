@@ -10,8 +10,6 @@ import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.datamodel.VectorDatabaseDriver
-import com.zhufucdev.practiso.helper.ChannelVectorDbDriver
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import java.util.Properties
@@ -42,9 +40,6 @@ abstract class JVMPlatform : Platform() {
             }
         )
     }
-
-    val channelVectorDbDriver = ChannelVectorDbDriver()
-    override fun createVectorDbDriver(): VectorDatabaseDriver = channelVectorDbDriver
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM

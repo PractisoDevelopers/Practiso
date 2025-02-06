@@ -57,6 +57,7 @@ import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SharedHorizontalDraggableExclusionLock
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.platform.AppDestination
@@ -485,7 +486,7 @@ fun <T> LazyListScope.flatContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DimensionRemovalDialog(
-    target: PractisoOption.Dimension,
+    target: DimensionOption,
     onDeleteAll: () -> Unit,
     onDeleteSelfOnly: () -> Unit,
     onDismiss: () -> Unit,
