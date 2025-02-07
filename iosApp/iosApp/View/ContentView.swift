@@ -16,12 +16,24 @@ struct ContentView: View {
                     case .session:
                         SessionView()
                             .navigationTitle("Sessions")
+                    case .dimension:
+                        OptionListView(data: model.dimensions)
+                            .navigationTitle("Dimensions")
+                    case .question:
+                        OptionListView(data: model.quizzes)
+                            .navigationTitle("Questions")
+                    case .template:
+                        OptionListView(data: model.templates)
+                            .navigationTitle("Templates")
                     default:
                         Text("should never reach here")
                     }
                 }
         }
         .environmentObject(model)
+        .task {
+            await model.startObserving()
+        }
     }
 }
 

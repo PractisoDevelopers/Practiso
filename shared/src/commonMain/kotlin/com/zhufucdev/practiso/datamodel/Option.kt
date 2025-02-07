@@ -6,6 +6,7 @@ import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.QuizQueries
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.SessionQueries
+import com.zhufucdev.practiso.database.Template
 import com.zhufucdev.practiso.datamodel.PractisoOption.View
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -20,6 +21,8 @@ import resources.empty_span
 import resources.n_questions_dot_created_date_para
 import resources.n_questions_span
 import resources.new_question_para
+import resources.new_template_para
+import resources.no_description_para
 
 private typealias DbQuiz = Quiz
 private typealias DbDimension = Dimension
@@ -91,6 +94,20 @@ data class SessionOption(val session: DbSession, val quizCount: Int) : PractisoO
         )
 }
 
+data class TemplateOption(val template: Template) : PractisoOption {
+    override val id: Long
+        get() = template.id
+
+    override val view: View
+        get() = View(
+            title = {
+                template.name.takeIf(String::isNotEmpty)
+                    ?: stringResource(Res.string.new_template_para)
+            },
+            preview = { template.description ?: stringResource(Res.string.no_description_para) }
+        )
+}
+
 fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<QuizOption>> =
     map { frames ->
         coroutineScope {
@@ -137,3 +154,5 @@ fun Flow<List<DbSession>>.toOptionFlow(db: SessionQueries): Flow<List<SessionOpt
             }.awaitAll()
         }
     }
+
+fun Flow<List<Template>>.toOptionFlow() = map { it.map { t -> TemplateOption(t) } }
