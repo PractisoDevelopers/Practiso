@@ -223,13 +223,11 @@ fun LibraryApp(
                     },
                     content = {
                         Box {
-                            PractisoOptionSkeleton(
-                                label = { Text(it.name) },
-                                preview = {
-                                    it.description?.let { p ->
-                                        Text(p, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    }
-                                },
+                            ListItem(
+                                option = it,
+                                onDelete = {
+                                    TODO()
+                                }
                             )
                         }
                     },

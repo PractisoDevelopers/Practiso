@@ -151,4 +151,6 @@
     <string name="new_take_from_x_para">New take from %1$s</string>
     <string name="generic_file_para">Generic file</string>
     <string name="pin_para">Pin</string>
+    <string name="new_template_para">New template</string>
+    <string name="no_description_para">No description</string>
 </resources>

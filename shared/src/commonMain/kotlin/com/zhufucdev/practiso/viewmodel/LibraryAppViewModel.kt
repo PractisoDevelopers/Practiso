@@ -48,6 +48,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
         db.templateQueries.getAllTemplates()
             .asFlow()
             .mapToList(Dispatchers.IO)
+            .toOptionFlow()
     }
 
     val quiz: Flow<List<QuizOption>> by lazy {

@@ -3,13 +3,14 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 73;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557BA273AAA24004C7B11 /* Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		6A03DC1C2D2ADEAE00AF3F06 /* AHAP in Resources */ = {isa = PBXBuildFile; fileRef = 6A03DC1B2D2ADEA900AF3F06 /* AHAP */; };
+		6A11F1492D55F6020062436E /* TimeConvert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A11F1482D55F6020062436E /* TimeConvert.swift */; };
 		6A96E8F32D2B6D3B009AE4F1 /* HapticFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A96E8F22D2B6D3B009AE4F1 /* HapticFeedback.swift */; };
 		6A9D7F892D54D83700A57747 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6A9D7F882D54D83700A57747 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
@@ -18,6 +19,7 @@
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		6A03DC1B2D2ADEA900AF3F06 /* AHAP */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AHAP; sourceTree = "<group>"; };
+		6A11F1482D55F6020062436E /* TimeConvert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeConvert.swift; sourceTree = "<group>"; };
 		6A96E8F22D2B6D3B009AE4F1 /* HapticFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedback.swift; sourceTree = "<group>"; };
 		6A9D7F882D54D83700A57747 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		6ADA94532D37B33700381F73 /* CouchbaseLiteSwift.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CouchbaseLiteSwift.xcframework; path = "../../../../Downloads/couchbase-lite-swift_xc_community_3.1.9/CouchbaseLiteSwift.xcframework"; sourceTree = "<group>"; };
@@ -26,8 +28,19 @@
 		AB3632DC29227652001CCB65 /* Config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		6A11F1432D55EDBD0062436E /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 7555FF79242A565900829871 /* Resources */;
+			membershipExceptions = (
+				Composed/BlockButton.swift,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		6A9D7F7E2D548CC800A57747 /* View */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = View; sourceTree = "<group>"; };
+		6A11F1442D55EDC30062436E /* Model */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Model; sourceTree = "<group>"; };
+		6A9D7F7E2D548CC800A57747 /* View */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (6A11F1432D55EDBD0062436E /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = View; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +83,7 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				6A11F1442D55EDC30062436E /* Model */,
 				6A03DC1B2D2ADEA900AF3F06 /* AHAP */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF8C242A565B00829871 /* Info.plist */,
@@ -77,6 +91,7 @@
 				6A96E8F22D2B6D3B009AE4F1 /* HapticFeedback.swift */,
 				6A9D7F7E2D548CC800A57747 /* View */,
 				6A9D7F882D54D83700A57747 /* Localizable.xcstrings */,
+				6A11F1482D55F6020062436E /* TimeConvert.swift */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -106,6 +121,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				6A11F1442D55EDC30062436E /* Model */,
 				6A9D7F7E2D548CC800A57747 /* View */,
 			);
 			name = iosApp;
@@ -132,7 +148,6 @@
 				};
 			};
 			buildConfigurationList = 7555FF76242A565900829871 /* Build configuration list for PBXProject "iosApp" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -142,6 +157,7 @@
 			mainGroup = 7555FF72242A565900829871;
 			packageReferences = (
 			);
+			preferredProjectObjectVersion = 56;
 			productRefGroup = 7555FF7C242A565900829871 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -193,6 +209,7 @@
 			files = (
 				6A96E8F32D2B6D3B009AE4F1 /* HapticFeedback.swift in Sources */,
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
+				6A11F1492D55F6020062436E /* TimeConvert.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
