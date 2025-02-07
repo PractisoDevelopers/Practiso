@@ -1,6 +1,25 @@
 import Foundation
 import SwiftUI
 
+private struct OptionGroup<LabelView: View>: View {
+    @State var isExpanded: Bool = false
+    @ViewBuilder var label: LabelView
+    
+    var body: some View {
+        Button(action: {
+            isExpanded = !isExpanded
+        }) {
+            HStack {
+                HStack {
+                    label
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                }
+            }
+        }
+    }
+}
+
 struct LibraryView: View {
     @Environment(ContentView.ViewModel.self) private var contentViewModel: ContentView.ViewModel?
     var body: some View {
@@ -22,7 +41,30 @@ struct LibraryView: View {
             }
             
             Section(header: Text("source")) {
-                
+                OptionGroup(label: {
+                    Label {
+                        Text("Templates")
+                            .foregroundStyle(Color.primary)
+                    } icon: {
+                        Image(systemName: "gearshape")
+                    }
+                })
+                OptionGroup(label: {
+                    Label {
+                        Text("Dimensions")
+                            .foregroundStyle(Color.primary)
+                    } icon: {
+                        Image(systemName: "tag")
+                    }
+                })
+                OptionGroup(label: {
+                    Label {
+                        Text("Questions")
+                            .foregroundStyle(Color.primary)
+                    } icon: {
+                        Image(systemName: "document")
+                    }
+                })
             }
         }
     }
