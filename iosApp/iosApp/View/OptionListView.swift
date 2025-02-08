@@ -13,11 +13,11 @@ struct OptionListView: View {
     
     class Data: ObservableObject {
         @Published var items: [Option]
-        @Published var refreshing: Bool
+        @Published var isRefreshing: Bool
         
         init(items: [Option] = [], refreshing: Bool = true) {
             self.items = items
-            self.refreshing = refreshing
+            self.isRefreshing = refreshing
         }
     }
 
@@ -46,6 +46,13 @@ struct OptionListView: View {
             }
         }
         .listStyle(.plain)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if data.isRefreshing {
+                    ProgressView()
+                }
+            }
+        }
     }
 }
 
