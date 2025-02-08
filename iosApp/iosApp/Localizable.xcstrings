@@ -23,9 +23,6 @@
         }
       }
     },
-    "Details here" : {
-
-    },
     "Dimension" : {
 
     },
@@ -38,14 +35,8 @@
     "Library" : {
 
     },
-    "Major %@ Ocean Seas" : {
-
-    },
     "New question" : {
       "extractionState" : "manual"
-    },
-    "Oceans and Seas" : {
-
     },
     "Question" : {
 
@@ -55,9 +46,6 @@
     },
     "Sessions" : {
       "extractionState" : "manual"
-    },
-    "should never reach here" : {
-
     },
     "Template" : {
 

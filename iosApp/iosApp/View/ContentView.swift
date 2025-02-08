@@ -4,14 +4,11 @@ import ComposeApp
 import Combine
 
 struct ContentView: View {
-    @State
-    private var model = Model()
-    
-    @State var splitVisibility = NavigationSplitViewVisibility.doubleColumn
+    @ObservedObject private var model = Model()
     
     var body: some View {
         @Bindable var model = model
-        NavigationSplitView(columnVisibility: $splitVisibility) {
+        NavigationSplitView {
             LibraryView(destination: $model.destination)
                 .navigationTitle("Library")
         } content: {
@@ -30,7 +27,8 @@ struct ContentView: View {
                     .navigationTitle("Session")
             }
         } detail: {
-            Text("Details here")
+            Text("Detail here")
+                .navigationTitle("Detail")
         }
         .environmentObject(model)
     }
