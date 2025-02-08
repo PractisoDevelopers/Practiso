@@ -1,6 +1,6 @@
 import Foundation
 
-enum Destination: Hashable {
+enum Destination {
     case session
     case template
     case dimension

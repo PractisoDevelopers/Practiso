@@ -10,7 +10,7 @@ struct LibraryView: View {
         let id: String
     }
     
-    struct LibraryOption: Identifiable, Hashable {
+    struct LibraryOption: Identifiable {
         let name: String
         let systemImage: String
         let id: Destination
@@ -32,18 +32,13 @@ struct LibraryView: View {
             ForEach($sections) { $section in
                 Section(isExpanded: $section.isExpanded, content: {
                     ForEach(section.options) { option in
-                        Label {
-                            Text(option.name)
-                        } icon: {
-                            Image(systemName: option.systemImage)
-                        }
+                        Label(option.name, systemImage: option.systemImage)
                     }
                 }, header: {
                     Text(section.id)
                 })
             }
         }
-        .listStyle(.sidebar)
     }
 }
 
