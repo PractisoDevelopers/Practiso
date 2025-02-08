@@ -15,7 +15,7 @@ struct OptionListView: View {
         @Published var items: [Option]
         @Published var refreshing: Bool
         
-        init(items: [Option] = [], refreshing: Bool = false) {
+        init(items: [Option] = [], refreshing: Bool = true) {
             self.items = items
             self.refreshing = refreshing
         }

@@ -8,7 +8,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 
-class LibraryDataModel(db: AppDatabase = Database.app) {
+object LibraryDataModel {
+    private val db: AppDatabase = Database.app
+
     val templates by lazy {
         db.templateQueries.getAllTemplates()
             .asFlow()
