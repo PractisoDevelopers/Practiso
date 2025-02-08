@@ -8,9 +8,9 @@ struct DimensionView: View {
     var body: some View {
         OptionListView(data: data)
             .task {
-                data.refreshing = true
+                data.isRefreshing = true
                 for await items in LibraryDataModel.shared.dimensions {
-                    data.refreshing = false
+                    data.isRefreshing = false
                     data.items = items.map(Option.init)
                 }
             }

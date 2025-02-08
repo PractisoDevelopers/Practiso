@@ -8,10 +8,10 @@ struct TemplateView: View {
     var body: some View {
         OptionListView(data: data)
             .task {
-                data.refreshing = true
+                data.isRefreshing = true
                 for await items in LibraryDataModel.shared.templates {
                     data.items = items.map(Option.init)
-                    data.refreshing = false
+                    data.isRefreshing = false
                 }
             }
     }
