@@ -2,57 +2,52 @@ import Foundation
 import SwiftUI
 
 struct LibraryView: View {
-    @Environment(ContentView.ViewModel.self) private var contentViewModel: ContentView.ViewModel?
-    var body: some View {
-        List {
-            Section(header: Text("derived")) {
-                BlockButton(action: { openView(dest: .session)}) {
-                    Label {
-                        Text("Sessions")
-                            .foregroundStyle(Color.primary)
-                    } icon: {
-                        Image(systemName: "star")
-                    }
-                }
-            }
-            
-            Section(header: Text("source")) {
-                BlockButton(action: { openView(dest: .template) }) {
-                    Label {
-                        Text("Templates")
-                            .foregroundStyle(Color.primary)
-                    } icon: {
-                        Image(systemName: "gearshape")
-                    }
-                }
-                BlockButton(action: { openView(dest: .dimension) }) {
-                    Label {
-                        Text("Dimensions")
-                            .foregroundStyle(Color.primary)
-                    } icon: {
-                        Image(systemName: "tag")
-                    }
-                }
-                BlockButton(action: { openView(dest: .question) }) {
-                    Label {
-                        Text("Questions")
-                            .foregroundStyle(Color.primary)
-                    } icon: {
-                        Image(systemName: "document")
-                    }
-                }
-            }
-        }
+    @Binding var destination: Destination?
+    
+    struct LibrarySection: Identifiable {
+        var isExpanded = true
+        let options: [LibraryOption]
+        let id: String
     }
     
-    func openView(dest: ContentView.Destination) {
-        guard let model = contentViewModel else {
-            return
+    struct LibraryOption: Identifiable, Hashable {
+        let name: String
+        let systemImage: String
+        let id: Destination
+    }
+    
+    @State private var sections: [LibrarySection] = [
+        LibrarySection(options: [
+            LibraryOption(name: "Session", systemImage: "star", id: .session)
+        ], id: "Derived"),
+        LibrarySection(options: [
+            LibraryOption(name: "Template", systemImage: "gearshape", id: .template),
+            LibraryOption(name: "Dimension", systemImage: "tag", id: .dimension),
+            LibraryOption(name: "Question", systemImage: "document", id: .question)
+        ], id: "Source")
+    ]
+    
+    var body: some View {
+        List(selection: $destination) {
+            ForEach($sections) { $section in
+                Section(isExpanded: $section.isExpanded, content: {
+                    ForEach(section.options) { option in
+                        Label {
+                            Text(option.name)
+                        } icon: {
+                            Image(systemName: option.systemImage)
+                        }
+                    }
+                }, header: {
+                    Text(section.id)
+                })
+            }
         }
-        model.navigationPath.append(dest)
+        .listStyle(.sidebar)
     }
 }
 
 #Preview {
-    LibraryView()
+    @Previewable @State var dest: Destination? = .session
+    LibraryView(destination: $dest)
 }

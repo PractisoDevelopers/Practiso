@@ -4,36 +4,35 @@ import ComposeApp
 import Combine
 
 struct ContentView: View {
-    @ObservedObject
-    var model = ViewModel()
+    @State
+    private var model = Model()
+    
+    @State var splitVisibility = NavigationSplitViewVisibility.doubleColumn
     
     var body: some View {
-        NavigationStack(path: $model.navigationPath) {
-            LibraryView()
+        @Bindable var model = model
+        NavigationSplitView(columnVisibility: $splitVisibility) {
+            LibraryView(destination: $model.destination)
                 .navigationTitle("Library")
-                .navigationDestination(for: Destination.self) { destination in
-                    switch destination {
-                    case .session:
-                        SessionView()
-                            .navigationTitle("Sessions")
-                    case .dimension:
-                        OptionListView(data: model.dimensions)
-                            .navigationTitle("Dimensions")
-                    case .question:
-                        OptionListView(data: model.quizzes)
-                            .navigationTitle("Questions")
-                    case .template:
-                        OptionListView(data: model.templates)
-                            .navigationTitle("Templates")
-                    default:
-                        Text("should never reach here")
-                    }
-                }
+        } content: {
+            switch model.destination {
+            case .template:
+                TemplateView()
+                    .navigationTitle("Template")
+            case .dimension:
+                DimensionView()
+                    .navigationTitle("Dimension")
+            case .question:
+                QuestionView()
+                    .navigationTitle("Question")
+            default:
+                SessionView()
+                    .navigationTitle("Session")
+            }
+        } detail: {
+            Text("Details here")
         }
         .environmentObject(model)
-        .task {
-            await model.startObserving()
-        }
     }
 }
 
