@@ -22,34 +22,47 @@ struct OptionListView: View {
     }
 
     var body: some View {
-        List {
-            ForEach(data.items) { option in
-                VStack(spacing: 4) {
-                    Text(option.view.header)
-                        .lineLimit(1)
-                        .fontWeight(.medium)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    if let title = option.view.title {
-                        Text(title)
+        if data.items.isEmpty {
+            VStack(spacing: 10) {
+                Image(systemName: "folder")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48)
+                Text("No items available")
+            }
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .edgesIgnoringSafeArea(.all)
+        } else {
+            List {
+                ForEach(data.items) { option in
+                    VStack(spacing: 4) {
+                        Text(option.view.header)
                             .lineLimit(1)
-                            .font(.system(size: 15))
+                            .fontWeight(.medium)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    if let subtitle = option.view.subtitle {
-                        Text(subtitle)
-                            .lineLimit(1)
-                            .font(.system(size: 15))
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if let title = option.view.title {
+                            Text(title)
+                                .lineLimit(1)
+                                .font(.system(size: 15))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        if let subtitle = option.view.subtitle {
+                            Text(subtitle)
+                                .lineLimit(1)
+                                .font(.system(size: 15))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
                 }
             }
-        }
-        .listStyle(.plain)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if data.isRefreshing {
-                    ProgressView()
+            .listStyle(.plain)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if data.isRefreshing {
+                        ProgressView()
+                    }
                 }
             }
         }

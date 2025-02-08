@@ -1,9 +1,11 @@
-package com.zhufucdev.practiso.datamodel
+package com.zhufucdev.practiso
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.datamodel.QuizOption
+import com.zhufucdev.practiso.datamodel.getQuizFrames
+import com.zhufucdev.practiso.datamodel.toOptionFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
