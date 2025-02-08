@@ -50,7 +50,7 @@ class ImportActivity : ComponentActivity() {
                                     ?: getString(R.string.generic_file_para),
                                 source = it.source()
                             )
-                            importer.import(target)
+                            importer.service.import(target)
                         }
                     }
                     finish()

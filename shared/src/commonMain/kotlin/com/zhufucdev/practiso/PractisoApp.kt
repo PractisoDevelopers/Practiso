@@ -63,7 +63,6 @@ import com.zhufucdev.practiso.composable.BackdropKey
 import com.zhufucdev.practiso.composable.ExtensiveSnackbar
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.ImportDialog
-import com.zhufucdev.practiso.composable.ImportState
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
@@ -77,6 +76,7 @@ import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
+import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel

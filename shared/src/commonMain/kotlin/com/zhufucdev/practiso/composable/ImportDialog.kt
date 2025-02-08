@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.viewmodel.ErrorModel
 import kotlinx.coroutines.channels.SendChannel
@@ -39,26 +40,6 @@ import resources.retry_para
 import resources.skip_para
 import resources.unarchiving_this_file_ellipsis_para
 import resources.will_import_n_items_to_library
-
-sealed interface ImportState {
-    data object Idle : ImportState
-    data class Unarchiving(val target: String) : ImportState
-    data class Confirmation(
-        val total: Int,
-        val ok: SendChannel<Unit>,
-        val dismiss: SendChannel<Unit>,
-    ) : ImportState
-
-    data class Importing(val total: Int, val done: Int) : ImportState
-
-    data class Error(
-        val model: ErrorModel,
-        val cancel: SendChannel<Unit>,
-        val retry: SendChannel<Unit>? = null,
-        val skip: SendChannel<Unit>? = null,
-        val ignore: SendChannel<Unit>? = null,
-    ) : ImportState
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
