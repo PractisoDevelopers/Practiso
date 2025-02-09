@@ -28,6 +28,7 @@ import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.service.RemoveService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -62,6 +63,8 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
             .mapToList(Dispatchers.IO)
             .toOptionFlow(db.quizQueries)
     }
+
+    private val removeService = RemoveService(db)
 
     @Serializable
     data class Caps(val template: Int = 5, val quiz: Int = 5, val dimension: Int = 5)
@@ -136,58 +139,21 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
 
     val event = Events()
 
-    private suspend fun removeQuizWithResources(id: Long) {
-        val quizFrames = db.quizQueries
-            .getQuizFrames(db.quizQueries.getQuizById(id))
-            .firstOrNull()
-        if (quizFrames.isNullOrEmpty()) {
-            return
-        }
-
-        withContext(Dispatchers.IO) {
-            val platform = getPlatform()
-            quizFrames.first()
-                .frames
-                .map(PrioritizedFrame::frame)
-                .resources()
-                .map { (name) ->
-                    async {
-                        platform.filesystem.delete(
-                            platform.resourcePath.resolve(
-                                name
-                            )
-                        )
-                    }
-                }
-                .awaitAll()
-        }
-
-        db.transaction {
-            db.quizQueries.removeQuiz(id)
-        }
-    }
-
-
     init {
         viewModelScope.launch {
             while (viewModelScope.isActive) {
                 select<Unit> {
-                    event.removeQuiz.onReceive {
-                        removeQuizWithResources(it)
-                    }
+                    event.removeQuiz.onReceive(
+                        removeService::removeQuizWithResources
+                    )
 
-                    event.removeDimensionKeepQuizzes.onReceive {
-                        db.transaction {
-                            db.dimensionQueries.removeDimension(it)
-                        }
-                    }
+                    event.removeDimensionKeepQuizzes.onReceive(
+                        removeService::removeDimensionKeepQuizzes
+                    )
 
-                    event.removeDimensionWithQuizzes.onReceive {
-                        db.transaction {
-                            db.quizQueries.removeQuizWithinDimension(it)
-                            db.dimensionQueries.removeDimension(it)
-                        }
-                    }
+                    event.removeDimensionWithQuizzes.onReceive(
+                        removeService::removeDimensionWithQuizzes
+                    )
 
                     event.reveal.onReceive {
                         _revealing.emit(it)
