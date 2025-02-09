@@ -23,6 +23,9 @@
         }
       }
     },
+    "Cancel" : {
+
+    },
     "Detail" : {
 
     },
@@ -34,6 +37,9 @@
     },
     "Empty" : {
       "extractionState" : "manual"
+    },
+    "Failed to import the archive" : {
+
     },
     "Hello there" : {
 

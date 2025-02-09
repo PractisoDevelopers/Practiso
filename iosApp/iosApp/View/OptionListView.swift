@@ -20,41 +20,39 @@ struct OptionListView: View {
             self.isRefreshing = refreshing
         }
     }
+    
+    struct Item: View {
+        @State var data: Option
+        var body: some View {
+            VStack(spacing: 4) {
+                Text(data.view.header)
+                    .lineLimit(1)
+                    .fontWeight(.medium)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let title = data.view.title {
+                    Text(title)
+                        .lineLimit(1)
+                        .font(.system(size: 15))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if let subtitle = data.view.subtitle {
+                    Text(subtitle)
+                        .lineLimit(1)
+                        .font(.system(size: 15))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+    }
 
     var body: some View {
         if data.items.isEmpty {
-            VStack(spacing: 10) {
-                Image(systemName: "folder")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 48)
-                Text("No items available")
-            }
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .edgesIgnoringSafeArea(.all)
+            OptionListPlaceholder()
         } else {
             List {
                 ForEach(data.items) { option in
-                    VStack(spacing: 4) {
-                        Text(option.view.header)
-                            .lineLimit(1)
-                            .fontWeight(.medium)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        if let title = option.view.title {
-                            Text(title)
-                                .lineLimit(1)
-                                .font(.system(size: 15))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        if let subtitle = option.view.subtitle {
-                            Text(subtitle)
-                                .lineLimit(1)
-                                .font(.system(size: 15))
-                                .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
+                    Item(data: option)
                 }
             }
             .listStyle(.plain)
