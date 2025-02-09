@@ -3,7 +3,7 @@ import SwiftUI
 import ComposeApp
 import UniformTypeIdentifiers
 
-private enum TransferItem: Transferable, Codable {
+enum TransferItem: Transferable, Codable {
     case url(url: URL)
     case binary(data: Data)
     case error(String)
@@ -13,8 +13,8 @@ private enum TransferItem: Transferable, Codable {
             let resultingUrl = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
                 .appendingPathComponent(representation.file.lastPathComponent)
             do {
-                try FileManager.default.copyItem(at: representation.file, to: resultingUrl)
-                return TransferItem.url(url: representation.file)
+                _ = try FileManager.default.replaceItemAt(resultingUrl, withItemAt: representation.file)
+                return TransferItem.url(url: resultingUrl)
             } catch {
                 return TransferItem.error(error.localizedDescription)
             }
@@ -25,70 +25,46 @@ private enum TransferItem: Transferable, Codable {
     }
 }
 
-private struct ListOrPlaceholder: View {
-    @Binding var data: [Option]
-    var processDrop: ([TransferItem]) -> Bool
-    
-    var body: some View {
-        if data.isEmpty {
-            OptionListPlaceholder()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.background)
-                .dropDestination(for: TransferItem.self) { data, _ in
-                    processDrop(data)
-                }
-        } else {
-            ScrollView {
-                HStack {
-                    Spacer()
-                        .frame(width: 22)
-                    LazyVStack(spacing: 8) {
-                        ForEach(data) { option in
-                            Color.secondary.opacity(0.3)
-                                .frame(maxWidth: .infinity, maxHeight: 0.5)
-                            OptionListView.Item(data: option)
-                        }
-                    }
-                }
-            }
-            .dropDestination(for: TransferItem.self) { data, _ in
-                processDrop(data)
-            }
-        }
-    }
-}
-
 struct QuestionView: View {
     private var importService = ImportService(db: Database.shared.app)
-    @State var data: [Option] = []
-    @State private var isRefreshing = false
-    @State private var isGenericImportFail = false
-    @State private var genericImportErrorMessage: String?
+    private var removeService = RemoveService(db: Database.shared.app)
+    @State var data = OptionListData()
+    @State private var isGenericErrorShown = false
+    @State private var genericErrorMessage: String?
     
     var body: some View {
-        ListOrPlaceholder(data: $data, processDrop: processDrop)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    if isRefreshing {
-                        ProgressView()
+        OptionListView(data: data) { option in
+            OptionListItem(data: option)
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        Task {
+                            await catchAndShowImmediately {
+                                try await removeService.removeQuizWithResources(id: option.id)
+                            }
+                        }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
                     }
                 }
+        }
+            .dropDestination(for: TransferItem.self) { data, _ in
+                processDrop(items: data)
             }
             .task {
-                isRefreshing = true
+                data.isRefreshing = true
                 for await items in LibraryDataModel.shared.quiz {
-                    data = items.map(Option.init)
-                    isRefreshing = false
+                    data.items = items.map(Option.init)
+                    data.isRefreshing = false
                 }
             }
             .alert(
-                "Failed to import the archive",
-                isPresented: $isGenericImportFail,
-                presenting: genericImportErrorMessage
+                "Operation failed",
+                isPresented: $isGenericErrorShown,
+                presenting: genericErrorMessage
             ) { _ in
                 Button("Cancel", role: .cancel) {
-                    isGenericImportFail = false
-                    genericImportErrorMessage = nil
+                    isGenericErrorShown = false
+                    genericErrorMessage = nil
                 }
             } message: { message in
                 Text(message)
@@ -99,8 +75,8 @@ struct QuestionView: View {
         do {
             try await action()
         } catch {
-            genericImportErrorMessage = error.localizedDescription
-            isGenericImportFail = true
+            genericErrorMessage = error.localizedDescription
+            isGenericErrorShown = true
         }
     }
     
@@ -123,15 +99,15 @@ struct QuestionView: View {
                     return false
                 }
             case .error(let description):
-                genericImportErrorMessage = description
-                isGenericImportFail = true
+                genericErrorMessage = description
+                isGenericErrorShown = true
                 return true
             }
         }
         
         for pack in packs {
-            Task {
-                let states = importService.import(pack: pack)
+            let states = importService.import(pack: pack)
+            Task.detached {
                 for await state in states {
                     switch state {
                     case let c as ImportStateConfirmation:
@@ -147,11 +123,4 @@ struct QuestionView: View {
         
         return true
     }
-}
-
-#Preview {
-    @Previewable @State var data = (0..<10).map { i in
-        Option(kt: QuizOption(quiz: Quiz(id: i, name: "Sample \(i+1)", creationTimeISO: Kotlinx_datetimeInstant.Companion.shared.DISTANT_FUTURE, modificationTimeISO: Kotlinx_datetimeInstant.Companion.shared.DISTANT_FUTURE), preview: "Sample preview for this quiz"))
-    }
-    ListOrPlaceholder(data: $data, processDrop: { _ in false })
 }

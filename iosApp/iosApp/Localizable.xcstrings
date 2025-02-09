@@ -26,6 +26,15 @@
     "Cancel" : {
 
     },
+    "Delete" : {
+
+    },
+    "Delete All" : {
+
+    },
+    "Deleting Dimension" : {
+
+    },
     "Detail" : {
 
     },
@@ -38,10 +47,10 @@
     "Empty" : {
       "extractionState" : "manual"
     },
-    "Failed to import the archive" : {
+    "Hello there" : {
 
     },
-    "Hello there" : {
+    "Keep Questions" : {
 
     },
     "Library" : {
@@ -51,6 +60,9 @@
       "extractionState" : "manual"
     },
     "No items available" : {
+
+    },
+    "Operation failed" : {
 
     },
     "Question" : {
@@ -63,6 +75,9 @@
       "extractionState" : "manual"
     },
     "Template" : {
+
+    },
+    "Would you like to delete questions contained as well?" : {
 
     }
   },
