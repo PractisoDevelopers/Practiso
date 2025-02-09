@@ -46,9 +46,13 @@ protocol NameComparable {
     var nameCompare: String { get }
 }
 
-extension DimensionOption: PractisoOptionViewable, NameComparable {
+extension DimensionOption: PractisoOptionViewable, NameComparable, CreationComparable {
     var nameCompare: String {
         dimension.name
+    }
+    
+    var creationCompare: Date {
+        Date(timeIntervalSince1970: TimeInterval(integerLiteral: dimension.id))
     }
     
     var view: PractisoOptionView {
