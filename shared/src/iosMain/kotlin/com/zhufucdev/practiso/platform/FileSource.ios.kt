@@ -17,7 +17,7 @@ import platform.posix.open
 import platform.posix.read as c_read
 
 @OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
-private class AppleFileSource(private val url: NSURL) : Source {
+internal class AppleFileSource(private val url: NSURL) : Source {
     private val fd: Int
 
     init {

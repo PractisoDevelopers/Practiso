@@ -30,6 +30,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6A11F1442D55EDC30062436E /* Model */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Model; sourceTree = "<group>"; };
+		6A567C2E2D5837C700D97C1D /* Composed */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Composed; sourceTree = "<group>"; };
 		6A9D7F7E2D548CC800A57747 /* View */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = View; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -73,15 +74,16 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
-				6A11F1442D55EDC30062436E /* Model */,
 				6A03DC1B2D2ADEA900AF3F06 /* AHAP */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
+				6A567C2E2D5837C700D97C1D /* Composed */,
+				6A96E8F22D2B6D3B009AE4F1 /* HapticFeedback.swift */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
-				6A96E8F22D2B6D3B009AE4F1 /* HapticFeedback.swift */,
-				6A9D7F7E2D548CC800A57747 /* View */,
 				6A9D7F882D54D83700A57747 /* Localizable.xcstrings */,
+				6A11F1442D55EDC30062436E /* Model */,
 				6A11F1482D55F6020062436E /* TimeConvert.swift */,
+				6A9D7F7E2D548CC800A57747 /* View */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -112,6 +114,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				6A11F1442D55EDC30062436E /* Model */,
+				6A567C2E2D5837C700D97C1D /* Composed */,
 				6A9D7F7E2D548CC800A57747 /* View */,
 			);
 			name = iosApp;
