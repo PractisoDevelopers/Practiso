@@ -151,6 +151,7 @@ struct OptionListView<Content : View, Item : Option>: View {
                     ToolbarItem(placement: .bottomBar) {
                         Button("Delete", role: .destructive) {
                             onDelete(selection)
+                            selection = Set()
                         }
                         .disabled(selection.isEmpty)
                     }
