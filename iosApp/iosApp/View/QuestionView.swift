@@ -17,8 +17,10 @@ private struct TransferItem: Transferable, Equatable, Sendable {
 }
 
 struct QuestionView: View {
-    @State var data = OptionListView.Data()
     private var importService = ImportService(db: Database.shared.app)
+    @State var data = OptionListView.Data()
+    @State private var isGenericImportFail = false
+    @State private var genericImportError: Error?
 
     var body: some View {
         OptionListView(data: data)
@@ -47,7 +49,9 @@ struct QuestionView: View {
                         for await state in states {
                             switch state {
                             case let c as ImportStateConfirmation:
-                                try! await c.ok.send(element: nil)
+                                await catchAndShowImmediately {
+                                    try await c.ok.send(element: nil)
+                                }
                             default:
                                 NSLog("Unknown state")
                             }
@@ -57,5 +61,26 @@ struct QuestionView: View {
                 
                 return true
             }
+            .alert(
+                "Failed to import the archive",
+                isPresented: $isGenericImportFail,
+                presenting: genericImportError
+            ) { _ in
+                Button("Cancel", role: .cancel) {
+                    isGenericImportFail = false
+                    genericImportError = nil
+                }
+            } message: { error in
+                Text(error.localizedDescription)
+            }
+    }
+    
+    func catchAndShowImmediately(action: () async throws -> Void) async {
+        do {
+            try await action()
+        } catch {
+            genericImportError = error
+            isGenericImportFail = true
+        }
     }
 }
