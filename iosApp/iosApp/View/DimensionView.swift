@@ -3,30 +3,35 @@ import SwiftUI
 import ComposeApp
 
 struct DimensionView: View {
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
+    
     @State var data = OptionListData()
     @State var isDeletingActionsShown = false
-    @State var deletionId: Int64?
+    @State var deletionIdSet: Set<Int64>?
     
     private let removeService = RemoveServiceSync(db: Database.shared.app)
     
     var body: some View {
-        OptionListView(data: data) { option in
+        OptionListView(data: data, onDelete: { ids in
+            deletionIdSet = ids
+            isDeletingActionsShown = true
+        }) { option in
             OptionListItem(data: option)
                 .swipeActions {
                     if (option.kt as! DimensionOption).quizCount <= 0 {
                         Button(role: .destructive) {
                             withAnimation {
-                                removeService.removeDimensionKeepQuizzes(id: option.id)
+                                errorHandler.catchAndShowImmediately {
+                                    try removeService.removeDimensionKeepQuizzes(id: option.id)
+                                }
                             }
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
                     } else {
                         Button {
-                            withAnimation {
-                                deletionId = option.id
-                                isDeletingActionsShown = true
-                            }
+                            deletionIdSet = Set(arrayLiteral: option.id)
+                            isDeletingActionsShown = true
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
@@ -34,12 +39,20 @@ struct DimensionView: View {
                     }
                 }
         }
-        .alert("Deleting Dimension", isPresented: $isDeletingActionsShown, presenting: deletionId, actions: { id in
+        .alert("Deleting Dimension", isPresented: $isDeletingActionsShown, presenting: deletionIdSet, actions: { idSet in
             Button("Delete All", role: .destructive) {
-                removeService.removeDimensionWithQuizzes(id: id)
+                for id in idSet {
+                    errorHandler.catchAndShowImmediately {
+                        try removeService.removeDimensionWithQuizzes(id: id)
+                    }
+                }
             }
             Button("Keep Questions") {
-                removeService.removeDimensionKeepQuizzes(id: id)
+                for id in idSet {
+                    errorHandler.catchAndShowImmediately {
+                        try removeService.removeDimensionKeepQuizzes(id: id)
+                    }
+                }
             }
         }, message: { _ in
             Text("Would you like to delete questions contained as well?")

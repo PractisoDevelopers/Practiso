@@ -5,9 +5,11 @@ import Combine
 
 struct ContentView: View {
     @ObservedObject private var model = Model()
+    @ObservedObject private var errorHandler = ErrorHandler()
     
     var body: some View {
         @Bindable var model = model
+        @Bindable var errorHandler = errorHandler
         NavigationSplitView {
             LibraryView(destination: $model.destination)
                 .navigationTitle("Library")
@@ -30,7 +32,20 @@ struct ContentView: View {
             Text("Detail here")
                 .navigationTitle("Detail")
         }
+        .alert(
+            "Operation failed",
+            isPresented: $errorHandler.shown,
+            presenting: errorHandler.message
+        ) { _ in
+            Button("Cancel", role: .cancel) {
+                errorHandler.shown = false
+                errorHandler.message = nil
+            }
+        } message: { message in
+            Text(message)
+        }
         .environmentObject(model)
+        .environmentObject(errorHandler)
     }
 }
 

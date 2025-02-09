@@ -27,56 +27,42 @@ enum TransferItem: Transferable, Codable {
 
 struct QuestionView: View {
     private var importService = ImportService(db: Database.shared.app)
-    private var removeService = RemoveService(db: Database.shared.app)
+    private var removeService = RemoveServiceSync(db: Database.shared.app)
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
+    
     @State var data = OptionListData()
+    
     @State private var isGenericErrorShown = false
     @State private var genericErrorMessage: String?
     
     var body: some View {
-        OptionListView(data: data) { option in
+        OptionListView(data: data, onDelete: { ids in
+            for id in ids {
+                errorHandler.catchAndShowImmediately {
+                    try removeService.removeQuizWithResources(id: id)
+                }
+            }
+        }) { option in
             OptionListItem(data: option)
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        Task {
-                            await catchAndShowImmediately {
-                                try await removeService.removeQuizWithResources(id: option.id)
-                            }
+                        errorHandler.catchAndShowImmediately {
+                            try removeService.removeQuizWithResources(id: option.id)
                         }
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
                 }
         }
-            .dropDestination(for: TransferItem.self) { data, _ in
-                processDrop(items: data)
+        .dropDestination(for: TransferItem.self) { data, _ in
+            processDrop(items: data)
+        }
+        .task {
+            data.isRefreshing = true
+            for await items in LibraryDataModel.shared.quiz {
+                data.items = items.map(Option.init)
+                data.isRefreshing = false
             }
-            .task {
-                data.isRefreshing = true
-                for await items in LibraryDataModel.shared.quiz {
-                    data.items = items.map(Option.init)
-                    data.isRefreshing = false
-                }
-            }
-            .alert(
-                "Operation failed",
-                isPresented: $isGenericErrorShown,
-                presenting: genericErrorMessage
-            ) { _ in
-                Button("Cancel", role: .cancel) {
-                    isGenericErrorShown = false
-                    genericErrorMessage = nil
-                }
-            } message: { message in
-                Text(message)
-            }
-    }
-    
-    private func catchAndShowImmediately(action: () async throws -> Void) async {
-        do {
-            try await action()
-        } catch {
-            genericErrorMessage = error.localizedDescription
-            isGenericErrorShown = true
         }
     }
     
@@ -111,7 +97,7 @@ struct QuestionView: View {
                 for await state in states {
                     switch state {
                     case let c as ImportStateConfirmation:
-                        await catchAndShowImmediately {
+                        await errorHandler.catchAndShowImmediately {
                             try await c.ok.send(element: nil)
                         }
                     default:
