@@ -6,7 +6,9 @@ struct TemplateView: View {
     @State var data = OptionListData()
     
     var body: some View {
-        OptionListView(data: data) {
+        OptionListView(data: data, onDelete: { _ in
+            // TODO
+        }) {
             OptionListItem(data: $0)
         }
             .task {

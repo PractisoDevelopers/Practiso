@@ -40,7 +40,11 @@ class OptionListData: ObservableObject {
 
 struct OptionListView<Content : View>: View {
     @ObservedObject var data: OptionListData
+    var onDelete: (Set<Int64>) -> Void
     var content: (Option) -> Content
+    
+    @State private var selection = Set<Int64>()
+    @State private var editMode: EditMode = .inactive
 
     var body: some View {
         if data.items.isEmpty {
@@ -48,16 +52,58 @@ struct OptionListView<Content : View>: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.background)
         } else {
-            List {
-                ForEach(data.items) { option in
-                    content(option)
-                }
+            List(data.items, selection: $selection) { option in
+                content(option)
             }
+            .environment(\.editMode, $editMode)
             .listStyle(.plain)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if data.isRefreshing {
                         ProgressView()
+                    }
+                }
+                
+                if editMode == .inactive {
+                    ToolbarItem {
+                        Menu {
+                            Button {
+                                withAnimation {
+                                    editMode = .active
+                                }
+                            } label: {
+                                Label("Select", systemImage: "checkmark.circle")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                        }
+                    }
+                } else {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        if selection.count == data.items.count {
+                            Button("Deselect All") {
+                                selection = Set()
+                            }
+                        } else {
+                            Button("Select All") {
+                                selection = Set(data.items.map { $0.id })
+                            }
+                        }
+                    }
+                    
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") {
+                            withAnimation {
+                                editMode = .inactive
+                            }
+                        }
+                    }
+                    
+                    ToolbarItem(placement: .bottomBar) {
+                        Button("Delete", role: .destructive) {
+                            onDelete(selection)
+                        }
+                        .disabled(selection.isEmpty)
                     }
                 }
             }
@@ -74,7 +120,11 @@ struct OptionListView<Content : View>: View {
             return Option(kt: QuizOption(quiz: Quiz(id: Int64(i), name: "Sample \(i)", creationTimeISO: future, modificationTimeISO: future), preview: "Lore Ipsum"))
         }
     }
-    OptionListView(data: OptionListData(items: items), content: { option in
-        OptionListItem(data: option)
-    })
+    OptionListView(
+        data: OptionListData(items: items),
+        onDelete: { _ in },
+        content: { option in
+            OptionListItem(data: option)
+        }
+    )
 }
