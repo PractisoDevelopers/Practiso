@@ -45,6 +45,7 @@ struct OptionListView<Content : View>: View {
     
     @State private var selection = Set<Int64>()
     @State private var editMode: EditMode = .inactive
+    @State private var searchText: String = ""
 
     var body: some View {
         if data.items.isEmpty {
@@ -52,7 +53,12 @@ struct OptionListView<Content : View>: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.background)
         } else {
-            List(data.items, selection: $selection) { option in
+            List(
+                {
+                    if searchText.isEmpty { data.items }
+                    else { data.items.filter { $0.view.header.contains(searchText) || $0.view.title?.contains(searchText) == true || $0.view.subtitle?.contains(searchText) == true } }
+                }(),
+                selection: $selection) { option in
                 content(option)
             }
             .environment(\.editMode, $editMode)
@@ -107,6 +113,7 @@ struct OptionListView<Content : View>: View {
                     }
                 }
             }
+            .searchable(text: $searchText, prompt: "Search...")
         }
     }
 }
