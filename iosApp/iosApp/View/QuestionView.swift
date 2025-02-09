@@ -30,7 +30,7 @@ struct QuestionView: View {
     private var removeService = RemoveServiceSync(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
-    @State var data = OptionListData()
+    @State var data = OptionListData<OptionImpl<QuizOption>>()
     
     @State private var isGenericErrorShown = false
     @State private var genericErrorMessage: String?
@@ -60,7 +60,7 @@ struct QuestionView: View {
         .task {
             data.isRefreshing = true
             for await items in LibraryDataModel.shared.quiz {
-                data.items = items.map(Option.init)
+                data.items = items.map(OptionImpl.init)
                 data.isRefreshing = false
             }
         }

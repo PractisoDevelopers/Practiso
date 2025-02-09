@@ -2,50 +2,38 @@ import Foundation
 import SwiftUI
 import ComposeApp
 
-struct OptionListItem: View {
-    @State var data: Option
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(data.view.header)
-                .lineLimit(1)
-                .fontWeight(.medium)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            if let title = data.view.title {
-                Text(title)
-                    .lineLimit(1)
-                    .font(.system(size: 15))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            if let subtitle = data.view.subtitle {
-                Text(subtitle)
-                    .lineLimit(1)
-                    .font(.system(size: 15))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-    }
-}
-
-class OptionListData: ObservableObject {
-    @Published var items: [Option]
-    @Published var isRefreshing: Bool
-    
-    init(items: [Option] = [], refreshing: Bool = true) {
-        self.items = items
-        self.isRefreshing = refreshing
-    }
-}
-
-
-struct OptionListView<Content : View>: View {
-    @ObservedObject var data: OptionListData
+struct OptionListView<Content : View, Item : Option>: View {
+    @ObservedObject var data: OptionListData<Item>
     var onDelete: (Set<Int64>) -> Void
-    var content: (Option) -> Content
+    var content: (Item) -> Content
     
     @State private var selection = Set<Int64>()
     @State private var editMode: EditMode = .inactive
     @State private var searchText: String = ""
+    @State private var sorting: OptionListSort = .name(.acending)
+    
+    private var itemModel: [Item] {
+        let sorted: [Item] = switch sorting {
+        case .name(.acending):
+            data.items.sorted { ($0.kt as! any NameComparable).nameCompare < ($1.kt as! any NameComparable).nameCompare }
+        case .name(.decending):
+            data.items.sorted { ($0.kt as! any NameComparable).nameCompare > ($1.kt as! any NameComparable).nameCompare }
+        case .modification(.acending):
+            data.items.sorted { ($0.kt as! any ModificationComparable).modificationCompare < ($1.kt as! any ModificationComparable).modificationCompare }
+        case .modification(.decending):
+            data.items.sorted { ($0.kt as! any ModificationComparable).modificationCompare > ($1.kt as! any ModificationComparable).modificationCompare }
+        case .creation(.acending):
+            data.items.sorted { ($0.kt as! any CreationComparable).creationCompare < ($1.kt as! any CreationComparable).creationCompare }
+        case .creation(.decending):
+            data.items.sorted { ($0.kt as! any CreationComparable).creationCompare > ($1.kt as! any CreationComparable).creationCompare }
+        }
+        
+        let filtered =
+        if searchText.isEmpty { sorted }
+        else { sorted.filter { $0.view.header.contains(searchText) || $0.view.title?.contains(searchText) == true || $0.view.subtitle?.contains(searchText) == true } }
+        
+        return filtered
+    }
 
     var body: some View {
         if data.items.isEmpty {
@@ -54,10 +42,7 @@ struct OptionListView<Content : View>: View {
                 .background(.background)
         } else {
             List(
-                {
-                    if searchText.isEmpty { data.items }
-                    else { data.items.filter { $0.view.header.contains(searchText) || $0.view.title?.contains(searchText) == true || $0.view.subtitle?.contains(searchText) == true } }
-                }(),
+                itemModel,
                 selection: $selection) { option in
                 content(option)
             }
@@ -72,16 +57,74 @@ struct OptionListView<Content : View>: View {
                 
                 if editMode == .inactive {
                     ToolbarItem {
-                        Menu {
-                            Button {
+                        Menu("More", systemImage: "ellipsis.circle") {
+                            Button("Select", systemImage: "checkmark.circle") {
                                 withAnimation {
                                     editMode = .active
                                 }
-                            } label: {
-                                Label("Select", systemImage: "checkmark.circle")
                             }
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
+                            
+                            Divider()
+                            
+                            if Item.KtType.self is any NameComparable.Type {
+                                Button {
+                                    sorting = switch sorting {
+                                    case .name(.acending):
+                                            .name(.decending)
+                                    default:
+                                            .name(.acending)
+                                    }
+                                } label: {
+                                    switch sorting {
+                                    case .name(.acending):
+                                        Label("Name", systemImage: "chevron.up")
+                                    case .name(.decending):
+                                        Label("Name", systemImage: "chevron.down")
+                                    default:
+                                        Text("Name")
+                                    }
+                                }
+                            }
+                            
+                            if Item.KtType.self is any ModificationComparable.Type {
+                                Button {
+                                    sorting = switch sorting {
+                                    case .modification(.acending):
+                                            .modification(.decending)
+                                    default:
+                                            .modification(.acending)
+                                    }
+                                } label: {
+                                    switch sorting {
+                                    case .modification(.acending):
+                                        Label("Modification", systemImage: "chevron.up")
+                                    case .modification(.decending):
+                                        Label("Modification", systemImage: "chevron.down")
+                                    default:
+                                        Text("Modification")
+                                    }
+                                }
+                            }
+                            
+                            if Item.KtType.self is any CreationComparable.Type {
+                                Button {
+                                    sorting = switch sorting {
+                                    case .creation(.acending):
+                                            .creation(.decending)
+                                    default:
+                                            .creation(.acending)
+                                    }
+                                } label: {
+                                    switch sorting {
+                                    case .creation(.acending):
+                                        Label("Creation", systemImage: "chevron.up")
+                                    case .creation(.decending):
+                                        Label("Creation", systemImage: "chevron.down")
+                                    default:
+                                        Text("Creation")
+                                    }
+                                }
+                            }
                         }
                     }
                 } else {
@@ -119,13 +162,9 @@ struct OptionListView<Content : View>: View {
 }
 
 #Preview {
-    let items: [Option] = (0...10).map { i in
-        if i < 5 {
-            return Option(kt: DimensionOption(dimension: Dimension(id: Int64(i), name: "Sample \(i)"), quizCount: Int32(120 * sin(Double(i)))))
-        } else {
-            let future = Kotlinx_datetimeInstant.Companion.shared.DISTANT_FUTURE
-            return Option(kt: QuizOption(quiz: Quiz(id: Int64(i), name: "Sample \(i)", creationTimeISO: future, modificationTimeISO: future), preview: "Lore Ipsum"))
-        }
+    let future = Kotlinx_datetimeInstant.Companion.shared.DISTANT_FUTURE
+    let items: [OptionImpl<QuizOption>] = (0...10).map { i in
+        return OptionImpl(kt: QuizOption(quiz: Quiz(id: Int64(i), name: "Sample \(i)", creationTimeISO: future, modificationTimeISO: future), preview: "Lore Ipsum"))
     }
     OptionListView(
         data: OptionListData(items: items),

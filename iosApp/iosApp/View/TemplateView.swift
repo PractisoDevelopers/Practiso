@@ -3,7 +3,7 @@ import SwiftUI
 import ComposeApp
 
 struct TemplateView: View {
-    @State var data = OptionListData()
+    @State var data = OptionListData<OptionImpl<TemplateOption>>()
     
     var body: some View {
         OptionListView(data: data, onDelete: { _ in
@@ -14,7 +14,7 @@ struct TemplateView: View {
             .task {
                 data.isRefreshing = true
                 for await items in LibraryDataModel.shared.templates {
-                    data.items = items.map(Option.init)
+                    data.items = items.map(OptionImpl.init)
                     data.isRefreshing = false
                 }
             }

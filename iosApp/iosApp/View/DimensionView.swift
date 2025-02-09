@@ -5,7 +5,7 @@ import ComposeApp
 struct DimensionView: View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
-    @State var data = OptionListData()
+    @State var data = OptionListData<OptionImpl<DimensionOption>>()
     @State var isDeletingActionsShown = false
     @State var deletionIdSet: Set<Int64>?
     
@@ -18,7 +18,7 @@ struct DimensionView: View {
         }) { option in
             OptionListItem(data: option)
                 .swipeActions {
-                    if (option.kt as! DimensionOption).quizCount <= 0 {
+                    if option.kt.quizCount <= 0 {
                         Button(role: .destructive) {
                             withAnimation {
                                 errorHandler.catchAndShowImmediately {
@@ -61,7 +61,7 @@ struct DimensionView: View {
             data.isRefreshing = true
             for await items in LibraryDataModel.shared.dimensions {
                 data.isRefreshing = false
-                data.items = items.map(Option.init)
+                data.items = items.map(OptionImpl.init)
             }
         }
     }

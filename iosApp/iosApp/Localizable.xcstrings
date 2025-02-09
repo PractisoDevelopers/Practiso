@@ -26,6 +26,9 @@
     "Cancel" : {
 
     },
+    "Creation" : {
+
+    },
     "Delete" : {
 
     },
@@ -60,6 +63,15 @@
 
     },
     "Library" : {
+
+    },
+    "Modification" : {
+
+    },
+    "More" : {
+
+    },
+    "Name" : {
 
     },
     "New question" : {
