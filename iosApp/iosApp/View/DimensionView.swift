@@ -60,8 +60,12 @@ struct DimensionView: View {
         .task {
             data.isRefreshing = true
             for await items in LibraryDataModel.shared.dimensions {
+                DispatchQueue.main.schedule {
+                    withAnimation {
+                        data.items = items.map(OptionImpl.init)
+                    }
+                }
                 data.isRefreshing = false
-                data.items = items.map(OptionImpl.init)
             }
         }
     }

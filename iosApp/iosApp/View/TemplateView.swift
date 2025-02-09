@@ -14,7 +14,11 @@ struct TemplateView: View {
             .task {
                 data.isRefreshing = true
                 for await items in LibraryDataModel.shared.templates {
-                    data.items = items.map(OptionImpl.init)
+                    DispatchQueue.main.schedule {
+                        withAnimation {
+                            data.items = items.map(OptionImpl.init)
+                        }
+                    }
                     data.isRefreshing = false
                 }
             }
