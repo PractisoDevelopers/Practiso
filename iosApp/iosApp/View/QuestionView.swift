@@ -34,6 +34,7 @@ struct QuestionView: View {
     
     @State private var isGenericErrorShown = false
     @State private var genericErrorMessage: String?
+    @State private var isArchiveImporterShown = false
     
     var body: some View {
         OptionListView(data: data, onDelete: { ids in
@@ -55,7 +56,7 @@ struct QuestionView: View {
                 }
         }
         .dropDestination(for: TransferItem.self) { data, _ in
-            processDrop(items: data)
+            processImport(items: data)
         }
         .task {
             data.isRefreshing = true
@@ -68,25 +69,43 @@ struct QuestionView: View {
                 data.isRefreshing = false
             }
         }
+        .fileImporter(isPresented: $isArchiveImporterShown, allowedContentTypes: [.data], allowsMultipleSelection: true) { result in
+            if let data = try? result.get() {
+                _ = processImport(items: data.map { url in .url(url: url) })
+            }
+        }
+        .toolbar {
+            ToolbarItem {
+                Menu("Add", systemImage: "plus") {
+                    Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
+                        isArchiveImporterShown = true
+                    }
+                }
+            }
+        }
     }
     
-    private func processDrop(items: [TransferItem]) -> Bool {
+    private func processImport(items: [TransferItem]) -> Bool {
         var packs: [ArchivePack] = []
         packs.reserveCapacity(items.count)
         
         for item in items {
             switch item {
             case .binary(let data):
-                if let pack = try? importService.unarchive(it: Importable(data: data)) {
+                if let pack = (errorHandler.catchAndShowImmediately {
+                    try importService.unarchive(it: Importable(data: data))
+                }) {
                     packs.append(pack)
                 } else {
-                    return false
+                    return true
                 }
             case .url(let url):
-                if let pack = try? importService.unarchive(it: Importable(url: url)) {
+                if let pack = (errorHandler.catchAndShowImmediately {
+                   try importService.unarchive(it: Importable(url: url))
+                }) {
                     packs.append(pack)
                 } else {
-                    return false
+                    return true
                 }
             case .error(let description):
                 genericErrorMessage = description

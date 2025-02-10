@@ -49,7 +49,7 @@ sealed interface ImportState {
 
 class ImportService(private val db: AppDatabase) {
     @Throws(IOException::class)
-    fun unarchive(it: Importable): ArchivePack? =
+    fun unarchive(it: Importable): ArchivePack =
         it.source.gzip().buffer().unarchive()
 
     fun import(pack: ArchivePack) = channelFlow {
