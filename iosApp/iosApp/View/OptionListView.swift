@@ -67,14 +67,22 @@ struct OptionListView<Content : View, Item : Option>: View {
                             Divider()
                             
                             if Item.KtType.self is any NameComparable.Type {
-                                Button {
+                                
+                                Toggle(isOn: Binding(get: {
+                                    switch sorting {
+                                    case .name(_):
+                                        true
+                                    default:
+                                        false
+                                    }
+                                }, set: { _ in
                                     sorting = switch sorting {
                                     case .name(.acending):
                                             .name(.decending)
                                     default:
                                             .name(.acending)
                                     }
-                                } label: {
+                                }), label: {
                                     switch sorting {
                                     case .name(.acending):
                                         Label("Name", systemImage: "chevron.up")
@@ -83,18 +91,25 @@ struct OptionListView<Content : View, Item : Option>: View {
                                     default:
                                         Text("Name")
                                     }
-                                }
+                                })
                             }
                             
                             if Item.KtType.self is any ModificationComparable.Type {
-                                Button {
+                                Toggle(isOn: Binding(get: {
+                                    switch sorting {
+                                    case .modification(_):
+                                        true
+                                    default:
+                                        false
+                                    }
+                                }, set: { _ in
                                     sorting = switch sorting {
                                     case .modification(.acending):
                                             .modification(.decending)
                                     default:
                                             .modification(.acending)
                                     }
-                                } label: {
+                                }), label: {
                                     switch sorting {
                                     case .modification(.acending):
                                         Label("Modification", systemImage: "chevron.up")
@@ -103,18 +118,25 @@ struct OptionListView<Content : View, Item : Option>: View {
                                     default:
                                         Text("Modification")
                                     }
-                                }
+                                })
                             }
                             
                             if Item.KtType.self is any CreationComparable.Type {
-                                Button {
-                                    sorting = switch sorting {
-                                    case .creation(.acending):
-                                            .creation(.decending)
-                                    default:
-                                            .creation(.acending)
-                                    }
-                                } label: {
+                                    Toggle(isOn: Binding(get: {
+                                        switch sorting {
+                                        case .creation(_):
+                                            true
+                                        default:
+                                            false
+                                        }
+                                    }, set: { _ in
+                                        sorting = switch sorting {
+                                        case .creation(.acending):
+                                                .creation(.decending)
+                                        default:
+                                                .creation(.acending)
+                                        }
+                                }), label: {
                                     switch sorting {
                                     case .creation(.acending):
                                         Label("Creation", systemImage: "chevron.up")
@@ -123,7 +145,7 @@ struct OptionListView<Content : View, Item : Option>: View {
                                     default:
                                         Text("Creation")
                                     }
-                                }
+                                })
                             }
                         }
                     }
