@@ -5,14 +5,15 @@ import ComposeApp
 extension ContentView {
     class Model: Observable, ObservableObject {
         @Published var destination: Destination? = .session
-        
+        @Published var detail: Detail?
     }
     
+    @MainActor
     class ErrorHandler: Observable, ObservableObject {
         @Published var shown = false
         @Published var message: String?
         
-        func catchAndShowImmediately<T>(action: () async throws -> T) async -> T? {
+        func catchAndShowImmediately<T>(action: @MainActor () async throws -> T) async -> T? {
             do {
                 return try await action()
             } catch {
