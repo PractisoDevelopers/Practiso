@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-import ComposeApp
+@preconcurrency import ComposeApp
 import UniformTypeIdentifiers
 
 enum TransferItem: Transferable, Codable {
@@ -29,21 +29,27 @@ struct QuestionView: View {
     private var importService = ImportService(db: Database.shared.app)
     private var removeService = RemoveServiceSync(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
+    @Environment(ContentView.Model.self) private var contentModel
     
     @State var data = OptionListData<OptionImpl<QuizOption>>()
     
     @State private var isGenericErrorShown = false
     @State private var genericErrorMessage: String?
     @State private var isArchiveImporterShown = false
-    
+    @State private var editMode: EditMode = .inactive
+    @State private var selection = Set<Int64>()
+
     var body: some View {
-        OptionListView(data: data, onDelete: { ids in
-            for id in ids {
-                errorHandler.catchAndShowImmediately {
-                    try removeService.removeQuizWithResources(id: id)
+        OptionListView(
+            data: data, editMode: $editMode, selection: $selection,
+            onDelete: { ids in
+                for id in ids {
+                    errorHandler.catchAndShowImmediately {
+                        try removeService.removeQuizWithResources(id: id)
+                    }
                 }
             }
-        }) { option in
+        ) { option in
             OptionListItem(data: option)
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
@@ -60,7 +66,8 @@ struct QuestionView: View {
         }
         .task {
             data.isRefreshing = true
-            for await items in LibraryDataModel.shared.quiz {
+            let service = LibraryService(db: Database.shared.app)
+            for await items in service.getQuizzes() {
                 DispatchQueue.main.schedule {
                     withAnimation {
                         data.items = items.map(OptionImpl.init)
@@ -75,12 +82,21 @@ struct QuestionView: View {
             }
         }
         .toolbar {
-            ToolbarItem {
-                Menu("Add", systemImage: "plus") {
-                    Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
-                        isArchiveImporterShown = true
+            if editMode == .inactive {
+                ToolbarItem {
+                    Menu("Add", systemImage: "plus") {
+                        Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
+                            isArchiveImporterShown = true
+                        }
                     }
                 }
+            }
+        }
+        .onChange(of: selection) { _, newValue in
+            if newValue.count == 1 {
+                contentModel.detail = .question(data.items.first(where: { option in
+                    option.id == selection.first!
+                })!.kt)
             }
         }
     }
@@ -116,7 +132,7 @@ struct QuestionView: View {
         
         for pack in packs {
             let states = importService.import(pack: pack)
-            Task.detached {
+            Task {
                 for await state in states {
                     switch state {
                     case let c as ImportStateConfirmation:

@@ -4,11 +4,19 @@ import ComposeApp
 
 struct OptionListView<Content : View, Item : Option>: View {
     @ObservedObject var data: OptionListData<Item>
+    @Binding var editMode: EditMode
+    @Binding private var selection: Set<Int64>
     var onDelete: (Set<Int64>) -> Void
     var content: (Item) -> Content
     
-    @State private var selection = Set<Int64>()
-    @State private var editMode: EditMode = .inactive
+    init(data: OptionListData<Item>, editMode: Binding<EditMode> = Binding.constant(.inactive), selection: Binding<Set<Int64>> = Binding.constant(Set()), onDelete: @escaping (Set<Int64>) -> Void, content: @escaping (Item) -> Content) {
+        self.data = data
+        self._editMode = editMode
+        self._selection = selection
+        self.onDelete = onDelete
+        self.content = content
+    }
+    
     @State private var searchText: String = ""
     @State private var sorting: OptionListSort = .name(.acending)
     
@@ -41,9 +49,7 @@ struct OptionListView<Content : View, Item : Option>: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.background)
         } else {
-            List(
-                itemModel,
-                selection: $selection) { option in
+            List(itemModel, selection: $selection) { option in
                 content(option)
             }
             .environment(\.editMode, $editMode)
@@ -189,6 +195,7 @@ struct OptionListView<Content : View, Item : Option>: View {
     let items: [OptionImpl<QuizOption>] = (0...10).map { i in
         return OptionImpl(kt: QuizOption(quiz: Quiz(id: Int64(i), name: "Sample \(i)", creationTimeISO: future, modificationTimeISO: future), preview: "Lore Ipsum"))
     }
+    
     OptionListView(
         data: OptionListData(items: items),
         onDelete: { _ in },

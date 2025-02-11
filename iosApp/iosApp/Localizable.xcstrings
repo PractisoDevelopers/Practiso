@@ -44,10 +44,10 @@
     "Deselect All" : {
 
     },
-    "Detail" : {
+    "Details for dimension %@ here" : {
 
     },
-    "Detail here" : {
+    "Details Here" : {
 
     },
     "Dimension" : {
@@ -71,6 +71,12 @@
     "Library" : {
 
     },
+    "Loading Image..." : {
+
+    },
+    "Loading Question..." : {
+
+    },
     "Modification" : {
 
     },
@@ -92,6 +98,15 @@
     "Question" : {
 
     },
+    "Question Unavailable" : {
+
+    },
+    "Resource is Corrupted" : {
+
+    },
+    "Resource Unavailable" : {
+
+    },
     "Search..." : {
 
     },
@@ -101,6 +116,9 @@
     "Select All" : {
 
     },
+    "Select an Item to Show" : {
+
+    },
     "Session" : {
 
     },
@@ -108,6 +126,9 @@
       "extractionState" : "manual"
     },
     "Template" : {
+
+    },
+    "Unknown frame type %@" : {
 
     },
     "Would you like to delete questions contained as well?" : {

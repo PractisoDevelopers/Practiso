@@ -1,21 +1,26 @@
 import Foundation
 import SwiftUI
-import ComposeApp
+@preconcurrency import ComposeApp
 
 struct DimensionView: View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
-    @State var data = OptionListData<OptionImpl<DimensionOption>>()
-    @State var isDeletingActionsShown = false
-    @State var deletionIdSet: Set<Int64>?
+    @State private var data = OptionListData<OptionImpl<DimensionOption>>()
+    @State private var isDeletingActionsShown = false
+    @State private var deletionIdSet: Set<Int64>?
+    @State private var editMode: EditMode = .inactive
+    @State private var selection = Set<Int64>()
     
     private let removeService = RemoveServiceSync(db: Database.shared.app)
     
     var body: some View {
-        OptionListView(data: data, onDelete: { ids in
-            deletionIdSet = ids
-            isDeletingActionsShown = true
-        }) { option in
+        OptionListView(
+            data: data, editMode: $editMode, selection: $selection,
+            onDelete: { ids in
+                deletionIdSet = ids
+                isDeletingActionsShown = true
+            }
+        ) { option in
             OptionListItem(data: option)
                 .swipeActions {
                     if option.kt.quizCount <= 0 {
@@ -59,7 +64,8 @@ struct DimensionView: View {
         })
         .task {
             data.isRefreshing = true
-            for await items in LibraryDataModel.shared.dimensions {
+            let service = LibraryService(db: Database.shared.app)
+            for await items in service.getDimensions() {
                 DispatchQueue.main.schedule {
                     withAnimation {
                         data.items = items.map(OptionImpl.init)

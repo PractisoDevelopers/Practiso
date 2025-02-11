@@ -5,7 +5,7 @@ import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.service.RemoveService
 import kotlinx.coroutines.runBlocking
 
-class RemoveServiceSync(private val db: AppDatabase) {
+class RemoveServiceSync(private val db: AppDatabase = Database.app) {
     val service = RemoveService(db)
 
     @Throws(SQLiteException::class)

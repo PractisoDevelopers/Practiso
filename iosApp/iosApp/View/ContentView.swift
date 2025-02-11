@@ -29,8 +29,18 @@ struct ContentView: View {
                     .navigationTitle("Session")
             }
         } detail: {
-            Text("Detail here")
-                .navigationTitle("Detail")
+            switch model.detail {
+            case .question(let quizOption):
+                QuestionDetailView(option: quizOption)
+                    .navigationTitle(quizOption.view.header)
+            case .dimension(let dimensionOption):
+                DimensionDetailView(option: dimensionOption)
+                    .navigationTitle(dimensionOption.view.header)
+            case .template(let templateOption):
+                TemplateDetailView()
+            case .none:
+                Text("Select an Item to Show")
+            }
         }
         .alert(
             "Operation failed",

@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.service
 
+import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.ArchivePack
 import com.zhufucdev.practiso.datamodel.Importable
@@ -47,7 +48,7 @@ sealed interface ImportState {
     ) : ImportState
 }
 
-class ImportService(private val db: AppDatabase) {
+class ImportService(private val db: AppDatabase = Database.app) {
     @Throws(IOException::class)
     fun unarchive(it: Importable): ArchivePack =
         it.source.gzip().buffer().unarchive()
