@@ -3,10 +3,10 @@ import SwiftUI
 import ComposeApp
 
 struct Question : View {
-    let data: QuizFrames
+    let data: [PrioritizedFrame]
     
     private var frames: [Frame] {
-        data.frames.sorted { $0.priority < $1.priority }.map(\.frame)
+        data.sorted { $0.priority < $1.priority }.map(\.frame)
     }
     
     var body: some View {
@@ -17,8 +17,15 @@ struct Question : View {
                     TextFrameView(frame: text.textFrame)
                 case let image as FrameImage:
                     ImageFrameView(frame: image.imageFrame)
+                case let options as FrameOptions:
+                    OptionsFrameView(frame: options) { item in
+                        Checkmark(isOn: Binding.constant(item.isKey)) {
+                            OptionsFrameViewItem(frame: item.frame)
+                        }
+                    }
                 default:
                     Text("Unknown frame type \(String(describing: frame.self))")
+                        .foregroundStyle(.secondary)
                         .padding()
                         .border(.secondary, cornerRadius: 12)
                 }

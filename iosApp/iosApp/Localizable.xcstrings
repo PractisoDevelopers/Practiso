@@ -131,6 +131,9 @@
     "Unknown frame type %@" : {
 
     },
+    "Unsupported frame type %@" : {
+
+    },
     "Would you like to delete questions contained as well?" : {
 
     }
