@@ -24,7 +24,9 @@ struct QuestionDetailView : View {
                 }
                 
             case .ok(let quizFrames):
-                Question(data: quizFrames)
+                ScrollView {
+                    Question(data: quizFrames.frames)
+                }
                 
             case .unavailable:
                 Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("Question Unavailable"))
