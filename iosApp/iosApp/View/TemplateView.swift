@@ -4,12 +4,11 @@ import SwiftUI
 
 struct TemplateView: View {
     @State var data = OptionListData<OptionImpl<TemplateOption>>()
-    @State var editMode: EditMode = .inactive
     @State private var selection = Set<Int64>()
 
     var body: some View {
-        OptionListView(
-            data: data, editMode: $editMode, selection: $selection,
+        OptionList(
+            data: data, selection: $selection,
             onDelete: { _ in
                 // TODO
             }) { OptionListItem(data: $0) }

@@ -2,16 +2,15 @@ import Foundation
 import SwiftUI
 import ComposeApp
 
-struct OptionListView<Content : View, Item : Option>: View {
+struct OptionList<Content : View, Item : Option>: View {
+    @Environment(\.editMode) var editMode: Binding<EditMode>?
     @ObservedObject var data: OptionListData<Item>
-    @Binding var editMode: EditMode
     @Binding private var selection: Set<Int64>
     var onDelete: (Set<Int64>) -> Void
     var content: (Item) -> Content
     
-    init(data: OptionListData<Item>, editMode: Binding<EditMode> = Binding.constant(.inactive), selection: Binding<Set<Int64>> = Binding.constant(Set()), onDelete: @escaping (Set<Int64>) -> Void, content: @escaping (Item) -> Content) {
+    init(data: OptionListData<Item>, selection: Binding<Set<Int64>> = Binding.constant(Set()), onDelete: @escaping (Set<Int64>) -> Void, content: @escaping (Item) -> Content) {
         self.data = data
-        self._editMode = editMode
         self._selection = selection
         self.onDelete = onDelete
         self.content = content
@@ -52,7 +51,6 @@ struct OptionListView<Content : View, Item : Option>: View {
             List(itemModel, selection: $selection) { option in
                 content(option)
             }
-            .environment(\.editMode, $editMode)
             .listStyle(.plain)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -61,12 +59,12 @@ struct OptionListView<Content : View, Item : Option>: View {
                     }
                 }
                 
-                if editMode == .inactive {
+                if editMode?.wrappedValue.isEditing == false {
                     ToolbarItem {
                         Menu("More", systemImage: "ellipsis.circle") {
                             Button("Select", systemImage: "checkmark.circle") {
                                 withAnimation {
-                                    editMode = .active
+                                    editMode?.wrappedValue = .active
                                 }
                             }
                             
@@ -171,7 +169,7 @@ struct OptionListView<Content : View, Item : Option>: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Done") {
                             withAnimation {
-                                editMode = .inactive
+                                editMode?.wrappedValue = .inactive
                             }
                         }
                     }
@@ -196,7 +194,7 @@ struct OptionListView<Content : View, Item : Option>: View {
         return OptionImpl(kt: QuizOption(quiz: Quiz(id: Int64(i), name: "Sample \(i)", creationTimeISO: future, modificationTimeISO: future), preview: "Lore Ipsum"))
     }
     
-    OptionListView(
+    OptionList(
         data: OptionListData(items: items),
         onDelete: { _ in },
         content: { option in

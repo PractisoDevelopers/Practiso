@@ -40,8 +40,8 @@ struct QuestionView: View {
     @State private var selection = Set<Int64>()
 
     var body: some View {
-        OptionListView(
-            data: data, editMode: $editMode, selection: $selection,
+        OptionList(
+            data: data, selection: $selection,
             onDelete: { ids in
                 for id in ids {
                     errorHandler.catchAndShowImmediately {
@@ -61,6 +61,7 @@ struct QuestionView: View {
                     }
                 }
         }
+        .environment(\.editMode, $editMode)
         .dropDestination(for: TransferItem.self) { data, _ in
             processImport(items: data)
         }
