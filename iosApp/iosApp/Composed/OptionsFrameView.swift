@@ -32,6 +32,7 @@ struct OptionsFrameView<Label : View> : View {
             if let name = frame.optionsFrame.name {
                 Text(name)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(.secondary)
             }
             ForEach(optionFrames, id: \.frame.id) { optionFrame in
                 content(optionFrame)
