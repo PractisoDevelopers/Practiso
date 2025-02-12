@@ -19,6 +19,7 @@ struct OptionsFrameViewItem : View {
 
 struct OptionsFrameView<Label : View> : View {
     let frame: FrameOptions
+    var showName: Bool = true
     let content: (KeyedPrioritizedFrame) -> Label
     private var optionFrames: [KeyedPrioritizedFrame] {
         frame.frames.sorted { $0.priority < $1.priority }
@@ -27,9 +28,11 @@ struct OptionsFrameView<Label : View> : View {
     var body: some View {
         VStack {
             if let name = frame.optionsFrame.name {
-                Text(name)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .foregroundStyle(.secondary)
+                if showName {
+                    Text(name)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(.secondary)
+                }
             }
             ForEach(optionFrames, id: \.frame.id) { optionFrame in
                 content(optionFrame)
