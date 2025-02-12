@@ -38,10 +38,7 @@
     "Delete All" : {
 
     },
-    "Delete Image" : {
-
-    },
-    "Delete Text" : {
+    "Delete Options" : {
 
     },
     "Deleting Dimension" : {
@@ -93,6 +90,9 @@
 
     },
     "Name" : {
+
+    },
+    "New option frame" : {
 
     },
     "New question" : {

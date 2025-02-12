@@ -48,14 +48,8 @@ struct QuestionEditor : View {
                     }
                     return .ignored
                 }
-                .contextMenu {
-                    Button("Delete Text", systemImage: "trash", role: .destructive, action: onDelete)
-                }
             case let image as FrameImage:
                 ImageFrameView(frame: image.imageFrame)
-                    .contextMenu {
-                        Button("Delete Image", systemImage: "trash", role: .destructive, action: onDelete)
-                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
             default:
                 Question.UnknownItem(frame: frame)
@@ -68,30 +62,56 @@ struct QuestionEditor : View {
             Group {
                 switch frame {
                 case let options as FrameOptions:
-                    OptionsFrameView(frame: options) { option in
-                        Checkmark(isOn: Binding(get: { option.isKey }, set: { newValue, _ in
-                            updateIsKey(options: options, item: option, newValue: newValue)
-                        })) {
-                            FrameEditor(
-                                frame: Binding(get: {
-                                    option.frame
-                                }, set: { newValue in
-                                    updateOptionFrame(options: options, item: option, newValue: newValue)
-                                }),
-                                onDelete: {
-                                    deleteOption(options: options, item: option)
-                                }
-                            )
+                    VStack {
+                        TextField(text: Binding(get: {
+                            options.optionsFrame.name ?? String(localized: "New option frame")
+                        }, set: { newValue, _ in
+                            let name: String? = if newValue.isEmpty {
+                                nil
+                            } else {
+                                newValue
+                            }
+                            updateFrame(newValue: FrameOptions(optionsFrame: OptionsFrame(id: options.optionsFrame.id, name: name), frames: options.frames))
+                        }), label: { EmptyView() })
+                        .foregroundStyle(.secondary)
+                        OptionsFrameView(frame: options, showName: false) { option in
+                            Checkmark(isOn: Binding(get: { option.isKey }, set: { newValue, _ in
+                                updateIsKey(options: options, item: option, newValue: newValue)
+                            })) {
+                                FrameEditor(
+                                    frame: Binding(get: {
+                                        option.frame
+                                    }, set: { newValue in
+                                        updateOptionFrame(options: options, item: option, newValue: newValue)
+                                    }),
+                                    onDelete: {
+                                        deleteOption(options: options, item: option)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    .contextMenu {
+                        Button("Delete All", systemImage: "trash", role: .destructive) {
+                            deleteFrame(id: options.id)
                         }
                     }
                 default:
-                    FrameEditor(frame: Binding(get: {
-                        frame
-                    }, set: { newValue in
-                        updateFrame(newValue: newValue)
-                    }), onDelete: {
-                        deleteFrame(id: frame.id)
-                    })
+                    FrameEditor(
+                        frame: Binding(get: {
+                            frame
+                        }, set: { newValue in
+                            updateFrame(newValue: newValue)
+                        }),
+                        onDelete: {
+                            deleteFrame(id: frame.id)
+                        }
+                    )
+                    .contextMenu {
+                        Button("Delete", systemImage: "trash", role: .destructive) {
+                            deleteFrame(id: frame.id)
+                        }
+                    }
                 }
             }
             .matchedGeometryEffect(id: frame.id, in: namespace)
@@ -161,8 +181,6 @@ struct QuestionEditor : View {
     @Previewable @Namespace var namespace
     NavigationStack {
         QuestionEditor(data: $frames, namespace: namespace)
-            .toolbar {
-                EditButton()
-            }
+            .navigationTitle("Sample Question")
     }
 }

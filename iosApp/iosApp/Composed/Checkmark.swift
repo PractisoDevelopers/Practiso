@@ -23,10 +23,10 @@ struct Checkmark<Title: View> : View {
             Group {
                 if isOn {
                     Image(systemName: "checkmark.circle.fill")
-                        .checkmarkStyle()
+                        .checkmarkStyle(isEnabled: isWithButton)
                 } else {
                     Image(systemName: "circle")
-                        .checkmarkStyle()
+                        .checkmarkStyle(isEnabled: isWithButton)
                 }
             }
             .hoverEffect(isEnabled: isWithButton)
@@ -41,10 +41,20 @@ struct Checkmark<Title: View> : View {
 }
 
 extension Image {
-    func checkmarkStyle() -> some View {
+    private func checkmarkStyleBase() -> some View {
         self.resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 24, height: 24)
-            .foregroundStyle(Color("AccentColor"))
+    }
+    
+    fileprivate func checkmarkStyle(isEnabled: Bool) -> some View {
+        Group {
+            if isEnabled {
+                checkmarkStyleBase()
+                    .foregroundStyle(Color("AccentColor"))
+            } else {
+                checkmarkStyleBase()
+            }
+        }
     }
 }
