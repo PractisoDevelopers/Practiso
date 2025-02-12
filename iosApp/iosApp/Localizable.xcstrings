@@ -38,6 +38,12 @@
     "Delete All" : {
 
     },
+    "Delete Image" : {
+
+    },
+    "Delete Text" : {
+
+    },
     "Deleting Dimension" : {
 
     },
@@ -54,6 +60,9 @@
 
     },
     "Done" : {
+
+    },
+    "Edit" : {
 
     },
     "Empty" : {
@@ -129,9 +138,6 @@
 
     },
     "Unknown frame type %@" : {
-
-    },
-    "Unsupported frame type %@" : {
 
     },
     "Would you like to delete questions contained as well?" : {

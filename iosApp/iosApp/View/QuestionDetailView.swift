@@ -12,8 +12,12 @@ struct QuestionDetailView : View {
     let option: QuizOption
     let libraryService = LibraryService(db: Database.shared.app)
     
+    @State private var editMode: EditMode = .inactive
     @State private var data: DataState = .pending
-    
+    @State private var staging: QuizFrames? = nil
+    @State private var cache = ImageFrameView.Cache()
+    @Namespace private var question
+
     var body: some View {
         Group {
             switch data {
@@ -24,10 +28,38 @@ struct QuestionDetailView : View {
                 }
                 
             case .ok(let quizFrames):
-                ScrollView {
-                    Question(data: quizFrames.frames)
+                Group {
+                    if editMode.isEditing == true {
+                        QuestionEditor(data: Binding {
+                            staging ?? quizFrames
+                        } set: {
+                            staging = $0
+                        }, namespace: question)
+                        .onAppear {
+                            staging = quizFrames
+                        }
+                    } else {
+                        Question(data: quizFrames, namespace: question)
+                    }
                 }
-                
+                .environment(\.editMode, $editMode)
+                .environmentObject(cache)
+                .toolbar {
+                    if editMode.isEditing {
+                        Button("Done") {
+                            withAnimation {
+                                editMode = .inactive
+                            }
+                        }
+                    } else {
+                        Button("Edit") {
+                            withAnimation {
+                                editMode = .active
+                            }
+                        }
+                    }
+                }
+
             case .unavailable:
                 Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("Question Unavailable"))
             }

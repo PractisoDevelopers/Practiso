@@ -19,10 +19,8 @@ struct Checkmark<Title: View> : View {
     }
     
     var body: some View {
-        Button(action: {
-            isOn = !isOn
-        }) {
-            HStack {
+        HStack {
+            Group {
                 if isOn {
                     Image(systemName: "checkmark.circle.fill")
                         .checkmarkStyle()
@@ -30,10 +28,15 @@ struct Checkmark<Title: View> : View {
                     Image(systemName: "circle")
                         .checkmarkStyle()
                 }
-                title
             }
-        }.foregroundStyle(.primary).padding(.vertical, 4)
-            .disabled(!isWithButton)
+            .hoverEffect(isEnabled: isWithButton)
+            .onTapGesture {
+                isOn = !isOn
+            }
+            title
+        }
+        .padding(.vertical, 4)
+        .foregroundStyle(.primary)
     }
 }
 

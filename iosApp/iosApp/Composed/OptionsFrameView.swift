@@ -12,10 +12,7 @@ struct OptionsFrameViewItem : View {
         case let image as FrameImage:
             ImageFrameView(frame: image.imageFrame)
         default:
-            Text("Unsupported frame type \(String(describing: frame.self))")
-                .foregroundStyle(.secondary)
-                .padding()
-                .border(.secondary, cornerRadius: 0.3)
+            Question.UnknownItem(frame: frame)
         }
     }
 }
