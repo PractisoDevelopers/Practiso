@@ -2,8 +2,21 @@ import Foundation
 import SwiftUI
 
 struct Checkmark<Title: View> : View {
-    @Binding var isOn: Bool
-    @ViewBuilder let title: Title
+    @Binding private var isOn: Bool
+    private let isWithButton: Bool
+    private let title: Title
+    
+    init(isOn: Bool, title: () -> Title) {
+        self._isOn = Binding.constant(isOn)
+        self.isWithButton = false
+        self.title = title()
+    }
+    
+    init(isOn: Binding<Bool>, title: () -> Title) {
+        self._isOn = isOn
+        self.isWithButton = true
+        self.title = title()
+    }
     
     var body: some View {
         Button(action: {
@@ -20,6 +33,7 @@ struct Checkmark<Title: View> : View {
                 title
             }
         }.foregroundStyle(.primary).padding(.vertical, 4)
+            .disabled(!isWithButton)
     }
 }
 

@@ -19,7 +19,7 @@ struct Question : View {
                     ImageFrameView(frame: image.imageFrame)
                 case let options as FrameOptions:
                     OptionsFrameView(frame: options) { item in
-                        Checkmark(isOn: Binding.constant(item.isKey)) {
+                        Checkmark(isOn: item.isKey) {
                             OptionsFrameViewItem(frame: item.frame)
                         }
                     }
