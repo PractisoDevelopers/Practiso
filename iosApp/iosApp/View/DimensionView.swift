@@ -14,8 +14,8 @@ struct DimensionView: View {
     private let removeService = RemoveServiceSync(db: Database.shared.app)
     
     var body: some View {
-        OptionListView(
-            data: data, editMode: $editMode, selection: $selection,
+        OptionList(
+            data: data, selection: $selection,
             onDelete: { ids in
                 deletionIdSet = ids
                 isDeletingActionsShown = true
