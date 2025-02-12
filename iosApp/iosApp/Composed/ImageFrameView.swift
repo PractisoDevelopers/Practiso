@@ -13,8 +13,13 @@ struct ImageFrameView : View {
     @State private var __data: DataState = .pending
 
     let frame: ImageFrame
-    let cache: Cache? = nil
-    let data: Binding<DataState>? = nil
+    let data: Binding<DataState>?
+    @Environment(Cache.self) var cache: Cache?
+
+    init(frame: ImageFrame, data: Binding<DataState>? = nil) {
+        self.frame = frame
+        self.data = data
+    }
 
     var body: some View {
         Group {
@@ -30,6 +35,7 @@ struct ImageFrameView : View {
                     Image(systemName: "photo.badge.exclamationmark")
                     Text("Resource Unavailable")
                 }
+                .frame(maxWidth: .infinity)
                 .padding()
                 .border(.secondary, cornerRadius: 12)
 
@@ -38,6 +44,7 @@ struct ImageFrameView : View {
                     Image(systemName: "photo.badge.exclamationmark")
                     Text("Resource is Corrupted")
                 }
+                .frame(maxWidth: .infinity)
                 .padding()
                 .border(.secondary, cornerRadius: 12)
                 
@@ -47,43 +54,26 @@ struct ImageFrameView : View {
                     Text("Loading Image...")
                 }
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, idealHeight: 150)
                 .padding()
-                
             }
         }
         .task(id: frame.id) {
             if let cached = await cache?.get(name: frame.filename) {
-                DispatchQueue.main.async {
-                    withAnimation {
-                        __data = .ok(image: cached)
-                        data?.wrappedValue = __data
-                    }
-                }
+                __data = .ok(image: cached)
+                data?.wrappedValue = __data
             } else {
                 do {
                     let image = try ImageService.load(fileName: frame.filename)
                     await cache?.put(name: frame.filename, image: image)
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            __data = .ok(image: image)
-                            data?.wrappedValue = __data
-                        }
-                    }
+                    __data = .ok(image: image)
+                    data?.wrappedValue = __data
                 } catch ImageServiceError.invalidData {
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            __data = .invalidImage(fileName: frame.filename)
-                            data?.wrappedValue = __data
-                        }
-                    }
+                    __data = .invalidImage(fileName: frame.filename)
+                    data?.wrappedValue = __data
                 } catch ImageServiceError.sourceUnavailable {
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            __data = .resourceUnavailable(fileName: frame.filename)
-                            data?.wrappedValue = __data
-                        }
-                    }
+                    __data = .resourceUnavailable(fileName: frame.filename)
+                    data?.wrappedValue = __data
                 } catch {
                     assertionFailure("\(error) is not possible")
                 }
@@ -91,4 +81,3 @@ struct ImageFrameView : View {
         }
     }
 }
-

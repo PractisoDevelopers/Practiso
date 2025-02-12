@@ -2,10 +2,14 @@ import Foundation
 import ImageIO
 
 extension ImageFrameView {
-    actor Cache {
-        let capacity: Double = 10 // Mega bytes
+    actor Cache : Observable, ObservableObject {
+        let capacity: Double
         private var store: Dictionary<String, CGImage> = Dictionary()
         private var visit: [String] = []
+        
+        init(capacity: Double = 10) { // 10 mega bytes
+            self.capacity = capacity
+        }
         
         func get(name: String) -> CGImage? {
             if let image = store[name] {
