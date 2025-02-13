@@ -45,16 +45,18 @@ struct QuestionDetailView : View {
                 .environment(\.editMode, $editMode)
                 .environmentObject(cache)
                 .toolbar {
-                    if editMode.isEditing {
-                        Button("Done") {
-                            withAnimation {
-                                editMode = .inactive
+                    ToolbarItem(placement: .primaryAction) {
+                        if editMode.isEditing {
+                            Button("Done") {
+                                withAnimation {
+                                    editMode = .inactive
+                                }
                             }
-                        }
-                    } else {
-                        Button("Edit") {
-                            withAnimation {
-                                editMode = .active
+                        } else {
+                            Button("Edit") {
+                                withAnimation {
+                                    editMode = .active
+                                }
                             }
                         }
                     }

@@ -41,13 +41,13 @@ struct Checkmark<Title: View> : View {
 }
 
 extension Image {
-    private func checkmarkStyleBase() -> some View {
+    func checkmarkStyleBase() -> some View {
         self.resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 24, height: 24)
     }
     
-    fileprivate func checkmarkStyle(isEnabled: Bool) -> some View {
+    func checkmarkStyle(isEnabled: Bool) -> some View {
         Group {
             if isEnabled {
                 checkmarkStyleBase()
