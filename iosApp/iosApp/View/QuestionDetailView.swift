@@ -3,7 +3,7 @@ import SwiftUI
 @preconcurrency import ComposeApp
 
 struct QuestionDetailView : View {
-    enum DataState {
+    enum DataState : Equatable {
         case pending
         case ok(QuizFrames)
         case unavailable
@@ -11,13 +11,16 @@ struct QuestionDetailView : View {
     
     let option: QuizOption
     let libraryService = LibraryService(db: Database.shared.app)
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
     @State private var editMode: EditMode = .inactive
     @State private var data: DataState = .pending
     @State private var staging: QuizFrames? = nil
+    @State private var editHistory: [Modification] = []
+    @State private var isApplyingModification = false
     @State private var cache = ImageFrameView.Cache()
     @Namespace private var question
-
+    
     var body: some View {
         Group {
             switch data {
@@ -30,11 +33,15 @@ struct QuestionDetailView : View {
             case .ok(let quizFrames):
                 Group {
                     if editMode.isEditing == true {
-                        QuestionEditor(data: Binding {
-                            staging ?? quizFrames
-                        } set: {
-                            staging = $0
-                        }, namespace: question)
+                        QuestionEditor(
+                            data: Binding {
+                                staging ?? quizFrames
+                            } set: {
+                                staging = $0
+                            },
+                            namespace: question,
+                            history: $editHistory
+                        )
                         .onAppear {
                             staging = quizFrames
                         }
@@ -47,10 +54,25 @@ struct QuestionDetailView : View {
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         if editMode.isEditing {
-                            Button("Done") {
-                                withAnimation {
-                                    editMode = .inactive
+                            if !isApplyingModification {
+                                Button("Done") {
+                                    if !editHistory.isEmpty {
+                                        isApplyingModification = true
+                                        errorHandler.catchAndShowImmediately {
+                                            try libraryService.saveModification(data: editHistory, quizId: option.id)
+                                            withAnimation {
+                                                editMode = .inactive
+                                            }
+                                        }
+                                        isApplyingModification = false
+                                    } else {
+                                        withAnimation {
+                                            editMode = .inactive
+                                        }
+                                    }
                                 }
+                            } else {
+                                ProgressView()
                             }
                         } else {
                             Button("Edit") {

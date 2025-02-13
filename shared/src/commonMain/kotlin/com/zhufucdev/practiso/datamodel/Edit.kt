@@ -127,10 +127,10 @@ sealed interface Edit {
     }
 
     @Serializable
-    data class Rename(val old: String, val new: String) : Edit {
+    data class Rename(val old: String?, val new: String?) : Edit {
         override suspend fun applyTo(db: AppDatabase, quizId: Long) {
             db.transaction {
-                db.quizQueries.updateQuizName(new.takeIf(String::isNotEmpty), quizId)
+                db.quizQueries.updateQuizName(new, quizId)
             }
         }
     }
@@ -140,7 +140,7 @@ fun List<Edit>.optimized(): List<Edit> {
     val appends = mutableListOf<Edit.Append>()
     val updates = mutableListOf<Edit.Update>()
     val removals = mutableListOf<Edit.Remove>()
-    var rename: Pair<String, String>? = null
+    var rename: Pair<String?, String?>? = null
     forEach {
         when (it) {
             is Edit.Append -> appends.add(it)
