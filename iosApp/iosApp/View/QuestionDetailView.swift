@@ -15,9 +15,8 @@ struct QuestionDetailView : View {
     
     @State private var editMode: EditMode = .inactive
     @State private var data: DataState = .pending
-    @State private var staging: QuizFrames? = nil
-    @State private var editHistory: [Modification] = []
-    @State private var isApplyingModification = false
+    @State private var staging: [Frame]? = nil
+    @State private var editHistory = History()
     @State private var cache = ImageFrameView.Cache()
     @Namespace private var question
     
@@ -35,7 +34,7 @@ struct QuestionDetailView : View {
                     if editMode.isEditing == true {
                         QuestionEditor(
                             data: Binding {
-                                staging ?? quizFrames
+                                staging ?? quizFrames.frames.map(\.frame)
                             } set: {
                                 staging = $0
                             },
@@ -43,7 +42,7 @@ struct QuestionDetailView : View {
                             history: $editHistory
                         )
                         .onAppear {
-                            staging = quizFrames
+                            staging = quizFrames.frames.map(\.frame)
                         }
                     } else {
                         Question(data: quizFrames, namespace: question)
@@ -54,28 +53,23 @@ struct QuestionDetailView : View {
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         if editMode.isEditing {
-                            if !isApplyingModification {
-                                Button("Done") {
-                                    if !editHistory.isEmpty {
-                                        isApplyingModification = true
-                                        errorHandler.catchAndShowImmediately {
-                                            try libraryService.saveModification(data: editHistory, quizId: option.id)
-                                            withAnimation {
-                                                editMode = .inactive
-                                            }
-                                        }
-                                        isApplyingModification = false
-                                    } else {
+                            Button("Done") {
+                                if !editHistory.isEmpty {
+                                    errorHandler.catchAndShowImmediately {
+                                        try libraryService.saveModification(data: editHistory.modifications, quizId: option.id)
                                         withAnimation {
                                             editMode = .inactive
                                         }
                                     }
+                                } else {
+                                    withAnimation {
+                                        editMode = .inactive
+                                    }
                                 }
-                            } else {
-                                ProgressView()
                             }
                         } else {
                             Button("Edit") {
+                                editHistory = History() // editor always starts with empty history
                                 withAnimation {
                                     editMode = .active
                                 }

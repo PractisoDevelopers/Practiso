@@ -4,16 +4,12 @@ import ComposeApp
 import ImageIO
 
 struct QuestionEditor : View {
-    @Binding var data: QuizFrames
+    @Binding var data: [Frame]
     let namespace: Namespace.ID
-    @Binding var history: [Modification]
-    
-    private var frames: [Frame] {
-        data.frames.sorted { $0.priority < $1.priority }.map(\.frame)
-    }
+    @Binding var history: History
     
     var body: some View {
-        List(frames, id: \.id) { frame in
+        List(data, id: \.id) { frame in
             Group {
                 switch frame {
                 case let options as FrameOptions:
@@ -105,6 +101,18 @@ struct QuestionEditor : View {
         .environment(\.editMode, Binding.constant(.inactive))
         .listStyle(.plain)
         .toolbar {
+            Button("Undo", systemImage: "arrow.uturn.backward.circle") {
+                if let mod = history.undo() {
+                    undo(mod)
+                }
+            }
+            .disabled(!history.canUndo)
+            Button("Redo", systemImage: "arrow.uturn.forward.circle") {
+                if let mod = history.redo() {
+                    redo(mod)
+                }
+            }
+            .disabled(!history.canRedo)
             Menu("Add", systemImage: "plus") {
                 Button("Text", systemImage: "character.textbox") {
                     withAnimation {
@@ -123,9 +131,6 @@ struct QuestionEditor : View {
                 }
             }
         }
-        .onAppear {
-            history = [] // editor always starts with empty history
-        }
     }
     
     func updateIsKey(options: FrameOptions, item: KeyedPrioritizedFrame, newValue: Bool) {
@@ -138,18 +143,19 @@ struct QuestionEditor : View {
     }
     
     func deleteOption(options: FrameOptions, item: KeyedPrioritizedFrame) {
-        let index = data.frames.firstIndex { $0.frame.id == options.optionsFrame.id }!
+        let index = data.firstIndex { $0.id == options.optionsFrame.id }!
         let optionIndex = options.frames.firstIndex { $0.frame.id == item.frame.id }!
         let newFrame = FrameOptions(optionsFrame: options.optionsFrame, frames: Array(options.frames[..<optionIndex] + options.frames[(optionIndex + 1)...]))
-        let wrapped = PrioritizedFrame(frame: newFrame, priority: data.frames[index].priority)
-        history.append(.update(oldValue: data.frames[index].frame, newValue: wrapped.frame))
-        data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + [wrapped] + data.frames[(index + 1)...]))
+        let mod: Modification = .update(oldValue: data[index], newValue: newFrame)
+        history.append(mod)
+        redo(mod)
     }
     
     func deleteFrame(id: Int64) {
-        let index = data.frames.firstIndex { $0.frame.id == id }!
-        history.append(.delete(frame: data.frames[index].frame, at: index))
-        data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + data.frames[(index + 1)...]))
+        let index = data.firstIndex { $0.id == id }!
+        let mod: Modification = .delete(frame: data[index], at: index)
+        history.append(mod)
+        redo(mod)
     }
 
     func updateOption(options: FrameOptions, newValue: KeyedPrioritizedFrame) {
@@ -182,37 +188,65 @@ struct QuestionEditor : View {
     }
     
     func appendFrame(itemType: Frame.Type) {
-        let nextId = (data.frames.max(by: { $0.frame.id < $1.frame.id })?.frame.id ?? 0) + 1
-        let nextPriority = (data.frames.max(by: {$0.priority < $1.priority })?.priority ?? -1) + 1
-        let wrapped = PrioritizedFrame(frame: createFrameFromType(id: nextId, itemType: itemType), priority: nextPriority)
-        history.append(.push(frame: wrapped.frame, at: data.frames.count))
-        data = QuizFrames(quiz: data.quiz, frames: Array(data.frames + [wrapped]))
+        let nextId = (data.max(by: { $0.id < $1.id })?.id ?? 0) + 1
+        let newFrame = createFrameFromType(id: nextId, itemType: itemType)
+        let mod: Modification = .push(frame: newFrame, at: data.count)
+        history.append(mod)
+        redo(mod)
     }
 
     func updateFrame(newValue: Frame) {
-        let index = data.frames.firstIndex { $0.frame.id == newValue.id }!
-        let wrapped = PrioritizedFrame(frame: newValue, priority: data.frames[index].priority)
-        history.append(.update(oldValue: data.frames[index].frame, newValue: newValue))
-        data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + [wrapped] + data.frames[(index + 1)...]))
+        let index = data.firstIndex { $0.id == newValue.id }!
+        let mod: Modification = .update(oldValue: data[index], newValue: newValue)
+        history.append(mod)
+        redo(mod)
     }
     
-    func updateFrame(newValue: PrioritizedFrame) {
-        let index = data.frames.firstIndex { $0.frame.id == newValue.frame.id }!
-        history.append(.update(oldValue: data.frames[index].frame, newValue: newValue.frame))
-        data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + [newValue] + data.frames[(index + 1)...]))
+    func undo(_ mod: Modification) {
+        switch mod {
+        case .update(let oldValue, let newValue):
+            let index = data.firstIndex { $0.id == newValue.id }!
+            data = Array(data[..<index] + [oldValue] + data[(index + 1)...])
+            
+        case .push(_, let at):
+            data = Array(data[..<at] + data[(at + 1)...])
+            
+        case .delete(let frame, let at):
+            data = Array(data[..<at] + [frame] + data[at...])
+            
+        case .renameQuiz(_, _):
+            return
+        }
+    }
+    
+    func redo(_ mod: Modification) {
+        switch mod {
+        case .update(_, let newValue):
+            let index = data.firstIndex { $0.id == newValue.id }!
+            data = Array(data[..<index] + [newValue] + data[(index + 1)...])
+
+        case .push(let value, let at):
+            data = Array(data[..<at] + [value] + data[at...])
+            
+        case .delete(_, let at):
+            data = Array(data[..<at] + data[(at + 1)...])
+
+        case .renameQuiz(_, _):
+            return
+        }
     }
 }
 
 #Preview {
-    @Previewable @State var frames = QuizFrames(quiz: Quiz(id: 0, name: "Sample quiz", creationTimeISO: Kotlinx_datetimeInstant.Companion.shared.DISTANT_FUTURE, modificationTimeISO: nil), frames: [
-        PrioritizedFrame(frame: FrameText(id: 0, textFrame: TextFrame(id: 0, embeddingsId: nil, content: "What's the meaning of life?")), priority: 0),
-        PrioritizedFrame(frame: FrameImage(id: 1, imageFrame: ImageFrame(id: 0, embeddingsId: nil, filename: "", width: -1, height: -1, altText: nil)), priority: 1),
-        PrioritizedFrame(frame: FrameOptions(optionsFrame: OptionsFrame(id: 2, name: nil), frames: [
+    @Previewable @State var frames: [Frame] = [
+        FrameText(id: 0, textFrame: TextFrame(id: 0, embeddingsId: nil, content: "What's the meaning of life?")),
+        FrameImage(id: 1, imageFrame: ImageFrame(id: 0, embeddingsId: nil, filename: "", width: -1, height: -1, altText: nil)),
+        FrameOptions(optionsFrame: OptionsFrame(id: 2, name: nil), frames: [
             KeyedPrioritizedFrame(frame: FrameText(id: 1, textFrame: TextFrame(id: 1, embeddingsId: nil, content: "To have fun")), isKey: true, priority: 0)
-        ]), priority: 2)
-    ])
+        ])
+    ]
     @Previewable @Namespace var namespace
-    @Previewable @State var history: [Modification] = []
+    @Previewable @State var history = History()
     NavigationStack {
         QuestionEditor(data: $frames, namespace: namespace, history: $history)
             .navigationTitle("Sample Question")
