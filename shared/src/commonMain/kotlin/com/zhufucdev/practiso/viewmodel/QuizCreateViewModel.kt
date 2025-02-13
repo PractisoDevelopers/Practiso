@@ -176,11 +176,11 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
     }
 
     private fun Edit.Rename.undo() {
-        name = old
+        name = old ?: ""
     }
 
     private fun Edit.Rename.redo() {
-        name = new
+        name = new ?: ""
     }
 
     private fun Edit.Update.undo() {

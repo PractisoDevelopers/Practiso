@@ -3,52 +3,10 @@ import SwiftUI
 import ComposeApp
 import ImageIO
 
-private enum Modification {
-    case update(oldValue: PrioritizedFrame, newValue: PrioritizedFrame)
-    case push(frame: Frame, at: Int)
-    case delete(frame: PrioritizedFrame, at: Int)
-    case renameQuiz(oldName: String?, newName: String?)
-}
-
-struct FrameEditor : View {
-    @Binding var frame: Frame
-    let onDelete: () -> Void
-    
-    var body: some View {
-        switch frame {
-        case let text as FrameText:
-            TextField(text: Binding(get: {
-                text.textFrame.content
-            }, set: { newValue, _ in
-                if newValue == text.textFrame.content {
-                    return
-                }
-                let textFrame = TextFrame(id: text.textFrame.id, embeddingsId: text.textFrame.embeddingsId, content: newValue)
-                frame = FrameText(id: frame.id, textFrame: textFrame)
-            }), axis: .vertical, label: {
-                Text("Type text here...")
-            })
-            .onKeyPress(.delete) {
-                if text.textFrame.content.isEmpty {
-                    onDelete()
-                    return .handled
-                }
-                return .ignored
-            }
-        case let image as FrameImage:
-            ImageFrameView(frame: image.imageFrame)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        default:
-            Question.UnknownItem(frame: frame)
-        }
-    }
-}
-
 struct QuestionEditor : View {
     @Binding var data: QuizFrames
     let namespace: Namespace.ID
-    
-    @State private var history: [Modification] = []
+    @Binding var history: [Modification]
     
     private var frames: [Frame] {
         data.frames.sorted { $0.priority < $1.priority }.map(\.frame)
@@ -61,7 +19,7 @@ struct QuestionEditor : View {
                 case let options as FrameOptions:
                     VStack {
                         TextField(text: Binding(get: {
-                            options.optionsFrame.name ?? String(localized: "New options frame")
+                            options.optionsFrame.name ?? ""
                         }, set: { newValue, _ in
                             let name: String? = if newValue.isEmpty {
                                 nil
@@ -69,7 +27,7 @@ struct QuestionEditor : View {
                                 newValue
                             }
                             updateFrame(newValue: FrameOptions(optionsFrame: OptionsFrame(id: options.optionsFrame.id, name: name), frames: options.frames))
-                        }), label: { EmptyView() })
+                        }), label: { Text("New options frame") })
                         .foregroundStyle(.secondary)
                         
                         OptionsFrameView(frame: options, showName: false) { option in
@@ -140,9 +98,7 @@ struct QuestionEditor : View {
             .padding(.vertical, 8)
             .swipeActions(edge: .trailing) {
                 Button("Delete", systemImage: "trash.fill", role: .destructive) {
-                    let index = data.frames.firstIndex { $0.frame.id == frame.id }!
-                    history.append(.delete(frame: data.frames[index], at: index))
-                    data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + data.frames[(index+1)...]))
+                    deleteFrame(id: frame.id)
                 }
             }
         }
@@ -167,6 +123,9 @@ struct QuestionEditor : View {
                 }
             }
         }
+        .onAppear {
+            history = [] // editor always starts with empty history
+        }
     }
     
     func updateIsKey(options: FrameOptions, item: KeyedPrioritizedFrame, newValue: Bool) {
@@ -183,13 +142,13 @@ struct QuestionEditor : View {
         let optionIndex = options.frames.firstIndex { $0.frame.id == item.frame.id }!
         let newFrame = FrameOptions(optionsFrame: options.optionsFrame, frames: Array(options.frames[..<optionIndex] + options.frames[(optionIndex + 1)...]))
         let wrapped = PrioritizedFrame(frame: newFrame, priority: data.frames[index].priority)
-        history.append(.update(oldValue: data.frames[index], newValue: wrapped))
+        history.append(.update(oldValue: data.frames[index].frame, newValue: wrapped.frame))
         data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + [wrapped] + data.frames[(index + 1)...]))
     }
     
     func deleteFrame(id: Int64) {
         let index = data.frames.firstIndex { $0.frame.id == id }!
-        history.append(.delete(frame: data.frames[index], at: index))
+        history.append(.delete(frame: data.frames[index].frame, at: index))
         data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + data.frames[(index + 1)...]))
     }
 
@@ -233,13 +192,13 @@ struct QuestionEditor : View {
     func updateFrame(newValue: Frame) {
         let index = data.frames.firstIndex { $0.frame.id == newValue.id }!
         let wrapped = PrioritizedFrame(frame: newValue, priority: data.frames[index].priority)
-        history.append(.update(oldValue: data.frames[index], newValue: wrapped))
+        history.append(.update(oldValue: data.frames[index].frame, newValue: newValue))
         data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + [wrapped] + data.frames[(index + 1)...]))
     }
     
     func updateFrame(newValue: PrioritizedFrame) {
         let index = data.frames.firstIndex { $0.frame.id == newValue.frame.id }!
-        history.append(.update(oldValue: data.frames[index], newValue: newValue))
+        history.append(.update(oldValue: data.frames[index].frame, newValue: newValue.frame))
         data = QuizFrames(quiz: data.quiz, frames: Array(data.frames[..<index] + [newValue] + data.frames[(index + 1)...]))
     }
 }
@@ -253,8 +212,9 @@ struct QuestionEditor : View {
         ]), priority: 2)
     ])
     @Previewable @Namespace var namespace
+    @Previewable @State var history: [Modification] = []
     NavigationStack {
-        QuestionEditor(data: $frames, namespace: namespace)
+        QuestionEditor(data: $frames, namespace: namespace, history: $history)
             .navigationTitle("Sample Question")
     }
 }
