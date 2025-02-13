@@ -71,7 +71,6 @@ struct OptionList<Content : View, Item : Option>: View {
                             Divider()
                             
                             if Item.KtType.self is any NameComparable.Type {
-                                
                                 Toggle(isOn: Binding(get: {
                                     switch sorting {
                                     case .name(_):

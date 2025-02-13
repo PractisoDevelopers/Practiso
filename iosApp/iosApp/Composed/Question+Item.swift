@@ -13,10 +13,12 @@ extension Question {
             case let image as FrameImage:
                 ImageFrameView(frame: image.imageFrame)
             case let options as FrameOptions:
-                OptionsFrameView(frame: options) { item in
-                    Checkmark(isOn: item.isKey) {
-                        OptionsFrameViewItem(frame: item.frame)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                VStack {
+                    OptionsFrameView(frame: options) { item in
+                        Checkmark(isOn: item.isKey) {
+                            OptionsFrameViewItem(frame: item.frame)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
                 }
             default:

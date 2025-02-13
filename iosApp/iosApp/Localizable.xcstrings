@@ -26,6 +26,9 @@
     "Add" : {
 
     },
+    "Add Option" : {
+
+    },
     "Cancel" : {
 
     },
@@ -36,9 +39,6 @@
 
     },
     "Delete All" : {
-
-    },
-    "Delete Options" : {
 
     },
     "Deleting Dimension" : {
@@ -68,6 +68,9 @@
     "Hello there" : {
 
     },
+    "Image" : {
+
+    },
     "Import Archive" : {
 
     },
@@ -92,7 +95,7 @@
     "Name" : {
 
     },
-    "New option frame" : {
+    "New options frame" : {
 
     },
     "New question" : {
@@ -102,6 +105,9 @@
 
     },
     "Operation failed" : {
+
+    },
+    "Options" : {
 
     },
     "Question" : {
@@ -135,6 +141,12 @@
       "extractionState" : "manual"
     },
     "Template" : {
+
+    },
+    "Text" : {
+
+    },
+    "Type text here..." : {
 
     },
     "Unknown frame type %@" : {
