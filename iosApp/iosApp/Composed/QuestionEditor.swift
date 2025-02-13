@@ -71,7 +71,7 @@ struct QuestionEditor : View {
                     }
                     .animation(.default, value: options)
                     .contextMenu {
-                        Button("Delete All", systemImage: "trash", role: .destructive) {
+                        Button("Delete Options", systemImage: "trash", role: .destructive) {
                             deleteFrame(id: options.id)
                         }
                     }
