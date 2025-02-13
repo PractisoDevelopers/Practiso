@@ -41,7 +41,7 @@ CREATE TABLE frameByOptionsFrame(
     textFrameId INTEGER,
     imageFrameId INTEGER,
     isKey INTEGER AS Boolean NOT NULL,
-    FOREIGN KEY (optionsFrameId) REFERENCES optionsFrame(id),
+    FOREIGN KEY (optionsFrameId) REFERENCES optionsFrame(id) ON DELETE CASCADE,
     FOREIGN KEY (textFrameId) REFERENCES textFrame(id) ON DELETE CASCADE,
     FOREIGN KEY (imageFrameId) REFERENCES imageFrame(id) ON DELETE CASCADE,
     CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)

@@ -25,11 +25,14 @@ sealed interface Edit {
                     }
 
                 is Frame.Options -> {
-                    frame.frames.map(KeyedPrioritizedFrame::frame)
-                        .forEachIndexed { index, frame ->
-                            (Remove(frame, index) as Edit).applyTo(db, index.toLong())
-                        }
                     db.transaction {
+                        frame.frames.forEach {
+                            when (val frame = it.frame) {
+                                is Frame.Image -> db.quizQueries.removeImageFrame(frame.id)
+                                is Frame.Text -> db.quizQueries.removeTextFrame(frame.id)
+                                else -> error("Unsupported option frame inception")
+                            }
+                        }
                         db.quizQueries.removeOptionsFrame(frame.id)
                     }
                 }
