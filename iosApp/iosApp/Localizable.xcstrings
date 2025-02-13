@@ -41,6 +41,9 @@
     "Delete All" : {
 
     },
+    "Delete Options" : {
+
+    },
     "Deleting Dimension" : {
 
     },
@@ -116,6 +119,9 @@
     "Question Unavailable" : {
 
     },
+    "Redo" : {
+
+    },
     "Resource is Corrupted" : {
 
     },
@@ -147,6 +153,9 @@
 
     },
     "Type text here..." : {
+
+    },
+    "Undo" : {
 
     },
     "Unknown frame type %@" : {
