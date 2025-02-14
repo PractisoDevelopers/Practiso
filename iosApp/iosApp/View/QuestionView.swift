@@ -3,28 +3,6 @@ import SwiftUI
 @preconcurrency import ComposeApp
 import UniformTypeIdentifiers
 
-enum TransferItem: Transferable, Codable {
-    case url(url: URL)
-    case binary(data: Data)
-    case error(String)
-    
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(importedContentType: .data) { representation in
-            let resultingUrl = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
-                .appendingPathComponent(representation.file.lastPathComponent)
-            do {
-                _ = try FileManager.default.replaceItemAt(resultingUrl, withItemAt: representation.file)
-                return TransferItem.url(url: resultingUrl)
-            } catch {
-                return TransferItem.error(error.localizedDescription)
-            }
-        }
-        ProxyRepresentation {
-            TransferItem.binary(data: $0)
-        }
-    }
-}
-
 struct QuestionView: View {
     private var importService = ImportService(db: Database.shared.app)
     private var removeService = RemoveServiceSync(db: Database.shared.app)
@@ -33,8 +11,6 @@ struct QuestionView: View {
     
     @State var data = OptionListData<OptionImpl<QuizOption>>()
     
-    @State private var isGenericErrorShown = false
-    @State private var genericErrorMessage: String?
     @State private var isArchiveImporterShown = false
     @State private var editMode: EditMode = .inactive
     @State private var selection = Set<Int64>()
@@ -62,7 +38,7 @@ struct QuestionView: View {
                 }
         }
         .environment(\.editMode, $editMode)
-        .dropDestination(for: TransferItem.self) { data, _ in
+        .dropDestination(for: CopiedTransfer.self) { data, _ in
             processImport(items: data)
         }
         .task {
@@ -102,7 +78,7 @@ struct QuestionView: View {
         }
     }
     
-    private func processImport(items: [TransferItem]) -> Bool {
+    private func processImport(items: [CopiedTransfer]) -> Bool {
         var packs: [ArchivePack] = []
         packs.reserveCapacity(items.count)
         
@@ -125,8 +101,7 @@ struct QuestionView: View {
                     return true
                 }
             case .error(let description):
-                genericErrorMessage = description
-                isGenericErrorShown = true
+                errorHandler.show(message: description)
                 return true
             }
         }

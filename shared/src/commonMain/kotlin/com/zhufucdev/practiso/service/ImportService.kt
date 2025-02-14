@@ -7,7 +7,9 @@ import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
+import com.zhufucdev.practiso.helper.copyTo
 import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.viewmodel.AppScope
 import com.zhufucdev.practiso.viewmodel.ErrorMessage
 import com.zhufucdev.practiso.viewmodel.ErrorModel
@@ -233,5 +235,16 @@ class ImportService(private val db: AppDatabase = Database.app) {
         import(pack).collect {
             send(it)
         }
+    }
+
+    fun importImage(importable: Importable): String {
+        val name = randomUUID() + "." + importable.name.split(".").last()
+        val platform = getPlatform()
+        importable.source.buffer().readAll(
+            platform
+                .filesystem
+                .sink(platform.resourcePath.resolve(name))
+        )
+        return name
     }
 }

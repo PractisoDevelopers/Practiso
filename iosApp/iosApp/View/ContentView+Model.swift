@@ -13,12 +13,20 @@ extension ContentView {
         @Published var shown = false
         @Published var message: String?
         
+        func show(error: Error) {
+            show(message: error.localizedDescription)
+        }
+        
+        func show(message: String) {
+            self.message = message
+            shown = true
+        }
+        
         func catchAndShowImmediately<T>(action: @MainActor () async throws -> T) async -> T? {
             do {
                 return try await action()
             } catch {
-                message = error.localizedDescription
-                shown = true
+                show(message: error.localizedDescription)
                 return nil
             }
         }
@@ -27,8 +35,7 @@ extension ContentView {
             do {
                 return try action()
             } catch {
-                message = error.localizedDescription
-                shown = true
+                show(message: error.localizedDescription)
                 return nil
             }
         }
