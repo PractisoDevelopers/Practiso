@@ -3,6 +3,7 @@ import SwiftUI
 @preconcurrency import ComposeApp
 
 struct DimensionView: View {
+    @Environment(ContentView.Model.self) private var contentModel
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
     @State private var data = OptionListData<OptionImpl<DimensionOption>>()
@@ -72,6 +73,11 @@ struct DimensionView: View {
                     }
                 }
                 data.isRefreshing = false
+            }
+        }
+        .onChange(of: selection) { _, newValue in
+            if !editMode.isEditing, let dimId = newValue.first {
+                contentModel.detail = .dimension(data.items.first(where: { $0.id == dimId })!.kt)
             }
         }
     }
