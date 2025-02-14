@@ -21,15 +21,15 @@ sealed interface Edit {
             when (frame) {
                 is Frame.Image ->
                     db.transaction {
-                        db.quizQueries.removeImageFrame(frame.id)
+                        db.quizQueries.removeImageFrame(frame.imageFrame.id)
                     }
 
                 is Frame.Options -> {
                     db.transaction {
                         frame.frames.forEach {
                             when (val frame = it.frame) {
-                                is Frame.Image -> db.quizQueries.removeImageFrame(frame.id)
-                                is Frame.Text -> db.quizQueries.removeTextFrame(frame.id)
+                                is Frame.Image -> db.quizQueries.removeImageFrame(frame.imageFrame.id)
+                                is Frame.Text -> db.quizQueries.removeTextFrame(frame.textFrame.id)
                                 else -> error("Unsupported option frame inception")
                             }
                         }
@@ -39,7 +39,7 @@ sealed interface Edit {
 
                 is Frame.Text ->
                     db.transaction {
-                        db.quizQueries.removeTextFrame(frame.id)
+                        db.quizQueries.removeTextFrame(frame.textFrame.id)
                     }
             }
         }
