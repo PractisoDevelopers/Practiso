@@ -122,6 +122,8 @@ struct ImageFrameEditor<Label : View> : View {
 
     @State private var isFileImporter = false
     @State private var isPhotosPicker = false
+    @State private var isEditingAltText = false
+    @State private var altTextBuffer: String? = nil
     @State private var pick: PhotosPickerItem?
     @State private var data: ImageFrameView.DataState?
     
@@ -133,6 +135,12 @@ struct ImageFrameEditor<Label : View> : View {
                 }
                 Button("Image File", systemImage: "document") {
                     isFileImporter = true
+                }
+            }
+            Section {
+                Button("Alternative Text", systemImage: "text.below.photo") {
+                    altTextBuffer = frame.altText
+                    isEditingAltText = true
                 }
             }
         } label: {
@@ -149,6 +157,21 @@ struct ImageFrameEditor<Label : View> : View {
             }
         }
         .photosPicker(isPresented: $isPhotosPicker, selection: $pick, preferredItemEncoding: .compatible)
+        .alert("Alternative Text", isPresented: $isEditingAltText) {
+            TextField("Briefly describe this image...", text: Binding(get: {
+                altTextBuffer ?? ""
+            }, set: { newValue in
+                altTextBuffer = newValue
+            }))
+            Button("OK") {
+                if altTextBuffer?.isEmpty == true {
+                    altTextBuffer = nil
+                }
+                frame = ImageFrame(id: frame.id, embeddingsId: frame.embeddingsId, filename: frame.filename, width: frame.width, height: frame.height, altText: altTextBuffer)
+            }
+            Button("Cancel", role: .cancel) {
+            }
+        }
         .onChange(of: pick) { _, newValue in
             if let photo = newValue {
                 Task {

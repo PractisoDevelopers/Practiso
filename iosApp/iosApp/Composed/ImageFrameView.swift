@@ -13,6 +13,7 @@ struct ImageFrameView : View {
     @State private var __data: DataState = .pending
     @State private var isFullscreen = false
     @State private var fullscreenScale: CGFloat = 1
+    @State private var isAltTextShown = false
 
     let frame: ImageFrame
     let data: Binding<DataState>?
@@ -110,8 +111,23 @@ struct ImageFrameView : View {
                     .hoverEffect()
                     .padding(12)
                 }
+                .onTapGesture {
+                    if frame.altText?.isEmpty == false {
+                        isAltTextShown = true
+                    }
+                }
             default:
                 Text("Resource Unavailable")
+            }
+        }
+        .alert("Alternative Text", isPresented: $isAltTextShown) {
+            Button("OK") {
+                isAltTextShown = false
+                isFullscreen = true
+            }
+        } message: {
+            if let altText = frame.altText {
+                Text(altText)
             }
         }
     }
