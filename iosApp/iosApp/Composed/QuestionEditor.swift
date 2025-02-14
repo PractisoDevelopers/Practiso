@@ -14,10 +14,9 @@ struct QuestionEditor : View {
                 frame
             }, set: { newValue in
                 updateFrame(newValue: newValue)
-            })) {
+            }), namespace: namespace) {
                 deleteFrame(id: frame.id)
             }
-            .matchedGeometryEffect(id: frame.id, in: namespace)
             .padding(.vertical, 8)
             .swipeActions(edge: .trailing) {
                 Button("Delete", systemImage: "trash.fill", role: .destructive) {
@@ -135,6 +134,7 @@ struct QuestionEditor : View {
 
 private struct Item : View {
     @Binding var frame: Frame
+    let namespace: Namespace.ID
     let onDelete: () -> Void
     
     var body: some View {
@@ -163,11 +163,14 @@ private struct Item : View {
                             }, set: { newValue in
                                 updateOptionFrame(options: options, item: option, newValue: newValue)
                             }),
+                            imageFrameEditorLabel: ImageFrameView.init,
+                            textFrameEditor: DebouncedTextField.init,
                             onDelete: {
                                 deleteOption(options: options, item: option)
                             }
                         )
                     }
+                    .matchedGeometryEffect(id: "\(frame.id)#\(option.frame.id)", in: namespace)
                 }
 
                 Menu {
@@ -197,10 +200,21 @@ private struct Item : View {
                 Button("Delete Options", systemImage: "trash", role: .destructive, action: onDelete)
             }
         default:
-            FrameEditor(frame: $frame, onDelete: onDelete)
-            .contextMenu {
-                Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
-            }
+            FrameEditor(
+                frame: $frame,
+                imageFrameEditorLabel: { frame, data in
+                    ImageFrameView(frame: frame, data: data)
+                        .matchedGeometryEffect(id: frame.id, in: namespace)
+                },
+                textFrameEditor: { text in
+                    DebouncedTextField(text: text)
+                        .matchedGeometryEffect(id: frame.id, in: namespace)
+                },
+                onDelete: onDelete
+            )
+                .contextMenu {
+                    Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
+                }
         }
     }
     

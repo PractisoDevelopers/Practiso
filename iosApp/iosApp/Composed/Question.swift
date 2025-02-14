@@ -13,8 +13,7 @@ struct Question : View {
     var body: some View {
         LazyVStack {
             ForEach(frames, id: \.id) { frame in
-                Item(frame: frame)
-                    .matchedGeometryEffect(id: frame.id, in: namespace)
+                Item(frame: frame, namespace: namespace)
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)

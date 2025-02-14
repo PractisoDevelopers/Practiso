@@ -4,14 +4,16 @@ import SwiftUI
 import PhotosUI
 import ComposeApp
 
-struct FrameEditor : View {
+struct FrameEditor<ImageFrameEditorLabel : View, TextFrameEditor : View> : View {
     @Binding var frame: Frame
+    let imageFrameEditorLabel: (ImageFrame, Binding<ImageFrameView.DataState?>) -> ImageFrameEditorLabel
+    let textFrameEditor: (Binding<String>) -> TextFrameEditor
     let onDelete: () -> Void
     
     var body: some View {
         switch frame {
         case let text as FrameText:
-            DebouncedTextField(text: Binding(get: {
+            textFrameEditor(Binding(get: {
                 text.textFrame.content
             }, set: { newValue, _ in
                 if newValue == text.textFrame.content {
@@ -32,7 +34,7 @@ struct FrameEditor : View {
                 image.imageFrame
             }, set: { newValue, _ in
                 frame = FrameImage(id: image.id, imageFrame: newValue)
-            }))
+            }), label: imageFrameEditorLabel)
             .frame(maxWidth: .infinity, alignment: .leading)
         default:
             Question.UnknownItem(frame: frame)
@@ -40,7 +42,7 @@ struct FrameEditor : View {
     }
 }
 
-private struct DebouncedTextField : View {
+struct DebouncedTextField : View {
     private class Model : ObservableObject, Observable, Cancellable {
         @Published var textBuffer: String? = nil
         @Published var textOutput: String? = nil
@@ -110,13 +112,14 @@ private struct DataUrl: Transferable {
     }
 }
 
-private struct ImageFrameEditor : View {
+struct ImageFrameEditor<Label : View> : View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ImageFrameView.Cache.self) private var cache
     
     @Binding var frame: ImageFrame
+    let label: (ImageFrame, Binding<ImageFrameView.DataState?>) -> Label
     var importService = ImportService(db: Database.shared.app)
-    
+
     @State private var isFileImporter = false
     @State private var isPhotosPicker = false
     @State private var pick: PhotosPickerItem?
@@ -133,7 +136,7 @@ private struct ImageFrameEditor : View {
                 }
             }
         } label: {
-            ImageFrameView(frame: frame, data: $data)
+            label(frame, $data)
         }
         .fileImporter(isPresented: $isFileImporter, allowedContentTypes: [.image]) { result in
             switch result {
