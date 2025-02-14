@@ -29,6 +29,12 @@
     "Add Option" : {
 
     },
+    "Alternative Text" : {
+
+    },
+    "Briefly describe this image..." : {
+
+    },
     "Cancel" : {
 
     },
@@ -114,6 +120,9 @@
       "extractionState" : "manual"
     },
     "No items available" : {
+
+    },
+    "OK" : {
 
     },
     "Operation failed" : {
