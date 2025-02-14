@@ -51,7 +51,7 @@ extension Image {
         Group {
             if isEnabled {
                 checkmarkStyleBase()
-                    .foregroundStyle(Color("AccentColor"))
+                    .foregroundStyle(.tint)
             } else {
                 checkmarkStyleBase()
             }
