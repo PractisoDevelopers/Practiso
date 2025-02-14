@@ -33,9 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.datamodel.Frame
+import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.helper.copyTo
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.randomUUID
+import com.zhufucdev.practiso.platform.source
+import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.style.PaddingNormal
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
@@ -58,6 +61,7 @@ fun EditableImageFrame(
     onDelete: () -> Unit,
     cache: BitmapRepository = remember { BitmapRepository() },
     deleteImageOnRemoval: Boolean = true,
+    importService: ImportService = ImportService(),
     modifier: Modifier = Modifier,
 ) {
     var editingAltText by remember { mutableStateOf(false) }
@@ -78,14 +82,9 @@ fun EditableImageFrame(
             platform.filesystem.delete(platform.resourcePath.resolve(value.imageFrame.filename))
         }
 
-        val name = randomUUID() + "." + file.name.split(".").last()
         coroutine.launch {
-            withContext(Dispatchers.IO) {
-                file.copyTo(
-                    platform
-                        .filesystem
-                        .sink(platform.resourcePath.resolve(name))
-                )
+            val name = withContext(Dispatchers.IO) {
+                importService.importImage(Importable.fromFile(file))
             }
 
             onValueChange(value.copy(imageFrame = value.imageFrame.copy(filename = name)))

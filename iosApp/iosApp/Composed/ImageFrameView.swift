@@ -16,9 +16,17 @@ struct ImageFrameView : View {
     let data: Binding<DataState>?
     @Environment(Cache.self) var cache: Cache?
 
-    init(frame: ImageFrame, data: Binding<DataState>? = nil) {
+    init(frame: ImageFrame, data: Binding<DataState?>? = nil) {
         self.frame = frame
-        self.data = data
+        if let dataBinding = data {
+            self.data = Binding(get: {
+                dataBinding.wrappedValue ?? .pending
+            }, set: { newValue in
+                dataBinding.wrappedValue = newValue
+            })
+        } else {
+            self.data = nil
+        }
     }
 
     var body: some View {
@@ -58,7 +66,7 @@ struct ImageFrameView : View {
                 .padding()
             }
         }
-        .task(id: frame.id) {
+        .task(id: frame) {
             if let cached = await cache?.get(name: frame.filename) {
                 __data = .ok(image: cached)
                 data?.wrappedValue = __data

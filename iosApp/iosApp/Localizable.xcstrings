@@ -74,6 +74,9 @@
     "Image" : {
 
     },
+    "Image File" : {
+
+    },
     "Import Archive" : {
 
     },
@@ -113,6 +116,9 @@
     "Options" : {
 
     },
+    "Photo from Library" : {
+
+    },
     "Question" : {
 
     },
@@ -120,6 +126,9 @@
 
     },
     "Redo" : {
+
+    },
+    "Replace With" : {
 
     },
     "Resource is Corrupted" : {
@@ -159,6 +168,9 @@
 
     },
     "Unknown frame type %@" : {
+
+    },
+    "Unsupported data type" : {
 
     },
     "Would you like to delete questions contained as well?" : {
