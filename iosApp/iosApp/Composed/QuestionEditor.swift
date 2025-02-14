@@ -10,87 +10,14 @@ struct QuestionEditor : View {
     
     var body: some View {
         List(data, id: \.id) { frame in
-            Group {
-                switch frame {
-                case let options as FrameOptions:
-                    VStack {
-                        TextField(text: Binding(get: {
-                            options.optionsFrame.name ?? ""
-                        }, set: { newValue, _ in
-                            let name: String? = if newValue.isEmpty {
-                                nil
-                            } else {
-                                newValue
-                            }
-                            updateFrame(newValue: FrameOptions(optionsFrame: OptionsFrame(id: options.optionsFrame.id, name: name), frames: options.frames))
-                        }), label: { Text("New options frame") })
-                        .foregroundStyle(.secondary)
-                        
-                        OptionsFrameView(frame: options, showName: false) { option in
-                            Checkmark(isOn: Binding(get: { option.isKey }, set: { newValue, _ in
-                                updateIsKey(options: options, item: option, newValue: newValue)
-                            })) {
-                                FrameEditor(
-                                    frame: Binding(get: {
-                                        option.frame
-                                    }, set: { newValue in
-                                        updateOptionFrame(options: options, item: option, newValue: newValue)
-                                    }),
-                                    onDelete: {
-                                        deleteOption(options: options, item: option)
-                                    }
-                                )
-                            }
-                        }
-
-                        Menu {
-                            Button("Text", systemImage: "character.textbox") {
-                                withAnimation {
-                                    appendToOptionFrame(options: options, itemType: FrameText.self)
-                                }
-                            }
-                            Button("Image", systemImage: "photo") {
-                                withAnimation {
-                                    appendToOptionFrame(options: options, itemType: FrameImage.self)
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                Image(systemName: "plus.circle.fill")
-                                    .checkmarkStyleBase()
-                                    .foregroundStyle(.green)
-                                Text("Add Option")
-                            }
-                        }
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .animation(.default, value: options)
-                    .contextMenu {
-                        Button("Delete Options", systemImage: "trash", role: .destructive) {
-                            deleteFrame(id: options.id)
-                        }
-                    }
-                    .matchedGeometryEffect(id: frame.id, in: namespace)
-                default:
-                    FrameEditor(
-                        frame: Binding(get: {
-                            frame
-                        }, set: { newValue in
-                            updateFrame(newValue: newValue)
-                        }),
-                        onDelete: {
-                            deleteFrame(id: frame.id)
-                        }
-                    )
-                    .matchedGeometryEffect(id: frame.id, in: namespace)
-                    .contextMenu {
-                        Button("Delete", systemImage: "trash", role: .destructive) {
-                            deleteFrame(id: frame.id)
-                        }
-                    }
-                }
+            Item(frame: Binding(get: {
+                frame
+            }, set: { newValue in
+                updateFrame(newValue: newValue)
+            })) {
+                deleteFrame(id: frame.id)
             }
+            .matchedGeometryEffect(id: frame.id, in: namespace)
             .padding(.vertical, 8)
             .swipeActions(edge: .trailing) {
                 Button("Delete", systemImage: "trash.fill", role: .destructive) {
@@ -133,24 +60,6 @@ struct QuestionEditor : View {
         }
     }
     
-    func updateIsKey(options: FrameOptions, item: KeyedPrioritizedFrame, newValue: Bool) {
-        let newOption = KeyedPrioritizedFrame(frame: item.frame, isKey: newValue, priority: item.priority)
-        updateOption(options: options, newValue: newOption)
-    }
-    
-    func updateOptionFrame(options: FrameOptions, item: KeyedPrioritizedFrame, newValue: Frame) {
-        updateOption(options: options, newValue: KeyedPrioritizedFrame(frame: newValue, isKey: item.isKey, priority: item.priority))
-    }
-    
-    func deleteOption(options: FrameOptions, item: KeyedPrioritizedFrame) {
-        let index = data.firstIndex { $0.id == options.optionsFrame.id }!
-        let optionIndex = options.frames.firstIndex { $0.frame.id == item.frame.id }!
-        let newFrame = FrameOptions(optionsFrame: options.optionsFrame, frames: Array(options.frames[..<optionIndex] + options.frames[(optionIndex + 1)...]))
-        let mod: Modification = .update(oldValue: data[index], newValue: newFrame)
-        history.append(mod)
-        redo(mod)
-    }
-    
     func deleteFrame(id: Int64) {
         let index = data.firstIndex { $0.id == id }!
         let mod: Modification = .delete(frame: data[index], at: index)
@@ -158,35 +67,6 @@ struct QuestionEditor : View {
         redo(mod)
     }
 
-    func updateOption(options: FrameOptions, newValue: KeyedPrioritizedFrame) {
-        let optionIndex = options.frames.firstIndex { $0.frame.id == newValue.frame.id }!
-        let newFrame = FrameOptions(optionsFrame: options.optionsFrame, frames: Array(options.frames[..<optionIndex] + [newValue] + options.frames[(optionIndex + 1)...]))
-        updateFrame(newValue: newFrame)
-    }
-    
-    func createFrameFromType(id: Int64, itemType: Frame.Type) -> any Frame {
-        let item: Frame? = if itemType is FrameImage.Type {
-            FrameImage(id: id, imageFrame: ImageFrame(id: id, embeddingsId: nil, filename: "", width: 0, height: 0, altText: nil))
-        } else if itemType is FrameText.Type {
-            FrameText(id: id, textFrame: TextFrame(id: id, embeddingsId: nil, content: ""))
-        } else if itemType is FrameOptions.Type {
-            FrameOptions(optionsFrame: OptionsFrame(id: id, name: nil), frames: [])
-        } else {
-            nil
-        }
-        if item == nil {
-            assertionFailure("Unsupported item type \(itemType)")
-        }
-        return item!
-    }
-    
-    func appendToOptionFrame(options: FrameOptions, itemType: Frame.Type) {
-        let nextId = (options.frames.max(by: { $0.frame.id < $1.frame.id })?.frame.id ?? -1) + 1
-        let wrapped = KeyedPrioritizedFrame(frame: createFrameFromType(id: nextId, itemType: itemType),
-                                            isKey: false, priority: (options.frames.max(by: { $0.priority < $1.priority })?.priority ?? -1) + 1)
-        updateFrame(newValue: FrameOptions(optionsFrame: options.optionsFrame, frames: options.frames + [wrapped]))
-    }
-    
     func appendFrame(itemType: Frame.Type) {
         let nextId = (data.max(by: { $0.id < $1.id })?.id ?? 0) + 1
         let newFrame = createFrameFromType(id: nextId, itemType: itemType)
@@ -252,3 +132,120 @@ struct QuestionEditor : View {
             .navigationTitle("Sample Question")
     }
 }
+
+private struct Item : View {
+    @Binding var frame: Frame
+    let onDelete: () -> Void
+    
+    var body: some View {
+        switch frame {
+        case let options as FrameOptions:
+            VStack {
+                TextField(text: Binding(get: {
+                    options.optionsFrame.name ?? ""
+                }, set: { newValue, _ in
+                    let name: String? = if newValue.isEmpty {
+                        nil
+                    } else {
+                        newValue
+                    }
+                    frame = FrameOptions(optionsFrame: OptionsFrame(id: options.optionsFrame.id, name: name), frames: options.frames)
+                }), label: { Text("New options frame") })
+                .foregroundStyle(.secondary)
+                
+                OptionsFrameView(frame: options, showName: false) { option in
+                    Checkmark(isOn: Binding(get: { option.isKey }, set: { newValue, _ in
+                        updateIsKey(options: options, item: option, newValue: newValue)
+                    })) {
+                        FrameEditor(
+                            frame: Binding(get: {
+                                option.frame
+                            }, set: { newValue in
+                                updateOptionFrame(options: options, item: option, newValue: newValue)
+                            }),
+                            onDelete: {
+                                deleteOption(options: options, item: option)
+                            }
+                        )
+                    }
+                }
+
+                Menu {
+                    Button("Text", systemImage: "character.textbox") {
+                        withAnimation {
+                            appendToOptionFrame(options: options, itemType: FrameText.self)
+                        }
+                    }
+                    Button("Image", systemImage: "photo") {
+                        withAnimation {
+                            appendToOptionFrame(options: options, itemType: FrameImage.self)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                            .checkmarkStyleBase()
+                            .foregroundStyle(.green)
+                        Text("Add Option")
+                    }
+                }
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .animation(.default, value: options)
+            .contextMenu {
+                Button("Delete Options", systemImage: "trash", role: .destructive, action: onDelete)
+            }
+        default:
+            FrameEditor(frame: $frame, onDelete: onDelete)
+            .contextMenu {
+                Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
+            }
+        }
+    }
+    
+    func updateIsKey(options: FrameOptions, item: KeyedPrioritizedFrame, newValue: Bool) {
+        let newOption = KeyedPrioritizedFrame(frame: item.frame, isKey: newValue, priority: item.priority)
+        updateOption(options: options, newValue: newOption)
+    }
+    
+    func updateOptionFrame(options: FrameOptions, item: KeyedPrioritizedFrame, newValue: Frame) {
+        updateOption(options: options, newValue: KeyedPrioritizedFrame(frame: newValue, isKey: item.isKey, priority: item.priority))
+    }
+    
+    func updateOption(options: FrameOptions, newValue: KeyedPrioritizedFrame) {
+        let optionIndex = options.frames.firstIndex { $0.frame.id == newValue.frame.id }!
+        let newFrame = FrameOptions(optionsFrame: options.optionsFrame, frames: Array(options.frames[..<optionIndex] + [newValue] + options.frames[(optionIndex + 1)...]))
+        frame = newFrame
+    }
+
+    func deleteOption(options: FrameOptions, item: KeyedPrioritizedFrame) {
+        let optionIndex = options.frames.firstIndex { $0.frame.id == item.frame.id }!
+        let newFrame = FrameOptions(optionsFrame: options.optionsFrame, frames: Array(options.frames[..<optionIndex] + options.frames[(optionIndex + 1)...]))
+        frame = newFrame
+    }
+    
+    func appendToOptionFrame(options: FrameOptions, itemType: Frame.Type) {
+        let nextId = (options.frames.max(by: { $0.frame.id < $1.frame.id })?.frame.id ?? -1) + 1
+        let wrapped = KeyedPrioritizedFrame(frame: createFrameFromType(id: nextId, itemType: itemType),
+                                            isKey: false, priority: (options.frames.max(by: { $0.priority < $1.priority })?.priority ?? -1) + 1)
+        frame = FrameOptions(optionsFrame: options.optionsFrame, frames: options.frames + [wrapped])
+    }
+}
+
+private func createFrameFromType(id: Int64, itemType: Frame.Type) -> any Frame {
+    let item: Frame? = if itemType is FrameImage.Type {
+        FrameImage(id: id, imageFrame: ImageFrame(id: id, embeddingsId: nil, filename: "", width: 0, height: 0, altText: nil))
+    } else if itemType is FrameText.Type {
+        FrameText(id: id, textFrame: TextFrame(id: id, embeddingsId: nil, content: ""))
+    } else if itemType is FrameOptions.Type {
+        FrameOptions(optionsFrame: OptionsFrame(id: id, name: nil), frames: [])
+    } else {
+        nil
+    }
+    if item == nil {
+        assertionFailure("Unsupported item type \(itemType)")
+    }
+    return item!
+}
+
