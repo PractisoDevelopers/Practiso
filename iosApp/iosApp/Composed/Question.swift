@@ -11,13 +11,14 @@ struct Question : View {
     }
     
     var body: some View {
-        LazyVStack {
-            ForEach(frames, id: \.id) { frame in
-                Item(frame: frame, namespace: namespace)
+        ScrollView {
+            LazyVStack {
+                ForEach(frames, id: \.id) { frame in
+                    Item(frame: frame, namespace: namespace)
+                }
             }
+            .padding()
         }
-        .frame(maxHeight: .infinity, alignment: .top)
-        .padding()
     }
 }
 
