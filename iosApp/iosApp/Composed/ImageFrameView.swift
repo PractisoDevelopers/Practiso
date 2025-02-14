@@ -11,6 +11,8 @@ struct ImageFrameView : View {
     }
     
     @State private var __data: DataState = .pending
+    @State private var isFullscreen = false
+    @State private var fullscreenScale: CGFloat = 1
 
     let frame: ImageFrame
     let data: Binding<DataState>?
@@ -37,6 +39,10 @@ struct ImageFrameView : View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(idealHeight: 150)
+                    .onTapGesture {
+                        fullscreenScale = 1
+                        isFullscreen = true
+                    }
                 
             case .resourceUnavailable:
                 VStack {
@@ -85,6 +91,27 @@ struct ImageFrameView : View {
                 } catch {
                     assertionFailure("\(error) is not possible")
                 }
+            }
+        }
+        .fullScreenCover(isPresented: $isFullscreen) {
+            switch data?.wrappedValue ?? __data {
+            case .ok(let image):
+                ZoomableScrollView(scale: $fullscreenScale, maxScale: 10) {
+                    Image(image, scale: 1, label: Text(frame.altText ?? ""))
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .overlay(alignment: .topTrailing) {
+                    Button("Close") {
+                        isFullscreen = false
+                    }
+                    .padding(8)
+                    .hoverEffect()
+                    .padding(12)
+                }
+            default:
+                Text("Resource Unavailable")
             }
         }
     }
