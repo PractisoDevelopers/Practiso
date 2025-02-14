@@ -137,6 +137,9 @@ private struct Item : View {
     let namespace: Namespace.ID
     let onDelete: () -> Void
     
+    @State private var isEditingContent = false
+    @Namespace private var internel
+    
     var body: some View {
         switch frame {
         case let options as FrameOptions:
@@ -153,51 +156,85 @@ private struct Item : View {
                 }), label: { Text("New options frame") })
                 .foregroundStyle(.secondary)
                 
-                OptionsFrameView(frame: options, showName: false) { option in
-                    Checkmark(isOn: Binding(get: { option.isKey }, set: { newValue, _ in
-                        updateIsKey(options: options, item: option, newValue: newValue)
-                    })) {
-                        FrameEditor(
-                            frame: Binding(get: {
-                                option.frame
-                            }, set: { newValue in
-                                updateOptionFrame(options: options, item: option, newValue: newValue)
-                            }),
-                            imageFrameEditorLabel: ImageFrameView.init,
-                            textFrameEditor: DebouncedTextField.init,
-                            onDelete: {
-                                deleteOption(options: options, item: option)
-                            }
-                        )
+                if !isEditingContent {
+                    OptionsFrameView(frame: options, showName: false) { option in
+                        Checkmark(isOn: Binding(get: { option.isKey }, set: { newValue, _ in
+                            updateIsKey(options: options, item: option, newValue: newValue)
+                        })) {
+                            OptionsFrameViewItem(frame: option.frame)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .matchedGeometryEffect(id: "\(frame.id)#\(option.frame.id)", in: namespace)
+                        .matchedGeometryEffect(id: option.frame.id, in: internel)
                     }
-                    .matchedGeometryEffect(id: "\(frame.id)#\(option.frame.id)", in: namespace)
-                }
+                } else {
+                    OptionsFrameView(frame: options, showName: false) { option in
+                        HStack {
+                            Image(systemName: "minus.circle.fill")
+                                .checkmarkStyleBase()
+                                .foregroundStyle(.red)
+                                .hoverEffect()
+                                .onTapGesture {
+                                    deleteOption(options: options, item: option)
+                                }
+                            
+                            FrameEditor(
+                                frame: Binding(get: {
+                                    option.frame
+                                }, set: { newValue in
+                                    updateOptionFrame(options: options, item: option, newValue: newValue)
+                                }),
+                                imageFrameEditorLabel: ImageFrameView.init,
+                                textFrameEditor: DebouncedTextField.init,
+                                onDelete: {
+                                    deleteOption(options: options, item: option)
+                                }
+                            )
+                        }
+                        .padding(.vertical, 4)
+                        .matchedGeometryEffect(id: option.frame.id, in: internel)
+                    }
 
-                Menu {
-                    Button("Text", systemImage: "character.textbox") {
-                        withAnimation {
-                            appendToOptionFrame(options: options, itemType: FrameText.self)
+                    Menu {
+                        Button("Text", systemImage: "character.textbox") {
+                            withAnimation {
+                                appendToOptionFrame(options: options, itemType: FrameText.self)
+                            }
+                        }
+                        Button("Image", systemImage: "photo") {
+                            withAnimation {
+                                appendToOptionFrame(options: options, itemType: FrameImage.self)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                                .checkmarkStyleBase()
+                                .foregroundStyle(.green)
+                            Text("Add Option")
                         }
                     }
-                    Button("Image", systemImage: "photo") {
-                        withAnimation {
-                            appendToOptionFrame(options: options, itemType: FrameImage.self)
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                            .checkmarkStyleBase()
-                            .foregroundStyle(.green)
-                        Text("Add Option")
-                    }
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .animation(.default, value: options)
+            .animation(.default, value: isEditingContent)
             .contextMenu {
-                Button("Delete Options", systemImage: "trash", role: .destructive, action: onDelete)
+                if !isEditingContent {
+                    Button("Edit Content", systemImage: "square.stack") {
+                        withAnimation {
+                            isEditingContent = true
+                        }
+                    }
+                    Button("Delete Options", systemImage: "trash", role: .destructive, action: onDelete)
+                } else {
+                    Button("Done") {
+                        withAnimation {
+                            isEditingContent = false
+                        }
+                    }
+                }
             }
         default:
             FrameEditor(
@@ -241,8 +278,9 @@ private struct Item : View {
     
     func appendToOptionFrame(options: FrameOptions, itemType: Frame.Type) {
         let nextId = (options.frames.max(by: { $0.frame.id < $1.frame.id })?.frame.id ?? -1) + 1
+        let nextPriority = (options.frames.max(by: { $0.priority < $1.priority })?.priority ?? -1) + 1
         let wrapped = KeyedPrioritizedFrame(frame: createFrameFromType(id: nextId, itemType: itemType),
-                                            isKey: false, priority: (options.frames.max(by: { $0.priority < $1.priority })?.priority ?? -1) + 1)
+                                            isKey: false, priority: nextPriority)
         frame = FrameOptions(optionsFrame: options.optionsFrame, frames: options.frames + [wrapped])
     }
 }
