@@ -94,9 +94,9 @@ struct QuestionView: View {
             }
         }
         .onChange(of: selection) { _, newValue in
-            if newValue.count == 1 {
+            if !editMode.isEditing, let id = selection.first {
                 contentModel.detail = .question(data.items.first(where: { option in
-                    option.id == selection.first!
+                    option.id == id
                 })!.kt)
             }
         }
