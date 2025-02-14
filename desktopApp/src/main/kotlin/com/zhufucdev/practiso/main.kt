@@ -76,7 +76,7 @@ fun main(args: Array<String>) {
                                     source = ips.source()
                                 )
 
-                                importer.import(target)
+                                importer.service.import(target)
                             }
                         }
                     }

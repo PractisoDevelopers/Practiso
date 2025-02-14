@@ -155,4 +155,4 @@ fun Flow<List<DbSession>>.toOptionFlow(db: SessionQueries): Flow<List<SessionOpt
         }
     }
 
-fun Flow<List<Template>>.toOptionFlow() = map { it.map { t -> TemplateOption(t) } }
+fun Flow<List<Template>>.toTemplateOptionFlow() = map { it.map { t -> TemplateOption(t) } }

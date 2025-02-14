@@ -13,35 +13,29 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.datamodel.PrioritizedFrame
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.createSession
 import com.zhufucdev.practiso.datamodel.createTake
 import com.zhufucdev.practiso.datamodel.getQuizFrames
-import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.toOptionFlow
+import com.zhufucdev.practiso.datamodel.toTemplateOptionFlow
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
-import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.RemoveService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) : ViewModel() {
@@ -49,7 +43,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
         db.templateQueries.getAllTemplates()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .toOptionFlow()
+            .toTemplateOptionFlow()
     }
 
     val quiz: Flow<List<QuizOption>> by lazy {
