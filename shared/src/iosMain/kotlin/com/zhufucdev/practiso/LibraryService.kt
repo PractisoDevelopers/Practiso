@@ -11,6 +11,7 @@ import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.insertInto
 import com.zhufucdev.practiso.datamodel.optimized
 import com.zhufucdev.practiso.datamodel.toOptionFlow
+import com.zhufucdev.practiso.datamodel.toTemplateOptionFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.map
@@ -21,7 +22,7 @@ class LibraryService(private val db: AppDatabase = Database.app) {
         db.templateQueries.getAllTemplates()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .toOptionFlow()
+            .toTemplateOptionFlow()
 
     fun getQuizzes() =
         db.quizQueries.getQuizFrames(db.quizQueries.getAllQuiz())
