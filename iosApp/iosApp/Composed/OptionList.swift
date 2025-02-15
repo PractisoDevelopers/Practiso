@@ -5,11 +5,11 @@ import ComposeApp
 struct OptionList<Content : View, Item : Option>: View {
     @Environment(\.editMode) var editMode: Binding<EditMode>?
     @ObservedObject var data: OptionListData<Item>
-    @Binding private var selection: Set<Int64>
-    var onDelete: (Set<Int64>) -> Void
+    @Binding private var selection: Set<Item>
+    var onDelete: (Set<Item>) -> Void
     var content: (Item) -> Content
     
-    init(data: OptionListData<Item>, selection: Binding<Set<Int64>> = Binding.constant(Set()), onDelete: @escaping (Set<Int64>) -> Void, content: @escaping (Item) -> Content) {
+    init(data: OptionListData<Item>, selection: Binding<Set<Item>> = Binding.constant(Set()), onDelete: @escaping (Set<Item>) -> Void, content: @escaping (Item) -> Content) {
         self.data = data
         self._selection = selection
         self.onDelete = onDelete
@@ -160,7 +160,7 @@ struct OptionList<Content : View, Item : Option>: View {
                             }
                         } else {
                             Button("Select All") {
-                                selection = Set(data.items.map { $0.id })
+                                selection = Set(data.items)
                             }
                         }
                     }

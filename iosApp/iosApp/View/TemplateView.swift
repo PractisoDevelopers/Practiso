@@ -4,7 +4,7 @@ import SwiftUI
 
 struct TemplateView: View {
     @State var data = OptionListData<OptionImpl<TemplateOption>>()
-    @State private var selection = Set<Int64>()
+    @State private var selection = Set<OptionImpl<TemplateOption>>()
 
     var body: some View {
         OptionList(
