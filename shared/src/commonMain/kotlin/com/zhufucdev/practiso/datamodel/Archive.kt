@@ -34,9 +34,17 @@ private val xml = XML {
     recommended_0_90_2()
 }
 
-suspend fun QuizArchive.importTo(db: AppDatabase) {
+/**
+ * Import only the [QuizArchive], including series of
+ * [FrameArchive] and [DimensionArchive] but excluding
+ * required resources.
+ *
+ * To import with resources, refer to [importAll] or
+ * [com.zhufucdev.practiso.service.ImportService].
+ */
+suspend fun QuizArchive.importTo(db: AppDatabase): Long {
     val quizId = db.transactionWithResult {
-        db.quizQueries.insertQuiz(name, creationTime, null)
+        db.quizQueries.insertQuiz(name.takeIf(String::isNotEmpty), creationTime, null)
         db.quizQueries.lastInsertRowId().executeAsOne()
     }
 
@@ -58,8 +66,14 @@ suspend fun QuizArchive.importTo(db: AppDatabase) {
             db.dimensionQueries.associateQuizWithDimension(quizId, dimensionId, it.intensity)
         }
     }
+
+    return quizId
 }
 
+/**
+ * Import everything in this archive pack, including resources
+ * not required by any frame.
+ */
 suspend fun ArchivePack.importAll(db: AppDatabase, resourceSink: (String) -> Sink) {
     resources.forEach { (name, sink) ->
         sink().buffer().readAll(resourceSink(name))
@@ -220,47 +234,47 @@ class FrameContainerSerializer : KSerializer<List<FrameArchive>> {
     private fun encodeFrame(target: XmlWriter, frame: FrameArchive) {
         when (frame) {
             is FrameArchive.Options -> {
-                target.startTag(null, OptionsFrameSerialName, null)
+                target.startTag(null, OptionsFrameSerialName, "")
                 if (frame.name != null) {
                     target.writeAttribute("name", frame.name)
                 }
                 frame.content.forEach {
-                    target.startTag(null, "item", null)
+                    target.startTag(null, "item", "")
                     if (it.isKey) {
                         target.writeAttribute("key", true)
                     }
                     target.writeAttribute("priority", it.priority)
                     encodeFrame(target, it.content)
-                    target.endTag(null, "item", null)
+                    target.endTag(null, "item", "")
                 }
-                target.endTag(null, OptionsFrameSerialName, null)
+                target.endTag(null, OptionsFrameSerialName, "")
             }
 
             is FrameArchive.Text -> {
-                target.startTag(null, TextFrameSerialName, null)
+                target.startTag(null, TextFrameSerialName, "")
                 target.text(frame.content)
-                target.endTag(null, TextFrameSerialName, null)
+                target.endTag(null, TextFrameSerialName, "")
             }
 
             is FrameArchive.Image -> {
-                target.startTag(null, ImageFrameSerialName, null)
+                target.startTag(null, ImageFrameSerialName, "")
                 target.writeAttribute("width", frame.width)
                 target.writeAttribute("height", frame.height)
                 target.writeAttribute("src", frame.filename)
                 if (frame.altText != null) {
                     target.writeAttribute("alt", frame.altText)
                 }
-                target.endTag(null, ImageFrameSerialName, null)
+                target.endTag(null, ImageFrameSerialName, "")
             }
         }
     }
 
     private fun encodeXml(target: XmlWriter, data: List<FrameArchive>) {
-        target.startTag(null, SERIAL_NAME, null)
+        target.startTag(null, SERIAL_NAME, "")
         data.forEach {
             encodeFrame(target, it)
         }
-        target.endTag(null, SERIAL_NAME, null)
+        target.endTag(null, SERIAL_NAME, "")
     }
 }
 
@@ -364,10 +378,26 @@ suspend fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?) {
     }
 }
 
+/**
+ * Dimension under the context of a quiz, consists of a
+ * [name] and an [intensity].
+ *
+ * This format is different from how it is stored in the
+ * actual application, in the way that an archived is **uniquely**
+ * bounded to its [QuizArchive].
+ *
+ * The import process merges all dimension archives whose name is equal.
+ */
 @Serializable
 @XmlSerialName("dimension")
 data class DimensionArchive(val name: String, @XmlValue val intensity: Double)
 
+/**
+ * Represents a sequence of [FrameArchive] and [DimensionArchive].
+ *
+ * Resources are not included. Instead, they are included in a shared
+ * resource pool (i.e. [ArchivePack]).
+ */
 @Serializable
 @XmlSerialName("quiz")
 data class QuizArchive(
@@ -377,10 +407,14 @@ data class QuizArchive(
     @XmlSerialName("modification")
     val modificationTime: Instant? = null,
     @Serializable(FrameContainerSerializer::class)
+    @XmlSerialName("frames")
     val frames: List<FrameArchive> = emptyList(),
     val dimensions: List<DimensionArchive> = emptyList(),
 )
 
+/**
+ * Contains a list of [QuizArchive].
+ */
 @Serializable
 @XmlSerialName(value = "archive", namespace = "http://schema.zhufucdev.com/practiso")
 data class QuizArchiveContainer(
@@ -390,25 +424,43 @@ data class QuizArchiveContainer(
     val quizzes: List<QuizArchive>,
 )
 
+/**
+ * Represents a Practiso archive (with the extension of
+ * `.psarchive`), including a set of [QuizArchive] and their
+ * [DimensionArchive], together with all or some of the required resources.
+ */
 data class ArchivePack(
     val archives: QuizArchiveContainer,
     val resources: Map<String, () -> Source>,
 )
 
+/**
+ * A dependency of resources by [FrameArchive].
+ */
 data class ArchiveResourceRequester(val name: String, val requester: FrameArchive)
 
-fun <T : FrameArchive> List<T>.resources(): List<ArchiveResourceRequester> = buildList {
-    this@resources.forEach {
-        when (it) {
-            is FrameArchive.Image -> add(ArchiveResourceRequester(it.filename, it))
-            is FrameArchive.Options -> addAll(
-                it.content.map(FrameArchive.Options.Item::content).resources()
-            )
+/**
+ * All required resources of a frame:
+ *
+ * - [FrameArchive.Text] requires nothing.
+ * - [FrameArchive.Image] requires [FrameArchive.Image.filename].
+ * - [FrameArchive.Options] requires all resources required by its [FrameArchive.Options.content].
+ */
+fun <T : FrameArchive> T.resources() = buildList {
+    when (this@resources) {
+        is FrameArchive.Image -> add(ArchiveResourceRequester(filename, this@resources))
+        is FrameArchive.Options -> addAll(
+            content.map(FrameArchive.Options.Item::content).resources()
+        )
 
-            is FrameArchive.Text -> {}
-        }
+        is FrameArchive.Text -> {}
     }
 }
+
+/**
+ * All required resources of the frames.
+ */
+fun <T : FrameArchive> List<T>.resources(): List<ArchiveResourceRequester> = flatMap { it.resources() }
 
 fun List<QuizArchive>.archive(resourceSource: (String) -> Source): Source = Buffer().apply {
     val container = QuizArchiveContainer(Clock.System.now(), this@archive)

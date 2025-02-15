@@ -4,8 +4,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct QuestionView: View {
-    private var importService = ImportService(db: Database.shared.app)
-    private var removeService = RemoveServiceSync(db: Database.shared.app)
+    private let archiveService = ImportService(db: Database.shared.app)
+    private let importService = ImportServiceSync(db: Database.shared.app)
+    private let removeService = RemoveServiceSync(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ContentView.Model.self) private var contentModel
     
@@ -86,7 +87,7 @@ struct QuestionView: View {
             switch item {
             case .binary(let data):
                 if let pack = (errorHandler.catchAndShowImmediately {
-                    try importService.unarchive(it: Importable(data: data))
+                    try archiveService.unarchive(it: Importable(data: data))
                 }) {
                     packs.append(pack)
                 } else {
@@ -94,7 +95,7 @@ struct QuestionView: View {
                 }
             case .url(let url):
                 if let pack = (errorHandler.catchAndShowImmediately {
-                   try importService.unarchive(it: Importable(url: url))
+                   try archiveService.unarchive(it: Importable(url: url))
                 }) {
                     packs.append(pack)
                 } else {
@@ -107,18 +108,8 @@ struct QuestionView: View {
         }
         
         for pack in packs {
-            let states = importService.import(pack: pack)
-            Task {
-                for await state in states {
-                    switch state {
-                    case let c as ImportStateConfirmation:
-                        await errorHandler.catchAndShowImmediately {
-                            try await c.ok.send(element: nil)
-                        }
-                    default:
-                        NSLog("Unknown state")
-                    }
-                }
+            errorHandler.catchAndShowImmediately {
+                try importService.importAll(pack: pack)
             }
         }
         

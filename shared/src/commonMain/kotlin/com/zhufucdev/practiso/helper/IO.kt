@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.helper
 
+import com.zhufucdev.practiso.platform.Platform
 import io.github.vinceglb.filekit.core.PlatformFile
 import okio.Sink
 import okio.Source
@@ -11,3 +12,5 @@ suspend fun PlatformFile.copyTo(sink: Sink) {
         it.write(readBytes())
     }
 }
+
+fun Platform.resourceSink(name: String) = filesystem.sink(resourcePath.resolve(name))

@@ -44,6 +44,12 @@
     "Creation" : {
 
     },
+    "Data is invalid because it is compound." : {
+
+    },
+    "Data represents an empty archive." : {
+
+    },
     "Delete" : {
 
     },

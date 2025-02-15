@@ -1,7 +1,7 @@
 import ComposeApp
 import Foundation
 
-protocol Option : Identifiable {
+protocol Option : Identifiable, Hashable {
     associatedtype KtType where KtType : PractisoOption, KtType : PractisoOptionViewable
     var id: Int64 { get }
     var kt: KtType { get }
@@ -9,6 +9,15 @@ protocol Option : Identifiable {
 }
 
 class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : PractisoOptionViewable {
+    static func == (lhs: OptionImpl<KtType>, rhs: OptionImpl<KtType>) -> Bool {
+        lhs.view == rhs.view
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(view)
+    }
+    
     let kt: KtType
     
     var id: Int64 {
@@ -24,7 +33,7 @@ class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : Practi
     }
 }
 
-struct PractisoOptionView {
+struct PractisoOptionView : Equatable, Hashable {
     var header: String
     var title: String?
     var subtitle: String?

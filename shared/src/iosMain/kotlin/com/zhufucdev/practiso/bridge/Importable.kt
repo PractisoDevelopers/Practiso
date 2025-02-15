@@ -1,4 +1,5 @@
-package com.zhufucdev.practiso
+package com.zhufucdev.practiso.bridge
+
 import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.platform.AppleFileSource
 import okio.Buffer

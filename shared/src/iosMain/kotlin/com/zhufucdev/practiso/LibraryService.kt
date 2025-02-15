@@ -10,6 +10,7 @@ import com.zhufucdev.practiso.datamodel.applyTo
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.insertInto
 import com.zhufucdev.practiso.datamodel.optimized
+import com.zhufucdev.practiso.datamodel.toOption
 import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.datamodel.toTemplateOptionFlow
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +37,8 @@ class LibraryService(private val db: AppDatabase = Database.app) {
 
     fun getQuizFrames(quizId: Long) =
         db.quizQueries.getQuizFrames(db.quizQueries.getQuizById(quizId)).map { it.firstOrNull() }
+
+    fun getQuizOption(quizId: Long) = getQuizFrames(quizId).map { it?.toOption() }
 
     @Throws(SQLiteException::class)
     fun createQuestion(frames: List<Frame>, name: String?) = runBlocking {
