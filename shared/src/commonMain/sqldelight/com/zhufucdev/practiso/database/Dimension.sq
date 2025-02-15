@@ -32,6 +32,11 @@ SELECT *
 FROM dimension
 WHERE name = ?;
 
+getDimensionByQuizId:
+SELECT D.*, Q.intensity
+FROM dimension D JOIN quizByDimension Q ON Q.dimensionId = D.id
+WHERE Q.quizId = ?;
+
 insertDimension:
 INSERT INTO dimension(name)
 VALUES (?);

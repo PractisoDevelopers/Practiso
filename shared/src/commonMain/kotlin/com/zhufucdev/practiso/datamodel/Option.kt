@@ -23,6 +23,7 @@ import resources.n_questions_span
 import resources.new_question_para
 import resources.new_template_para
 import resources.no_description_para
+import kotlin.collections.map
 
 private typealias DbQuiz = Quiz
 private typealias DbDimension = Dimension
@@ -108,17 +109,19 @@ data class TemplateOption(val template: Template) : PractisoOption {
         )
 }
 
+suspend fun QuizFrames.toOption() = coroutineScope {
+    QuizOption(
+        quiz = quiz,
+        preview = frames.map { async { it.frame.getPreviewText() } }.awaitAll()
+            .joinToString("  ")
+    )
+}
+
 fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<QuizOption>> =
     map { frames ->
         coroutineScope {
             frames.map {
-                async {
-                    QuizOption(
-                        quiz = it.quiz,
-                        preview = it.frames.map { async { it.frame.getPreviewText() } }.awaitAll()
-                            .joinToString("  ")
-                    )
-                }
+                async { it.toOption() }
             }.awaitAll()
         }
     }

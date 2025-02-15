@@ -7,7 +7,7 @@ import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
-import com.zhufucdev.practiso.helper.copyTo
+import com.zhufucdev.practiso.helper.resourceSink
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.viewmodel.AppScope
@@ -29,6 +29,7 @@ import resources.Res
 import resources.failed_to_copy_resource_x_for_quiz_y_para
 import resources.invalid_file_format_para
 import resources.resource_x_for_quiz_y_was_not_found_para
+import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface ImportState {
     data object Idle : ImportState
@@ -96,7 +97,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
 
                 db.transaction {
                     quizArchive.importTo(db)
-                    val resources = quizArchive.frames.resources().toList()
+                    val resources = quizArchive.frames.resources()
                     val platform = getPlatform()
                     resources.forEachIndexed { i, (name, requester) ->
                         val source = pack.resources[name]
@@ -241,10 +242,53 @@ class ImportService(private val db: AppDatabase = Database.app) {
         val name = randomUUID() + "." + importable.name.split(".").last()
         val platform = getPlatform()
         importable.source.buffer().readAll(
-            platform
-                .filesystem
-                .sink(platform.resourcePath.resolve(name))
+            platform.resourceSink(name)
         )
         return name
     }
+
+    /**
+     * Import an [Importable] which represents only one
+     * [com.zhufucdev.practiso.datamodel.QuizArchive],
+     * throwing [ArchiveAssertionException] if there's more
+     * than one quiz or [EmptyArchiveException] otherwise.
+     *
+     * If any of the required resources is not present,
+     * throws [ResourceNotFoundException].
+     *
+     * @return id of the imported quiz.
+     */
+    @Throws(AssertionError::class, ResourceNotFoundException::class, CancellationException::class)
+    suspend fun importSingleton(importable: Importable): Long {
+        val unpack = unarchive(importable)
+        if (unpack.archives.quizzes.size > 1) {
+            throw ArchiveAssertionException()
+        } else if (unpack.archives.quizzes.isEmpty()) {
+            throw EmptyArchiveException()
+        }
+
+        val quiz = unpack.archives.quizzes.first()
+        val resources = quiz.frames.resources()
+        resources.forEach {
+            if (!unpack.resources.containsKey(it.name)) {
+                throw ResourceNotFoundException(it.name)
+            }
+        }
+        val platform = getPlatform()
+        resources.forEach {
+            unpack.resources[it.name]!!.invoke()
+                .buffer()
+                .readAll(
+                    platform.filesystem.sink(platform.resourcePath.resolve(it.name))
+                )
+        }
+        return quiz.importTo(db)
+    }
 }
+
+class ResourceNotFoundException(val resourceName: String) :
+    Exception("Resource \"${resourceName}\" is absent.")
+
+class EmptyArchiveException : Exception()
+
+class ArchiveAssertionException : Exception()

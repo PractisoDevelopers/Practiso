@@ -18,7 +18,13 @@ struct QuestionDetailView : View {
     @State private var staging: [Frame]? = nil
     @State private var editHistory = History()
     @State private var cache = ImageFrameView.Cache()
+    @State private var titleBuffer: String
     @Namespace private var question
+    
+    init(option: QuizOption) {
+        self.option = option
+        titleBuffer = option.quiz.name ?? String(localized: "New question")
+    }
     
     var body: some View {
         Group {
@@ -86,10 +92,19 @@ struct QuestionDetailView : View {
             for await qf in libraryService.getQuizFrames(quizId: option.id) {
                 if let qf = qf {
                     data = .ok(qf)
+                    titleBuffer = qf.quiz.name ?? String(localized: "New question")
                 } else {
                     data = .unavailable
                 }
             }
         }
+        .onChange(of: titleBuffer) { oldValue, newValue in
+            errorHandler.catchAndShowImmediately {
+                try libraryService.saveModification(data: [Modification.renameQuiz(oldName: oldValue, newName: newValue)], quizId: option.id)
+            }
+        }
+        .navigationTitle($titleBuffer)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationDocument(option, preview: SharePreview(option.view.header))
     }
 }
