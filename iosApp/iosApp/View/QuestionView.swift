@@ -14,15 +14,15 @@ struct QuestionView: View {
     
     @State private var isArchiveImporterShown = false
     @State private var editMode: EditMode = .inactive
-    @State private var selection = Set<Int64>()
+    @State private var selection = Set<OptionImpl<QuizOption>>()
 
     var body: some View {
         OptionList(
             data: data, selection: $selection,
-            onDelete: { ids in
-                for id in ids {
+            onDelete: { options in
+                for option in options {
                     errorHandler.catchAndShowImmediately {
-                        try removeService.removeQuizWithResources(id: id)
+                        try removeService.removeQuizWithResources(id: option.kt.id)
                     }
                 }
             }
@@ -31,7 +31,7 @@ struct QuestionView: View {
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
                         errorHandler.catchAndShowImmediately {
-                            try removeService.removeQuizWithResources(id: option.id)
+                            try removeService.removeQuizWithResources(id: option.kt.id)
                         }
                     } label: {
                         Label("Delete", systemImage: "trash")
@@ -71,10 +71,8 @@ struct QuestionView: View {
             }
         }
         .onChange(of: selection) { _, newValue in
-            if !editMode.isEditing, let id = selection.first {
-                contentModel.detail = .question(data.items.first(where: { option in
-                    option.id == id
-                })!.kt)
+            if !editMode.isEditing, let option = selection.first {
+                contentModel.detail = .question(option.kt)
             }
         }
     }

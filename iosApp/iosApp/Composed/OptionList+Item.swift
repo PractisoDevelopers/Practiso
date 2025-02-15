@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 struct OptionListItem<Item : Option>: View {
-    @State var data: Item
+    let data: Item
     var body: some View {
         VStack(spacing: 4) {
             Text(data.view.header)

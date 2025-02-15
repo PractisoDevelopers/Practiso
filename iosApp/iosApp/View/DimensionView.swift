@@ -10,15 +10,15 @@ struct DimensionView: View {
     @State private var isDeletingActionsShown = false
     @State private var deletionIdSet: Set<Int64>?
     @State private var editMode: EditMode = .inactive
-    @State private var selection = Set<Int64>()
+    @State private var selection = Set<OptionImpl<DimensionOption>>()
     
     private let removeService = RemoveServiceSync(db: Database.shared.app)
     
     var body: some View {
         OptionList(
             data: data, selection: $selection,
-            onDelete: { ids in
-                deletionIdSet = ids
+            onDelete: { options in
+                deletionIdSet = Set(options.map(\.kt.id))
                 isDeletingActionsShown = true
             }
         ) { option in
@@ -28,7 +28,7 @@ struct DimensionView: View {
                         Button(role: .destructive) {
                             withAnimation {
                                 errorHandler.catchAndShowImmediately {
-                                    try removeService.removeDimensionKeepQuizzes(id: option.id)
+                                    try removeService.removeDimensionKeepQuizzes(id: option.kt.id)
                                 }
                             }
                         } label: {
@@ -36,7 +36,7 @@ struct DimensionView: View {
                         }
                     } else {
                         Button {
-                            deletionIdSet = Set(arrayLiteral: option.id)
+                            deletionIdSet = Set(arrayLiteral: option.kt.id)
                             isDeletingActionsShown = true
                         } label: {
                             Label("Delete", systemImage: "trash")
@@ -76,8 +76,8 @@ struct DimensionView: View {
             }
         }
         .onChange(of: selection) { _, newValue in
-            if !editMode.isEditing, let dimId = newValue.first {
-                contentModel.detail = .dimension(data.items.first(where: { $0.id == dimId })!.kt)
+            if !editMode.isEditing, let dim = newValue.first {
+                contentModel.detail = .dimension(dim.kt)
             }
         }
     }

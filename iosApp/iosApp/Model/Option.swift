@@ -3,25 +3,24 @@ import Foundation
 
 protocol Option : Identifiable, Hashable {
     associatedtype KtType where KtType : PractisoOption, KtType : PractisoOptionViewable
-    var id: Int64 { get }
     var kt: KtType { get }
     var view: PractisoOptionView { get }
 }
 
 class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : PractisoOptionViewable {
     static func == (lhs: OptionImpl<KtType>, rhs: OptionImpl<KtType>) -> Bool {
-        lhs.view == rhs.view
+        lhs.kt.id == rhs.kt.id
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        hasher.combine(kt.id)
         hasher.combine(view)
     }
     
     let kt: KtType
     
-    var id: Int64 {
-        kt.id
+    var id: some Option {
+        self
     }
     
     var view: PractisoOptionView {
