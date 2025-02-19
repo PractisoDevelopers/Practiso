@@ -153,7 +153,7 @@ private struct Item : View {
                         newValue
                     }
                     frame = FrameOptions(optionsFrame: OptionsFrame(id: options.optionsFrame.id, name: name), frames: options.frames)
-                }), label: { Text("New options frame") })
+                }), label: { Text("Name of options frame") })
                 .foregroundStyle(.secondary)
                 
                 if !isEditingContent {
