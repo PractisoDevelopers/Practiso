@@ -7,6 +7,7 @@ struct QuestionView: View {
     private let archiveService = ImportService(db: Database.shared.app)
     private let importService = ImportServiceSync(db: Database.shared.app)
     private let removeService = RemoveServiceSync(db: Database.shared.app)
+    private let createService = CreateService(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ContentView.Model.self) private var contentModel
     
@@ -18,7 +19,14 @@ struct QuestionView: View {
 
     var body: some View {
         OptionList(
-            data: data, selection: $selection,
+            data: data, selection: Binding(get: {
+                selection
+            }, set: { newValue in
+                if !editMode.isEditing, let option = newValue.first {
+                    contentModel.detail = .question(option.kt)
+                }
+                selection = newValue
+            }),
             onDelete: { options in
                 for option in options {
                     errorHandler.catchAndShowImmediately {
@@ -37,6 +45,22 @@ struct QuestionView: View {
                         Label("Delete", systemImage: "trash")
                     }
                 }
+        }
+        .toolbar {
+            if editMode == .inactive {
+                ToolbarItem {
+                    Menu("Add", systemImage: "plus") {
+                        Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
+                            isArchiveImporterShown = true
+                        }
+                        
+                        Button("Create", systemImage: "document.badge.plus") {
+                            let created = createService.createNewQuiz()
+                            contentModel.detail = .question(created)
+                        }
+                    }
+                }
+            }
         }
         .environment(\.editMode, $editMode)
         .dropDestination(for: CopiedTransfer.self) { data, _ in
@@ -57,22 +81,6 @@ struct QuestionView: View {
         .fileImporter(isPresented: $isArchiveImporterShown, allowedContentTypes: [.data], allowsMultipleSelection: true) { result in
             if let data = try? result.get() {
                 _ = processImport(items: data.map { url in .url(url: url) })
-            }
-        }
-        .toolbar {
-            if editMode == .inactive {
-                ToolbarItem {
-                    Menu("Add", systemImage: "plus") {
-                        Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
-                            isArchiveImporterShown = true
-                        }
-                    }
-                }
-            }
-        }
-        .onChange(of: selection) { _, newValue in
-            if !editMode.isEditing, let option = selection.first {
-                contentModel.detail = .question(option.kt)
             }
         }
     }
