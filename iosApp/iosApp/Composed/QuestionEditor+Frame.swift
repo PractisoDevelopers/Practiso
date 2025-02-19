@@ -115,6 +115,7 @@ private struct DataUrl: Transferable {
 struct ImageFrameEditor<Label : View> : View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ImageFrameView.Cache.self) private var cache
+    @Environment(\.imageService) private var loader
     
     @Binding var frame: ImageFrame
     let label: (ImageFrame, Binding<ImageFrameView.DataState?>) -> Label
@@ -192,7 +193,7 @@ struct ImageFrameEditor<Label : View> : View {
     
     func importImage(from: URL) throws {
         let name = importService.importImage(importable: Importable(url: from))
-        let cgImage = try ImageService.load(fileName: name)
+        let cgImage = try loader.load(fileName: name)
         Task {
             await cache.put(name: name, image: cgImage)
             frame = ImageFrame(id: frame.id, embeddingsId: frame.embeddingsId, filename: name, width: Int64(cgImage.width), height: Int64(cgImage.height), altText: nil)
