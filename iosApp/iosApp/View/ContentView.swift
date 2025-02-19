@@ -32,7 +32,6 @@ struct ContentView: View {
             switch model.detail {
             case .question(let quizOption):
                 QuestionDetailView(option: quizOption)
-                    .navigationTitle(quizOption.view.header)
             case .dimension(let dimensionOption):
                 DimensionDetailView(option: dimensionOption)
                     .navigationTitle(dimensionOption.view.header)
