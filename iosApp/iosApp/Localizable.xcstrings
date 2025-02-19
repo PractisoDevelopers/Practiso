@@ -32,6 +32,9 @@
     "Alternative Text" : {
 
     },
+    "An error occurred and the document is failed to load" : {
+
+    },
     "Briefly describe this image..." : {
 
     },
@@ -89,6 +92,9 @@
     "Hello there" : {
 
     },
+    "Home" : {
+
+    },
     "Image" : {
 
     },
@@ -102,6 +108,9 @@
 
     },
     "Library" : {
+
+    },
+    "Loaded data represents an invalid image." : {
 
     },
     "Loading Image..." : {
@@ -176,10 +185,16 @@
     "Sessions" : {
       "extractionState" : "manual"
     },
+    "Source \"%@\" is unavailable." : {
+
+    },
     "Template" : {
 
     },
     "Text" : {
+
+    },
+    "This archive is empty" : {
 
     },
     "Type text here..." : {
@@ -189,6 +204,9 @@
 
     },
     "Unknown frame type %@" : {
+
+    },
+    "Unnamed question" : {
 
     },
     "Unsupported data type" : {

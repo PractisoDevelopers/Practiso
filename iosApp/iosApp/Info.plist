@@ -6,6 +6,23 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Practiso Archive</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>CFBundleTypeIconFile</key>
+			<string>Archive@x2</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.zhufucdev.psarchive</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,7 +42,7 @@
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
+		<true/>
 	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
@@ -46,6 +63,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
@@ -57,7 +78,9 @@
 			<key>UTTypeDescription</key>
 			<string>Practiso Archive</string>
 			<key>UTTypeIconFiles</key>
-			<array/>
+			<array>
+				<string>Archive@x2</string>
+			</array>
 			<key>UTTypeIdentifier</key>
 			<string>com.zhufucdev.psarchive</string>
 			<key>UTTypeTagSpecification</key>
@@ -84,7 +107,9 @@
 			<key>UTTypeDescription</key>
 			<string>Practiso Archive</string>
 			<key>UTTypeIconFiles</key>
-			<array/>
+			<array>
+				<string>Archive@x2</string>
+			</array>
 			<key>UTTypeIdentifier</key>
 			<string>com.zhufucdev.psarchive</string>
 			<key>UTTypeTagSpecification</key>

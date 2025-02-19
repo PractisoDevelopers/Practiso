@@ -51,7 +51,10 @@ struct QuestionDetailView : View {
                             staging = quizFrames.frames.map(\.frame)
                         }
                     } else {
-                        Question(data: quizFrames, namespace: question)
+                        Question(
+                            frames: quizFrames.frames.sorted(by: { $0.priority < $1.priority }).map(\.frame),
+                            namespace: question
+                        )
                     }
                 }
                 .environment(\.editMode, $editMode)

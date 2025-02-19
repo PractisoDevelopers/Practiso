@@ -17,6 +17,7 @@ struct ImageFrameView : View {
 
     let frame: ImageFrame
     let data: Binding<DataState>?
+    @Environment(\.imageService) var loader
     @Environment(Cache.self) var cache: Cache?
 
     init(frame: ImageFrame, data: Binding<DataState?>? = nil) {
@@ -79,7 +80,7 @@ struct ImageFrameView : View {
                 data?.wrappedValue = __data
             } else {
                 do {
-                    let image = try ImageService.load(fileName: frame.filename)
+                    let image = try loader.load(fileName: frame.filename)
                     await cache?.put(name: frame.filename, image: image)
                     __data = .ok(image: image)
                     data?.wrappedValue = __data
