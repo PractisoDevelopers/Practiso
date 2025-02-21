@@ -46,6 +46,16 @@ struct QuestionView: View {
                     }
                 }
                 .draggable(option.kt)
+                .contextMenu {
+                    Button("Delete \(option.view.header)", systemImage: "trash", role: .destructive) {
+                        errorHandler.catchAndShowImmediately {
+                            try removeService.removeQuizWithResources(id: option.kt.id)
+                        }
+                    }
+                } preview: {
+                    QuestionPreview(data: option.kt.quiz)
+                }
+
         }
         .toolbar {
             if editMode == .inactive {
