@@ -50,11 +50,33 @@ extension QuizOption : @retroactive Transferable {
     }
     
     public static var transferRepresentation: some TransferRepresentation {
+        ProxyRepresentation { option in
+            String(option.id)
+        } importing: { id in
+            let service = QueryService(db: Database.shared.app)
+            if let id = Int64(id) {
+                if let option = service.getQuizOption(quizId: id) {
+                    return option
+                }
+                throw CocoaError(.fileNoSuchFile)
+            } else {
+                throw CocoaError(.coreData)
+            }
+        }
+
+        
         DataRepresentation(contentType: .psarchive) { option in
             try option.data()
         } importing: { data in
             try QuizOption(data: data)
         }.suggestedFileName(\.view.header)
+        
+        FileRepresentation(exportedContentType: .psarchive) { option in
+            SentTransferredFile(
+                NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: false)
+                    .appendingPathComponent(option.view.header + ".psarchive")
+            )
+        }
         
         DataRepresentation(contentType: .gzip) { option in
             try option.data()

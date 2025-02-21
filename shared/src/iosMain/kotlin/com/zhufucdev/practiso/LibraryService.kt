@@ -8,6 +8,7 @@ import com.zhufucdev.practiso.datamodel.Edit
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.applyTo
 import com.zhufucdev.practiso.datamodel.getQuizFrames
+import com.zhufucdev.practiso.datamodel.getQuizIntensitiesById
 import com.zhufucdev.practiso.datamodel.insertInto
 import com.zhufucdev.practiso.datamodel.optimized
 import com.zhufucdev.practiso.datamodel.toOption
@@ -39,6 +40,11 @@ class LibraryService(private val db: AppDatabase = Database.app) {
         db.quizQueries.getQuizFrames(db.quizQueries.getQuizById(quizId)).map { it.firstOrNull() }
 
     fun getQuizOption(quizId: Long) = getQuizFrames(quizId).map { it?.toOption() }
+
+    fun getQuizIntensities(dimId: Long) =
+        db.dimensionQueries.getQuizIntensitiesById(dimId)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
 
     @Throws(SQLiteException::class)
     fun createQuestion(frames: List<Frame>, name: String?) = runBlocking {
