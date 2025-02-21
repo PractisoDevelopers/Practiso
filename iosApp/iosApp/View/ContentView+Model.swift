@@ -10,16 +10,35 @@ extension ContentView {
     
     @MainActor
     class ErrorHandler: Observable, ObservableObject {
-        @Published var shown = false
-        @Published var message: String?
+        enum State {
+            case hidden
+            case shown(message: String)
+        }
+        
+        @Published var state: State = .hidden
+        
+        var shown: Binding<Bool> {
+            Binding {
+                switch self.state {
+                case .hidden:
+                    return false
+                case .shown(let message):
+                    return true
+                }
+            } set: { newValue in
+                if !newValue {
+                    self.state = .hidden
+                }
+            }
+
+        }
         
         func show(error: Error) {
             show(message: error.localizedDescription)
         }
         
         func show(message: String) {
-            self.message = message
-            shown = true
+            state = .shown(message: message)
         }
         
         func catchAndShowImmediately<T>(action: @MainActor () async throws -> T) async -> T? {

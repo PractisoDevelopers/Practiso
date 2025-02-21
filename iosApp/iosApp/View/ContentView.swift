@@ -34,7 +34,6 @@ struct ContentView: View {
                 QuestionDetailView(option: quizOption)
             case .dimension(let dimensionOption):
                 DimensionDetailView(option: dimensionOption)
-                    .navigationTitle(dimensionOption.view.header)
             case .template(let templateOption):
                 TemplateDetailView()
             case .none:
@@ -43,15 +42,18 @@ struct ContentView: View {
         }
         .alert(
             "Operation failed",
-            isPresented: $errorHandler.shown,
-            presenting: errorHandler.message
-        ) { _ in
+            isPresented: errorHandler.shown
+        ) {
             Button("Cancel", role: .cancel) {
-                errorHandler.shown = false
-                errorHandler.message = nil
+                errorHandler.state = .hidden
             }
-        } message: { message in
-            Text(message)
+        } message: {
+            switch errorHandler.state {
+            case .hidden:
+                EmptyView()
+            case .shown(let message):
+                Text(message)
+            }
         }
         .environmentObject(model)
         .environmentObject(errorHandler)

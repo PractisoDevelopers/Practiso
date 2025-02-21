@@ -42,9 +42,7 @@ struct Checkmark<Title: View> : View {
 
 extension Image {
     func checkmarkStyleBase() -> some View {
-        self.resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 24, height: 24)
+        self.imageScale(.medium)
     }
     
     func checkmarkStyle(isEnabled: Bool) -> some View {

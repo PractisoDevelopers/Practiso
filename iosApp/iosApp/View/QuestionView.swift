@@ -45,6 +45,7 @@ struct QuestionView: View {
                         Label("Delete", systemImage: "trash")
                     }
                 }
+                .draggable(option.kt)
         }
         .toolbar {
             if editMode == .inactive {
