@@ -15,6 +15,7 @@ struct DimensionDetailView : View {
     let option: DimensionOption
     
     @State private var state: ViewState = .pending
+    @State private var currentPopoverItem: QuizIntensity? = nil
     
     var body: some View {
         Group {
@@ -30,9 +31,8 @@ struct DimensionDetailView : View {
                         ForEach(data) { item in
                             Item(
                                 data: item,
-                                onExclude: {
-                                    categorizeService.disassociate(quizId: item.quiz.id, dimensionId: option.id)
-                                }
+                                dimensionId: option.dimension.id,
+                                service: categorizeService
                             )
                         }
                     }
@@ -71,28 +71,46 @@ struct DimensionDetailView : View {
 extension DimensionDetailView {
     struct Item : View {
         let data: QuizIntensity
-        let onExclude: () -> Void
+        let dimensionId: Int64
+        let service: CategorizeServiceSync
         
-        private var quizName: String {
-            data.quiz.name ?? String(localized: "Empty question")
+        @State private var isPopoverPresented = false
+        @State private var intensityBuffer: Double
+        
+        init(data: QuizIntensity, dimensionId: Int64, service: CategorizeServiceSync) {
+            self.data = data
+            self.dimensionId = dimensionId
+            self.service = service
+            
+            intensityBuffer = data.intensity
         }
         
         var body: some View {
-            VStack {
-                Image("Document")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 54, height: 54)
-                Text(quizName)
-                Text("\(Int((data.intensity * 100).rounded()))%")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .contextMenu {
-                Button("Exclude \(quizName)", systemImage: "folder.badge.minus", role: .destructive, action: onExclude)
-            } preview: {
-                QuestionPreview(data: data.quiz)
-            }
+            QuestionIntensity(quiz: data.quiz, intensity: intensityBuffer)
+                .contextMenu {
+                    Button("Exclude", systemImage: "folder.badge.minus", role: .destructive) {
+                        service.disassociate(quizId: data.quiz.id, dimensionId: dimensionId)
+                    }
+                } preview: {
+                    QuestionPreview(data: data.quiz)
+                }
+                .popover(isPresented: $isPopoverPresented) {
+                    DimensionIntensitySlider(value: $intensityBuffer)
+                        .padding()
+                        .frame(minWidth: 300, idealWidth: 360)
+                }
+                .onTapGesture {
+                    isPopoverPresented = true
+                }
+                .onChange(of: isPopoverPresented) { _, newValue in
+                    if !newValue {
+                        service.updateIntensity(quizId: data.quiz.id, dimensionId: dimensionId, value: intensityBuffer)
+                    }
+                }
+        }
+        
+        private func updateIntensity(_ newValue: Double) {
+            service.updateIntensity(quizId: data.quiz.id, dimensionId: dimensionId, value: newValue)
         }
     }
 }

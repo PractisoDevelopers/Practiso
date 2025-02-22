@@ -14,4 +14,8 @@ class CategorizeServiceSync(db: AppDatabase) {
     fun disassociate(quizId: Long, dimensionId: Long) = runBlocking {
         service.disassociate(quizId, dimensionId)
     }
+
+    fun updateIntensity(quizId: Long, dimensionId: Long, value: Double) = runBlocking {
+        service.updateIntensity(quizId, dimensionId, value)
+    }
 }

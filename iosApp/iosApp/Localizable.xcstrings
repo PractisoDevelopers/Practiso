@@ -26,6 +26,12 @@
     "%lld%%" : {
 
     },
+    "0%" : {
+
+    },
+    "100%" : {
+
+    },
     "Add" : {
 
     },
@@ -101,7 +107,7 @@
     "Empty question" : {
 
     },
-    "Exclude %@" : {
+    "Exclude" : {
 
     },
     "Hello there" : {
