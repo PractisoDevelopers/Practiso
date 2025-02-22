@@ -16,7 +16,15 @@ struct DimensionView: View {
     
     var body: some View {
         OptionList(
-            data: data, selection: $selection,
+            data: data,
+            selection: Binding(get: {
+                selection
+            }, set: { newValue in
+                if !editMode.isEditing, let dim = newValue.first {
+                    contentModel.detail = .dimension(dim.kt)
+                }
+                selection = newValue
+            }),
             onDelete: { options in
                 deletionIdSet = Set(options.map(\.kt.id))
                 isDeletingActionsShown = true
@@ -73,11 +81,6 @@ struct DimensionView: View {
                     }
                 }
                 data.isRefreshing = false
-            }
-        }
-        .onChange(of: selection) { _, newValue in
-            if !editMode.isEditing, let dim = newValue.first {
-                contentModel.detail = .dimension(dim.kt)
             }
         }
     }

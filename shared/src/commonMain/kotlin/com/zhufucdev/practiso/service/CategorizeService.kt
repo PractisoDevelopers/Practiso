@@ -10,4 +10,8 @@ class CategorizeService(private val db: AppDatabase) {
     suspend fun disassociate(quizId: Long, dimensionId: Long) {
         db.dimensionQueries.dissoicateQuizFromDimension(quizId, dimensionId)
     }
+
+    suspend fun updateIntensity(quizId: Long, dimensionId: Long, value: Double) {
+        db.dimensionQueries.updateDimensionAssoicationIntensity(value, quizId, dimensionId)
+    }
 }
