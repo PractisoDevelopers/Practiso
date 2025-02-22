@@ -88,6 +88,9 @@ extension DimensionDetailView {
         var body: some View {
             QuestionIntensity(quiz: data.quiz, intensity: intensityBuffer)
                 .contextMenu {
+                    Button("Change Intensity", systemImage: "dial.high") {
+                        isPopoverPresented = true
+                    }
                     Button("Exclude", systemImage: "folder.badge.minus", role: .destructive) {
                         service.disassociate(quizId: data.quiz.id, dimensionId: dimensionId)
                     }
