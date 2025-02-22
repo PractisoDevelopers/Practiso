@@ -53,6 +53,7 @@ struct DimensionView: View {
                     }
                 }
         }
+        .environment(\.editMode, $editMode)
         .alert("Deleting Dimension", isPresented: $isDeletingActionsShown, presenting: deletionIdSet, actions: { idSet in
             Button("Delete All", role: .destructive) {
                 for id in idSet {

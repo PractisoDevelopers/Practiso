@@ -98,6 +98,7 @@ extension DimensionDetailView {
                     DimensionIntensitySlider(value: $intensityBuffer)
                         .padding()
                         .frame(minWidth: 300, idealWidth: 360)
+                        .presentationCompactAdaptation(.popover)
                 }
                 .onTapGesture {
                     isPopoverPresented = true

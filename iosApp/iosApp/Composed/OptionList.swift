@@ -47,6 +47,13 @@ struct OptionList<Content : View, Item : Option>: View {
             OptionListPlaceholder()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.background)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        if data.isRefreshing {
+                            ProgressView()
+                        }
+                    }
+                }
         } else {
             List(itemModel, selection: $selection) { option in
                 content(option)
