@@ -18,12 +18,12 @@ struct LibraryView: View {
     
     @State private var sections: [LibrarySection] = [
         LibrarySection(options: [
-            LibraryOption(name: "Session", systemImage: "star", id: .session)
+            .init(name: "Session", systemImage: "star", id: .session)
         ], id: "Derived"),
         LibrarySection(options: [
-            LibraryOption(name: "Template", systemImage: "gearshape", id: .template),
-            LibraryOption(name: "Dimension", systemImage: "tag", id: .dimension),
-            LibraryOption(name: "Question", systemImage: "document", id: .question)
+            .init(name: "Template", systemImage: "gearshape", id: .template),
+            .init(name: "Dimension", systemImage: "tag", id: .dimension),
+            .init(name: "Question", systemImage: "document", id: .question)
         ], id: "Source")
     ]
     
@@ -32,7 +32,9 @@ struct LibraryView: View {
             ForEach($sections) { $section in
                 Section(isExpanded: $section.isExpanded, content: {
                     ForEach(section.options) { option in
-                        Label(option.name, systemImage: option.systemImage)
+                        NavigationLink(value: option.id) {
+                            Label(option.name, systemImage: option.systemImage)
+                        }
                     }
                 }, header: {
                     Text(section.id)
