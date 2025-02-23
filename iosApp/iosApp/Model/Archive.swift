@@ -5,6 +5,7 @@ import CoreTransferable
 
 extension UTType {
     static var psarchive: UTType { UTType(exportedAs: "com.zhufucdev.psarchive") }
+    static var psquiz: UTType { UTType(exportedAs: "com.zhufucdev.psquiz") }
 }
 
 enum SingleQuizTransferError : LocalizedError {
@@ -35,19 +36,11 @@ private func importQuiz(importable: Importable) throws -> QuizOption {
     }
 }
 
-func QuizOption(data: Data) throws -> QuizOption {
-    try importQuiz(importable: Importable(data: data))
-}
-
-func QuizOption(url: URL) throws -> QuizOption {
-    try importQuiz(importable: Importable(url: url))
-}
-
 fileprivate struct IdProxy : Codable, Transferable {
     let id: Int64
     
     static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(for: Self.self, contentType: .psarchive)
+        CodableRepresentation(contentType: .psquiz)
     }
 }
 
@@ -67,25 +60,11 @@ extension QuizOption : @retroactive Transferable {
             }
             throw CocoaError(.fileNoSuchFile)
         }
-
         
         DataRepresentation(contentType: .psarchive) { option in
             try option.data()
         } importing: { data in
-            try QuizOption(data: data)
-        }.suggestedFileName(\.view.header)
-        
-        FileRepresentation(exportedContentType: .psarchive) { option in
-            SentTransferredFile(
-                NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: false)
-                    .appendingPathComponent(option.view.header + ".psarchive")
-            )
-        }
-        
-        DataRepresentation(contentType: .gzip) { option in
-            try option.data()
-        } importing: { data in
-            try QuizOption(data: data)
+            try importQuiz(importable: Importable(data: data))
         }.suggestedFileName(\.view.header)
     }
 }
