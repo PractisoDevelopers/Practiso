@@ -30,7 +30,7 @@ struct DimensionView: View {
                 isDeletingActionsShown = true
             }
         ) { option in
-            OptionListItem(data: option)
+            Item(option: option)
                 .swipeActions {
                     if option.kt.quizCount <= 0 {
                         Button(role: .destructive) {
@@ -84,5 +84,31 @@ struct DimensionView: View {
                 data.isRefreshing = false
             }
         }
+    }
+}
+
+fileprivate struct Item : View {
+    let option: OptionImpl<DimensionOption>
+    private let dimensionId: Int64
+    
+    init(option: OptionImpl<DimensionOption>) {
+        self.option = option
+        self.dimensionId = option.kt.id
+    }
+    
+    var body: some View {
+        OptionListItem(data: option)
+            .onDrop(of: [.psarchive], isTargeted: Binding.constant(false)) { providers in
+                if let provider = providers.first {
+                    _ = provider.loadTransferable(type: QuizOption.self) { result in
+                        if let quizOption = try? result.get() {
+                            let service = CategorizeServiceSync(db: Database.shared.app)
+                            service.associate(quizId: quizOption.quiz.id, dimensionId: dimensionId)
+                        }
+                    }
+                    return true
+                }
+                return false
+            }
     }
 }
