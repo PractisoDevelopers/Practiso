@@ -31,10 +31,10 @@ class LibraryService(private val db: AppDatabase = Database.app) {
             .toOptionFlow()
 
     fun getDimensions() =
-        db.dimensionQueries.getAllDimensions()
+        db.dimensionQueries.getAllDimensionsWithQuizCount()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .toOptionFlow(db.quizQueries)
+            .toOptionFlow()
 
     fun getQuizFrames(quizId: Long) =
         db.quizQueries.getQuizFrames(db.quizQueries.getQuizById(quizId)).map { it.firstOrNull() }
