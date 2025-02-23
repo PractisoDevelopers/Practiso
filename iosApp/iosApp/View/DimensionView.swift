@@ -121,16 +121,15 @@ fileprivate struct Item : View {
     var body: some View {
         OptionListItem(data: option)
             .onDrop(of: [.psarchive], isTargeted: Binding.constant(false)) { providers in
-                if let provider = providers.first {
+                for provider in providers {
                     _ = provider.loadTransferable(type: QuizOption.self) { result in
                         if let quizOption = try? result.get() {
                             let service = CategorizeServiceSync(db: Database.shared.app)
                             try? service.associate(quizId: quizOption.quiz.id, dimensionId: dimensionId)
                         }
                     }
-                    return true
                 }
-                return false
+                return true
             }
     }
 }
