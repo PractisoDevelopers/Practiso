@@ -103,7 +103,7 @@ fileprivate struct Item : View {
                     _ = provider.loadTransferable(type: QuizOption.self) { result in
                         if let quizOption = try? result.get() {
                             let service = CategorizeServiceSync(db: Database.shared.app)
-                            service.associate(quizId: quizOption.quiz.id, dimensionId: dimensionId)
+                            try? service.associate(quizId: quizOption.quiz.id, dimensionId: dimensionId)
                         }
                     }
                     return true

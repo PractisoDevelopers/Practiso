@@ -37,6 +37,11 @@ SELECT D.*, Q.intensity
 FROM dimension D JOIN quizByDimension Q ON Q.dimensionId = D.id
 WHERE Q.quizId = ?;
 
+getAllDimensionsWithQuizCount:
+SELECT D.*, coalesce(count(*), 0) AS quizCount
+FROM dimension D JOIN quizByDimension Q ON Q.dimensionId = D.id
+GROUP BY D.id;
+
 getQuizIntensitiesByDimensionId:
 SELECT Q.*, QD.intensity
 FROM dimension D JOIN quizByDimension QD ON QD.dimensionId = D.id JOIN quiz Q ON Q.id = QD.quizId

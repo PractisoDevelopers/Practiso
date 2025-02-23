@@ -61,7 +61,7 @@ struct DimensionDetailView : View {
     
     private func handleQuizDrop(items: [QuizOption]) -> Bool {
         for item in items {
-            categorizeService.associate(quizId: item.id, dimensionId: option.id)
+            try? categorizeService.associate(quizId: item.id, dimensionId: option.id)
         }
         return true
     }

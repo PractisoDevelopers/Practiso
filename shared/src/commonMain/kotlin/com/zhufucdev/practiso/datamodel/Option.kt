@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.datamodel
 
 import androidx.compose.runtime.Composable
 import com.zhufucdev.practiso.database.Dimension
+import com.zhufucdev.practiso.database.GetAllDimensionsWithQuizCount
 import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.QuizQueries
 import com.zhufucdev.practiso.database.Session
@@ -23,7 +24,6 @@ import resources.n_questions_span
 import resources.new_question_para
 import resources.new_template_para
 import resources.no_description_para
-import kotlin.collections.map
 
 private typealias DbQuiz = Quiz
 private typealias DbDimension = Dimension
@@ -139,6 +139,16 @@ fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<DimensionOp
                     )
                 }
             }.awaitAll()
+        }
+    }
+
+fun Flow<List<GetAllDimensionsWithQuizCount>>.toOptionFlow(): Flow<List<DimensionOption>> =
+    map { data ->
+        data.map {
+            DimensionOption(
+                dimension = Dimension(it.id, it.name),
+                quizCount = it.quizCount.toInt()
+            )
         }
     }
 
