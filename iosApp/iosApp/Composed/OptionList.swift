@@ -20,26 +20,26 @@ struct OptionList<Content : View, Item : Option>: View {
     @State private var sorting: OptionListSort = .name(.acending)
     
     private var itemModel: [Item] {
+        let filtered =
+        if searchText.isEmpty { data.items }
+        else { data.items.filter { $0.view.header.contains(searchText) || $0.view.title?.contains(searchText) == true || $0.view.subtitle?.contains(searchText) == true } }
+        
         let sorted: [Item] = switch sorting {
         case .name(.acending):
-            data.items.sorted { ($0.kt as! any NameComparable).nameCompare < ($1.kt as! any NameComparable).nameCompare }
+            filtered.sorted { ($0.kt as! any NameComparable).nameCompare < ($1.kt as! any NameComparable).nameCompare }
         case .name(.decending):
-            data.items.sorted { ($0.kt as! any NameComparable).nameCompare > ($1.kt as! any NameComparable).nameCompare }
+            filtered.sorted { ($0.kt as! any NameComparable).nameCompare > ($1.kt as! any NameComparable).nameCompare }
         case .modification(.acending):
-            data.items.sorted { ($0.kt as! any ModificationComparable).modificationCompare < ($1.kt as! any ModificationComparable).modificationCompare }
+            filtered.sorted { ($0.kt as! any ModificationComparable).modificationCompare < ($1.kt as! any ModificationComparable).modificationCompare }
         case .modification(.decending):
-            data.items.sorted { ($0.kt as! any ModificationComparable).modificationCompare > ($1.kt as! any ModificationComparable).modificationCompare }
+            filtered.sorted { ($0.kt as! any ModificationComparable).modificationCompare > ($1.kt as! any ModificationComparable).modificationCompare }
         case .creation(.acending):
-            data.items.sorted { ($0.kt as! any CreationComparable).creationCompare < ($1.kt as! any CreationComparable).creationCompare }
+            filtered.sorted { ($0.kt as! any CreationComparable).creationCompare < ($1.kt as! any CreationComparable).creationCompare }
         case .creation(.decending):
-            data.items.sorted { ($0.kt as! any CreationComparable).creationCompare > ($1.kt as! any CreationComparable).creationCompare }
+            filtered.sorted { ($0.kt as! any CreationComparable).creationCompare > ($1.kt as! any CreationComparable).creationCompare }
         }
         
-        let filtered =
-        if searchText.isEmpty { sorted }
-        else { sorted.filter { $0.view.header.contains(searchText) || $0.view.title?.contains(searchText) == true || $0.view.subtitle?.contains(searchText) == true } }
-        
-        return filtered
+        return sorted
     }
 
     var body: some View {
