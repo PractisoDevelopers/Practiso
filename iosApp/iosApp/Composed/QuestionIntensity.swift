@@ -17,6 +17,7 @@ struct QuestionIntensity : View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 54, height: 54)
             Text(quizName)
+                .multilineTextAlignment(.center)
             Text("\(Int((intensity * 100).rounded()))%")
                 .font(.caption)
                 .foregroundStyle(.secondary)
