@@ -20,4 +20,8 @@ class CategorizeServiceSync(db: AppDatabase) {
     fun updateIntensity(quizId: Long, dimensionId: Long, value: Double) = runBlocking {
         service.updateIntensity(quizId, dimensionId, value)
     }
+
+    fun createDimension(name: String) = runBlocking {
+        service.createDimension(name)
+    }
 }

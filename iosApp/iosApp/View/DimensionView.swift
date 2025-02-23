@@ -11,9 +11,12 @@ struct DimensionView: View {
     @State private var deletionIdSet: Set<Int64>?
     @State private var editMode: EditMode = .inactive
     @State private var selection = Set<OptionImpl<DimensionOption>>()
+    @State private var isNamingAlertShown = false
+    @State private var namingBuffer = ""
     
     private let removeService = RemoveServiceSync(db: Database.shared.app)
-    
+    private let categorizeService = CategorizeServiceSync(db: Database.shared.app)
+
     var body: some View {
         OptionList(
             data: data,
@@ -83,6 +86,25 @@ struct DimensionView: View {
                 }
                 data.isRefreshing = false
             }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Create", systemImage: "plus") {
+                    isNamingAlertShown = true
+                }
+            }
+        }
+        .alert("Create Dimension", isPresented: $isNamingAlertShown) {
+            TextField("Name of the dimension", text: $namingBuffer)
+            Button("Cancel", role: .cancel) {
+            }
+            Button("OK") {
+                categorizeService.createDimension(name: namingBuffer.trimmingCharacters(in: .whitespaces))
+                namingBuffer = ""
+                isNamingAlertShown = false
+            }
+            .disabled(namingBuffer.trimmingCharacters(in: .whitespaces).isEmpty)
+        } message: {
         }
     }
 }

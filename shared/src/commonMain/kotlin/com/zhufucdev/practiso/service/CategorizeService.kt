@@ -14,4 +14,9 @@ class CategorizeService(private val db: AppDatabase) {
     suspend fun updateIntensity(quizId: Long, dimensionId: Long, value: Double) {
         db.dimensionQueries.updateDimensionAssoicationIntensity(value, quizId, dimensionId)
     }
+
+    suspend fun createDimension(name: String): Long {
+        db.dimensionQueries.insertDimension(name)
+        return db.quizQueries.lastInsertRowId().executeAsOne()
+    }
 }
