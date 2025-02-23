@@ -16,7 +16,9 @@ class CategorizeService(private val db: AppDatabase) {
     }
 
     suspend fun createDimension(name: String): Long {
-        db.dimensionQueries.insertDimension(name)
-        return db.quizQueries.lastInsertRowId().executeAsOne()
+        return db.transactionWithResult {
+            db.dimensionQueries.insertDimension(name)
+            db.quizQueries.lastInsertRowId().executeAsOne()
+        }
     }
 }
