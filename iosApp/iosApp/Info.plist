@@ -74,6 +74,7 @@
 			<array>
 				<string>public.gzip</string>
 				<string>public.data</string>
+				<string>public.content</string>
 			</array>
 			<key>UTTypeDescription</key>
 			<string>Practiso Archive</string>
@@ -94,6 +95,16 @@
 					<string>application/gzip</string>
 				</array>
 			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeIdentifier</key>
+			<string>com.zhufucdev.psquiz</string>
+			<key>UTTypeTagSpecification</key>
+			<dict/>
 		</dict>
 	</array>
 	<key>UTImportedTypeDeclarations</key>
