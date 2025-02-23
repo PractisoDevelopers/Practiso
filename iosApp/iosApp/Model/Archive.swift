@@ -43,6 +43,14 @@ func QuizOption(url: URL) throws -> QuizOption {
     try importQuiz(importable: Importable(url: url))
 }
 
+fileprivate struct IdProxy : Codable, Transferable {
+    let id: Int64
+    
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(for: Self.self, contentType: .psarchive)
+    }
+}
+
 extension QuizOption : @retroactive Transferable {
     func data() throws -> Data {
         let service = ExportServiceSync(db: Database.shared.app)
@@ -51,17 +59,13 @@ extension QuizOption : @retroactive Transferable {
     
     public static var transferRepresentation: some TransferRepresentation {
         ProxyRepresentation { option in
-            String(option.id)
-        } importing: { id in
+            IdProxy(id: option.id)
+        } importing: { proxy in
             let service = QueryService(db: Database.shared.app)
-            if let id = Int64(id) {
-                if let option = service.getQuizOption(quizId: id) {
-                    return option
-                }
-                throw CocoaError(.fileNoSuchFile)
-            } else {
-                throw CocoaError(.coreData)
+            if let option = service.getQuizOption(quizId: proxy.id) {
+                return option
             }
+            throw CocoaError(.fileNoSuchFile)
         }
 
         
