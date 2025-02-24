@@ -111,6 +111,10 @@ extension DimensionDetailView {
                         service.updateIntensity(quizId: data.quiz.id, dimensionId: dimensionId, value: intensityBuffer)
                     }
                 }
+                .draggable({
+                    let service = QueryService(db: Database.shared.app)
+                    return service.getQuizOption(quizId: data.quiz.id)!
+                }())
         }
         
         private func updateIntensity(_ newValue: Double) {
