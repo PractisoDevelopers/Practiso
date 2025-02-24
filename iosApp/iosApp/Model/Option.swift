@@ -14,7 +14,13 @@ class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : Practi
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(kt.id)
-        hasher.combine(view)
+        if KtType.self is DimensionOption.Type {
+            let option = kt as! DimensionOption
+            hasher.combine(option.quizCount)
+            hasher.combine(option.dimension.name)
+        } else {
+            hasher.combine(view)
+        }
     }
     
     let kt: KtType
