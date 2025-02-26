@@ -1,7 +1,7 @@
 import Foundation
 @preconcurrency import ComposeApp
 
-extension LibraryService {
+extension EditService {
     func saveModification(data: [Modification], quizId: Int64) throws {
         let edits: [Edit] = data.map { mod in
             switch mod {

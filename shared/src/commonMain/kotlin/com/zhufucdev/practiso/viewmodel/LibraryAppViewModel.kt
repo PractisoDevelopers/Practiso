@@ -26,6 +26,7 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.service.LibraryService
 import com.zhufucdev.practiso.service.RemoveService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -39,23 +40,18 @@ import kotlinx.coroutines.selects.select
 import kotlinx.serialization.Serializable
 
 class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) : ViewModel() {
+    private val libraryService = LibraryService()
+
     val templates by lazy {
-        db.templateQueries.getAllTemplates()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .toTemplateOptionFlow()
+        libraryService.getTemplates()
     }
 
     val quiz: Flow<List<QuizOption>> by lazy {
-        db.quizQueries.getQuizFrames(db.quizQueries.getAllQuiz())
-            .toOptionFlow()
+        libraryService.getQuizzes()
     }
 
     val dimensions by lazy {
-        db.dimensionQueries.getAllDimensions()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .toOptionFlow(db.quizQueries)
+        libraryService.getDimensions()
     }
 
     private val removeService = RemoveService(db)

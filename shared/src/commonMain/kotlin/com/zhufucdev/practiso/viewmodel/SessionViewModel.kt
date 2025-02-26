@@ -24,6 +24,7 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.service.LibraryService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
@@ -42,14 +43,12 @@ import resources.x_and_n_more_para
 
 class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
+    private val libraryService = LibraryService()
+
     val sessions by lazy {
         MutableStateFlow<List<SessionOption>?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
-                db.sessionQueries.getAllSessions()
-                    .asFlow()
-                    .mapToList(Dispatchers.IO)
-                    .toOptionFlow(db.sessionQueries)
-                    .collect(this@apply)
+                libraryService.getSessions().collect(this@apply)
             }
         }
     }
@@ -57,11 +56,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     val recentTakeStats by lazy {
         MutableStateFlow<List<TakeStat>?>(null).apply {
             viewModelScope.launch(Dispatchers.IO) {
-                db.sessionQueries.getRecentTakeStats(5)
-                    .asFlow()
-                    .mapToList(Dispatchers.IO)
-                    .map { it.filter { it.pinned == 1L } + it.filter { it.pinned == 0L } }
-                    .collect(this@apply)
+                libraryService.getRecentTakes().collect(this@apply)
             }
         }
     }
