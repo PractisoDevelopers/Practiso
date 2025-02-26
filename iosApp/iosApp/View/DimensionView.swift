@@ -8,9 +8,8 @@ struct DimensionView: View {
     
     @State private var data = OptionListData<OptionImpl<DimensionOption>>()
     @State private var isDeletingActionsShown = false
-    @State private var deletionIdSet: Set<Int64>?
     @State private var editMode: EditMode = .inactive
-    @State private var selection = Set<OptionImpl<DimensionOption>>()
+    @State private var selection = Set<Int64>()
     @State private var isNamingAlertShown = false
     @State private var namingBuffer = ""
     
@@ -23,13 +22,12 @@ struct DimensionView: View {
             selection: Binding(get: {
                 selection
             }, set: { newValue in
-                if !editMode.isEditing, let dim = newValue.first {
-                    contentModel.detail = .dimension(dim.kt)
+                if !editMode.isEditing, let id = newValue.first {
+                    contentModel.detail = .dimension(data.items.first(where: {$0.id == id})!.kt)
                 }
                 selection = newValue
             }),
             onDelete: { options in
-                deletionIdSet = Set(options.map(\.kt.id))
                 isDeletingActionsShown = true
             }
         ) { option in
@@ -47,7 +45,6 @@ struct DimensionView: View {
                         }
                     } else {
                         Button {
-                            deletionIdSet = Set(arrayLiteral: option.kt.id)
                             isDeletingActionsShown = true
                         } label: {
                             Label("Delete", systemImage: "trash")
@@ -57,22 +54,22 @@ struct DimensionView: View {
                 }
         }
         .environment(\.editMode, $editMode)
-        .alert("Deleting Dimension", isPresented: $isDeletingActionsShown, presenting: deletionIdSet, actions: { idSet in
+        .alert("Deleting Dimension", isPresented: $isDeletingActionsShown, actions: {
             Button("Delete All", role: .destructive) {
-                for id in idSet {
+                for id in selection {
                     errorHandler.catchAndShowImmediately {
                         try removeService.removeDimensionWithQuizzes(id: id)
                     }
                 }
             }
             Button("Keep Questions") {
-                for id in idSet {
+                for id in selection {
                     errorHandler.catchAndShowImmediately {
                         try removeService.removeDimensionKeepQuizzes(id: id)
                     }
                 }
             }
-        }, message: { _ in
+        }, message: {
             Text("Would you like to delete questions contained as well?")
         })
         .task {
