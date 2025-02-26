@@ -11,6 +11,7 @@ struct QuestionDetailView : View {
     
     let option: QuizOption
     let libraryService = LibraryService(db: Database.shared.app)
+    let editService = EditService(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
     @State private var editMode: EditMode = .inactive
@@ -65,7 +66,7 @@ struct QuestionDetailView : View {
                             Button("Done") {
                                 if !editHistory.isEmpty {
                                     errorHandler.catchAndShowImmediately {
-                                        try libraryService.saveModification(data: editHistory.modifications, quizId: option.id)
+                                        try editService.saveModification(data: editHistory.modifications, quizId: option.id)
                                         withAnimation {
                                             editMode = .inactive
                                         }
@@ -103,7 +104,7 @@ struct QuestionDetailView : View {
         }
         .onChange(of: titleBuffer) { oldValue, newValue in
             errorHandler.catchAndShowImmediately {
-                try libraryService.saveModification(data: [Modification.renameQuiz(oldName: oldValue, newName: newValue)], quizId: option.id)
+                try editService.saveModification(data: [Modification.renameQuiz(oldName: oldValue, newName: newValue)], quizId: option.id)
             }
         }
         .navigationTitle($titleBuffer)

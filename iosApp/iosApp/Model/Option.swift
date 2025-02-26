@@ -4,30 +4,21 @@ import Foundation
 protocol Option : Identifiable, Hashable {
     associatedtype KtType where KtType : PractisoOption, KtType : PractisoOptionViewable
     var kt: KtType { get }
+    var id: Int64 { get }
     var view: PractisoOptionView { get }
 }
 
-class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : PractisoOptionViewable {
+class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : PractisoOptionViewable, KtType : Hashable {
     static func == (lhs: OptionImpl<KtType>, rhs: OptionImpl<KtType>) -> Bool {
-        lhs.kt.id == rhs.kt.id
+        lhs.kt == rhs.kt
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(kt.id)
-        if KtType.self is DimensionOption.Type {
-            let option = kt as! DimensionOption
-            hasher.combine(option.quizCount)
-            hasher.combine(option.dimension.name)
-        } else {
-            hasher.combine(view)
-        }
+        hasher.combine(kt)
     }
     
     let kt: KtType
-    
-    var id: some Option {
-        self
-    }
+    let id: Int64
     
     var view: PractisoOptionView {
         kt.view
@@ -35,6 +26,7 @@ class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : Practi
     
     init(kt: KtType) {
         self.kt = kt
+        self.id = kt.id
     }
 }
 
@@ -112,3 +104,14 @@ extension TemplateOption: PractisoOptionViewable, NameComparable, CreationCompar
     }
 }
 
+extension SessionOption : PractisoOptionViewable {
+    var view: PractisoOptionView {
+        let timeFormatter = RelativeDateTimeFormatter()
+        let relativeTime = timeFormatter.localizedString(for: Date(kt: session.creationTimeISO), relativeTo: Date())
+        return PractisoOptionView(
+            header: session.name,
+            title: String(localized: "Created \(relativeTime)"),
+            subtitle: String(localized: "\(quizCount) questions")
+        )
+    }
+}

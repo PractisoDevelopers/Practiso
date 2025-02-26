@@ -3,8 +3,21 @@ import Foundation
 import ComposeApp
 
 struct SessionView: View {
-    @ObservedObject private var viewModel = ViewModel()
+    @State var options: [OptionImpl<SessionOption>] = []
+    
     var body: some View {
-        Text("Hello there")
+        List {
+            Section("Takes") {
+                
+            }
+            Section("Sessions") {
+                ForEach(options) { option in
+                    OptionListItem(data: option)
+                }
+            }
+        }
+        .task {
+            
+        }
     }
 }

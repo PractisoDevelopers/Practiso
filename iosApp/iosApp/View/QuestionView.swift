@@ -15,22 +15,22 @@ struct QuestionView: View {
     
     @State private var isArchiveImporterShown = false
     @State private var editMode: EditMode = .inactive
-    @State private var selection = Set<OptionImpl<QuizOption>>()
+    @State private var selection = Set<Int64>()
 
     var body: some View {
         OptionList(
             data: data, selection: Binding(get: {
                 selection
             }, set: { newValue in
-                if !editMode.isEditing, let option = newValue.first {
-                    contentModel.detail = .question(option.kt)
+                if !editMode.isEditing, let id = newValue.first {
+                    contentModel.detail = .question(data.items.first(where: {$0.id == id})!.kt)
                 }
                 selection = newValue
             }),
             onDelete: { options in
                 for option in options {
                     errorHandler.catchAndShowImmediately {
-                        try removeService.removeQuizWithResources(id: option.kt.id)
+                        try removeService.removeQuizWithResources(id: option)
                     }
                 }
             }
