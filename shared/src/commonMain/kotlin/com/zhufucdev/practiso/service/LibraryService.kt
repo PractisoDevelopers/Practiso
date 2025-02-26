@@ -1,8 +1,8 @@
-package com.zhufucdev.practiso
+package com.zhufucdev.practiso.service
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import co.touchlab.sqliter.interop.SQLiteException
+import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.Edit
 import com.zhufucdev.practiso.datamodel.Frame
@@ -36,6 +36,18 @@ class LibraryService(private val db: AppDatabase = Database.app) {
             .mapToList(Dispatchers.IO)
             .toOptionFlow()
 
+    fun getSessions() =
+        db.sessionQueries.getAllSessions()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .toOptionFlow(db.sessionQueries)
+
+    fun getRecentTakes() =
+        db.sessionQueries.getRecentTakeStats(5)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { it.filter { it.pinned == 1L } + it.filter { it.pinned == 0L } }
+
     fun getQuizFrames(quizId: Long) =
         db.quizQueries.getQuizFrames(db.quizQueries.getQuizById(quizId)).map { it.firstOrNull() }
 
@@ -46,13 +58,4 @@ class LibraryService(private val db: AppDatabase = Database.app) {
             .asFlow()
             .mapToList(Dispatchers.IO)
 
-    @Throws(SQLiteException::class)
-    fun createQuestion(frames: List<Frame>, name: String?) = runBlocking {
-        frames.map(Frame::toArchive).insertInto(db, name)
-    }
-
-    @Throws(SQLiteException::class)
-    fun saveEdit(data: List<Edit>, quizId: Long) = runBlocking {
-        data.optimized().applyTo(db, quizId)
-    }
 }
