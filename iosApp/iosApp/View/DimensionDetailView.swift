@@ -27,7 +27,7 @@ struct DimensionDetailView : View {
                 }
             case .ok(let data):
                 ScrollView {
-                    LazyVGrid(columns: [.init(.adaptive(minimum: 100))], spacing: 24) {
+                    FileGrid {
                         ForEach(data) { item in
                             Item(
                                 data: item,
@@ -117,6 +117,19 @@ extension DimensionDetailView {
                 }())
         }
         
+        private struct QuestionIntensity : View {
+            let quiz: Quiz
+            let intensity: Double
+            
+            private var quizName: String {
+                quiz.name ?? String(localized: "Empty question")
+            }
+            
+            var body: some View {
+                FileGridItem(title: Text(quizName), caption: Text("\(Int((intensity * 100).rounded()))%"))
+            }
+        }
+
         private func updateIntensity(_ newValue: Double) {
             service.updateIntensity(quizId: data.quiz.id, dimensionId: dimensionId, value: newValue)
         }

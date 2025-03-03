@@ -17,7 +17,6 @@ import com.zhufucdev.practiso.composable.FlipCardState
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.datamodel.SessionOption
-import com.zhufucdev.practiso.datamodel.createTake
 import com.zhufucdev.practiso.helper.protoBufStateListSaver
 import com.zhufucdev.practiso.helper.protobufSaver
 import com.zhufucdev.practiso.platform.AppDestination
@@ -26,6 +25,7 @@ import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.randomUUID
+import com.zhufucdev.practiso.service.CreateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -45,6 +45,8 @@ class TakeStarterViewModel(
     val db: AppDatabase,
     state: SavedStateHandle,
 ) : ViewModel() {
+    val createService = CreateService(db)
+
     val option = MutableStateFlow<SessionOption?>(null)
     var uiCoroutineScope: CoroutineScope? = null
         private set
@@ -93,12 +95,11 @@ class TakeStarterViewModel(
     val event = Events()
 
     private suspend fun newTake(): Long {
-        val takeId = createTake(
+        val takeId = createService.createTake(
             sessionId = option.value!!.session.id,
             timers = timers.map(
                 Timer::duration
             ),
-            db = db
         )
         timers.clear()
         return takeId

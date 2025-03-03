@@ -51,28 +51,3 @@ private fun calculateCorrectness(quizzes: List<QuizFrames>, answers: List<Answer
             }
         }
     }
-
-suspend fun createTake(sessionId: Long, timers: List<Duration>, db: AppDatabase): Long {
-    val takeId = db.transactionWithResult {
-        db.sessionQueries.updateSessionAccessTime(
-            Clock.System.now(),
-            sessionId
-        )
-        db.sessionQueries.insertTake(
-            sessionId = sessionId,
-            creationTimeISO = Clock.System.now(),
-        )
-        db.quizQueries.lastInsertRowId().executeAsOne()
-    }
-
-    db.transaction {
-        timers.forEach { d ->
-            db.sessionQueries.associateTimerWithTake(
-                takeId,
-                durationSeconds = d.inWholeMilliseconds / 1000.0
-            )
-        }
-    }
-
-    return takeId
-}

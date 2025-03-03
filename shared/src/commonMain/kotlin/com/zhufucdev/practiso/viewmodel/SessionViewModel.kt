@@ -25,6 +25,7 @@ import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.service.LibraryService
+import com.zhufucdev.practiso.service.RecommendationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
@@ -44,6 +45,7 @@ import resources.x_and_n_more_para
 class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
     private val libraryService = LibraryService()
+    private val recommendationService = RecommendationService()
 
     val sessions by lazy {
         MutableStateFlow<List<SessionOption>?>(null).apply {
@@ -124,65 +126,12 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
         }
     }
 
-    // TODO: recommend based on error rates, quiz legitimacy, etc
     val smartRecommendations by lazy {
-        recentRecommendations
+        recommendationService.getSmartRecommendations()
     }
 
-    val recentRecommendations = MutableStateFlow<List<SessionCreator>?>(null).apply {
-        viewModelScope.launch(Dispatchers.IO) {
-            db.quizQueries.getQuizFrames(db.quizQueries.getRecentQuiz())
-                .toOptionFlow()
-                .collectLatest { quizzes ->
-                    db.dimensionQueries.getRecentDimensions(5)
-                        .asFlow()
-                        .mapToList(Dispatchers.IO)
-                        .toOptionFlow(db.quizQueries)
-                        .collectLatest { dimensions ->
-                            val emission = buildList {
-                                if (quizzes.isNotEmpty()) {
-                                    val firstName = quizzes.first().quiz.name
-                                        ?: getString(Res.string.new_question_para)
-                                    add(
-                                        SessionCreator.ViaSelection(
-                                            selection = Selection(
-                                                quizIds = quizzes.map(PractisoOption::id).toSet()
-                                            ),
-                                            type = SessionCreator.ViaSelection.Type.RecentlyCreated,
-                                            preview = if (quizzes.size > 1) {
-                                                getString(
-                                                    Res.string.x_and_n_more_para,
-                                                    firstName,
-                                                    quizzes.size - 1
-                                                )
-                                            } else {
-                                                firstName
-                                            }
-                                        )
-                                    )
-                                }
-
-                                dimensions.forEach {
-                                    add(
-                                        SessionCreator.ViaSelection(
-                                            selection = Selection(
-                                                dimensionIds = setOf(it.dimension.id)
-                                            ),
-                                            type = SessionCreator.ViaSelection.Type.RecentlyCreated,
-                                            preview = getPluralString(
-                                                Res.plurals.n_questions_in_dimension,
-                                                it.quizCount,
-                                                it.quizCount,
-                                                it.dimension.name
-                                            )
-                                        )
-                                    )
-                                }
-                            }
-                            emit(emission)
-                        }
-                }
-        }
+    val recentRecommendations by lazy {
+        recommendationService.getRecentRecommendations()
     }
 
     companion object {

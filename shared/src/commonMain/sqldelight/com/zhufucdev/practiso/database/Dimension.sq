@@ -47,6 +47,11 @@ SELECT Q.*, QD.intensity
 FROM dimension D JOIN quizByDimension QD ON QD.dimensionId = D.id JOIN quiz Q ON Q.id = QD.quizId
 WHERE D.id = ?;
 
+getQuizzesByDimenionId:
+SELECT Q.*
+FROM quizByDimension QD JOIN quiz Q ON QD.quizId = Q.id
+WHERE dimensionId = ?;
+
 insertDimension:
 INSERT INTO dimension(name)
 VALUES (?);

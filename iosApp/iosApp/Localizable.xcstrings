@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "%d questions" : {
       "localizations" : {
         "en" : {
@@ -23,6 +26,15 @@
         }
       }
     },
+    "%lld hr" : {
+
+    },
+    "%lld min" : {
+
+    },
+    "%lld sec" : {
+
+    },
     "%lld%%" : {
 
     },
@@ -38,13 +50,25 @@
     "Add Option" : {
 
     },
+    "Add Timer" : {
+
+    },
+    "Almost There" : {
+
+    },
     "Alternative Text" : {
 
     },
     "An error occurred and the document is failed to load" : {
 
     },
+    "Begin a new take as well" : {
+
+    },
     "Briefly describe this image..." : {
+
+    },
+    "Browse" : {
 
     },
     "Cancel" : {
@@ -54,6 +78,9 @@
 
     },
     "Close" : {
+
+    },
+    "Continue without starting" : {
 
     },
     "Create" : {
@@ -89,6 +116,9 @@
     "Deleting Dimension" : {
 
     },
+    "Deselect" : {
+
+    },
     "Deselect All" : {
 
     },
@@ -99,6 +129,9 @@
 
     },
     "Dimension not available" : {
+
+    },
+    "Don't create takes for now" : {
 
     },
     "Done" : {
@@ -134,6 +167,12 @@
     "Keep Questions" : {
 
     },
+    "Least accessed" : {
+
+    },
+    "Less" : {
+
+    },
     "Library" : {
 
     },
@@ -147,6 +186,12 @@
 
     },
     "Loading Question..." : {
+
+    },
+    "Loading questions..." : {
+
+    },
+    "Loading suggestions" : {
 
     },
     "Modification" : {
@@ -164,8 +209,17 @@
     "Name of the dimension" : {
 
     },
+    "Name of the session" : {
+
+    },
     "New question" : {
       "extractionState" : "manual"
+    },
+    "New suggestion" : {
+
+    },
+    "Next" : {
+
     },
     "No items available" : {
 
@@ -188,7 +242,16 @@
     "Question Unavailable" : {
 
     },
+    "Recently created" : {
+
+    },
+    "Recommended for you" : {
+
+    },
     "Redo" : {
+
+    },
+    "Remove" : {
 
     },
     "Replace With" : {
@@ -215,10 +278,25 @@
     "Session" : {
 
     },
+    "Session name" : {
+
+    },
     "Sessions" : {
       "extractionState" : "manual"
     },
     "Source \"%@\" is unavailable." : {
+
+    },
+    "Specification" : {
+
+    },
+    "Start now" : {
+
+    },
+    "Suggestions" : {
+
+    },
+    "Take" : {
 
     },
     "Takes" : {
@@ -231,6 +309,9 @@
 
     },
     "This archive is empty" : {
+
+    },
+    "Timers" : {
 
     },
     "Type text here..." : {
@@ -248,7 +329,13 @@
     "Unsupported data type" : {
 
     },
+    "Welcome" : {
+
+    },
     "Would you like to delete questions contained as well?" : {
+
+    },
+    "Would you like to start the newly created session immediately?" : {
 
     }
   },

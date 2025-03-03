@@ -107,12 +107,11 @@ import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.calculateTakeCorrectQuizCount
 import com.zhufucdev.practiso.datamodel.calculateTakeNumber
-import com.zhufucdev.practiso.datamodel.createSession
-import com.zhufucdev.practiso.datamodel.createTake
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
+import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -181,6 +180,7 @@ import kotlin.time.DurationUnit
 @Composable
 fun SessionApp(
     model: SessionViewModel = viewModel(factory = SessionViewModel.Factory),
+    createService: CreateService = CreateService(),
 ) {
     val takeStats by model.recentTakeStats.collectAsState(Dispatchers.IO)
     val sessions by model.sessions.collectAsState(Dispatchers.IO)
@@ -205,15 +205,13 @@ fun SessionApp(
                         popupScope = this@SharedElementTransitionPopup,
                         onCreate = {
                             coroutine.launch {
-                                val sessionId = createSession(
+                                val sessionId = createService.createSession(
                                     name = it.sessionName ?: getString(Res.string.new_session_para),
                                     selection = it.selection,
-                                    db = model.db
                                 )
-                                val takeId = createTake(
+                                val takeId = createService.createTake(
                                     sessionId = sessionId,
                                     timers = listOf(),
-                                    db = model.db
                                 )
                                 model.event.startTake.send(takeId)
                             }

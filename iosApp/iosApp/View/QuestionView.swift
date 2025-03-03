@@ -66,8 +66,10 @@ struct QuestionView: View {
                         }
                         
                         Button("Create", systemImage: "document.badge.plus") {
-                            let created = createService.createNewQuiz()
-                            contentModel.detail = .question(created)
+                            Task {
+                                let created = try await createService.createNewQuiz()
+                                contentModel.detail = .question(created)
+                            }
                         }
                     }
                 }
