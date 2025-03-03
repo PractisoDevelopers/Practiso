@@ -1,8 +1,8 @@
 import Foundation
 import SwiftUI
 
-struct OptionListItem<Item : Option>: View {
-    let data: Item
+struct OptionListItem: View {
+    let data: any Option
     var body: some View {
         VStack(spacing: 4) {
             Text(data.view.header)

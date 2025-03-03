@@ -1,14 +1,9 @@
 import Foundation
 import SwiftUI
-import ComposeApp
 
-struct QuestionIntensity : View {
-    let quiz: Quiz
-    let intensity: Double
-    
-    private var quizName: String {
-        quiz.name ?? String(localized: "Empty question")
-    }
+struct FileGridItem<Title : View, Caption : View> : View {
+    let title: Title
+    let caption: Caption
     
     var body: some View {
         VStack {
@@ -16,11 +11,13 @@ struct QuestionIntensity : View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 54, height: 54)
-            Text(quizName)
+            title
                 .multilineTextAlignment(.center)
-            Text("\(Int((intensity * 100).rounded()))%")
+            caption
+                .multilineTextAlignment(.center)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 }

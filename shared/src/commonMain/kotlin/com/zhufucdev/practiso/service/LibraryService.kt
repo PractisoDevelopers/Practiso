@@ -4,6 +4,7 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.datamodel.DimensionQuizzes
 import com.zhufucdev.practiso.datamodel.Edit
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.applyTo
@@ -16,6 +17,7 @@ import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.datamodel.toTemplateOptionFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 
@@ -58,4 +60,18 @@ class LibraryService(private val db: AppDatabase = Database.app) {
             .asFlow()
             .mapToList(Dispatchers.IO)
 
+    fun getDimensionQuizzes(): Flow<List<DimensionQuizzes>> =
+        db.dimensionQueries.getAllDimensions()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { dimensions ->
+                dimensions.map {
+                    DimensionQuizzes(
+                        dimension = it,
+                        quizzes =
+                            db.dimensionQueries.getQuizzesByDimenionId(it.id)
+                                .executeAsList()
+                    )
+                }
+            }
 }

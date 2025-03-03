@@ -8,7 +8,7 @@ protocol Option : Identifiable, Hashable {
     var view: PractisoOptionView { get }
 }
 
-class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : PractisoOptionViewable, KtType : Hashable {
+class OptionImpl<KtType> : Option where KtType : PractisoOption & PractisoOptionViewable & Hashable {
     static func == (lhs: OptionImpl<KtType>, rhs: OptionImpl<KtType>) -> Bool {
         lhs.kt == rhs.kt
     }
@@ -27,6 +27,16 @@ class OptionImpl<KtType> : Option where KtType : PractisoOption, KtType : Practi
     init(kt: KtType) {
         self.kt = kt
         self.id = kt.id
+    }
+}
+
+struct SessionCreatorOption {
+    static func from(sessionCreator: ComposeApp.SessionCreator) -> any Option {
+        if let kt = sessionCreator as? SessionCreatorViaSelection {
+            return OptionImpl<SessionCreatorViaSelection>(kt: kt)
+        } else {
+            fatalError()
+        }
     }
 }
 
@@ -112,6 +122,23 @@ extension SessionOption : PractisoOptionViewable {
             header: session.name,
             title: String(localized: "Created \(relativeTime)"),
             subtitle: String(localized: "\(quizCount) questions")
+        )
+    }
+}
+
+extension SessionCreatorViaSelection : PractisoOptionViewable {
+    var view: PractisoOptionView {
+        let header = switch self.type {
+            case .recentlyCreated:
+                String(localized: "Recently created")
+            case .failMuch:
+                String(localized: "Recommended for you")
+            case .leastAccessed:
+                String(localized: "Least accessed")
+            }
+        return PractisoOptionView(
+            header: header,
+            subtitle: preview
         )
     }
 }

@@ -32,6 +32,7 @@
 		6A3EF6F52D5AF32D0088589B /* Service */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Service; sourceTree = "<group>"; };
 		6A567C2E2D5837C700D97C1D /* Composed */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Composed; sourceTree = "<group>"; };
 		6A9D7F7E2D548CC800A57747 /* View */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = View; sourceTree = "<group>"; };
+		6AAABA1B2D75ECF4008A818A /* Style */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Style; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +75,7 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				6AAABA1B2D75ECF4008A818A /* Style */,
 				6A0E3A022D5F72E70087FD38 /* Helper */,
 				6A3EF6F52D5AF32D0088589B /* Service */,
 				6A03DC1B2D2ADEA900AF3F06 /* AHAP */,
@@ -119,6 +121,7 @@
 				6A3EF6F52D5AF32D0088589B /* Service */,
 				6A567C2E2D5837C700D97C1D /* Composed */,
 				6A9D7F7E2D548CC800A57747 /* View */,
+				6AAABA1B2D75ECF4008A818A /* Style */,
 			);
 			name = iosApp;
 			packageProductDependencies = (
