@@ -33,6 +33,7 @@ struct SessionCreatorView : View {
                                 Button("Next") {
                                     navigationPath.append(.completion)
                                 }
+                                .disabled(sessionParams.name.trimmingCharacters(in: .whitespaces).isEmpty)
                             }
                     case .completion:
                         CompletionView {
@@ -47,6 +48,7 @@ struct SessionCreatorView : View {
                     Button("Next") {
                         navigationPath.append(.specification)
                     }
+                    .disabled(sessionParams.selection.isEmpty)
                 }
         }
     }

@@ -13,6 +13,12 @@ struct SessionParameters {
             self.quizIds = quizIds
             self.dimensionIds = dimensionIds
         }
+        
+        var isEmpty: Bool {
+            get {
+                dimensionIds.isEmpty && quizIds.isEmpty
+            }
+        }
     }
     
     init(name: String, selection: Selection = Selection()) {
