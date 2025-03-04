@@ -99,6 +99,7 @@ struct SessionCreatorView : View {
                     sessionParams.selection
                 }, set: { newValue in
                     sessionParams = SessionParameters(name: sessionParams.name, selection: newValue)
+                    selectedSuggestion = nil
                 }), searchText: searchText, data: Binding(get: {
                     if case .ok(let quizzes, let dims) = browserState {
                         .ok(isBrowserExpanded ? quizzes : Array(quizzes[0..<5]), dims)

@@ -80,9 +80,27 @@ struct QuestionSelector : View {
             })
         } set: { newValue in
             if newValue {
-                
+                selection = SessionParameters.Selection(quizIds: selection.quizIds.union([quiz.id]), dimensionIds: selection.dimensionIds)
             } else {
-                
+                if selection.quizIds.contains(quiz.id) {
+                    selection = SessionParameters.Selection(quizIds: selection.quizIds.subtracting([quiz.id]), dimensionIds: selection.dimensionIds)
+                } else {
+                    let relatedDims = selection.dimensionIds.map { id in
+                        dims.first(where: {$0.dimension.id == id})
+                    }.filter { q in
+                        q != nil
+                    } as! [DimensionQuizzes]
+                    var relatedQuiz = selection.quizIds
+                    for dim in relatedDims {
+                        for q in dim.quizzes {
+                            if q.id == quiz.id {
+                                continue
+                            }
+                            relatedQuiz.insert(q.id)
+                        }
+                    }
+                    selection = SessionParameters.Selection(quizIds: relatedQuiz, dimensionIds: selection.dimensionIds.subtracting(relatedDims.map(\.dimension.id)))
+                }
             }
         }
     }
