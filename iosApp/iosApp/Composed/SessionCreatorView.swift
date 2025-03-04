@@ -76,7 +76,7 @@ struct SessionCreatorView : View {
                     if let creator = newValue?.kt as? ComposeApp.SessionCreator {
                         sessionParams = .init(from: creator)
                     }
-                }))
+                }), searchText: searchText)
                 
                 Divider()
                     .padding(.leading)

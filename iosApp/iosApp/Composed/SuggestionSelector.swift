@@ -11,10 +11,12 @@ struct SuggestionSelector : View {
     }
     
     @Binding var selection: (any Option)?
+    var searchText: String
     @State private var data: DataState = .pending
     
-    init(selection: Binding<(any Option)?> = Binding.constant(nil)) {
+    init(selection: Binding<(any Option)?> = Binding.constant(nil), searchText: String = "") {
         self._selection = selection
+        self.searchText = searchText
     }
     
     var body: some View {
@@ -28,7 +30,7 @@ struct SuggestionSelector : View {
                 .foregroundStyle(.secondary)
             case .ok(let array):
                 LazyVStack(spacing: 0) {
-                    ForEach(array, id: \.id) { option in
+                    ForEach({ if searchText.isEmpty { array } else { try! array.filter(isIncluded) }}(), id: \.id) { option in
                         Divider()
                             .padding(.leading)
                         Button {
@@ -60,5 +62,11 @@ struct SuggestionSelector : View {
                 data = .ok(options.map(SessionCreatorOption.from))
             }
         }
+    }
+    
+    private func isIncluded(option: any Option) -> Bool {
+        return option.view.header.contains(searchText)
+        || option.view.title?.contains(searchText) == true
+        || option.view.subtitle?.contains(searchText) == true
     }
 }
