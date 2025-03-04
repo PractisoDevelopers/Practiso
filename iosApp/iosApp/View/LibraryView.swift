@@ -32,14 +32,34 @@ struct LibraryView: View {
             ForEach($sections) { $section in
                 Section(isExpanded: $section.isExpanded, content: {
                     ForEach(section.options) { option in
-                        NavigationLink(value: option.id) {
-                            Label(option.name, systemImage: option.systemImage)
+                        Item(option: option) {
+                            destination = option.id
                         }
                     }
                 }, header: {
                     Text(section.id)
                 })
             }
+        }
+    }
+    
+    private struct Item : View {
+        let option: LibraryOption
+        @ObservedObject private var dropDelegate: HoverableDropDelegate
+        init(option: LibraryOption, trigger: @escaping () -> Void) {
+            self.option = option
+            self.dropDelegate = HoverableDropDelegate(trigger: trigger)
+        }
+
+        var body: some View {
+            NavigationLink(value: option.id) {
+                Label(option.name, systemImage: option.systemImage)
+            }
+            .opacity(dropDelegate.flicker ? 0.4 : 1)
+            .onDrop(
+                of: [.psarchive, .psquiz],
+                delegate: dropDelegate
+            )
         }
     }
 }
