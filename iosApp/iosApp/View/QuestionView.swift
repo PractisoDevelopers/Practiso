@@ -59,7 +59,7 @@ struct QuestionView: View {
         }
         .toolbar {
             if editMode == .inactive {
-                ToolbarItem {
+                ToolbarItem(placement: .primaryAction) {
                     Menu("Add", systemImage: "plus") {
                         Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
                             isArchiveImporterShown = true
