@@ -82,13 +82,14 @@ struct SessionView: View {
                         if let (sessionId, takeId) = (await errorHandler.catchAndShowImmediately {
                             try await creator.create()
                         }) {
+                            creatorModel = SessionCreatorView.Model()
                         }
                     } else {
                         let creator = SessionCreator(params: creatorModel.sessionParams)
                         if let sessionId = (await errorHandler.catchAndShowImmediately {
                             try await creator.create()
                         }) {
-                            
+                            creatorModel = SessionCreatorView.Model()
                         }
                     }
                 }
