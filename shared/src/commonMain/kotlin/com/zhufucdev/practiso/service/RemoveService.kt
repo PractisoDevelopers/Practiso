@@ -56,4 +56,10 @@ class RemoveService(private val db: AppDatabase) {
             db.dimensionQueries.removeDimension(id)
         }
     }
+
+    suspend fun removeSession(id: Long) {
+        db.transaction {
+            db.sessionQueries.removeSession(id)
+        }
+    }
 }
