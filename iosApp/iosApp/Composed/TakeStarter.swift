@@ -50,10 +50,13 @@ struct TakeStarter : View {
                 
                 VStack(alignment: .leading) {
                     Spacer()
-                    VStack(alignment: .leading) {
-                        Text(stat.name)
-                        Text("\(stat.countQuizTotal) questions")
-                            .font(.subheadline)
+                    HStack(spacing: 12) {
+                        CircularProgressView(value: Double(stat.countQuizDone) / Double(stat.countQuizTotal))
+                        VStack(alignment: .leading) {
+                            Text(stat.name)
+                            Text("\(100 * stat.countQuizDone / stat.countQuizTotal)% done")
+                                .font(.subheadline)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
