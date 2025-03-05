@@ -22,7 +22,7 @@ extension ContentView {
                 switch self.state {
                 case .hidden:
                     return false
-                case .shown(let message):
+                case .shown(_):
                     return true
                 }
             } set: { newValue in
