@@ -15,6 +15,7 @@ struct SessionView: View {
     @State var sessions: OptionState<OptionImpl<SessionOption>> = .pending
     @State var takes: OptionState<TakeStat> = .pending
     @State var isCreatorShown = false
+    @State var creatorModel = SessionCreatorView.Model()
 
     var body: some View {
         Group {
@@ -72,18 +73,18 @@ struct SessionView: View {
             }
         }
         .sheet(isPresented: $isCreatorShown) {
-            SessionCreatorView { sessionParameters, takeParameters, task in
+            SessionCreatorView(model: $creatorModel) { task in
                 isCreatorShown = false
                 
                 Task {
-                    if let takeParam = takeParameters {
-                        let creator = SessionTakeCreator(session: sessionParameters, take: takeParam)
+                    if let takeParam = creatorModel.takeParams {
+                        let creator = SessionTakeCreator(session: creatorModel.sessionParams, take: takeParam)
                         if let (sessionId, takeId) = (await errorHandler.catchAndShowImmediately {
                             try await creator.create()
                         }) {
                         }
                     } else {
-                        let creator = SessionCreator(params: sessionParameters)
+                        let creator = SessionCreator(params: creatorModel.sessionParams)
                         if let sessionId = (await errorHandler.catchAndShowImmediately {
                             try await creator.create()
                         }) {
