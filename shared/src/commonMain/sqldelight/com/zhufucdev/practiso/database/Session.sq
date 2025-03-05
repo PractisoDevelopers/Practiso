@@ -93,6 +93,9 @@ VALUES (?, ?);
 updateSessionAccessTime:
 UPDATE session SET lastAccessTimeISO = ? WHERE id = ?;
 
+updateSessionAccessTimeByTakeId:
+UPDATE session SET lastAccessTimeISO = ? WHERE id = (SELECT sessionId FROM take WHERE id = ?);
+
 removeSession:
 DELETE FROM session WHERE id == ?;
 
