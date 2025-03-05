@@ -53,7 +53,7 @@ struct QuestionDetailView : View {
                         }
                     } else {
                         Question(
-                            frames: quizFrames.frames.sorted(by: { $0.priority < $1.priority }).map(\.frame),
+                            frames: quizFrames.frames,
                             namespace: question
                         )
                     }

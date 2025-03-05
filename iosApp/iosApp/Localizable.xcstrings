@@ -32,6 +32,9 @@
     "%lld min" : {
 
     },
+    "%lld questions" : {
+
+    },
     "%lld sec" : {
 
     },
@@ -273,6 +276,9 @@
 
     },
     "Session" : {
+
+    },
+    "Session is empty" : {
 
     },
     "Session name" : {
