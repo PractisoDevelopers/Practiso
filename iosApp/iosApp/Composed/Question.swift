@@ -6,6 +6,16 @@ struct Question : View {
     let frames: [Frame]
     let namespace: Namespace.ID
     
+    init(frames: [Frame], namespace: Namespace.ID) {
+        self.frames = frames
+        self.namespace = namespace
+    }
+    
+    init(frames: [PrioritizedFrame], namespace: Namespace.ID) {
+        self.frames = frames.sorted(by: { $0.priority < $1.priority }).map(\.frame)
+        self.namespace = namespace
+    }
+    
     var body: some View {
         ScrollView {
             LazyVStack {

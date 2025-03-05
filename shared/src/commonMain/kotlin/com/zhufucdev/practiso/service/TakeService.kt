@@ -16,6 +16,8 @@ import com.zhufucdev.practiso.datamodel.getQuizFrames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlin.random.Random
@@ -30,6 +32,16 @@ class TakeService(private val db: AppDatabase = Database.app) {
         val creationTime = db.sessionQueries.getTakeById(takeId).executeAsOne().creationTimeISO
         return db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(takeId))
             .map { frames -> frames.shuffled(Random(creationTime.epochSeconds)) }
+    }
+
+    suspend fun getCurrentQuiz(takeId: Long): QuizFrames? {
+        val id = getCurrentQuizId(takeId)
+        val quizzes = getQuizzes(takeId).first()
+        return if (id == null) {
+            quizzes.firstOrNull()
+        } else {
+            quizzes.firstOrNull { it.quiz.id == id }
+        }
     }
 
     suspend fun getCurrentQuizId(takeId: Long): Long? =

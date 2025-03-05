@@ -1,11 +1,12 @@
 import Foundation
 import SwiftUI
-import ComposeApp
+@preconcurrency import ComposeApp
 
 struct TakeStarter : View {
     enum ModelState {
         case pending
         case ok(Model)
+        case empty
     }
     
     let stat: TakeStat
@@ -29,32 +30,50 @@ struct TakeStarter : View {
     
     var body: some View {
         ZStack {
-            VStack(alignment: .leading) {
+            ZStack(alignment: .leading) {
                 Group {
                     switch getModel() {
                     case .pending:
                         Spacer()
+                    case .empty:
+                        Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
                     case .ok(let model):
                         Question(frames: model.question, namespace: internel)
+                            .opacity(0.6)
                     }
                 }
-                .frame(height: 66)
+                .fixedSize()
+                .frame(height: 160, alignment: .top)
                 .frame(maxWidth: .infinity)
-                Text(stat.name)
-                Text("\(stat.countQuizTotal) questions")
-                    .font(.subheadline)
+                .clipped()
+                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2), .init(color: .black, location: 1)], startPoint: .top, endPoint: .bottom))
+                
+                VStack(alignment: .leading) {
+                    Spacer()
+                    VStack(alignment: .leading) {
+                        Text(stat.name)
+                        Text("\(stat.countQuizTotal) questions")
+                            .font(.subheadline)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background {
+                        Rectangle().fill(.regularMaterial)
+                    }
+                }
             }
-            .padding()
         }
         .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.tint)
+            Rectangle().fill(.tint)
         }
+        .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)
         .task {
             let takeService = TakeService(db: Database.shared.app)
-            if let currentQuizId = try? await takeService.getCurrentQuizId(takeId: stat.id) {
-                takeService.getQuizzes(takeId: stat.id, shuffleSeed: <#T##Int64#>)
+            if let quiz = try? await takeService.getCurrentQuiz(takeId: stat.id) {
+                updateModel(newValue: .ok(.init(question: quiz.frames)))
+            } else {
+                updateModel(newValue: .empty)
             }
         }
     }

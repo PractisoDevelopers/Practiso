@@ -24,6 +24,11 @@ struct SessionView: View {
                 } else {
                     List {
                         Section("Takes") {
+                            ForEach(takes, id: \.id) { stat in
+                                TakeStarter(stat: stat)
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .listRowSeparator(.hidden)
                         }
                         Section("Sessions") {
                             ForEach(sessions) { option in
