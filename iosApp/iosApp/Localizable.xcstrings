@@ -54,13 +54,13 @@
     "%lld min" : {
 
     },
-    "%lld questions" : {
-
-    },
     "%lld sec" : {
 
     },
     "%lld%%" : {
+
+    },
+    "%lld%% done" : {
 
     },
     "0%" : {
