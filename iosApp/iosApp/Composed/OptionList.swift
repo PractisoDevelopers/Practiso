@@ -177,7 +177,7 @@ struct OptionList<Content : View, Item : Option>: View {
                         }
                     }
                 }
-                .searchable(text: $searchText, prompt: "Search...")
+                .searchable(text: $searchText)
             }
         }
         .toolbar {
