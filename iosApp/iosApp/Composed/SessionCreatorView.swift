@@ -14,51 +14,59 @@ struct SessionCreatorView : View {
     }
     
     @State private var navigationPath: [Page] = []
-    @State private var sessionParams = SessionParameters(name: "")
-    @State private var takeParams: TimerParameters?
-    
-    let onCreate: (SessionParameters, TimerParameters?, CompletionTask) -> Void
+    @Binding var model: Model
+    let onCreate: (CompletionTask) -> Void
     let onCancel: () -> Void
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            WelcomeView(sessionParams: $sessionParams)
+            WelcomeView(sessionParams: $model.sessionParams, selectedSuggestion: $model.selectedSuggestion)
                 .navigationTitle("Welcome")
                 .navigationDestination(for: Page.self) { page in
                     switch page {
                     case .specification:
-                        SpecificationView(sessionParams: $sessionParams, takeParams: $takeParams)
+                        SpecificationView(sessionParams: $model.sessionParams, takeParams: $model.takeParams)
                             .navigationTitle("Specification")
                             .toolbar {
                                 Button("Next") {
                                     navigationPath.append(.completion)
                                 }
-                                .disabled(sessionParams.name.trimmingCharacters(in: .whitespaces).isEmpty)
+                                .disabled(model.sessionParams.name.trimmingCharacters(in: .whitespaces).isEmpty)
                             }
                     case .completion:
-                        CompletionView {
-                            onCreate(sessionParams, takeParams, $0)
-                        }
+                        CompletionView(onComplete: onCreate)
                         .toolbar {
                             Button("Cancel", action: onCancel)
                         }
                     }
                 }
                 .toolbar {
-                    Button("Next") {
-                        navigationPath.append(.specification)
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Next") {
+                            navigationPath.append(.specification)
+                        }
+                        .disabled(model.sessionParams.selection.isEmpty)
                     }
-                    .disabled(sessionParams.selection.isEmpty)
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Reset") {
+                            model = Model()
+                        }
+                        .disabled(model.isEmpty)
+                    }
+                    ToolbarItem(placement: .status) {
+                        Text("\(model.sessionParams.selection.quizIds.count + model.sessionParams.selection.dimensionIds.count) items selected")
+                            .font(.footnote)
+                    }
                 }
         }
     }
     
     struct WelcomeView : View {
         @Binding var sessionParams: SessionParameters
+        @Binding var selectedSuggestion: (any Option)?
         @State private var searchText = ""
         @State private var isBrowserExpanded = false
         @State private var browserState: QuestionSelector.DataState?
-        @State private var selectedSuggestion: (any Option)? = nil
 
         var body: some View {
             ScrollView {
@@ -315,7 +323,9 @@ struct SessionCreatorView : View {
 }
 
 #Preview {
-    SessionCreatorView { session, timer, task in
+    @Previewable @State var model = SessionCreatorView.Model()
+
+    SessionCreatorView(model: $model) { task in
         
     } onCancel: {
         

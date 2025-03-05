@@ -29,6 +29,28 @@
     "%lld hr" : {
 
     },
+    "%lld items selected" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item selected"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld items selected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld min" : {
 
     },
@@ -258,6 +280,9 @@
 
     },
     "Replace With" : {
+
+    },
+    "Reset" : {
 
     },
     "Resource is Corrupted" : {
