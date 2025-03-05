@@ -4,6 +4,7 @@ import Foundation
 
 struct SessionView: View {
     private let libraryService = LibraryService(db: Database.shared.app)
+    private let removeService = RemoveServiceSync(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
     enum OptionState<T> {
@@ -27,6 +28,13 @@ struct SessionView: View {
                         Section("Sessions") {
                             ForEach(sessions) { option in
                                 OptionListItem(data: option)
+                                    .swipeActions {
+                                        Button("Remove", systemImage: "trash", role: .destructive) {
+                                            errorHandler.catchAndShowImmediately {
+                                                try removeService.removeSession(id: option.kt.id)
+                                            }
+                                        }
+                                    }
                             }
                         }
                     }

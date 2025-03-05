@@ -9,23 +9,22 @@ class RemoveServiceSync(private val db: AppDatabase = Database.app) {
     val service = RemoveService(db)
 
     @Throws(SQLiteException::class)
-    fun removeQuizWithResources(id: Long) {
-        runBlocking {
-            service.removeQuizWithResources(id)
-        }
+    fun removeQuizWithResources(id: Long) = runBlocking {
+        service.removeQuizWithResources(id)
     }
 
     @Throws(SQLiteException::class)
-    fun removeDimensionKeepQuizzes(id: Long) {
-        runBlocking {
-            service.removeDimensionKeepQuizzes(id)
-        }
+    fun removeDimensionKeepQuizzes(id: Long) = runBlocking {
+        service.removeDimensionKeepQuizzes(id)
     }
 
     @Throws(SQLiteException::class)
-    fun removeDimensionWithQuizzes(id: Long) {
-        runBlocking {
-            service.removeDimensionWithQuizzes(id)
-        }
+    fun removeDimensionWithQuizzes(id: Long) = runBlocking {
+        service.removeDimensionWithQuizzes(id)
+    }
+
+    @Throws(SQLiteException::class)
+    fun removeSession(id: Long) = runBlocking {
+        service.removeSession(id)
     }
 }
