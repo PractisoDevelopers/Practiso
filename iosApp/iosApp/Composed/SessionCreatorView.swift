@@ -112,7 +112,7 @@ struct SessionCreatorView : View {
                     selectedSuggestion = nil
                 }), searchText: searchText, data: Binding(get: {
                     if case .ok(let quizzes, let dims) = browserState {
-                        .ok(isBrowserExpanded ? quizzes : Array(quizzes[0..<5]), dims)
+                        .ok(isBrowserExpanded ? quizzes : Array(quizzes[0..<min(5, quizzes.count)]), dims)
                     } else {
                         browserState
                     }
