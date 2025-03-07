@@ -56,6 +56,7 @@ struct QuestionDetailView : View {
                             frames: quizFrames.frames,
                             namespace: question
                         )
+                        .padding(.horizontal)
                     }
                 }
                 .environment(\.editMode, $editMode)

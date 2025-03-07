@@ -61,4 +61,4 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sql-delight" }
-skie = { id = "co.touchlab.skie", version = "0.9.3" }
+skie = { id = "co.touchlab.skie", version = "0.10.1" }

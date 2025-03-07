@@ -84,6 +84,9 @@
     "Alternative Text" : {
 
     },
+    "An error has occurred in %@." : {
+
+    },
     "An error occurred and the document is failed to load" : {
 
     },
@@ -103,6 +106,9 @@
 
     },
     "Close" : {
+
+    },
+    "Confirmation" : {
 
     },
     "Continue without starting" : {
@@ -174,10 +180,16 @@
     "Empty question" : {
 
     },
+    "Error" : {
+
+    },
     "Exclude" : {
 
     },
     "Home" : {
+
+    },
+    "Ignore" : {
 
     },
     "Image" : {
@@ -199,6 +211,9 @@
 
     },
     "Library" : {
+
+    },
+    "library intent model" : {
 
     },
     "Loaded data represents an invalid image." : {
@@ -261,6 +276,9 @@
     "Photo from Library" : {
 
     },
+    "Proceed" : {
+
+    },
     "Question" : {
 
     },
@@ -291,6 +309,9 @@
     "Resource Unavailable" : {
 
     },
+    "Retry" : {
+
+    },
     "Select" : {
 
     },
@@ -311,6 +332,9 @@
     },
     "Sessions" : {
       "extractionState" : "manual"
+    },
+    "Skip" : {
+
     },
     "Source \"%@\" is unavailable." : {
 
@@ -351,6 +375,9 @@
     "Unknown frame type %@" : {
 
     },
+    "unknown scope" : {
+
+    },
     "Unnamed question" : {
 
     },
@@ -361,6 +388,9 @@
 
     },
     "Would you like to delete questions contained as well?" : {
+
+    },
+    "Would you like to import %d questions?" : {
 
     },
     "Would you like to start the newly created session immediately?" : {

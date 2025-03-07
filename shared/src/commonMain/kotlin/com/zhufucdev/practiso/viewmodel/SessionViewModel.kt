@@ -7,17 +7,10 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.TakeStat
-import com.zhufucdev.practiso.datamodel.PractisoOption
-import com.zhufucdev.practiso.datamodel.Selection
-import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.SessionOption
-import com.zhufucdev.practiso.datamodel.getQuizFrames
-import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
@@ -30,17 +23,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import org.jetbrains.compose.resources.getPluralString
-import org.jetbrains.compose.resources.getString
-import resources.Res
-import resources.n_questions_in_dimension
-import resources.new_question_para
-import resources.x_and_n_more_para
 
 class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
