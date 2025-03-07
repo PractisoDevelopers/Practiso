@@ -23,6 +23,7 @@ class ImportServiceSync(db: AppDatabase) {
                 is ImportState.Confirmation -> it.ok.send(Unit)
                 is ImportState.Error -> {
                     if (it.model.exception != null) {
+                        it.cancel.trySend(Unit)
                         throw it.model.exception
                     } else {
                         error("Unspecified error while importing an archive.")

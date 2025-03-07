@@ -9,6 +9,7 @@ import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.getQuizIntensitiesById
 import com.zhufucdev.practiso.datamodel.toOption
 import com.zhufucdev.practiso.datamodel.toOptionFlow
+import com.zhufucdev.practiso.datamodel.toDimensionOptionFlow
 import com.zhufucdev.practiso.datamodel.toTemplateOptionFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -30,7 +31,7 @@ class LibraryService(private val db: AppDatabase = Database.app) {
         db.dimensionQueries.getAllDimensionsWithQuizCount()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .toOptionFlow()
+            .toDimensionOptionFlow()
 
     fun getSessions() =
         db.sessionQueries.getAllSessions()

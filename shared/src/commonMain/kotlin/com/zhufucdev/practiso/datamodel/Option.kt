@@ -142,7 +142,7 @@ fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<DimensionOp
         }
     }
 
-fun Flow<List<GetAllDimensionsWithQuizCount>>.toOptionFlow(): Flow<List<DimensionOption>> =
+fun Flow<List<GetAllDimensionsWithQuizCount>>.toDimensionOptionFlow(): Flow<List<DimensionOption>> =
     map { data ->
         data.map {
             DimensionOption(

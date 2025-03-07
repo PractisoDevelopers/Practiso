@@ -21,8 +21,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingBig
-import com.zhufucdev.practiso.viewmodel.ErrorModel
-import kotlinx.coroutines.channels.SendChannel
+import com.zhufucdev.practiso.viewmodel.stringContent
+import com.zhufucdev.practiso.viewmodel.stringTitle
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource

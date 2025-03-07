@@ -23,7 +23,6 @@ struct Question : View {
                     Item(frame: frame, namespace: namespace)
                 }
             }
-            .padding()
         }
     }
 }
