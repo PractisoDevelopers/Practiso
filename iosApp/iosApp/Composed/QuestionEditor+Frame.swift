@@ -192,7 +192,7 @@ struct ImageFrameEditor<Label : View> : View {
     }
     
     func importImage(from: URL) throws {
-        let name = importService.importImage(importable: Importable(url: from))
+        let name = importService.importImage(namedSource: NamedSource(url: from))
         let cgImage = try loader.load(fileName: name)
         Task {
             await cache.put(name: name, image: cgImage)

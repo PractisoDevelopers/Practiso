@@ -40,7 +40,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.Backdrop
@@ -58,7 +57,7 @@ import com.zhufucdev.practiso.composable.SharedHorizontalDraggableExclusionLock
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.datamodel.DimensionOption
-import com.zhufucdev.practiso.datamodel.Importable
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
@@ -119,7 +118,7 @@ fun LibraryApp(
                 }
 
                 coroutine.launch {
-                    importer.event.import.send(Importable.fromFile(file))
+                    importer.event.import.send(NamedSource.fromFile(file))
                 }
             }
         FloatingPopupButton(

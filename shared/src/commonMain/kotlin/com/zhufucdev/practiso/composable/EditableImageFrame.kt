@@ -33,11 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.datamodel.Frame
-import com.zhufucdev.practiso.datamodel.Importable
-import com.zhufucdev.practiso.helper.copyTo
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.platform.getPlatform
-import com.zhufucdev.practiso.platform.randomUUID
-import com.zhufucdev.practiso.platform.source
 import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.style.PaddingNormal
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
@@ -84,7 +81,7 @@ fun EditableImageFrame(
 
         coroutine.launch {
             val name = withContext(Dispatchers.IO) {
-                importService.importImage(Importable.fromFile(file))
+                importService.importImage(NamedSource.fromFile(file))
             }
 
             onValueChange(value.copy(imageFrame = value.imageFrame.copy(filename = name)))

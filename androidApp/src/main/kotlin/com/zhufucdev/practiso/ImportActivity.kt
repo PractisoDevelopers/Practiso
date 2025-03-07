@@ -13,7 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.ImportDialog
-import com.zhufucdev.practiso.datamodel.Importable
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.style.PractisoTheme
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import okio.source
@@ -45,7 +45,7 @@ class ImportActivity : ComponentActivity() {
                     }
                     if (uri != null) {
                         contentResolver.openInputStream(uri)?.use {
-                            val target = Importable(
+                            val target = NamedSource(
                                 name = uri.path?.split('/')?.lastOrNull()
                                     ?: getString(R.string.generic_file_para),
                                 source = it.source()

@@ -2,7 +2,7 @@ package com.zhufucdev.practiso
 
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.ArchivePack
-import com.zhufucdev.practiso.datamodel.Importable
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.service.ResourceNotFoundException
@@ -13,8 +13,8 @@ class ImportServiceSync(db: AppDatabase) {
     private val service = ImportService(db)
 
     @Throws(AssertionError::class, ResourceNotFoundException::class, CancellationException::class)
-    fun importSingleton(importable: Importable) =
-        runBlocking { service.importSingleton(importable) }
+    fun importSingleton(namedSource: NamedSource) =
+        runBlocking { service.importSingleton(namedSource) }
 
     @Throws(Exception::class, RuntimeException::class)
     fun importAll(pack: ArchivePack) = runBlocking {

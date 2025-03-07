@@ -6,7 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.datamodel.Importable
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.service.ImportState
 import kotlinx.coroutines.channels.Channel
@@ -25,7 +25,7 @@ class ImportViewModel(db: AppDatabase) : ViewModel() {
     val state: StateFlow<ImportState> get() = _state
 
     data class Events(
-        val import: Channel<Importable> = Channel(),
+        val import: Channel<NamedSource> = Channel(),
     )
 
     val event = Events()
