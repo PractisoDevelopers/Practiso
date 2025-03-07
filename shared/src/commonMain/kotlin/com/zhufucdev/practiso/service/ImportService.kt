@@ -3,7 +3,7 @@ package com.zhufucdev.practiso.service
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.ArchivePack
-import com.zhufucdev.practiso.datamodel.Importable
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
@@ -53,7 +53,7 @@ sealed interface ImportState {
 
 class ImportService(private val db: AppDatabase = Database.app) {
     @Throws(IOException::class)
-    fun unarchive(it: Importable): ArchivePack =
+    fun unarchive(it: NamedSource): ArchivePack =
         it.source.gzip().buffer().unarchive()
 
     fun import(pack: ArchivePack) = channelFlow {
@@ -204,12 +204,12 @@ class ImportService(private val db: AppDatabase = Database.app) {
         send(ImportState.Idle)
     }
 
-    fun import(importable: Importable): Flow<ImportState> = channelFlow {
-        send(ImportState.Unarchiving(importable.name))
+    fun import(namedSource: NamedSource): Flow<ImportState> = channelFlow {
+        send(ImportState.Unarchiving(namedSource.name))
         val cancelChannel = Channel<Unit>()
         val pack = withContext(Dispatchers.IO) {
             try {
-                unarchive(importable)
+                unarchive(namedSource)
             } catch (e: Exception) {
                 send(
                     ImportState.Error(
@@ -238,17 +238,17 @@ class ImportService(private val db: AppDatabase = Database.app) {
         }
     }
 
-    fun importImage(importable: Importable): String {
-        val name = randomUUID() + "." + importable.name.split(".").last()
+    fun importImage(namedSource: NamedSource): String {
+        val name = randomUUID() + "." + namedSource.name.split(".").last()
         val platform = getPlatform()
-        importable.source.buffer().readAll(
+        namedSource.source.buffer().readAll(
             platform.resourceSink(name)
         )
         return name
     }
 
     /**
-     * Import an [Importable] which represents only one
+     * Import an [NamedSource] which represents only one
      * [com.zhufucdev.practiso.datamodel.QuizArchive],
      * throwing [ArchiveAssertionException] if there's more
      * than one quiz or [EmptyArchiveException] otherwise.
@@ -259,8 +259,8 @@ class ImportService(private val db: AppDatabase = Database.app) {
      * @return id of the imported quiz.
      */
     @Throws(AssertionError::class, ResourceNotFoundException::class, CancellationException::class)
-    suspend fun importSingleton(importable: Importable): Long {
-        val unpack = unarchive(importable)
+    suspend fun importSingleton(namedSource: NamedSource): Long {
+        val unpack = unarchive(namedSource)
         if (unpack.archives.quizzes.size > 1) {
             throw ArchiveAssertionException()
         } else if (unpack.archives.quizzes.isEmpty()) {

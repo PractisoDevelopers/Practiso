@@ -22,10 +22,10 @@ enum SingleQuizTransferError : LocalizedError {
     }
 }
 
-private func importQuiz(importable: Importable) throws -> QuizOption {
+private func importQuiz(source: NamedSource) throws -> QuizOption {
     let serivce = ImportServiceSync(db: Database.shared.app)
     do {
-        let quizId = try serivce.importSingleton(importable: importable)
+        let quizId = try serivce.importSingleton(namedSource: source)
         
         let query = QueryService(db: Database.shared.app)
         return query.getQuizOption(quizId: quizId)!
@@ -64,7 +64,7 @@ extension QuizOption : @retroactive Transferable {
         DataRepresentation(contentType: .psarchive) { option in
             try option.data()
         } importing: { data in
-            try importQuiz(importable: Importable(data: data))
+            try importQuiz(source: NamedSource(data: data))
         }.suggestedFileName(\.view.header)
     }
 }

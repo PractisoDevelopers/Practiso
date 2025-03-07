@@ -5,8 +5,8 @@ import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.FrameArchive
-import com.zhufucdev.practiso.datamodel.Importable
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.QuizDocument
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
@@ -43,8 +43,8 @@ object DocumentService {
         }
 
     @Throws(IOException::class)
-    fun unarchive(importable: Importable): List<QuizDocument> {
-        val pack = importable.source.gzip().buffer().unarchive()
+    fun unarchive(namedSource: NamedSource): List<QuizDocument> {
+        val pack = namedSource.source.gzip().buffer().unarchive()
         return pack.archives.quizzes.map {
             var id = 0L
             val frames = it.frames.map { archive ->

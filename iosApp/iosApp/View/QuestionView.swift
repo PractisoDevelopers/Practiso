@@ -106,7 +106,7 @@ struct QuestionView: View {
             switch item {
             case .binary(let data):
                 if let pack = (errorHandler.catchAndShowImmediately {
-                    try archiveService.unarchive(it: Importable(data: data))
+                    try archiveService.unarchive(it: NamedSource(data: data))
                 }) {
                     packs.append(pack)
                 } else {
@@ -114,7 +114,7 @@ struct QuestionView: View {
                 }
             case .url(let url):
                 if let pack = (errorHandler.catchAndShowImmediately {
-                   try archiveService.unarchive(it: Importable(url: url))
+                    try archiveService.unarchive(it: NamedSource(url: url))
                 }) {
                     packs.append(pack)
                 } else {

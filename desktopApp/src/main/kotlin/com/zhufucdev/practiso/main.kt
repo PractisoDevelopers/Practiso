@@ -16,7 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.singleWindowApplication
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.zhufucdev.practiso.datamodel.Importable
+import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
 import com.zhufucdev.practiso.platform.Navigation
@@ -71,7 +71,7 @@ fun main(args: Array<String>) {
                     openFileChannel.onReceive { file ->
                         file.forEach { file ->
                             file.inputStream().use { ips ->
-                                val target = Importable(
+                                val target = NamedSource(
                                     name = file.name,
                                     source = ips.source()
                                 )
