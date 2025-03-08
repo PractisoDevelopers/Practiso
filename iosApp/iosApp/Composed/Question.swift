@@ -17,11 +17,9 @@ struct Question : View {
     }
     
     var body: some View {
-        ScrollView {
-            LazyVStack {
-                ForEach(frames, id: \.id) { frame in
-                    Item(frame: frame, namespace: namespace)
-                }
+        LazyVStack {
+            ForEach(frames, id: \.id) { frame in
+                Item(frame: frame, namespace: namespace)
             }
         }
     }
