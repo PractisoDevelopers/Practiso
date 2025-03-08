@@ -90,7 +90,7 @@ extension DimensionDetailView {
         }
         
         var body: some View {
-            FileGridItem(title: Text(quizName), caption: Text("\(Int((data.intensity * 100).rounded()))%")) {
+            FileGridItem(title: Text(quizName), caption: Text("\(Int((intensityBuffer * 100).rounded()))%")) {
                 FileIcon()
                     .contextMenu {
                         Button("Change Intensity", systemImage: "dial.high") {
