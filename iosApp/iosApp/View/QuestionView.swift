@@ -33,6 +33,7 @@ struct QuestionView: View {
                         try removeService.removeQuizWithResources(id: option)
                     }
                 }
+                selection = Set()
             }
         ) { option in
             OptionListItem(data: option)
