@@ -140,6 +140,7 @@ struct QuestionSelector : View {
                         }
                     } preview: {
                         QuestionPreview(data: data.quiz)
+                            .padding()
                     }
             }
             .overlay {

@@ -101,7 +101,7 @@ extension DimensionDetailView {
                         }
                     } preview: {
                         QuestionPreview(data: data.quiz)
-                            .padding(.vertical)
+                            .padding()
                     }
             }
             .popover(isPresented: $isPopoverPresented) {
