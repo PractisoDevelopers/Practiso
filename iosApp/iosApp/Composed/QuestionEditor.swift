@@ -9,18 +9,18 @@ struct QuestionEditor : View {
     @Binding var history: History
     
     var body: some View {
-        List(data, id: \.id) { frame in
+        List(data, id: \.utid) { frame in
             Item(frame: Binding(get: {
                 frame
             }, set: { newValue in
                 updateFrame(newValue: newValue)
             }), namespace: namespace) {
-                deleteFrame(id: frame.id)
+                deleteFrame(value: frame)
             }
             .padding(.vertical, 8)
             .swipeActions(edge: .trailing) {
                 Button("Delete", systemImage: "trash.fill", role: .destructive) {
-                    deleteFrame(id: frame.id)
+                    deleteFrame(value: frame)
                 }
             }
         }
@@ -59,8 +59,8 @@ struct QuestionEditor : View {
         }
     }
     
-    func deleteFrame(id: Int64) {
-        let index = data.firstIndex { $0.id == id }!
+    func deleteFrame(value: Frame) {
+        let index = data.firstIndex { $0.id == value.id && type(of: $0) == type(of: value) }!
         let mod: Modification = .delete(frame: data[index], at: index)
         history.append(mod)
         redo(mod)
@@ -75,7 +75,7 @@ struct QuestionEditor : View {
     }
 
     func updateFrame(newValue: Frame) {
-        let index = data.firstIndex { $0.id == newValue.id }!
+        let index = data.firstIndex { $0.id == newValue.id && type(of: $0) == type(of: newValue) }!
         let mod: Modification = .update(oldValue: data[index], newValue: newValue)
         history.append(mod)
         redo(mod)
@@ -84,7 +84,7 @@ struct QuestionEditor : View {
     func undo(_ mod: Modification) {
         switch mod {
         case .update(let oldValue, let newValue):
-            let index = data.firstIndex { $0.id == newValue.id }!
+            let index = data.firstIndex { $0.id == newValue.id && type(of: $0) == type(of: newValue) }!
             data = Array(data[..<index] + [oldValue] + data[(index + 1)...])
             
         case .push(_, let at):
@@ -101,7 +101,7 @@ struct QuestionEditor : View {
     func redo(_ mod: Modification) {
         switch mod {
         case .update(_, let newValue):
-            let index = data.firstIndex { $0.id == newValue.id }!
+            let index = data.firstIndex { $0.id == newValue.id && type(of: $0) == type(of: newValue) }!
             data = Array(data[..<index] + [newValue] + data[(index + 1)...])
 
         case .push(let value, let at):
