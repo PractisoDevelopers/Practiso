@@ -15,6 +15,7 @@ struct TakeStarter : View {
     
     private let useOwnModel: Bool
     @State private var ownModel: ModelState = .pending
+    @State private var isReady: Bool = false
     @Namespace private var internel
     
     init(stat: TakeStat, model: Binding<ModelState>? = nil) {
@@ -27,6 +28,7 @@ struct TakeStarter : View {
             self.useOwnModel = true
         }
     }
+    
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -55,7 +57,8 @@ struct TakeStarter : View {
                     Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
                 case .ok(let model):
                     Question(frames: model.question, namespace: internel)
-                        .opacity(0.6)
+                        .opacity(isReady ? 0.6 : 0)
+                        .animation(.default, value: isReady)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -90,6 +93,15 @@ struct TakeStarter : View {
             ownModel = newValue
         } else {
             model = newValue
+        }
+        DispatchQueue.main.schedule {
+            withAnimation {
+                if case .ok(_) = newValue {
+                    isReady = true
+                } else {
+                    isReady = false
+                }
+            }
         }
     }
 }
