@@ -52,10 +52,12 @@ struct QuestionDetailView : View {
                             staging = quizFrames.frames.map(\.frame)
                         }
                     } else {
-                        Question(
-                            frames: quizFrames.frames,
-                            namespace: question
-                        )
+                        ScrollView {
+                            Question(
+                                frames: quizFrames.frames,
+                                namespace: question
+                            )
+                        }
                         .padding(.horizontal)
                     }
                 }

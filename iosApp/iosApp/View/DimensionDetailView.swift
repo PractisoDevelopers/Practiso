@@ -96,6 +96,7 @@ extension DimensionDetailView {
                     }
                 } preview: {
                     QuestionPreview(data: data.quiz)
+                        .padding(.vertical)
                 }
                 .popover(isPresented: $isPopoverPresented) {
                     DimensionIntensitySlider(value: $intensityBuffer)

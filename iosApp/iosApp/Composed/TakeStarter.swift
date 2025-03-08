@@ -9,9 +9,9 @@ struct TakeStarter : View {
         case empty
     }
     
+    private let libraryService = LibraryService(db: Database.shared.app)
     let stat: TakeStat
     @Binding var model: ModelState
-    let libraryService = LibraryService(db: Database.shared.app)
     
     private let useOwnModel: Bool
     @State private var ownModel: ModelState = .pending
@@ -29,45 +29,41 @@ struct TakeStarter : View {
     }
     
     var body: some View {
-        ZStack {
-            ZStack(alignment: .leading) {
-                Group {
-                    switch getModel() {
-                    case .pending:
-                        Spacer()
-                    case .empty:
-                        Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
-                    case .ok(let model):
-                        Question(frames: model.question, namespace: internel)
-                            .opacity(0.6)
-                    }
-                }
-                .fixedSize()
-                .frame(height: 160, alignment: .top)
-                .frame(maxWidth: .infinity)
-                .clipped()
-                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2), .init(color: .black, location: 1)], startPoint: .top, endPoint: .bottom))
-                
+        VStack(alignment: .leading) {
+            Spacer()
+            HStack(spacing: 12) {
+                CircularProgressView(value: Double(stat.countQuizDone) / Double(stat.countQuizTotal))
                 VStack(alignment: .leading) {
-                    Spacer()
-                    HStack(spacing: 12) {
-                        CircularProgressView(value: Double(stat.countQuizDone) / Double(stat.countQuizTotal))
-                        VStack(alignment: .leading) {
-                            Text(stat.name)
-                            Text("\(100 * stat.countQuizDone / stat.countQuizTotal)% done")
-                                .font(.subheadline)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background {
-                        Rectangle().fill(.regularMaterial)
-                    }
+                    Text(stat.name)
+                    Text("\(100 * stat.countQuizDone / stat.countQuizTotal)% done")
+                        .font(.subheadline)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background {
+                Rectangle().fill(.regularMaterial)
+            }
+        }
+        .frame(height: 160)
+        .background {
+            Group {
+                switch getModel() {
+                case .pending:
+                    Spacer()
+                case .empty:
+                    Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
+                case .ok(let model):
+                    Question(frames: model.question, namespace: internel)
+                        .opacity(0.6)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2), .init(color: .black, location: 1)], startPoint: .top, endPoint: .bottom))
+            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2), .init(color: .black, location: 1)], startPoint: .leading, endPoint: .trailing))
         }
         .background {
-            Rectangle().fill(.tint)
+            Rectangle().fill(Color(accentColorFrom: "\(stat.name)\(stat.id)"))
         }
         .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)
