@@ -77,6 +77,10 @@ extension DimensionDetailView {
         @State private var isPopoverPresented = false
         @State private var intensityBuffer: Double
         
+        private var quizName: String {
+            data.quiz.name ?? String(localized: "Empty question")
+        }
+
         init(data: QuizIntensity, dimensionId: Int64, service: CategorizeServiceSync) {
             self.data = data
             self.dimensionId = dimensionId
@@ -86,51 +90,40 @@ extension DimensionDetailView {
         }
         
         var body: some View {
-            QuestionIntensity(quiz: data.quiz, intensity: intensityBuffer)
-                .contextMenu {
-                    Button("Change Intensity", systemImage: "dial.high") {
-                        isPopoverPresented = true
+            FileGridItem(title: Text(quizName), caption: Text("\(Int((data.intensity * 100).rounded()))%")) {
+                FileIcon()
+                    .contextMenu {
+                        Button("Change Intensity", systemImage: "dial.high") {
+                            isPopoverPresented = true
+                        }
+                        Button("Exclude", systemImage: "folder.badge.minus", role: .destructive) {
+                            service.disassociate(quizId: data.quiz.id, dimensionId: dimensionId)
+                        }
+                    } preview: {
+                        QuestionPreview(data: data.quiz)
+                            .padding(.vertical)
                     }
-                    Button("Exclude", systemImage: "folder.badge.minus", role: .destructive) {
-                        service.disassociate(quizId: data.quiz.id, dimensionId: dimensionId)
-                    }
-                } preview: {
-                    QuestionPreview(data: data.quiz)
-                        .padding(.vertical)
+            }
+            .popover(isPresented: $isPopoverPresented) {
+                DimensionIntensitySlider(value: $intensityBuffer)
+                    .padding()
+                    .frame(minWidth: 300, idealWidth: 360)
+                    .presentationCompactAdaptation(.popover)
+            }
+            .onTapGesture {
+                isPopoverPresented = true
+            }
+            .onChange(of: isPopoverPresented) { _, newValue in
+                if !newValue {
+                    service.updateIntensity(quizId: data.quiz.id, dimensionId: dimensionId, value: intensityBuffer)
                 }
-                .popover(isPresented: $isPopoverPresented) {
-                    DimensionIntensitySlider(value: $intensityBuffer)
-                        .padding()
-                        .frame(minWidth: 300, idealWidth: 360)
-                        .presentationCompactAdaptation(.popover)
-                }
-                .onTapGesture {
-                    isPopoverPresented = true
-                }
-                .onChange(of: isPopoverPresented) { _, newValue in
-                    if !newValue {
-                        service.updateIntensity(quizId: data.quiz.id, dimensionId: dimensionId, value: intensityBuffer)
-                    }
-                }
-                .draggable({
-                    let service = QueryService(db: Database.shared.app)
-                    return service.getQuizOption(quizId: data.quiz.id)!
-                }())
+            }
+            .draggable({
+                let service = QueryService(db: Database.shared.app)
+                return service.getQuizOption(quizId: data.quiz.id)!
+            }())
         }
         
-        private struct QuestionIntensity : View {
-            let quiz: Quiz
-            let intensity: Double
-            
-            private var quizName: String {
-                quiz.name ?? String(localized: "Empty question")
-            }
-            
-            var body: some View {
-                FileGridItem(title: Text(quizName), caption: Text("\(Int((intensity * 100).rounded()))%"))
-            }
-        }
-
         private func updateIntensity(_ newValue: Double) {
             service.updateIntensity(quizId: data.quiz.id, dimensionId: dimensionId, value: newValue)
         }
