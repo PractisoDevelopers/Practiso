@@ -65,6 +65,7 @@ struct SessionCreatorView : View {
         @Binding var sessionParams: SessionParameters
         @Binding var selectedSuggestion: (any Option)?
         @State private var searchText = ""
+        @State private var isSearchExpanded = false
         @State private var isBrowserExpanded = false
         @State private var browserState: QuestionSelector.DataState?
 
@@ -93,7 +94,7 @@ struct SessionCreatorView : View {
                     Text("Browse")
                         .foregroundStyle(.secondary)
                     Spacer()
-                    if case .ok(let quizzes, _) = browserState, quizzes.count > 5 {
+                    if case .ok(let quizzes, _) = browserState, quizzes.count > 5 && !isSearchExpanded {
                         Button(isBrowserExpanded ? "Less" : "More") {
                             isBrowserExpanded = !isBrowserExpanded
                         }
@@ -112,7 +113,7 @@ struct SessionCreatorView : View {
                     selectedSuggestion = nil
                 }), searchText: searchText, data: Binding(get: {
                     if case .ok(let quizzes, let dims) = browserState {
-                        .ok(isBrowserExpanded ? quizzes : Array(quizzes[0..<min(5, quizzes.count)]), dims)
+                        .ok(isBrowserExpanded || isSearchExpanded ? quizzes : Array(quizzes[0..<min(5, quizzes.count)]), dims)
                     } else {
                         browserState
                     }
@@ -123,7 +124,7 @@ struct SessionCreatorView : View {
                 .padding()
             }
             .listStyle(.inset)
-            .searchable(text: $searchText)
+            .searchable(text: $searchText, isPresented: $isSearchExpanded)
         }
     }
     
