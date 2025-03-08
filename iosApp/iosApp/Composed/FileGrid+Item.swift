@@ -1,16 +1,14 @@
 import Foundation
 import SwiftUI
 
-struct FileGridItem<Title : View, Caption : View> : View {
+struct FileGridItem<Icon : View, Title : View, Caption : View> : View {
     let title: Title
     let caption: Caption
-    
+    @ViewBuilder let icon: Icon
+
     var body: some View {
         VStack {
-            Image("Document")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 54, height: 54)
+            icon
             title
                 .multilineTextAlignment(.center)
             caption

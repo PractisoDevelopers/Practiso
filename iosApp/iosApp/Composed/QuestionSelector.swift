@@ -132,20 +132,22 @@ struct QuestionSelector : View {
             FileGridItem(
                 title: Text(data.quiz.name ?? "New question"),
                 caption: Text(Date(kt: data.quiz.creationTimeISO), format: .relative(presentation: .numeric))
-            )
+            ) {
+                FileIcon()
+                    .contextMenu {
+                        Button(isOn ? "Deselect" : "Select", systemImage: "checkmark.circle") {
+                            isOn = !isOn
+                        }
+                    } preview: {
+                        QuestionPreview(data: data.quiz)
+                    }
+            }
             .overlay {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .checkmarkStyle(isEnabled: true)
             }
             .onTapGesture {
                 isOn = !isOn
-            }
-            .contextMenu {
-                Button(isOn ? "Deselect" : "Select", systemImage: "checkmark.circle") {
-                    isOn = !isOn
-                }
-            } preview: {
-                QuestionPreview(data: data.quiz)
             }
         }
     }
