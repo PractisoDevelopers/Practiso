@@ -17,8 +17,8 @@ struct Question : View {
     }
     
     var body: some View {
-        LazyVStack {
-            ForEach(frames, id: \.id) { frame in
+        VStack {
+            ForEach(frames, id: \.utid) { frame in
                 Item(frame: frame, namespace: namespace)
             }
         }
