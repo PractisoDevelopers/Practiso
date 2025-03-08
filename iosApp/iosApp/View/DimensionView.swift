@@ -28,7 +28,17 @@ struct DimensionView: View {
                 selection = newValue
             }),
             onDelete: { options in
-                isDeletingActionsShown = true
+                if data.items.first(where: { options.contains($0.id) && $0.kt.quizCount > 0 }) != nil {
+                    isDeletingActionsShown = true
+                } else {
+                    withAnimation {
+                        errorHandler.catchAndShowImmediately {
+                            for id in options {
+                                try removeService.removeDimensionKeepQuizzes(id: id)
+                            }
+                        }
+                    }
+                }
             }
         ) { option in
             Item(option: option)
@@ -45,6 +55,7 @@ struct DimensionView: View {
                         }
                     } else {
                         Button {
+                            selection = Set([option.id])
                             isDeletingActionsShown = true
                         } label: {
                             Label("Delete", systemImage: "trash")
@@ -61,6 +72,7 @@ struct DimensionView: View {
                         try removeService.removeDimensionWithQuizzes(id: id)
                     }
                 }
+                selection = Set()
             }
             Button("Keep Questions") {
                 for id in selection {
@@ -68,6 +80,7 @@ struct DimensionView: View {
                         try removeService.removeDimensionKeepQuizzes(id: id)
                     }
                 }
+                selection = Set()
             }
         }, message: {
             Text("Would you like to delete questions contained as well?")
