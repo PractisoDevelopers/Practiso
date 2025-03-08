@@ -13,6 +13,7 @@ struct ArchiveDocumentView : View {
     let onClose: () -> Void
     @State private var importState: ImportState = .idle
     @State private var isImporting = false
+    @State private var isImportCompletionShown = false
     
     init(url: URL, onClose: @escaping () -> Void) {
         self.url = url
@@ -49,7 +50,6 @@ struct ArchiveDocumentView : View {
                                 }
                             }
                         }
-                        .importAlert(state: importState, isPresented: $isImporting)
                     } else {
                         Text("This archive is empty")
                     }
@@ -65,19 +65,31 @@ struct ArchiveDocumentView : View {
                 }
             }
         }
+        .onChange(of: url) { _, _ in
+            isImporting = false
+        }
+        .importAlert(state: importState, isPresented: $isImporting)
+        .toolbar {
+            if isImportCompletionShown {
+                ToolbarItem(placement: .status) {
+                    Text("Import Completed")
+                        .font(.footnote)
+                }
+            }
+        }
         .task(id: isImporting) {
             if !isImporting {
                 importState = .idle
                 return
             }
-            
+            isImportCompletionShown = false
             let service = ImportService(db: Database.shared.app)
             for await state in service.import(namedSource: NamedSource(url: self.url)) {
                 self.importState = .init(kt: state)
             }
-            isImporting = false
-        }
-        .onChange(of: url) { _, _ in
+            isImportCompletionShown = true
+            try? await Task.sleep(for: .seconds(10))
+            isImportCompletionShown = false
             isImporting = false
         }
     }
@@ -122,6 +134,13 @@ fileprivate extension View {
                     Text("An error has occurred in \(String(appScope: model.scope)).")
                     if let err = model.exception {
                         Text(err.description())
+                    }
+                }
+            case .importing(let total, let done):
+                toolbar {
+                    ToolbarItem(placement: .status) {
+                        Text("Importing \(total) items, \(done) completed...")
+                            .font(.footnote)
                     }
                 }
             default:
