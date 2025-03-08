@@ -55,6 +55,7 @@ struct QuestionView: View {
                     }
                 } preview: {
                     QuestionPreview(data: option.kt.quiz)
+                        .padding()
                 }
 
         }
