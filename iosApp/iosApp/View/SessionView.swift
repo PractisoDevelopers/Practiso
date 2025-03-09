@@ -51,12 +51,16 @@ struct SessionView: View {
         }
         .task {
             for await option in libraryService.getSessions() {
-                sessions = .ok(option.map(OptionImpl.init))
+                withAnimation {
+                    sessions = .ok(option.map(OptionImpl.init))
+                }
             }
         }
         .task {
             for await stat in libraryService.getRecentTakes() {
-                takes = .ok(stat)
+                withAnimation {
+                    takes = .ok(stat)
+                }
             }
         }
         .toolbar {
