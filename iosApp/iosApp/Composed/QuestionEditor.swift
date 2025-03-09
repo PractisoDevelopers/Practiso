@@ -138,7 +138,6 @@ private struct Item : View {
     let onDelete: () -> Void
     
     @State private var isEditingContent = false
-    @Namespace private var internel
     
     var body: some View {
         switch frame {
@@ -164,8 +163,7 @@ private struct Item : View {
                             OptionsFrameViewItem(frame: option.frame)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .matchedGeometryEffect(id: "\(frame.id)#\(option.frame.id)", in: namespace)
-                        .matchedGeometryEffect(id: option.frame.id, in: internel)
+                        .matchedGeometryEffect(id: option.frame.utid, in: namespace)
                     }
                 } else {
                     OptionsFrameView(frame: options, showName: false) { option in
@@ -192,7 +190,7 @@ private struct Item : View {
                             )
                         }
                         .padding(.vertical, 4)
-                        .matchedGeometryEffect(id: option.frame.id, in: internel)
+                        .matchedGeometryEffect(id: option.frame.utid, in: namespace)
                     }
 
                     Menu {
@@ -241,11 +239,11 @@ private struct Item : View {
                 frame: $frame,
                 imageFrameEditorLabel: { frame, data in
                     ImageFrameView(frame: frame, data: data)
-                        .matchedGeometryEffect(id: frame.id, in: namespace)
+                        .matchedGeometryEffect(id: frame.utid, in: namespace)
                 },
                 textFrameEditor: { text in
                     DebouncedTextField(text: text)
-                        .matchedGeometryEffect(id: frame.id, in: namespace)
+                        .matchedGeometryEffect(id: frame.utid, in: namespace)
                 },
                 onDelete: onDelete
             )

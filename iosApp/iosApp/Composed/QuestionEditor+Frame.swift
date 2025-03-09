@@ -114,7 +114,7 @@ private struct DataUrl: Transferable {
 
 struct ImageFrameEditor<Label : View> : View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
-    @Environment(ImageFrameView.Cache.self) private var cache
+    @Environment(\.imageCache) private var cache
     @Environment(\.imageService) private var loader
     
     @Binding var frame: ImageFrame

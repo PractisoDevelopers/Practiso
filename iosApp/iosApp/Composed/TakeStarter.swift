@@ -9,17 +9,21 @@ struct TakeStarter : View {
         case empty
     }
     
-    private let libraryService = LibraryService(db: Database.shared.app)
     let stat: TakeStat
     @Binding var model: ModelState
+    let namespace: Namespace.ID
+    
+    private let libraryService = LibraryService(db: Database.shared.app)
+    @Environment(ContentView.Model.self) private var contentModel
     
     private let useOwnModel: Bool
     @State private var ownModel: ModelState = .pending
     @State private var isReady: Bool = false
-    @Namespace private var internel
+    @State private var isLocked: Bool = false
     
-    init(stat: TakeStat, model: Binding<ModelState>? = nil) {
+    init(stat: TakeStat, namespace: Namespace.ID, model: Binding<ModelState>? = nil) {
         self.stat = stat
+        self.namespace = namespace
         if let m = model {
             self._model = m
             self.useOwnModel = false
@@ -28,7 +32,6 @@ struct TakeStarter : View {
             self.useOwnModel = true
         }
     }
-    
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -47,7 +50,7 @@ struct TakeStarter : View {
                 Rectangle().fill(.regularMaterial)
             }
         }
-        .frame(height: 160)
+        .frame(idealHeight: 160)
         .background {
             Group {
                 switch getModel() {
@@ -56,7 +59,7 @@ struct TakeStarter : View {
                 case .empty:
                     Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
                 case .ok(let model):
-                    Question(frames: model.question, namespace: internel)
+                    Question(frames: model.question, namespace: namespace)
                         .opacity(isReady ? 0.6 : 0)
                         .animation(.default, value: isReady)
                 }
@@ -70,6 +73,16 @@ struct TakeStarter : View {
         }
         .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)
+        .onTapGesture {
+            let cache: [PrioritizedFrame]? = if case .ok(let model) = getModel() {
+                model.question
+            } else {
+                nil
+            }
+            withAnimation {
+                contentModel.answering = .shown(takeId: stat.id, cache: cache)
+            }
+        }
         .task {
             let takeService = TakeService(db: Database.shared.app)
             if let quiz = try? await takeService.getCurrentQuiz(takeId: stat.id) {

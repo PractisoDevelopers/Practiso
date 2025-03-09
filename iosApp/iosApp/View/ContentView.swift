@@ -6,6 +6,7 @@ import Combine
 struct ContentView: View {
     @ObservedObject private var model = Model()
     @ObservedObject private var errorHandler = ErrorHandler()
+    @Namespace private var namespace
     
     var body: some View {
         NavigationSplitView {
@@ -23,7 +24,7 @@ struct ContentView: View {
                 QuestionView()
                     .navigationTitle("Question")
             default:
-                SessionView()
+                SessionView(namespace: namespace)
                     .navigationTitle("Session")
             }
         } detail: {
@@ -51,6 +52,23 @@ struct ContentView: View {
                 EmptyView()
             case .shown(let message):
                 Text(message)
+            }
+        }
+        .overlay {
+            if case .shown(let takeId, let initial) = model.answering {
+                NavigationStack {
+                    AnswerView(takeId: takeId, namespace: namespace, initialQuizFrames: initial)
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button("Close") {
+                                    withAnimation {
+                                        model.answering = .idle
+                                    }
+                                }
+                            }
+                        }
+                }
+                .matchedGeometryEffect(id: takeId, in: namespace)
             }
         }
         .environmentObject(model)

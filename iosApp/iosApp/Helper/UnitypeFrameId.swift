@@ -3,16 +3,37 @@ import ComposeApp
 
 extension Frame {
     var utid: Int128 {
-        let typeId : Int128 = switch self {
-        case is FrameText:
-            1
-        case is FrameImage:
-            2
-        case is FrameOptions:
-            3
+        switch self {
+        case let t as FrameText:
+            t.textFrame.utid
+        case let i as FrameImage:
+            i.imageFrame.utid
+        case let o as FrameOptions:
+            o.optionsFrame.utid
         default:
-            0
+            Int128(self.id)
         }
-        return (typeId << 64) | Int128(self.id)
+    }
+}
+
+protocol UnitypeFrameId {
+    var utid: Int128 { get }
+}
+
+extension ImageFrame : UnitypeFrameId {
+    var utid: Int128 {
+        return (2 << 64) | Int128(self.id)
+    }
+}
+
+extension TextFrame : UnitypeFrameId {
+    var utid: Int128 {
+        return (1 << 64) | Int128(self.id)
+    }
+}
+
+extension OptionsFrame : UnitypeFrameId {
+    var utid: Int128 {
+        return (3 << 64) | Int128(self.id)
     }
 }

@@ -3,19 +3,22 @@ import Foundation
 @preconcurrency import ComposeApp
 
 struct SessionView: View {
+    let namespace: Namespace.ID
+    
     private let libraryService = LibraryService(db: Database.shared.app)
     private let removeService = RemoveServiceSync(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
+    @Environment(ContentView.Model.self) private var contentModel
     
-    enum OptionState<T> {
+    private enum DataState<T> {
         case pending
         case ok([T])
     }
     
-    @State var sessions: OptionState<OptionImpl<SessionOption>> = .pending
-    @State var takes: OptionState<TakeStat> = .pending
-    @State var isCreatorShown = false
-    @State var creatorModel = SessionCreatorView.Model()
+    @State private var sessions: DataState<OptionImpl<SessionOption>> = .pending
+    @State private var takes: DataState<TakeStat> = .pending
+    @State private var isCreatorShown = false
+    @State private var creatorModel = SessionCreatorView.Model()
 
     var body: some View {
         Group {
@@ -26,8 +29,7 @@ struct SessionView: View {
                     List {
                         Section("Takes") {
                             ForEach(takes, id: \.id) { stat in
-                                TakeStarter(stat: stat)
-                                    .frame(maxWidth: .infinity)
+                                TakeItem(stat: stat, namespace: namespace)
                             }
                             .listRowSeparator(.hidden)
                         }
@@ -100,6 +102,19 @@ struct SessionView: View {
             } onCancel: {
                 isCreatorShown = false
             }
+        }
+    }
+    
+    struct TakeItem : View {
+        let stat: TakeStat
+        let namespace: Namespace.ID
+        
+        @Environment(ContentView.Model.self) private var contentModel
+        
+        var body: some View {
+            TakeStarter(stat: stat, namespace: namespace)
+                .frame(maxWidth: .infinity)
+                .matchedGeometryEffect(id: stat.id, in: namespace, isSource: true)
         }
     }
 }
