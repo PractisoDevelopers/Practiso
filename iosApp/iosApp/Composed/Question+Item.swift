@@ -11,10 +11,10 @@ extension Question {
             switch frame {
             case let text as FrameText:
                 TextFrameView(frame: text.textFrame)
-                    .matchedGeometryEffect(id: frame.id, in: namespace)
+                    .matchedGeometryEffect(id: frame.utid, in: namespace)
             case let image as FrameImage:
                 ImageFrameView(frame: image.imageFrame)
-                    .matchedGeometryEffect(id: frame.id, in: namespace)
+                    .matchedGeometryEffect(id: frame.utid, in: namespace)
             case let options as FrameOptions:
                 VStack {
                     OptionsFrameView(frame: options) { item in
@@ -22,7 +22,7 @@ extension Question {
                             OptionsFrameViewItem(frame: item.frame)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .matchedGeometryEffect(id: "\(frame.id)#\(item.frame.id)", in: namespace)
+                        .matchedGeometryEffect(id: item.frame.utid, in: namespace)
                     }
                 }
             default:

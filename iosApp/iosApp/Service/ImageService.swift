@@ -20,14 +20,3 @@ enum ImageServiceError : LocalizedError {
 protocol ImageService : Observable, Sendable {
     func load(fileName: String) throws(ImageServiceError) -> CGImage
 }
-
-struct ImageServiceKey : EnvironmentKey {
-    static let defaultValue: any ImageService = ResourceImageService.shared
-}
-
-extension EnvironmentValues {
-    var imageService: any ImageService {
-        get { self[ImageServiceKey.self] }
-        set { self[ImageServiceKey.self] = newValue }
-    }
-}

@@ -18,7 +18,6 @@ struct QuestionDetailView : View {
     @State private var data: DataState = .pending
     @State private var staging: [Frame]? = nil
     @State private var editHistory = History()
-    @State private var cache = ImageFrameView.Cache()
     @State private var titleBuffer: String
     @Namespace private var question
     
@@ -62,7 +61,6 @@ struct QuestionDetailView : View {
                     }
                 }
                 .environment(\.editMode, $editMode)
-                .environmentObject(cache)
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         if editMode.isEditing {
