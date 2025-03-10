@@ -189,6 +189,9 @@
     "Exclude" : {
 
     },
+    "Explore" : {
+
+    },
     "Home" : {
 
     },
@@ -343,6 +346,9 @@
     "Session" : {
 
     },
+    "Session %@ here" : {
+
+    },
     "Session is empty" : {
 
     },
@@ -401,9 +407,6 @@
 
     },
     "Unsupported data type" : {
-
-    },
-    "Welcome" : {
 
     },
     "Would you like to delete questions contained as well?" : {

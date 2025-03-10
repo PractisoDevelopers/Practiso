@@ -11,5 +11,11 @@ extension SessionCreatorView {
         var isEmpty: Bool {
             return sessionParams.name.isEmpty && sessionParams.selection.isEmpty && takeParams == nil && selectedSuggestion == nil
         }
+        
+        func reset() {
+            sessionParams = SessionParameters(name: "")
+            takeParams = nil
+            selectedSuggestion = nil
+        }
     }
 }
