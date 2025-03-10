@@ -59,7 +59,7 @@ struct TakeStarter : View {
                 case .empty:
                     Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
                 case .ok(let model):
-                    Question(frames: model.question, namespace: namespace)
+                    Question(frames: model.quizFrames.frames, namespace: namespace)
                         .opacity(isReady ? 0.6 : 0)
                         .animation(.default, value: isReady)
                 }
@@ -75,8 +75,8 @@ struct TakeStarter : View {
         .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)
         .onTapGesture {
-            let cache: [PrioritizedFrame]? = if case .ok(let model) = getModel() {
-                model.question
+            let cache: QuizFrames? = if case .ok(let model) = getModel() {
+                model.quizFrames
             } else {
                 nil
             }
@@ -85,9 +85,9 @@ struct TakeStarter : View {
             }
         }
         .task {
-            let takeService = TakeService(db: Database.shared.app)
-            if let quiz = try? await takeService.getCurrentQuiz(takeId: stat.id) {
-                updateModel(newValue: .ok(.init(question: quiz.frames)))
+            let takeService = TakeService(takeId: stat.id, db: Database.shared.app)
+            if let quiz = try? await takeService.getCurrentQuiz() {
+                updateModel(newValue: .ok(.init(quizFrames: quiz)))
             } else {
                 updateModel(newValue: .empty)
             }

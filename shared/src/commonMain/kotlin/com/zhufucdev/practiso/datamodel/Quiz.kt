@@ -73,7 +73,7 @@ sealed interface Frame {
         )
     }
 
-    sealed interface Answerable<T : Answer> : Frame {
+    sealed interface Answerable<T : PractisoAnswer> : Frame {
         fun List<T>.isAdequateNecessary(): Boolean
     }
 
@@ -81,12 +81,12 @@ sealed interface Frame {
     data class Options(
         val optionsFrame: OptionsFrame = OptionsFrame(-1, null),
         val frames: List<KeyedPrioritizedFrame> = emptyList(),
-    ) : Answerable<Answer.Option> {
+    ) : Answerable<PractisoAnswer.Option> {
         override val id: Long
             get() = optionsFrame.id
 
-        override fun List<Answer.Option>.isAdequateNecessary(): Boolean {
-            val optionIds = map(Answer.Option::optionId)
+        override fun List<PractisoAnswer.Option>.isAdequateNecessary(): Boolean {
+            val optionIds = map(PractisoAnswer.Option::optionId)
             return frames.all { !it.isKey && it.frame.id !in optionIds || it.isKey && it.frame.id in optionIds }
         }
 

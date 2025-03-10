@@ -5,25 +5,26 @@ import ComposeApp
 struct AnswerView : View {
     let takeId: Int64
     let namespace: Namespace.ID
+    let service: TakeService
     
     @State private var data: DataState
     
-    init(takeId: Int64, namespace: Namespace.ID, initialQuizFrames: [PrioritizedFrame]? = nil) {
+    init(takeId: Int64, namespace: Namespace.ID, initialQuizFrames: QuizFrames? = nil) {
         self.takeId = takeId
         self.namespace = namespace
+        self.service = TakeService(takeId: takeId, db: Database.shared.app)
         self.data = if let initial = initialQuizFrames {
-            .transition(frames: initial)
+            .transition(qf: initial)
         } else {
             .pending
         }
     }
     
-    let service = TakeService(db: Database.shared.app)
     
     enum DataState {
         case pending
-        case transition(frames: [PrioritizedFrame])
-        case ok(qf: [QuizFrames], answers: [Answer])
+        case transition(qf: QuizFrames)
+        case ok(qf: [QuizFrames], answers: [PractisoAnswer])
     }
     
     var body: some View {
@@ -34,8 +35,8 @@ struct AnswerView : View {
                     ProgressView()
                     Text("Loading Take...")
                 }
-            case .transition(let frames):
-                Page(pframes: frames, answer: [], namespace: namespace)
+            case .transition(let qf):
+                Page(quizFrames: qf, answer: [], service: service, namespace: namespace)
                     .padding(.horizontal)
                     .scrollTargetLayout()
             case .ok(let qf, let answers):
@@ -43,7 +44,7 @@ struct AnswerView : View {
                     ScrollView(.vertical) {
                         LazyVStack(spacing: 0) {
                             ForEach(qf, id: \.quiz.id) { qf in
-                                Page(pframes: qf.frames, answer: answers.filter { $0.quizId == qf.quiz.id }, namespace: namespace)
+                                Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, service: service, namespace: namespace)
                                     .frame(height: proxy.size.height + proxy.safeAreaInsets.top, alignment: .top)
                                     .padding(.horizontal)
                                     .padding(.bottom, proxy.safeAreaInsets.bottom)
@@ -59,10 +60,10 @@ struct AnswerView : View {
         }
         .task(id: takeId) {
             var qf: [QuizFrames]? = nil
-            var answers: [Answer]? = nil
+            var answers: [PractisoAnswer]? = nil
             
             Task {
-                for await quiz in service.getQuizzes(takeId: takeId) {
+                for await quiz in service.getQuizzes() {
                     qf = quiz
                     if let ans = answers {
                         data = .ok(qf: quiz, answers: ans)
@@ -70,7 +71,7 @@ struct AnswerView : View {
                 }
             }
             Task {
-                for await ans in service.getAnswers(takeId: takeId) {
+                for await ans in service.getAnswers() {
                     answers = ans
                     if let quizzes = qf {
                         data = .ok(qf: quizzes, answers: ans)

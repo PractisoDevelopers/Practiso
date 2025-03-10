@@ -8,7 +8,7 @@ import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.Take
 import com.zhufucdev.practiso.database.TimerByTake
-import com.zhufucdev.practiso.datamodel.Answer
+import com.zhufucdev.practiso.datamodel.PractisoAnswer
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.datamodel.calculateTakeNumber
 import com.zhufucdev.practiso.datamodel.getAnswersDataModel
@@ -65,7 +65,7 @@ class TakeService(private val takeId: Long, private val db: AppDatabase = Databa
             .mapToList(Dispatchers.IO)
             .map { t -> t.map(TimerByTake::durationSeconds) }
 
-    fun getAnswers(): Flow<List<Answer>> =
+    fun getAnswers(): Flow<List<PractisoAnswer>> =
         db.sessionQueries
             .getAnswersDataModel(takeId)
 
@@ -82,13 +82,13 @@ class TakeService(private val takeId: Long, private val db: AppDatabase = Databa
         }
     }
 
-    suspend fun commitAnswer(model: Answer, priority: Int) {
+    suspend fun commitAnswer(model: PractisoAnswer, priority: Int) {
         db.transaction {
             model.commit(db, takeId, priority)
         }
     }
 
-    suspend fun rollbackAnswer(model: Answer) {
+    suspend fun rollbackAnswer(model: PractisoAnswer) {
         db.transaction {
             model.rollback(db, takeId)
         }

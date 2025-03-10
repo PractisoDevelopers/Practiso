@@ -117,7 +117,7 @@ suspend fun QuizFrames.toOption() = coroutineScope {
     )
 }
 
-fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<QuizOption>> =
+fun Flow<List<QuizFrames>>.toQuizOptionFlow(): Flow<List<QuizOption>> =
     map { frames ->
         coroutineScope {
             frames.map {
@@ -126,7 +126,7 @@ fun Flow<List<QuizFrames>>.toOptionFlow(): Flow<List<QuizOption>> =
         }
     }
 
-fun Flow<List<DbDimension>>.toOptionFlow(db: QuizQueries): Flow<List<DimensionOption>> =
+fun Flow<List<DbDimension>>.toDimensionOptionFlow(db: QuizQueries): Flow<List<DimensionOption>> =
     map { dimensions ->
         coroutineScope {
             dimensions.map {
@@ -163,7 +163,7 @@ fun DbSessionOption.toOption() =
         quizCount = quizCount.toInt()
     )
 
-fun Flow<List<DbSessionOption>>.toOptionFlow(): Flow<List<SessionOption>> =
+fun Flow<List<DbSessionOption>>.toSessionOptionFlow(): Flow<List<SessionOption>> =
     map { sessions ->
         sessions.map(DbSessionOption::toOption)
     }

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface Answer {
+sealed interface PractisoAnswer {
     val quizId: Long
     val frameId: Long
 
@@ -20,7 +20,7 @@ sealed interface Answer {
 
     @Serializable
     data class Text(val text: String, override val frameId: Long, override val quizId: Long) :
-        Answer {
+        PractisoAnswer {
         override suspend fun commit(db: AppDatabase, takeId: Long, priority: Int) {
             db.sessionQueries.setTextAnswer(
                 quizId,
@@ -38,7 +38,7 @@ sealed interface Answer {
 
     @Serializable
     data class Option(val optionId: Long, override val frameId: Long, override val quizId: Long) :
-        Answer {
+        PractisoAnswer {
         override suspend fun commit(db: AppDatabase, takeId: Long, priority: Int) {
             db.sessionQueries.setOptionAnswer(
                 quizId,
@@ -60,7 +60,7 @@ sealed interface Answer {
     }
 }
 
-fun SessionQueries.getAnswersDataModel(takeId: Long): Flow<List<Answer>> =
+fun SessionQueries.getAnswersDataModel(takeId: Long): Flow<List<PractisoAnswer>> =
     getAnswersByTakeId(takeId)
         .asFlow()
         .mapToList(Dispatchers.IO)
@@ -69,13 +69,13 @@ fun SessionQueries.getAnswersDataModel(takeId: Long): Flow<List<Answer>> =
                 .sortedBy { it.priority }
                 .map {
                     when {
-                        it.textFrameId != null -> Answer.Text(
+                        it.textFrameId != null -> PractisoAnswer.Text(
                             it.answerText!!,
                             it.textFrameId,
                             it.quizId
                         )
 
-                        it.optionsFrameId != null -> Answer.Option(
+                        it.optionsFrameId != null -> PractisoAnswer.Option(
                             it.answerOptionId!!,
                             it.optionsFrameId,
                             it.quizId

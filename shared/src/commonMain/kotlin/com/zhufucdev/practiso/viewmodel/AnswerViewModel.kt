@@ -13,7 +13,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.composable.BitmapRepository
-import com.zhufucdev.practiso.datamodel.Answer
+import com.zhufucdev.practiso.datamodel.PractisoAnswer
 import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.datamodel.SettingsModel
@@ -184,8 +184,8 @@ class AnswerViewModel(
     val imageCache = BitmapRepository()
 
     data class Events(
-        val answer: Channel<Answer> = Channel(),
-        val unanswer: Channel<Answer> = Channel(),
+        val answer: Channel<PractisoAnswer> = Channel(),
+        val unanswer: Channel<PractisoAnswer> = Channel(),
         val updateDuration: Channel<Unit> = Channel(),
         val updateCurrentQuizIndex: Channel<Int> = Channel(),
     )

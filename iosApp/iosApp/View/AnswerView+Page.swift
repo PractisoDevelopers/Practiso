@@ -4,18 +4,18 @@ import ComposeApp
 
 extension AnswerView {
     struct Page : View {
+        let quizId: Int64
         let frames: [Frame]
-        let answer: [Answer]
+        let answer: [PractisoAnswer]
+        let service: TakeService
         let namespace: Namespace.ID
         
-        init(frames: [Frame], answer: [Answer], namespace: Namespace.ID) {
-            self.frames = frames
+        init(quizFrames: QuizFrames, answer: [PractisoAnswer], service: TakeService, namespace: Namespace.ID) {
+            self.quizId = quizFrames.quiz.id
+            self.frames = quizFrames.frames.sorted(by: { $0.priority < $1.priority }).map(\.frame)
             self.answer = answer
+            self.service = service
             self.namespace = namespace
-        }
-        
-        init(pframes: [PrioritizedFrame], answer: [Answer], namespace: Namespace.ID) {
-            self.init(frames: pframes.sorted(by: {$0.priority < $1.priority}).map(\.frame), answer: answer, namespace: namespace)
         }
         
         var body: some View {
@@ -23,7 +23,8 @@ extension AnswerView {
                 ForEach(frames, id: \.utid) { frame in
                     switch onEnum(of: frame) {
                     case .answerable(let frame):
-                        StatefulFrame(data: frame, answers: answer.filter { $0.frameId == frame.id }, namespace: namespace)
+                        StatefulFrame(quizId: quizId, data: frame, answers: answer.filter { $0.frameId == frame.id },
+                                      service: service, namespace: namespace)
                     default:
                         StatelessFrame(data: frame, namespace: namespace)
                     }
@@ -35,7 +36,7 @@ extension AnswerView {
     struct StatelessFrame : View {
         let data: Frame
         let namespace: Namespace.ID
-
+        
         var body: some View {
             switch onEnum(of: data) {
             case .answerable(_):
@@ -51,13 +52,19 @@ extension AnswerView {
     }
     
     struct StatefulFrame : View {
+        @Environment(ContentView.ErrorHandler.self) private var errorHandler
+        
+        let quizId: Int64
         let data: FrameAnswerable
-        let answers: [Answer]
+        let answers: [PractisoAnswer]
+        let service: TakeServiceSync
         let namespace: Namespace.ID
         
-        init(data: FrameAnswerable, answers: [Answer], namespace: Namespace.ID) {
+        init(quizId: Int64, data: FrameAnswerable, answers: [PractisoAnswer], service: TakeService, namespace: Namespace.ID) {
+            self.quizId = quizId
             self.data = data
             self.answers = answers
+            self.service = TakeServiceSync(base: service)
             self.namespace = namespace
         }
         
@@ -65,8 +72,29 @@ extension AnswerView {
             switch onEnum(of: data) {
             case .options(let options):
                 VStack(alignment: .leading) {
-                    ForEach(options.frames, id: \.frame.utid) { option in
-                        OptionAnswerFrame(data: option, isSelected: answers.contains(where: { $0.frameId == option.frame.id }), namespace: namespace)
+                    ForEach(Array(options.frames.enumerated()), id: \.element.frame.utid) { index, option in
+                        OptionAnswerFrame(
+                            data: option,
+                            isSelected: Binding(get: {
+                                answers.contains(where: {
+                                    if let o = $0 as? PractisoAnswerOption {
+                                        o.optionId == option.frame.id
+                                    } else {
+                                        false
+                                    }
+                                })
+                            }, set: { newValue in
+                                let answer = PractisoAnswerOption(optionId: option.frame.id, frameId: data.id, quizId: quizId)
+                                errorHandler.catchAndShowImmediately {
+                                    if newValue {
+                                        try service.commitAnswer(model: answer, priority: Int32(index))
+                                    } else {
+                                        try service.rollbackAnswer(model: answer)
+                                    }
+                                }
+                            }),
+                            namespace: namespace
+                        )
                     }
                 }
             }
@@ -74,16 +102,15 @@ extension AnswerView {
         
         struct OptionAnswerFrame : View {
             let data: KeyedPrioritizedFrame
-            @State var isSelected: Bool
+            @Binding var isSelected: Bool
             let namespace: Namespace.ID
             
             var body: some View {
-                Checkmark(isOn: Binding(get: {
-                    isSelected
-                }, set: { newValue in
-                    isSelected = newValue
-                })) {
+                Checkmark(isOn: $isSelected) {
                     StatelessFrame(data: data.frame, namespace: namespace)
+                }
+                .onTapGesture {
+                    isSelected = !isSelected
                 }
             }
         }
