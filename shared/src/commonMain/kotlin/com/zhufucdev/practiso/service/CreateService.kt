@@ -6,7 +6,7 @@ import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.getQuizFrames
-import com.zhufucdev.practiso.datamodel.toOptionFlow
+import com.zhufucdev.practiso.datamodel.toQuizOptionFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlin.time.Duration
@@ -18,7 +18,7 @@ class CreateService(private val db: AppDatabase = Database.app) {
             db.quizQueries.lastInsertRowId().executeAsOne()
         }
         return db.quizQueries.getQuizFrames(db.quizQueries.getQuizById(id))
-            .toOptionFlow()
+            .toQuizOptionFlow()
             .first()
             .first()
     }

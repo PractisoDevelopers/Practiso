@@ -13,8 +13,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.composable.BitmapRepository
-import com.zhufucdev.practiso.database.Session
-import com.zhufucdev.practiso.database.Take
 import com.zhufucdev.practiso.datamodel.Answer
 import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.QuizFrames
@@ -24,17 +22,19 @@ import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.service.TakeService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -43,65 +43,46 @@ import kotlinx.datetime.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AnswerViewModel(
     state: SavedStateHandle,
     val settings: SettingsModel,
-    val takeService: TakeService = TakeService(),
 ) : ViewModel() {
-    val session = MutableStateFlow<Session?>(null)
-    val takeNumber by lazy {
-        MutableStateFlow<Int?>(null).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                take.map { it?.id }.distinctUntilChanged().collectLatest { id ->
-                    if (id != null) {
-                        takeService.getTakeNumber(id)
-                            .collect(this@apply)
-                    } else {
-                        emit(null)
-                    }
-                }
+    /**
+     * Avoid using this flow directly, use [take].id instead
+     */
+    @OptIn(SavedStateHandleSaveableApi::class)
+    @Deprecated(
+        message = "Avoid using this flow directly",
+        replaceWith = ReplaceWith("take.map { it?.id ?: -1 }")
+    )
+    private val takeId
+            by state.saveable(saver = protobufMutableStateFlowSaver<Long>()) { MutableStateFlow(-1L) }
+
+    val takeService: StateFlow<TakeService?> by lazy {
+        MutableStateFlow<TakeService?>(null).apply {
+            viewModelScope.launch {
+                @Suppress("DEPRECATION") // take service has to be derived from takeId
+                takeId.map { it.takeIf { it >= 0 }?.let { TakeService(takeId = it) } }
+                    .collect(this@apply)
             }
         }
     }
-    val answers: StateFlow<List<Answer>?> by lazy {
-        MutableStateFlow<List<Answer>?>(null).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                take.map { it?.id }.distinctUntilChanged().collectLatest {
-                    if (it != null) {
-                        takeService.getAnswers(it)
-                            .collect(this@apply)
-                    } else {
-                        emit(null)
-                    }
-                }
-            }
-        }
-    }
-    val take by lazy {
-        MutableStateFlow<Take?>(null).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                @Suppress("DEPRECATION") // take is derived from takeId
-                takeId.filter { it >= 0 }.distinctUntilChanged().collectLatest {
-                    takeService.getTake(it)
-                        .collect(this@apply)
-                }
-            }
-        }
-    }
-    val quizzes by lazy {
-        MutableStateFlow<List<QuizFrames>?>(null).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                take.map { it?.id to it?.creationTimeISO }
-                    .distinctUntilChanged()
-                    .collectLatest { (id, creationTime) ->
-                        emit(null)
-                        if (id != null && creationTime != null) {
-                            takeService.getQuizzes(id).collect(this@apply)
-                        }
-                    }
-            }
-        }
-    }
+
+    val session = takeService.map { it?.getSession() }.flatMapMerge { it ?: flowOf(null) }
+    val takeNumber: Flow<Int?> =
+        takeService.map { it?.getTakeNumber() }.flatMapMerge { it ?: flowOf(null) }
+    val answers = takeService.map { it?.getAnswers() }.flatMapMerge { it ?: flowOf(null) }
+    val take = takeService.map { it?.getTake() }.flatMapMerge { it ?: flowOf(null) }
+    val quizzes =
+        takeService.map { it?.getQuizzes() }
+            .flatMapMerge { it ?: flowOf(null) }
+            .distinctUntilChanged()
+            .flowOn(Dispatchers.IO)
+    val timers: Flow<List<Double>> =
+        takeService.map { it?.getTimersInSecond() }
+            .distinctUntilChanged()
+            .flatMapMerge { it ?: flowOf(emptyList()) }
     val elapsed by lazy {
         MutableStateFlow<Duration?>(null).apply {
             viewModelScope.launch {
@@ -123,16 +104,6 @@ class AnswerViewModel(
                         emit(currentDuration)
                         startInstant = Clock.System.now()
                     }
-                }
-            }
-        }
-    }
-    val timers by lazy {
-        MutableStateFlow<List<Double>>(emptyList()).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                take.filterNotNull().collectLatest {
-                    takeService.getTimersInSecond(it.id)
-                        .collect(this@apply)
                 }
             }
         }
@@ -179,39 +150,36 @@ class AnswerViewModel(
     }
 
     val pageState by lazy {
-        MutableStateFlow<PageState?>(null).apply {
-            viewModelScope.launch {
-                settings.answerPageStyle.collectLatest { style ->
-                    quizzes.map {
-                        it?.let { q ->
-                            when (style) {
-                                PageStyle.Horizontal -> {
-                                    PageState.Pager.Horizontal(
-                                        quizzes = q,
-                                        state = PagerState(getCurrentQuizIndex()) { q.size }
-                                    )
-                                }
+        settings.answerPageStyle
+            .map { style ->
+                quizzes.map {
+                    it?.let { q ->
+                        when (style) {
+                            PageStyle.Horizontal -> {
+                                PageState.Pager.Horizontal(
+                                    quizzes = q,
+                                    state = PagerState(getCurrentQuizIndex()) { q.size }
+                                )
+                            }
 
-                                PageStyle.Vertical -> {
-                                    PageState.Pager.Vertical(
-                                        quizzes = q,
-                                        state = PagerState(getCurrentQuizIndex()) { q.size }
-                                    )
-                                }
+                            PageStyle.Vertical -> {
+                                PageState.Pager.Vertical(
+                                    quizzes = q,
+                                    state = PagerState(getCurrentQuizIndex()) { q.size }
+                                )
+                            }
 
-                                PageStyle.Column -> {
-                                    PageState.Column(
-                                        quizzes = q,
-                                        state = LazyListState(getCurrentQuizIndex())
-                                    )
-                                }
+                            PageStyle.Column -> {
+                                PageState.Column(
+                                    quizzes = q,
+                                    state = LazyListState(getCurrentQuizIndex())
+                                )
                             }
                         }
                     }
-                        .collect(this@apply)
                 }
             }
-        }
+            .flatMapMerge { it }
     }
     val imageCache = BitmapRepository()
 
@@ -224,48 +192,31 @@ class AnswerViewModel(
 
     val event = Events()
 
-    /**
-     * Avoid using this flow directly, use [take].id instead
-     */
-    @OptIn(SavedStateHandleSaveableApi::class)
-    @Deprecated(
-        message = "Avoid using this flow directly",
-        replaceWith = ReplaceWith("take.map { it?.id ?: -1 }")
-    )
-    private val takeId
-            by state.saveable(saver = protobufMutableStateFlowSaver<Long>()) { MutableStateFlow(-1L) }
-
     suspend fun loadNavOptions(options: List<NavigationOption>) {
         val takeId =
             (options.lastOrNull { it is NavigationOption.OpenTake } as NavigationOption.OpenTake?)?.takeId
 
         elapsed.emit(null)
         if (takeId != null) {
-            val session = takeService.getSession(takeId).firstOrNull()!!
-
-            this.session.emit(session)
-
-            takeService.updateAccessTime(takeId)
-            @Suppress("DEPRECATION")
+            @Suppress("DEPRECATION") // this is the data source
             this.takeId.emit(takeId)
+
+            val service = takeService.first() ?: return
+            service.updateAccessTime()
         }
     }
 
     suspend fun getCurrentQuizIndex(): Int {
-        val take = take.filterNotNull().first()
-        val quizzes = quizzes.filterNotNull().first()
-        val targetId = takeService.getCurrentQuizId(take.id)
-        return if (targetId != null) {
-            maxOf(0, quizzes.indexOfFirst { it.quiz.id == targetId })
-        } else {
-            0
-        }
+        val targetId = takeService.first()?.getCurrentQuizId() ?: return 0
+        return maxOf(
+            0,
+            quizzes.first()?.indexOfFirst { it.quiz.id == targetId } ?: 0
+        )
     }
 
     suspend fun updateDurationDb() {
-        val take = take.filterNotNull().first()
-        val elapsed = elapsed.filterNotNull().first()
-        takeService.updateDuration(take.id, elapsed.inWholeSeconds)
+        val elapsed = elapsed.value ?: return
+        takeService.value?.updateDuration(elapsed.inWholeSeconds)
     }
 
     init {
@@ -273,13 +224,11 @@ class AnswerViewModel(
             while (viewModelScope.isActive) {
                 select<Unit> {
                     event.answer.onReceive {
-                        val take = take.filterNotNull().first()
-                        takeService.commitAnswer(it, take.id, getCurrentQuizIndex())
+                        takeService.value?.commitAnswer(it, getCurrentQuizIndex())
                     }
 
                     event.unanswer.onReceive {
-                        val take = take.filterNotNull().first()
-                        takeService.rollbackAnswer(it, take.id)
+                        takeService.value?.rollbackAnswer(it)
                     }
 
                     event.updateDuration.onReceive {
@@ -287,12 +236,11 @@ class AnswerViewModel(
                     }
 
                     event.updateCurrentQuizIndex.onReceive {
-                        val quizzes = quizzes.filterNotNull().first()
-                        if (it >= quizzes.size || it < 0) {
+                        val quizzes = quizzes.first()
+                        if (quizzes == null || it >= quizzes.size || it < 0) {
                             return@onReceive
                         }
-                        val takeId = take.filterNotNull().first().id
-                        takeService.updateCurrentQuizId(quizzes[it].quiz.id, takeId)
+                        takeService.value?.updateCurrentQuizId(quizzes[it].quiz.id)
                     }
                 }
             }

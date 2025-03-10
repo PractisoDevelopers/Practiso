@@ -10,9 +10,10 @@ import com.zhufucdev.practiso.datamodel.DimensionQuizzes
 import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.getQuizIntensitiesById
-import com.zhufucdev.practiso.datamodel.toOption
-import com.zhufucdev.practiso.datamodel.toOptionFlow
 import com.zhufucdev.practiso.datamodel.toDimensionOptionFlow
+import com.zhufucdev.practiso.datamodel.toOption
+import com.zhufucdev.practiso.datamodel.toQuizOptionFlow
+import com.zhufucdev.practiso.datamodel.toSessionOptionFlow
 import com.zhufucdev.practiso.datamodel.toTemplateOptionFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -28,7 +29,7 @@ class LibraryService(private val db: AppDatabase = Database.app) {
 
     fun getQuizzes() =
         db.quizQueries.getQuizFrames(db.quizQueries.getAllQuiz())
-            .toOptionFlow()
+            .toQuizOptionFlow()
 
     fun getDimensions() =
         db.dimensionQueries.getAllDimensionsWithQuizCount()
@@ -40,7 +41,7 @@ class LibraryService(private val db: AppDatabase = Database.app) {
         db.sessionQueries.getAllSessionOptions()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .toOptionFlow()
+            .toSessionOptionFlow()
 
     fun getRecentTakes() =
         db.sessionQueries.getRecentTakeStats(5)

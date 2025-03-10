@@ -13,7 +13,8 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.getQuizFrames
-import com.zhufucdev.practiso.datamodel.toOptionFlow
+import com.zhufucdev.practiso.datamodel.toDimensionOptionFlow
+import com.zhufucdev.practiso.datamodel.toQuizOptionFlow
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +51,7 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                     launch(Dispatchers.IO) {
                         val quizFrames = db.quizQueries
                             .getQuizFrames(db.quizQueries.getAllQuiz())
-                            .toOptionFlow()
+                            .toQuizOptionFlow()
                             .first()
                             .filter {
                                 it.quiz.name?.let { name -> tokens.any { t -> t in name } } == true
@@ -68,7 +69,7 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                             .getAllDimensions()
                             .asFlow()
                             .mapToList(Dispatchers.IO)
-                            .toOptionFlow(db.quizQueries)
+                            .toDimensionOptionFlow(db.quizQueries)
                             .first()
                             .filter { tokens.any { t -> t in it.dimension.name } }
                         mutex.lock()
