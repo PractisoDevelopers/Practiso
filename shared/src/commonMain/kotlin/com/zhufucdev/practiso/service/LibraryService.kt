@@ -2,9 +2,12 @@ package com.zhufucdev.practiso.service
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.SessionOptionView
 import com.zhufucdev.practiso.datamodel.DimensionQuizzes
+import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.getQuizIntensitiesById
 import com.zhufucdev.practiso.datamodel.toOption
@@ -34,10 +37,10 @@ class LibraryService(private val db: AppDatabase = Database.app) {
             .toDimensionOptionFlow()
 
     fun getSessions() =
-        db.sessionQueries.getAllSessions()
+        db.sessionQueries.getAllSessionOptions()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .toOptionFlow(db.sessionQueries)
+            .toOptionFlow()
 
     fun getRecentTakes() =
         db.sessionQueries.getRecentTakeStats(5)
@@ -70,4 +73,9 @@ class LibraryService(private val db: AppDatabase = Database.app) {
                 }
             }
 
+    fun getSession(id: Long): Flow<SessionOption> =
+        db.sessionQueries.getSessionOptionById(id)
+            .asFlow()
+            .mapToOne(Dispatchers.IO)
+            .map(SessionOptionView::toOption)
 }

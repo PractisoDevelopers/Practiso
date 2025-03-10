@@ -70,6 +70,7 @@ struct TakeStarter : View {
         }
         .background {
             Rectangle().fill(Color(accentColorFrom: "\(stat.name)\(stat.id)"))
+                .matchedGeometryEffect(id: stat.id, in: namespace)
         }
         .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)

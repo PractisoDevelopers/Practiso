@@ -6,7 +6,6 @@ import com.zhufucdev.practiso.database.GetAllDimensionsWithQuizCount
 import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.QuizQueries
 import com.zhufucdev.practiso.database.Session
-import com.zhufucdev.practiso.database.SessionQueries
 import com.zhufucdev.practiso.database.Template
 import com.zhufucdev.practiso.datamodel.PractisoOption.View
 import kotlinx.coroutines.async
@@ -24,10 +23,11 @@ import resources.n_questions_span
 import resources.new_question_para
 import resources.new_template_para
 import resources.no_description_para
+import kotlin.collections.map
 
 private typealias DbQuiz = Quiz
 private typealias DbDimension = Dimension
-private typealias DbSession = Session
+private typealias DbSessionOption = com.zhufucdev.practiso.database.SessionOptionView
 
 sealed interface PractisoOption {
     val id: Long
@@ -77,7 +77,7 @@ data class DimensionOption(val dimension: DbDimension, val quizCount: Int) : Pra
         get() = dimension.name
 }
 
-data class SessionOption(val session: DbSession, val quizCount: Int) : PractisoOption {
+data class SessionOption(val session: Session, val quizCount: Int) : PractisoOption {
     override val id: Long
         get() = session.id
 
@@ -152,20 +152,20 @@ fun Flow<List<GetAllDimensionsWithQuizCount>>.toDimensionOptionFlow(): Flow<List
         }
     }
 
-fun Flow<List<DbSession>>.toOptionFlow(db: SessionQueries): Flow<List<SessionOption>> =
+fun DbSessionOption.toOption() =
+    SessionOption(
+        session = Session(
+            id = id,
+            name = name,
+            creationTimeISO = creationTimeISO,
+            lastAccessTimeISO = lastAccessTimeISO
+        ),
+        quizCount = quizCount.toInt()
+    )
+
+fun Flow<List<DbSessionOption>>.toOptionFlow(): Flow<List<SessionOption>> =
     map { sessions ->
-        coroutineScope {
-            sessions.map {
-                async {
-                    SessionOption(
-                        session = it,
-                        quizCount = db.getQuizCountBySession(it.id)
-                            .executeAsOne()
-                            .toInt()
-                    )
-                }
-            }.awaitAll()
-        }
+        sessions.map(DbSessionOption::toOption)
     }
 
 fun Flow<List<Template>>.toTemplateOptionFlow() = map { it.map { t -> TemplateOption(t) } }
