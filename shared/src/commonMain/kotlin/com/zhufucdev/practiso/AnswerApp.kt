@@ -133,10 +133,10 @@ fun AnswerApp(model: AnswerViewModel) {
     Scaffold(
         topBar = {
             Box {
-                val takeNumber by model.takeNumber.collectAsState()
-                val session by model.session.collectAsState()
+                val takeNumber by model.takeNumber.collectAsState(null)
+                val session by model.session.collectAsState(null)
                 val elapsed by model.elapsed.collectAsState()
-                val timers by model.timers.collectAsState()
+                val timers by model.timers.collectAsState(emptyList())
                 AppTopBar(
                     takeNumber = takeNumber,
                     secondaryTextState = rememberSecondaryTextState(
@@ -157,7 +157,7 @@ fun AnswerApp(model: AnswerViewModel) {
                         model.event.updateCurrentQuizIndex.send(index)
                     }
                     val showAccuracy by model.settings.showAccuracy.collectAsState()
-                    val answers by model.answers.collectAsState()
+                    val answers by model.answers.collectAsState(null)
                     val errorRanges by remember(answers, it.quizzes, showAccuracy) {
                         derivedStateOf {
                             if (showAccuracy && answers != null)
@@ -352,7 +352,7 @@ private fun AppTopBar(
 
 @Composable
 private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerViewModel) {
-    val answers by model.answers.collectAsState()
+    val answers by model.answers.collectAsState(null)
     val showAccuracy by model.settings.showAccuracy.collectAsState()
     Column(modifier) {
         quiz.frames.forEach { frame ->

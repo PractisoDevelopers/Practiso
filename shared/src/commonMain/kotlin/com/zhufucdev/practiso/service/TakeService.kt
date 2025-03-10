@@ -17,26 +17,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlin.random.Random
 
-class TakeService(private val db: AppDatabase = Database.app) {
-    fun getTake(takeId: Long): Flow<Take> =
+class TakeService(private val takeId: Long, private val db: AppDatabase = Database.app) {
+    fun getTake(): Flow<Take> =
         db.sessionQueries.getTakeById(takeId)
             .asFlow()
             .mapToOne(Dispatchers.IO)
 
-    fun getQuizzes(takeId: Long): Flow<List<QuizFrames>> {
+    fun getQuizzes(): Flow<List<QuizFrames>> {
         val creationTime = db.sessionQueries.getTakeById(takeId).executeAsOne().creationTimeISO
         return db.quizQueries.getQuizFrames(db.sessionQueries.getQuizzesByTakeId(takeId))
             .map { frames -> frames.shuffled(Random(creationTime.epochSeconds)) }
     }
 
-    suspend fun getCurrentQuiz(takeId: Long): QuizFrames? {
-        val id = getCurrentQuizId(takeId)
-        val quizzes = getQuizzes(takeId).first()
+    suspend fun getCurrentQuiz(): QuizFrames? {
+        val id = getCurrentQuizId()
+        val quizzes = getQuizzes().first()
         return if (id == null) {
             quizzes.firstOrNull()
         } else {
@@ -44,58 +43,58 @@ class TakeService(private val db: AppDatabase = Database.app) {
         }
     }
 
-    suspend fun getCurrentQuizId(takeId: Long): Long? =
+    suspend fun getCurrentQuizId(): Long? =
         db.transactionWithResult {
             db.sessionQueries.getCurrentQuizIdByTakeId(takeId)
                 .executeAsOne()
                 .currentQuizId
         }
 
-    fun getTakeNumber(takeId: Long): Flow<Int> =
+    fun getTakeNumber(): Flow<Int> =
         calculateTakeNumber(db, takeId)
 
-    fun getSession(takeId: Long): Flow<Session> =
+    fun getSession(): Flow<Session> =
         db.sessionQueries.getSessionByTakeId(takeId)
             .asFlow()
             .mapToOne(Dispatchers.IO)
 
-    fun getTimersInSecond(takeId: Long): Flow<List<Double>> =
+    fun getTimersInSecond(): Flow<List<Double>> =
         db.sessionQueries
             .getTimersByTakeId(takeId)
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map { t -> t.map(TimerByTake::durationSeconds) }
 
-    fun getAnswers(takeId: Long): Flow<List<Answer>> =
+    fun getAnswers(): Flow<List<Answer>> =
         db.sessionQueries
             .getAnswersDataModel(takeId)
 
-    suspend fun updateAccessTime(takeId: Long) {
+    suspend fun updateAccessTime() {
         db.transaction {
             db.sessionQueries.updateTakeAccessTime(Clock.System.now(), takeId)
             db.sessionQueries.updateSessionAccessTimeByTakeId(Clock.System.now(), takeId)
         }
     }
 
-    suspend fun updateDuration(takeId: Long, durationInSeconds: Long) {
+    suspend fun updateDuration(durationInSeconds: Long) {
         db.transaction {
             db.sessionQueries.updateTakeDuration(durationInSeconds, takeId)
         }
     }
 
-    suspend fun commitAnswer(model: Answer, takeId: Long, priority: Int) {
+    suspend fun commitAnswer(model: Answer, priority: Int) {
         db.transaction {
             model.commit(db, takeId, priority)
         }
     }
 
-    suspend fun rollbackAnswer(model: Answer, takeId: Long) {
+    suspend fun rollbackAnswer(model: Answer) {
         db.transaction {
             model.rollback(db, takeId)
         }
     }
 
-    suspend fun updateCurrentQuizId(currentQuizId: Long, takeId: Long) {
+    suspend fun updateCurrentQuizId(currentQuizId: Long) {
         db.transaction {
             db.sessionQueries.updateCurrentQuizId(currentQuizId, takeId)
         }

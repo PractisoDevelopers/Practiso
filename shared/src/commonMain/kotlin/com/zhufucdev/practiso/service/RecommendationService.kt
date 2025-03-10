@@ -8,7 +8,8 @@ import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.getQuizFrames
-import com.zhufucdev.practiso.datamodel.toOptionFlow
+import com.zhufucdev.practiso.datamodel.toDimensionOptionFlow
+import com.zhufucdev.practiso.datamodel.toQuizOptionFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -25,12 +26,12 @@ class RecommendationService(private val db: AppDatabase = Database.app) {
     fun getRecentRecommendations(): Flow<List<SessionCreator>> =
         channelFlow {
             db.quizQueries.getQuizFrames(db.quizQueries.getRecentQuiz())
-                .toOptionFlow()
+                .toQuizOptionFlow()
                 .collectLatest { quizzes ->
                     db.dimensionQueries.getRecentDimensions(5)
                         .asFlow()
                         .mapToList(Dispatchers.IO)
-                        .toOptionFlow(db.quizQueries)
+                        .toDimensionOptionFlow(db.quizQueries)
                         .collectLatest { dimensions ->
                             val emission = buildList {
                                 if (quizzes.isNotEmpty()) {

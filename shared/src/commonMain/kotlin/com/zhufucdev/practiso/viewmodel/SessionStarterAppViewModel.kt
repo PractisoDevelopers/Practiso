@@ -17,7 +17,7 @@ import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.getQuizFrames
-import com.zhufucdev.practiso.datamodel.toOptionFlow
+import com.zhufucdev.practiso.datamodel.toQuizOptionFlow
 import com.zhufucdev.practiso.helper.concat
 import com.zhufucdev.practiso.helper.protobufSaver
 import kotlinx.coroutines.Dispatchers
@@ -140,7 +140,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
                     it.map { dimension ->
                         db.quizQueries
                             .getQuizFrames(db.quizQueries.getQuizByDimension(dimension.id))
-                            .toOptionFlow()
+                            .toQuizOptionFlow()
                             .map { options ->
                                 Item.Categorized(
                                     dimension = dimension,
@@ -152,7 +152,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
                 }
         val stranded: Flow<List<Item>> =
             db.quizQueries.getQuizFrames(db.quizQueries.getStrandedQuiz())
-                .toOptionFlow()
+                .toQuizOptionFlow()
                 .map {
                     if (it.isNotEmpty()) {
                         listOf(Item.Stranded(it))
