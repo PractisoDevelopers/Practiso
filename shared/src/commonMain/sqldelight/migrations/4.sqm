@@ -1,0 +1,5 @@
+CREATE VIEW sessionOptionView AS
+SELECT S.*, count(Q.quizId) AS quizCount
+FROM session S
+JOIN quizBySession Q ON Q.sessionId = S.id
+GROUP BY S.id;

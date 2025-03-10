@@ -10,13 +10,13 @@ struct SessionView: View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ContentView.Model.self) private var contentModel
     
-    private enum DataState<T> {
+    enum DataState<T> {
         case pending
         case ok([T])
     }
     
-    @State private var sessions: DataState<OptionImpl<SessionOption>> = .pending
-    @State private var takes: DataState<TakeStat> = .pending
+    @Binding var sessions: DataState<OptionImpl<SessionOption>>
+    @Binding var takes: DataState<TakeStat>
     @State private var isCreatorShown = false
     @State private var creatorModel = SessionCreatorView.Model()
 
@@ -88,14 +88,30 @@ struct SessionView: View {
                         if let (sessionId, takeId) = (await errorHandler.catchAndShowImmediately {
                             try await creator.create()
                         }) {
-                            creatorModel = SessionCreatorView.Model()
+                            creatorModel.reset()
+                            switch task {
+                            case .reveal:
+                                let session = await libraryService.getSession(id: sessionId).makeAsyncIterator().next()!
+                                contentModel.detail = .session(session)
+                            case .startTake:
+                                contentModel.answering = .shown(takeId: takeId, cache: nil)
+                            case .none:
+                                return
+                            }
                         }
                     } else {
                         let creator = SessionCreator(params: creatorModel.sessionParams)
                         if let sessionId = (await errorHandler.catchAndShowImmediately {
                             try await creator.create()
                         }) {
-                            creatorModel = SessionCreatorView.Model()
+                            creatorModel.reset()
+                            switch task {
+                            case .reveal:
+                                let session = await libraryService.getSession(id: sessionId).makeAsyncIterator().next()!
+                                contentModel.detail = .session(session)
+                            default:
+                                return
+                            }
                         }
                     }
                 }
@@ -114,7 +130,7 @@ struct SessionView: View {
         var body: some View {
             TakeStarter(stat: stat, namespace: namespace)
                 .frame(maxWidth: .infinity)
-                .matchedGeometryEffect(id: stat.id, in: namespace, isSource: true)
+                .geometryGroup()
         }
     }
 }
