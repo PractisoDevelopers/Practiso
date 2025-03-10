@@ -11,7 +11,10 @@ struct SessionCreatorView : View {
     enum CompletionTask {
         case startTake
         case reveal
+        case none
     }
+    
+    @Environment(ContentView.Model.self) private var contentModel
     
     @State private var navigationPath: [Page] = []
     @Binding var model: Model
@@ -21,15 +24,23 @@ struct SessionCreatorView : View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             WelcomeView(sessionParams: $model.sessionParams, selectedSuggestion: $model.selectedSuggestion)
-                .navigationTitle("Welcome")
+                .navigationTitle("Explore")
                 .navigationDestination(for: Page.self) { page in
                     switch page {
                     case .specification:
                         SpecificationView(sessionParams: $model.sessionParams, takeParams: $model.takeParams)
                             .navigationTitle("Specification")
                             .toolbar {
-                                Button("Next") {
-                                    navigationPath.append(.completion)
+                                Group {
+                                    if let _ = model.takeParams {
+                                        Button("Next") {
+                                            navigationPath.append(.completion)
+                                        }
+                                    } else {
+                                        Button("Done") {
+                                            onCreate(.reveal)
+                                        }
+                                    }
                                 }
                                 .disabled(model.sessionParams.name.trimmingCharacters(in: .whitespaces).isEmpty)
                             }
