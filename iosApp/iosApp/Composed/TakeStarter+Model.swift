@@ -4,6 +4,6 @@ import ComposeApp
 
 extension TakeStarter {
     struct Model {
-        let question: [PrioritizedFrame]
+        let quizFrames: QuizFrames
     }
 }

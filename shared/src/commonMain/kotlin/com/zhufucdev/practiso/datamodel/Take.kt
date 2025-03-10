@@ -9,8 +9,6 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.datetime.Clock
-import kotlin.time.Duration
 
 fun calculateTakeNumber(db: AppDatabase, takeId: Long): Flow<Int> = channelFlow {
     db.sessionQueries.getTakeById(takeId)
@@ -37,7 +35,7 @@ fun calculateTakeCorrectQuizCount(db: AppDatabase, takeId: Long): Flow<Int> = ch
         }
 }
 
-private fun calculateCorrectness(quizzes: List<QuizFrames>, answers: List<Answer>): Int =
+private fun calculateCorrectness(quizzes: List<QuizFrames>, answers: List<PractisoAnswer>): Int =
     quizzes.count { option ->
         val answerables =
             option.frames.map(PrioritizedFrame::frame).filterIsInstance<Frame.Answerable<*>>()
@@ -46,7 +44,7 @@ private fun calculateCorrectness(quizzes: List<QuizFrames>, answers: List<Answer
             when (frame) {
                 is Frame.Options -> with(frame) {
                     @Suppress("UNCHECKED_CAST")
-                    (current as List<Answer.Option>).isAdequateNecessary()
+                    (current as List<PractisoAnswer.Option>).isAdequateNecessary()
                 }
             }
         }

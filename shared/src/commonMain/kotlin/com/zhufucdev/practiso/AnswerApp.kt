@@ -76,7 +76,7 @@ import com.zhufucdev.practiso.composable.TextFrameSkeleton
 import com.zhufucdev.practiso.composable.rememberFileImageState
 import com.zhufucdev.practiso.composition.rememberClosestTimerAhead
 import com.zhufucdev.practiso.composition.toTimerPresentation
-import com.zhufucdev.practiso.datamodel.Answer
+import com.zhufucdev.practiso.datamodel.PractisoAnswer
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
 import com.zhufucdev.practiso.datamodel.PageStyle
@@ -373,7 +373,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                         content = {
                             val answerOptionIds by remember(answers) {
                                 derivedStateOf {
-                                    answers?.mapNotNull { (it.takeIf { it is Answer.Option && it.quizId == quiz.quiz.id } as Answer.Option?)?.optionId }
+                                    answers?.mapNotNull { (it.takeIf { it is PractisoAnswer.Option && it.quizId == quiz.quiz.id } as PractisoAnswer.Option?)?.optionId }
                                         ?: emptyList()
                                 }
                             }
@@ -384,7 +384,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                             }
 
                             fun answerModel(option: KeyedPrioritizedFrame) =
-                                Answer.Option(option.frame.id, frame.frame.id, quiz.quiz.id)
+                                PractisoAnswer.Option(option.frame.id, frame.frame.id, quiz.quiz.id)
 
 
                             frame.frame.frames.forEachIndexed { index, option ->
@@ -633,7 +633,7 @@ private fun AnswerProgressIndicator(
 
 @Suppress("UNCHECKED_CAST")
 private fun calculateErrorRanges(
-    answers: List<Answer>,
+    answers: List<PractisoAnswer>,
     quizzes: List<QuizFrames>,
 ): List<OpenEndRange<Float>> = buildList {
     val quizWeight = 1f / quizzes.size
@@ -647,7 +647,7 @@ private fun calculateErrorRanges(
             if (current.isNotEmpty()) {
                 when (frame) {
                     is Frame.Options -> {
-                        (current as List<Answer.Option>)
+                        (current as List<PractisoAnswer.Option>)
                         if (!with(frame) { current.isAdequateNecessary() }) {
                             add((quizWeight * quizIndex + frameWeight * frameIndex).let {
                                 it.rangeUntil(it + frameWeight)
