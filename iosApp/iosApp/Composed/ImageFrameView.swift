@@ -40,7 +40,7 @@ struct ImageFrameView : View {
                 Image(image, scale: 1, orientation: .up, label: Text(frame.altText ?? ""))
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(idealHeight: 150)
+                    .frame(maxHeight: 150)
                     .onTapGesture {
                         fullscreenScale = 1
                         isFullscreen = true
@@ -105,12 +105,11 @@ struct ImageFrameView : View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .overlay(alignment: .topTrailing) {
-                    Button("Close") {
-                        isFullscreen = false
-                    }
-                    .padding(8)
-                    .hoverEffect()
-                    .padding(12)
+                    ClosePushButton()
+                        .onTapGesture {
+                            isFullscreen = false
+                        }
+                        .padding(12)
                 }
                 .onTapGesture {
                     if frame.altText?.isEmpty == false {
