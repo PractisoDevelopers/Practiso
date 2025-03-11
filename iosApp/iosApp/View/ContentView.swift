@@ -15,20 +15,8 @@ struct ContentView: View {
     var body: some View {
         Group {
             if case .shown(let takeId, let initial) = model.answering {
-                NavigationStack {
-                    AnswerView(takeId: takeId, namespace: namespace, initialQuizFrames: initial)
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Button("Close") {
-                                    withAnimation {
-                                        model.answering = .idle
-                                    }
-                                }
-                            }
-                        }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .matchedGeometryEffect(id: takeId, in: namespace, isSource: true)
+                AnswerView(takeId: takeId, namespace: namespace, initialQuizFrames: initial)
+                    .matchedGeometryEffect(id: takeId, in: namespace, isSource: true)
             } else {
                 NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
                     LibraryView(destination: $model.destination)
