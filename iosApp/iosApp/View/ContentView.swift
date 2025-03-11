@@ -16,7 +16,6 @@ struct ContentView: View {
         Group {
             if case .shown(let takeId, let initial) = model.answering {
                 AnswerView(takeId: takeId, namespace: namespace, initialQuizFrames: initial)
-                    .matchedGeometryEffect(id: takeId, in: namespace, isSource: true)
             } else {
                 NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
                     LibraryView(destination: $model.destination)
