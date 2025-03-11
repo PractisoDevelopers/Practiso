@@ -74,6 +74,7 @@ struct TakeStarter : View {
         }
         .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)
+        .scalesOnTap()
         .onTapGesture {
             let cache: QuizFrames? = if case .ok(let model) = getModel() {
                 model.quizFrames
