@@ -3,6 +3,8 @@ import SwiftUI
 import ComposeApp
 
 struct AnswerView : View {
+    @Environment(ContentView.Model.self) private var contentModel
+    
     let takeId: Int64
     let namespace: Namespace.ID
     let service: TakeService
@@ -20,7 +22,6 @@ struct AnswerView : View {
         }
     }
     
-    
     enum DataState {
         case pending
         case transition(qf: QuizFrames)
@@ -28,36 +29,52 @@ struct AnswerView : View {
     }
     
     var body: some View {
-        Group {
-            switch data {
-            case .pending:
-                VStack {
-                    ProgressView()
-                    Text("Loading Take...")
-                }
-            case .transition(let qf):
-                Page(quizFrames: qf, answer: [], service: service, namespace: namespace)
-                    .padding(.horizontal)
-                    .scrollTargetLayout()
-            case .ok(let qf, let answers):
-                GeometryReader { proxy in
-                    ScrollView(.vertical) {
-                        LazyVStack(spacing: 0) {
-                            ForEach(qf, id: \.quiz.id) { qf in
-                                Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, service: service, namespace: namespace)
-                                    .frame(height: proxy.size.height + proxy.safeAreaInsets.top, alignment: .top)
-                                    .padding(.horizontal)
-                                    .padding(.bottom, proxy.safeAreaInsets.bottom)
-                                    .offset(y: proxy.safeAreaInsets.top)
-                            }
-                        }
-                        .scrollTargetLayout()
+        NavigationStack {
+            Group {
+                switch data {
+                case .pending:
+                    VStack {
+                        ProgressView()
+                        Text("Loading Take...")
                     }
-                    .scrollTargetBehavior(.paging)
-                    .ignoresSafeArea(.container, edges: [.top, .bottom])
+                case .transition(let qf):
+                    Page(quizFrames: qf, answer: [], service: service, namespace: namespace)
+                        .padding()
+                case .ok(let qf, let answers):
+                    GeometryReader { proxy in
+                        ScrollView(.vertical) {
+                            LazyVStack(spacing: 0) {
+                                ForEach(qf, id: \.quiz.id) { qf in
+                                    Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, service: service, namespace: namespace)
+                                }
+                                .padding()
+                                .frame(height: proxy.size.height + proxy.safeAreaInsets.top, alignment: .top)
+                                .padding(.bottom, proxy.safeAreaInsets.bottom)
+                                .offset(y: proxy.safeAreaInsets.top)
+                            }
+                            .scrollTargetLayout()
+                        }
+                        .scrollTargetBehavior(.paging)
+                        .ignoresSafeArea(.container, edges: [.top, .bottom])
+                    }
                 }
             }
+            .toolbarVisibility(.hidden, for: .navigationBar)
         }
+        .overlay(alignment: .topTrailing) {
+            Image(systemName: "xmark.circle.fill")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 28, height: 28)
+                .padding(.all, 20)
+                .ignoresSafeArea(.container, edges: .top)
+                .onTapGesture {
+                    withAnimation {
+                        contentModel.answering = .idle
+                    }
+                }
+        }
+        .statusBarHidden()
         .task(id: takeId) {
             var qf: [QuizFrames]? = nil
             var answers: [PractisoAnswer]? = nil
