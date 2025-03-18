@@ -68,7 +68,7 @@ struct AnswerView : View {
                 ClosePushButton()
                     .padding(max(16, window.safeAreaInsets.top - 28))
                     .ignoresSafeArea()
-                    .scalesOnTap()
+                    .scalesOnTap(scale: 0.9)
                     .onTapGesture {
                         withAnimation {
                             contentModel.answering = .idle
