@@ -36,19 +36,12 @@ struct TakeStarter : View {
     var body: some View {
         VStack(alignment: .leading) {
             Spacer()
-            HStack(spacing: 12) {
-                CircularProgressView(value: Double(stat.countQuizDone) / Double(stat.countQuizTotal))
-                VStack(alignment: .leading) {
-                    Text(stat.name)
-                    Text("\(100 * stat.countQuizDone / stat.countQuizTotal)% done")
-                        .font(.subheadline)
+            TakeStatHeader(stat: stat)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background {
+                    Rectangle().fill(.regularMaterial)
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-            .background {
-                Rectangle().fill(.regularMaterial)
-            }
         }
         .frame(idealHeight: 160)
         .background {

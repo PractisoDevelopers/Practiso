@@ -40,7 +40,7 @@ struct SessionView: View {
                     })) {
                         Section("Takes") {
                             ForEach(takes, id: \.id) { stat in
-                                TakeItem(stat: stat, namespace: namespace)
+                                TakeStarter(stat: stat, namespace: namespace)
                             }
                             .listRowSeparator(.hidden)
                         }
@@ -129,19 +129,6 @@ struct SessionView: View {
             } onCancel: {
                 isCreatorShown = false
             }
-        }
-    }
-    
-    struct TakeItem : View {
-        let stat: TakeStat
-        let namespace: Namespace.ID
-        
-        @Environment(ContentView.Model.self) private var contentModel
-        
-        var body: some View {
-            TakeStarter(stat: stat, namespace: namespace)
-                .frame(maxWidth: .infinity)
-                .geometryGroup()
         }
     }
 }
