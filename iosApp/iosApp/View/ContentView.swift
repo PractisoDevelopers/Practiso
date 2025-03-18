@@ -44,7 +44,7 @@ struct ContentView: View {
                     case .template(let templateOption):
                         TemplateDetailView()
                     case .session(let sessionOption):
-                        SessionDetailView(option: sessionOption)
+                        SessionDetailView(option: sessionOption, namespace: namespace)
                     case .none:
                         Text("Select an Item to Show")
                     }

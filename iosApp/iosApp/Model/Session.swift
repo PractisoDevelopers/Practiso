@@ -85,3 +85,13 @@ struct SessionTakeCreator {
         return (sessionId, takeId.int64Value)
     }
 }
+
+struct TakeCreator {
+    let take: TakeParameters
+    let service = CreateService(db: Database.shared.app)
+    
+    func create() async throws -> (Int64) {
+        let takeId = try await service.createTake(sessionId: take.sessionId, timers: take.timers)
+        return takeId.int64Value
+    }
+}

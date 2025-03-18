@@ -904,7 +904,7 @@ private fun ListItem(
 private fun ColumnScope.TakeStarterContent(
     model: TakeStarterViewModel,
 ) {
-    val takes by model.takeStats.collectAsState()
+    val takes by model.takeStats.collectAsState(null, Dispatchers.IO)
     val visibleTakes by remember(takes) {
         derivedStateOf { takes?.filter { it.hidden == 0L } }
     }
@@ -1152,7 +1152,7 @@ private fun TakeStatItem(
 
 @Composable
 private fun ColumnScope.NewTakeContent(model: TakeStarterViewModel) {
-    val takes by model.takeStats.collectAsState()
+    val takes by model.takeStats.collectAsState(null, Dispatchers.IO)
     val number by remember(takes) { derivedStateOf { takes?.let { it.size + 1 } } }
     val coroutine = rememberCoroutineScope()
 
