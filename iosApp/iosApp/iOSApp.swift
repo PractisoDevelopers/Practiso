@@ -9,7 +9,7 @@ struct iOSApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ZStack {
+            Group {
                 if let url = url {
                     ArchiveDocumentView(
                         url: url,
