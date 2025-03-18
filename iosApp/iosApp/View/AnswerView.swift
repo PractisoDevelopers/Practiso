@@ -4,17 +4,20 @@ import ComposeApp
 
 struct AnswerView : View {
     @Environment(ContentView.Model.self) private var contentModel
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
     let takeId: Int64
     let namespace: Namespace.ID
     let service: TakeService
     
     @State private var data: DataState
+    @State private var currentQuizId: Int64?
     
     init(takeId: Int64, namespace: Namespace.ID, initialQuizFrames: QuizFrames? = nil) {
         self.takeId = takeId
         self.namespace = namespace
-        self.service = TakeService(takeId: takeId, db: Database.shared.app)
+        let service = TakeService(takeId: takeId, db: Database.shared.app)
+        self.service = service
         self.data = if let initial = initialQuizFrames {
             .transition(qf: initial)
         } else {
@@ -56,7 +59,13 @@ struct AnswerView : View {
                                 .scrollTargetLayout()
                             }
                             .scrollTargetBehavior(.paging)
+                            .scrollPosition(id: $currentQuizId)
                             .ignoresSafeArea(.container, edges: [.top, .bottom])
+                            .onChange(of: currentQuizId) { old, new in
+                                if let id = new {
+                                    dbUpdateCurrentQuiz(quizId: id)
+                                }
+                            }
                         }
                     }
                 }
@@ -77,7 +86,8 @@ struct AnswerView : View {
             .task(id: takeId) {
                 var qf: [QuizFrames]? = nil
                 var answers: [PractisoAnswer]? = nil
-                
+                self.currentQuizId = try? await service.getCurrentQuizId()?.int64Value
+
                 Task {
                     for await quiz in service.getQuizzes() {
                         qf = quiz
@@ -94,6 +104,14 @@ struct AnswerView : View {
                         }
                     }
                 }
+            }
+        }
+    }
+    
+    func dbUpdateCurrentQuiz(quizId: Int64) {
+        Task {
+            await errorHandler.catchAndShowImmediately {
+                try await service.updateCurrentQuizId(currentQuizId: quizId)
             }
         }
     }
