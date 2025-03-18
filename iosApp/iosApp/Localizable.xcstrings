@@ -247,6 +247,9 @@
     "Loading questions..." : {
 
     },
+    "Loading session..." : {
+
+    },
     "Loading suggestions" : {
 
     },
@@ -343,9 +346,6 @@
     "Session" : {
 
     },
-    "Session %@ here" : {
-
-    },
     "Session is empty" : {
 
     },
@@ -385,6 +385,9 @@
     "This archive is empty" : {
 
     },
+    "Timer" : {
+
+    },
     "Timers" : {
 
     },
@@ -404,6 +407,9 @@
 
     },
     "Unsupported data type" : {
+
+    },
+    "Will create as Take %lld" : {
 
     },
     "Would you like to delete questions contained as well?" : {

@@ -10,12 +10,9 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.composable.FlipCardState
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.helper.protoBufStateListSaver
 import com.zhufucdev.practiso.helper.protobufSaver
@@ -26,13 +23,14 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.service.CreateService
+import com.zhufucdev.practiso.service.LibraryService
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -40,28 +38,21 @@ import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
-@OptIn(SavedStateHandleSaveableApi::class)
+@OptIn(SavedStateHandleSaveableApi::class, ExperimentalCoroutinesApi::class)
 class TakeStarterViewModel(
     val db: AppDatabase,
     state: SavedStateHandle,
+    private val createService: CreateService = CreateService(db),
+    private val libraryService: LibraryService = LibraryService(db),
 ) : ViewModel() {
-    val createService = CreateService(db)
-
     val option = MutableStateFlow<SessionOption?>(null)
     var uiCoroutineScope: CoroutineScope? = null
         private set
 
     val takeStats by lazy {
-        MutableStateFlow<List<TakeStat>?>(null).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                option.filterNotNull().collectLatest {
-                    db.sessionQueries.getTakeStatsBySessionId(it.session.id)
-                        .asFlow()
-                        .mapToList(Dispatchers.IO)
-                        .collect(this@apply)
-                }
-            }
-        }
+        option.filterNotNull()
+            .mapLatest { libraryService.getTakesBySession(it.id) }
+            .flatMapMerge { it }
     }
 
     val flipCardState = FlipCardState()

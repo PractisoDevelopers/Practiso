@@ -79,4 +79,9 @@ class LibraryService(private val db: AppDatabase = Database.app) {
             .asFlow()
             .mapToOne(Dispatchers.IO)
             .map(SessionOptionView::toOption)
+
+    fun getTakesBySession(id: Long) =
+        db.sessionQueries.getTakeStatsBySessionId(id)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
 }

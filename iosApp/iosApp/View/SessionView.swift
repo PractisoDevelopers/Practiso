@@ -19,6 +19,7 @@ struct SessionView: View {
     @Binding var takes: DataState<TakeStat>
     @State private var isCreatorShown = false
     @State private var creatorModel = SessionCreatorView.Model()
+    @State private var selection = Set<Int64>()
 
     var body: some View {
         Group {
@@ -26,7 +27,17 @@ struct SessionView: View {
                 if sessions.isEmpty && takes.isEmpty {
                     OptionListPlaceholder()
                 } else {
-                    List {
+                    List(selection: Binding(get: {
+                        selection
+                    }, set: { newValue in
+                        if newValue.count == 1 {
+                            let id = newValue.first!
+                            if let option = sessions.first(where: { $0.id == id }) {
+                                contentModel.detail = .session(option.kt)
+                            }
+                        }
+                        selection = newValue
+                    })) {
                         Section("Takes") {
                             ForEach(takes, id: \.id) { stat in
                                 TakeItem(stat: stat, namespace: namespace)
@@ -34,7 +45,7 @@ struct SessionView: View {
                             .listRowSeparator(.hidden)
                         }
                         Section("Sessions") {
-                            ForEach(sessions) { option in
+                            ForEach(sessions, id: \.id) { option in
                                 OptionListItem(data: option)
                                     .swipeActions {
                                         Button("Remove", systemImage: "trash", role: .destructive) {
