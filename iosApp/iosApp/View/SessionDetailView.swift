@@ -6,6 +6,7 @@ struct SessionDetailView : View {
     let libraryService = LibraryService(db: Database.shared.app)
     let createService = CreateService(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
+    @Environment(ContentView.Model.self) private var contentModel
     
     let option: SessionOption
     let namespace: Namespace.ID
@@ -39,9 +40,16 @@ struct SessionDetailView : View {
                     if array.isEmpty {
                         OptionListPlaceholder()
                     } else {
-                        List(array, id: \.id) { take in
-                            TakeStarter(stat: take, namespace: namespace)
-                                .listRowSeparator(.hidden)
+                        List(array, id: \.id, selection: Binding(get: {
+                            Set<Int64>()
+                        }, set: { newValue in
+                            if let first = newValue.first {
+                                withAnimation {
+                                    contentModel.answering = .shown(takeId: first, cache: nil)
+                                }
+                            }
+                        })) { take in
+                            TakeStatHeader(stat: take)
                         }
                         .listStyle(.plain)
                     }
