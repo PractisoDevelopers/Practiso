@@ -14,6 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
@@ -178,6 +179,7 @@ private fun QuizQueries.getPrioritizedTextFrames(quizId: Long): List<Prioritized
 
 fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
     starter.asFlow()
+        .distinctUntilChanged()
         .mapToList(Dispatchers.IO)
         .map { quizzes ->
             quizzes.map { quiz ->

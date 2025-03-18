@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 
 struct ScaleTap : ViewModifier {
+    let scale: Double
     @State var isPressed = false
     
     func body(content: Content) -> some View {
@@ -15,13 +16,13 @@ struct ScaleTap : ViewModifier {
                         isPressed = false
                     }
             )
-            .scaleEffect(isPressed ? 0.96 : 1)
+            .scaleEffect(isPressed ? scale : 1)
             .animation(.linear(duration: 0.1), value: isPressed)
     }
 }
 
 extension View {
-    func scalesOnTap() -> some View {
-        modifier(ScaleTap())
+    func scalesOnTap(scale: Double = 0.97) -> some View {
+        modifier(ScaleTap(scale: scale))
     }
 }
