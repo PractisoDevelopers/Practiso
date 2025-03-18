@@ -133,7 +133,7 @@ struct AnswerView : View {
 extension View {
     fileprivate func pageDefaults(proxy: GeometryProxy, safeAreaTop: Double) -> some View {
         padding()
-            .offset(y: proxy.safeAreaInsets.top + (safeAreaTop < 56 ? 56 : 0))
+            .offset(y: safeAreaTop < 56 ? 56 : 0)
             .frame(maxHeight: .infinity, alignment: .top)
     }
 }
