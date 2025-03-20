@@ -61,6 +61,19 @@ struct AnswerView : View {
                     }
                 }
             }
+            .pannable { location, translation, velocity in
+                if abs(translation.y) > 100 {
+                    withAnimation {
+                        if translation.y < 0 {
+                            page.update(.next)
+                        } else {
+                            page.update(.previous)
+                        }
+                    }
+                    return true
+                }
+                return false
+            }
             .background()
             .statusBarHidden()
             .matchedGeometryEffect(id: takeId, in: namespace, isSource: true)
