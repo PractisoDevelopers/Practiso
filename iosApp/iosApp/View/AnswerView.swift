@@ -59,20 +59,21 @@ struct AnswerView : View {
                             dbUpdateCurrentQuiz(quizId: qf[index].quiz.id)
                         }
                     }
-                }
-            }
-            .pannable { location, translation, velocity in
-                if abs(translation.y) > 100 {
-                    withAnimation {
-                        if translation.y < 0 {
-                            page.update(.next)
-                        } else {
-                            page.update(.previous)
+                    .pannable { location, translation, velocity in
+                        if abs(translation.y) > 100 {
+                            withAnimation {
+                                if translation.y < 0 {
+                                    page.update(.next)
+                                } else {
+                                    page.update(.previous)
+                                }
+                                dbUpdateCurrentQuiz(quizId: qf[page.index].quiz.id)
+                            }
+                            return true
                         }
+                        return false
                     }
-                    return true
                 }
-                return false
             }
             .background()
             .statusBarHidden()
