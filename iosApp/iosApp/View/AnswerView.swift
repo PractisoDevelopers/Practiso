@@ -82,13 +82,13 @@ struct AnswerView : View {
             .overlay(alignment: .topTrailing) {
                 ClosePushButton()
                     .padding(max(16, window.safeAreaInsets.top - 28))
-                    .ignoresSafeArea()
                     .scalesOnTap(scale: 0.9)
                     .onTapGesture {
                         withAnimation {
                             contentModel.topLevel = .library
                         }
                     }
+                    .ignoresSafeArea()
             }
             .task(id: takeId) {
                 for await quiz in service.getQuizzes() {
@@ -121,10 +121,10 @@ struct AnswerView : View {
     }
     
     func initative(quiz: [QuizFrames], ans: [PractisoAnswer], currId: Int64) {
-        let firstInitativation = if case .pending = data {
-            true
-        } else {
+        let firstInitativation = if case .ok(_, _) = data {
             false
+        } else {
+            true
         }
         data = .ok(qf: quiz, answers: ans)
         if firstInitativation {
