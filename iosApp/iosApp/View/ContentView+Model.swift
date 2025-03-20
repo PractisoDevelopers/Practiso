@@ -4,13 +4,9 @@ import ComposeApp
 
 extension ContentView {
     class Model: Observable, ObservableObject {
-        enum AnswerState {
-            case idle
-            case shown(takeId: Int64, cache: QuizFrames?)
-        }
         @Published var destination: Destination? = .session
         @Published var detail: Detail?
-        @Published var answering: AnswerState = .idle
+        @Published var topLevel: TopLevel = .library
     }
     
     @MainActor
