@@ -84,7 +84,7 @@ struct AnswerView : View {
                     .scalesOnTap(scale: 0.9)
                     .onTapGesture {
                         withAnimation {
-                            contentModel.answering = .idle
+                            contentModel.topLevel = .library
                         }
                     }
             }

@@ -45,7 +45,7 @@ struct SessionDetailView : View {
                         }, set: { newValue in
                             if let first = newValue.first {
                                 withAnimation {
-                                    contentModel.answering = .shown(takeId: first, cache: nil)
+                                    contentModel.topLevel = .answer(takeId: first, cache: nil)
                                 }
                             }
                         })) { take in

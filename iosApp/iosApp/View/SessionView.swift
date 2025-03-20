@@ -105,7 +105,7 @@ struct SessionView: View {
                                 let session = await libraryService.getSession(id: sessionId).makeAsyncIterator().next()!
                                 contentModel.detail = .session(session)
                             case .startTake:
-                                contentModel.answering = .shown(takeId: takeId, cache: nil)
+                                contentModel.topLevel = .answer(takeId: takeId, cache: nil)
                             case .none:
                                 return
                             }

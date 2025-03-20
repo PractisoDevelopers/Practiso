@@ -14,9 +14,8 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if case .shown(let takeId, let initial) = model.answering {
-                AnswerView(takeId: takeId, namespace: namespace, initialQuizFrames: initial)
-            } else {
+            switch model.topLevel {
+            case .library:
                 NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
                     LibraryView(destination: $model.destination)
                         .navigationTitle("Library")
@@ -49,21 +48,23 @@ struct ContentView: View {
                         Text("Select an Item to Show")
                     }
                 }
-                .alert(
-                    "Operation failed",
-                    isPresented: errorHandler.shown
-                ) {
-                    Button("Cancel", role: .cancel) {
-                        errorHandler.state = .hidden
-                    }
-                } message: {
-                    switch errorHandler.state {
-                    case .hidden:
-                        EmptyView()
-                    case .shown(let message):
-                        Text(message)
-                    }
-                }
+            case .answer(let takeId, let cache):
+                AnswerView(takeId: takeId, namespace: namespace, initialQuizFrames: cache)
+            }
+        }
+        .alert(
+            "Operation failed",
+            isPresented: errorHandler.shown
+        ) {
+            Button("Cancel", role: .cancel) {
+                errorHandler.state = .hidden
+            }
+        } message: {
+            switch errorHandler.state {
+            case .hidden:
+                EmptyView()
+            case .shown(let message):
+                Text(message)
             }
         }
         .environmentObject(model)
