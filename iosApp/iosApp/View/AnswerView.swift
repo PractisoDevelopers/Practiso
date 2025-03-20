@@ -13,6 +13,7 @@ struct AnswerView : View {
     
     @State private var data: DataState
     @StateObject private var page: SwiftUIPager.Page = .first()
+    @State private var buffer = Buffer()
     
     init(takeId: Int64, namespace: Namespace.ID, initialQuizFrames: QuizFrames? = nil) {
         self.takeId = takeId
@@ -90,57 +91,63 @@ struct AnswerView : View {
                     }
             }
             .task(id: takeId) {
-                var qf: [QuizFrames]? = nil
-                var answers: [PractisoAnswer]? = nil
-                var currQuizId: Int64? = nil
-                
-                @MainActor
-                func initative(quiz: [QuizFrames], ans: [PractisoAnswer], currId: Int64) {
-                    data = .ok(qf: quiz, answers: ans)
-                    page.index = if currId >= 0 {
-                        quiz.firstIndex(where: { $0.quiz.id == currId }) ?? 0
-                    } else {
-                        0
+                for await quiz in service.getQuizzes() {
+                    buffer.qf = quiz
+                    if let ans = buffer.answers, let curr = buffer.currQuizId {
+                        initative(quiz: quiz, ans: ans, currId: curr)
                     }
                 }
-                
-                Task {
-                    for await quiz in service.getQuizzes() {
-                        qf = quiz
-                        if let ans = answers, let curr = currQuizId {
-                            initative(quiz: quiz, ans: ans, currId: curr)
-                        }
-                    }
-                }
-                Task {
-                    for await ans in service.getAnswers() {
-                        answers = ans
-                        if let quizzes = qf, let curr = currQuizId {
-                            initative(quiz: quizzes, ans: ans, currId: curr)
-                        }
-                    }
-                }
-                Task {
-                    let curr: Int64 = if let id = (try? await service.getCurrentQuizId())?.int64Value {
-                        id
-                    } else {
-                        -1
-                    }
-                    currQuizId = curr
-                    if let quizzes = qf, let ans = answers {
+            }
+            .task(id: takeId) {
+                for await ans in service.getAnswers() {
+                    buffer.answers = ans
+                    if let quizzes = buffer.qf, let curr = buffer.currQuizId {
                         initative(quiz: quizzes, ans: ans, currId: curr)
                     }
+                }
+            }
+            .task(id: takeId) {
+                let curr: Int64 = if let id = (try? await service.getCurrentQuizId())?.int64Value {
+                    id
+                } else {
+                    -1
+                }
+                buffer.currQuizId = curr
+                if let quizzes = buffer.qf, let ans = buffer.answers {
+                    initative(quiz: quizzes, ans: ans, currId: curr)
                 }
             }
         }
     }
     
+    func initative(quiz: [QuizFrames], ans: [PractisoAnswer], currId: Int64) {
+        let firstInitativation = if case .pending = data {
+            true
+        } else {
+            false
+        }
+        data = .ok(qf: quiz, answers: ans)
+        if firstInitativation {
+            page.index = if currId >= 0 {
+                quiz.firstIndex(where: { $0.quiz.id == currId }) ?? 0
+            } else {
+                0
+            }
+        }
+    }
+
     func dbUpdateCurrentQuiz(quizId: Int64) {
         Task {
             await errorHandler.catchAndShowImmediately {
                 try await service.updateCurrentQuizId(currentQuizId: quizId)
             }
         }
+    }
+    
+    private struct Buffer {
+        var qf: [QuizFrames]? = nil
+        var answers: [PractisoAnswer]? = nil
+        var currQuizId: Int64? = nil
     }
 }
 
