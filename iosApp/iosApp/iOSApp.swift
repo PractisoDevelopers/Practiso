@@ -5,21 +5,27 @@ import ComposeApp
 
 @main
 struct iOSApp: App {
-    @State var url: URL?
+    @Environment(\.openWindow) private var openWindow
     
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "content") {
+            ContentView()
+                .onOpenURL { value in
+                    openWindow(id: "browser", value: value)
+                }
+        }
+        
+        WindowGroup(id: "browser", for: URL.self) { $url in
             Group {
                 if let url = url {
                     ArchiveDocumentView(
                         url: url,
                         onClose: {
-                            self.url = nil
+                            openWindow(id: "content")
                         }
                     )
-                }
-                if url == nil {
-                    ContentView()
+                } else {
+                    OptionListPlaceholder()
                 }
             }
             .onOpenURL { value in
