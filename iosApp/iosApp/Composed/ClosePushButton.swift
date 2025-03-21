@@ -6,7 +6,10 @@ struct ClosePushButton : View {
         Image(systemName: "xmark.circle.fill")
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .background()
+            .background {
+                Circle()
+                    .foregroundStyle(.background)
+            }
             .frame(width: 28, height: 28)
     }
 }
