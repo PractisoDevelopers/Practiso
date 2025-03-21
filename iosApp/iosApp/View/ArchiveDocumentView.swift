@@ -83,13 +83,21 @@ struct ArchiveDocumentView : View {
                 return
             }
             isImportCompletionShown = false
+            var everyImported = false
+            
             let service = ImportService(db: Database.shared.app)
             for await state in service.import(namedSource: NamedSource(url: self.url)) {
                 self.importState = .init(kt: state)
+                if case .importing(_, _) = importState {
+                    everyImported = true
+                }
             }
-            isImportCompletionShown = true
-            try? await Task.sleep(for: .seconds(10))
-            isImportCompletionShown = false
+            
+            if everyImported {
+                isImportCompletionShown = true
+                try? await Task.sleep(for: .seconds(10))
+                isImportCompletionShown = false
+            }
             isImporting = false
         }
     }
