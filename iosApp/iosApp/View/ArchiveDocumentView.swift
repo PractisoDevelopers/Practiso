@@ -30,39 +30,40 @@ struct ArchiveDocumentView : View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                switch data {
-                case .ok(let questions):
-                    if let question = questions.first {
-                        ScrollView {
-                            Question(frames: question.frames, namespace: internel)
-                                .environment(\.imageService, CachedImageService(data: Dictionary(quizDoc: question)))
-                                .padding(.horizontal)
-                        }
-                        .navigationTitle(question.name ?? String(localized: "Unnamed question"))
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .primaryAction) {
-                                Menu("More", systemImage: "ellipsis.circle") {
-                                    Button("Import Archive", systemImage: "square.and.arrow.down") {
-                                        isImporting = true
-                                    }
+            switch data {
+            case .ok(let questions):
+                if let question = questions.first {
+                    ScrollView {
+                        Question(frames: question.frames, namespace: internel)
+                            .environment(\.imageService, CachedImageService(data: Dictionary(quizDoc: question)))
+                            .padding(.horizontal)
+                    }
+                    .navigationTitle(question.name ?? String(localized: "Unnamed question"))
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            Menu("More", systemImage: "ellipsis.circle") {
+                                Button("Import Archive", systemImage: "square.and.arrow.down") {
+                                    isImporting = true
                                 }
                             }
                         }
-                    } else {
-                        Text("This archive is empty")
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Home", systemImage: "house", action: onClose)
+                        }
                     }
-                case .error(let error):
-                    Text("An error occurred and the document is failed to load")
-                    Text(error.localizedDescription)
-                        .foregroundStyle(.secondary)
+                } else {
+                    Text("This archive is empty")
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Home", systemImage: "house", action: onClose)
-                }
+            case .error(let error):
+                Text("An error occurred and the document is failed to load")
+                Text(error.localizedDescription)
+                    .foregroundStyle(.secondary)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Home", systemImage: "house", action: onClose)
+                        }
+                    }
             }
         }
         .onChange(of: url) { _, _ in

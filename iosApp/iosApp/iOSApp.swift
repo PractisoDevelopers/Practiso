@@ -6,26 +6,48 @@ import ComposeApp
 @main
 struct iOSApp: App {
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.supportsMultipleWindows) private var supportsMultipleWindow
+    
+    @State private var url: URL? = nil
     
     var body: some Scene {
         WindowGroup(id: "content") {
             ContentView()
                 .onOpenURL { value in
-                    openWindow(id: "browser", value: value)
+                    if supportsMultipleWindow {
+                        openWindow(id: "browser", value: value)
+                    } else {
+                        withAnimation {
+                            self.url = value
+                        }
+                    }
                 }
         }
         
         WindowGroup(id: "browser", for: URL.self) { $url in
             Group {
-                if let url = url {
+                if let openingUrl = url {
                     ArchiveDocumentView(
-                        url: url,
+                        url: openingUrl,
                         onClose: {
-                            openWindow(id: "content")
+                            if supportsMultipleWindow {
+                                openWindow(id: "content")
+                                dismissWindow(id: "browser")
+                            } else {
+                                url = nil
+                            }
                         }
                     )
-                } else {
+                } else if supportsMultipleWindow {
                     OptionListPlaceholder()
+                } else {
+                    ContentView()
+                        .onOpenURL { value in
+                            withAnimation {
+                                url = value
+                            }
+                        }
                 }
             }
             .onOpenURL { value in
