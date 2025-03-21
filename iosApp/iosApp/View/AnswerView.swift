@@ -62,8 +62,9 @@ struct AnswerView : View {
                             dbUpdateCurrentQuiz(quizId: qf[index].quiz.id)
                         }
                     }
-                    .pannable(
+                    .gesture(
                         PanGesture()
+                            .source([.mouse, .trackpad])
                             .onChange { location, translation, velocity in
                                 if abs(translation.y) > 100 {
                                     withAnimation {

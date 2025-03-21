@@ -1,23 +1,83 @@
 import Foundation
 import SwiftUI
 
-struct Pannable : ViewModifier {
-    let gesture: PanGesture
+struct PanGestureSource : OptionSet {
+    let rawValue: Int
+    static let mouse = PanGestureSource(rawValue: 1 << 0)
+    static let trackpad = PanGestureSource(rawValue: 1 << 1)
+    static let touch = PanGestureSource(rawValue: 1 << 2)
     
-    func body(content: Content) -> some View {
-        PannableView(content: { content }, gesture: gesture)
-    }
+    static let all: PanGestureSource = [.mouse, .touch, .trackpad]
 }
 
-extension View {
-    func pannable(_ gesture: PanGesture) -> some View {
-        modifier(Pannable(gesture: gesture))
+final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRecognizerDelegate {
+    private var change: PanChange? = nil
+    private var end: PanEnd? = nil
+    private var source: PanGestureSource = .all
+    
+    private func setTypeMask(recognizer: UIPanGestureRecognizer) {
+        var mask = UIScrollTypeMask()
+        if source.contains(.mouse) {
+            mask.insert(.discrete)
+        }
+        if source.contains(.trackpad) {
+            mask.insert(.continuous)
+        }
+        recognizer.allowedScrollTypesMask = mask
     }
-}
-
-class PanGesture {
-    var change: PanChange? = nil
-    var end: PanEnd? = nil
+    
+    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+        let pgr = UIPanGestureRecognizer()
+        setTypeMask(recognizer: pgr)
+        pgr.delegate = self
+        context.coordinator.panStateObservation = pgr.observe(\.state) { gr, change in
+            DispatchQueue.main.async {
+                switch gr.state {
+                case .possible:
+                    fallthrough
+                case .ended:
+                    fallthrough
+                case .cancelled:
+                    context.coordinator.endingTranslation = .zero
+                    if let end = self.end {
+                        end()
+                    }
+                default:
+                    break
+                }
+            }
+        }
+        
+        return pgr
+    }
+    
+    func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        if let change = self.change {
+            let location = context.converter.localLocation
+            let translation = context.converter.localTranslation!
+            let end = context.coordinator.endingTranslation
+            let relativeTranslation = CGPoint(x: translation.x - end.x, y: translation.y - end.y)
+            
+            let velocity = context.converter.localVelocity!
+            if change(location, relativeTranslation, velocity) {
+                context.coordinator.endingTranslation = translation
+            }
+        }
+    }
+    
+    func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        recognizer.delegate = self
+        setTypeMask(recognizer: recognizer)
+    }
+    
+    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+        Coordinator()
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return source.contains(.mouse) && source.contains(.trackpad) && touch.type == .indirect
+        || source.contains(.touch) && touch.type == .direct
+    }
     
     func onChange(change: @escaping PanChange) -> Self {
         self.change = change
@@ -28,102 +88,18 @@ class PanGesture {
         self.end = end
         return self
     }
+    
+    func source(_ value: PanGestureSource) -> Self {
+        self.source = value
+        return self
+    }
+    
+    class Coordinator {
+        var endingTranslation: CGPoint = .zero
+        var panStateObservation: NSKeyValueObservation? = nil
+    }
 }
 
 typealias PanChange = (_ location: CGPoint, _ translation: CGPoint, _ velocity: CGPoint) -> Bool
 typealias PanEnd = () -> Void
-
-struct PannableView<Content : View> : UIViewRepresentable {
-    @ViewBuilder let content: Content
-    let gesture: PanGesture
-    
-    func makeUIView(context: Context) -> some UIView {
-        let coordinator = context.coordinator
-        let hostedView = coordinator.hostingController.view!
-        let panGestureRecognizer = coordinator.withGestureRecognizer()
-        let container = UIView()
-        
-        hostedView.addGestureRecognizer(panGestureRecognizer)
-        hostedView.translatesAutoresizingMaskIntoConstraints = true
-        hostedView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        
-        container.addSubview(hostedView)
-        return container
-    }
-    
-    func updateUIView(_ uiView: UIViewType, context: Context) {
-        context.coordinator.hostingController.rootView = self.content
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(hostingController: UIHostingController(rootView: self.content), gesture: gesture)
-    }
-    
-    static func dismantleUIView(_ uiView: UIViewType, coordinator: Coordinator) {
-        coordinator.cleanup()
-    }
-    
-    @MainActor
-    class Coordinator : NSObject, UIGestureRecognizerDelegate {
-        let hostingController: UIHostingController<Content>
-        private let gesture: PanGesture
-        
-        private var endingTranslation: CGPoint = .zero
-        private var panStateObservation: NSKeyValueObservation? = nil
-        
-        init(hostingController: UIHostingController<Content>, gesture: PanGesture) {
-            self.hostingController = hostingController
-            self.gesture = gesture
-        }
-        
-        func withGestureRecognizer() -> UIPanGestureRecognizer {
-            assert(panStateObservation == nil, "withGestureRecoginzer called twice")
-            
-            let pgr = UIPanGestureRecognizer(target: self, action: #selector(pan(_:)))
-            pgr.allowedScrollTypesMask = [.continuous]
-            pgr.delegate = self
-            panStateObservation = pgr.observe(\.state) { gr, change in
-                DispatchQueue.main.async {
-                    switch gr.state {
-                    case .possible:
-                        fallthrough
-                    case .ended:
-                        fallthrough
-                    case .cancelled:
-                        self.endingTranslation = .zero
-                        if let end = self.gesture.end {
-                            end()
-                        }
-                    default:
-                        break
-                    }
-                }
-            }
-            
-            return pgr
-        }
-        
-        func cleanup() {
-            panStateObservation?.invalidate()
-        }
-        
-        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-            return !(gestureRecognizer is UIPanGestureRecognizer)
-        }
-        
-        @objc
-        func pan(_ gr: UIPanGestureRecognizer) {
-            if let change = gesture.change {
-                let location = gr.location(in: hostingController.view)
-                let translation = gr.translation(in: hostingController.view)
-                let relativeTranslation = CGPoint(x: translation.x - endingTranslation.x, y: translation.y - endingTranslation.y)
-                
-                let velocity = gr.velocity(in: hostingController.view)
-                if change(location, relativeTranslation, velocity) {
-                    endingTranslation = translation
-                }
-            }
-        }
-    }
-}
 
