@@ -75,7 +75,7 @@ struct TakeStarter : View {
                 nil
             }
             withAnimation {
-                contentModel.topLevel = .answer(takeId: stat.id, cache: cache)
+                contentModel.pathPeek = .answer(takeId: stat.id, cache: cache)
             }
         }
         .task {

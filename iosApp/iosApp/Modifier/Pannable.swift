@@ -2,24 +2,40 @@ import Foundation
 import SwiftUI
 
 struct Pannable : ViewModifier {
-    let onPan: PanChange
+    let gesture: PanGesture
     
     func body(content: Content) -> some View {
-        PannableView(content: { content }, onPan: onPan)
+        PannableView(content: { content }, gesture: gesture)
     }
 }
 
 extension View {
-    func pannable(change: @escaping PanChange) -> some View {
-        modifier(Pannable(onPan: change))
+    func pannable(_ gesture: PanGesture) -> some View {
+        modifier(Pannable(gesture: gesture))
+    }
+}
+
+class PanGesture {
+    var change: PanChange? = nil
+    var end: PanEnd? = nil
+    
+    func onChange(change: @escaping PanChange) -> Self {
+        self.change = change
+        return self
+    }
+    
+    func onEnd(end: @escaping PanEnd) -> Self {
+        self.end = end
+        return self
     }
 }
 
 typealias PanChange = (_ location: CGPoint, _ translation: CGPoint, _ velocity: CGPoint) -> Bool
+typealias PanEnd = () -> Void
 
 struct PannableView<Content : View> : UIViewRepresentable {
     @ViewBuilder let content: Content
-    let onPan: PanChange
+    let gesture: PanGesture
     
     func makeUIView(context: Context) -> some UIView {
         let coordinator = context.coordinator
@@ -40,7 +56,7 @@ struct PannableView<Content : View> : UIViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(hostingController: UIHostingController(rootView: self.content), onPan: onPan)
+        Coordinator(hostingController: UIHostingController(rootView: self.content), gesture: gesture)
     }
     
     static func dismantleUIView(_ uiView: UIViewType, coordinator: Coordinator) {
@@ -50,14 +66,14 @@ struct PannableView<Content : View> : UIViewRepresentable {
     @MainActor
     class Coordinator : NSObject, UIGestureRecognizerDelegate {
         let hostingController: UIHostingController<Content>
-        private let onPan: PanChange
+        private let gesture: PanGesture
         
         private var endingTranslation: CGPoint = .zero
         private var panStateObservation: NSKeyValueObservation? = nil
         
-        init(hostingController: UIHostingController<Content>, onPan: @escaping PanChange) {
+        init(hostingController: UIHostingController<Content>, gesture: PanGesture) {
             self.hostingController = hostingController
-            self.onPan = onPan
+            self.gesture = gesture
         }
         
         func withGestureRecognizer() -> UIPanGestureRecognizer {
@@ -75,6 +91,9 @@ struct PannableView<Content : View> : UIViewRepresentable {
                         fallthrough
                     case .cancelled:
                         self.endingTranslation = .zero
+                        if let end = self.gesture.end {
+                            end()
+                        }
                     default:
                         break
                     }
@@ -94,13 +113,15 @@ struct PannableView<Content : View> : UIViewRepresentable {
         
         @objc
         func pan(_ gr: UIPanGestureRecognizer) {
-            let location = gr.location(in: hostingController.view)
-            let translation = gr.translation(in: hostingController.view)
-            let relativeTranslation = CGPoint(x: translation.x - endingTranslation.x, y: translation.y - endingTranslation.y)
-            
-            let velocity = gr.velocity(in: hostingController.view)
-            if self.onPan(location, relativeTranslation, velocity) {
-                endingTranslation = translation
+            if let change = gesture.change {
+                let location = gr.location(in: hostingController.view)
+                let translation = gr.translation(in: hostingController.view)
+                let relativeTranslation = CGPoint(x: translation.x - endingTranslation.x, y: translation.y - endingTranslation.y)
+                
+                let velocity = gr.velocity(in: hostingController.view)
+                if change(location, relativeTranslation, velocity) {
+                    endingTranslation = translation
+                }
             }
         }
     }
