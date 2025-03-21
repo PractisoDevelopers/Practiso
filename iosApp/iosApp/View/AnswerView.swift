@@ -10,6 +10,7 @@ struct AnswerView : View {
     let takeId: Int64
     let namespace: Namespace.ID
     let service: TakeService
+    let initialQuizFrames: QuizFrames?
     
     @State private var data: DataState
     @StateObject private var page: SwiftUIPager.Page = .first()
@@ -20,6 +21,7 @@ struct AnswerView : View {
         self.namespace = namespace
         let service = TakeService(takeId: takeId, db: Database.shared.app)
         self.service = service
+        self.initialQuizFrames = initialQuizFrames
         self.data = if let initial = initialQuizFrames {
             .transition(qf: initial)
         } else {
@@ -60,20 +62,23 @@ struct AnswerView : View {
                             dbUpdateCurrentQuiz(quizId: qf[index].quiz.id)
                         }
                     }
-                    .pannable { location, translation, velocity in
-                        if abs(translation.y) > 100 {
-                            withAnimation {
-                                if translation.y < 0 {
-                                    page.update(.next)
-                                } else {
-                                    page.update(.previous)
+                    .pannable(
+                        PanGesture()
+                            .onChange { location, translation, velocity in
+                                if abs(translation.y) > 100 {
+                                    withAnimation {
+                                        if translation.y < 0 {
+                                            page.update(.next)
+                                        } else {
+                                            page.update(.previous)
+                                        }
+                                        dbUpdateCurrentQuiz(quizId: qf[page.index].quiz.id)
+                                    }
+                                    return true
                                 }
-                                dbUpdateCurrentQuiz(quizId: qf[page.index].quiz.id)
+                                return false
                             }
-                            return true
-                        }
-                        return false
-                    }
+                    )
                 }
             }
             .background()
@@ -85,7 +90,7 @@ struct AnswerView : View {
                     .scalesOnTap(scale: 0.9)
                     .onTapGesture {
                         withAnimation {
-                            contentModel.topLevel = .library
+                            _ = contentModel.path.popLast()
                         }
                     }
                     .ignoresSafeArea()

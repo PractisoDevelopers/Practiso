@@ -6,7 +6,35 @@ extension ContentView {
     class Model: Observable, ObservableObject {
         @Published var destination: Destination? = .session
         @Published var detail: Detail?
-        @Published var topLevel: TopLevel = .library
+        @Published var path: [TopLevel] = []
+        
+        var pathPeek: TopLevel {
+            get {
+                if let top = path.last {
+                    top
+                } else {
+                    .library
+                }
+            }
+            set {
+                if path.count <= 0 {
+                    path.append(newValue)
+                } else {
+                    path[path.count - 1] = newValue
+                }
+            }
+        }
+        var pathPeekNext: TopLevel? {
+            get {
+                if path.count <= 0 {
+                    nil
+                } else if path.count > 1 {
+                    path[path.count - 2]
+                } else {
+                    .library
+                }
+            }
+        }
     }
     
     @MainActor
