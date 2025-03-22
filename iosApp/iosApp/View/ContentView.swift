@@ -13,9 +13,28 @@ struct ContentView: View {
     @State private var preferredColumn: NavigationSplitViewColumn = .content
     @State private var takeStatData: SessionView.DataState<TakeStat> = .pending
     @State private var sessionData: SessionView.DataState<OptionImpl<SessionOption>> = .pending
+    @State private var appScale = 1.0
+    @State private var isBackGestureActivated = false
     
     var body: some View {
-        app(topLevel: model.pathPeek)
+        GeometryReader { window in
+            ZStack {
+                app(topLevel: model.pathPeek)
+                    .animation(.easeInOut, value: appScale)
+                    .overlay {
+                        if appScale < 1 {
+                            RoundedRectangle(cornerRadius: (1 - appScale) * 40)
+                                .stroke(lineWidth: 0.8)
+                                .fill(.foreground.opacity(0.8))
+                        } else {
+                            EmptyView()
+                        }
+                    }
+                    .scaleEffect(appScale)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .gesture(backGesture(containerWidth: window.size.width))
+        }
         .alert(
             "Operation failed",
             isPresented: errorHandler.shown
@@ -35,17 +54,45 @@ struct ContentView: View {
         .environmentObject(errorHandler)
     }
     
+    func backGesture(containerWidth: Double) -> PanGesture {
+        PanGesture()
+            .onChange { location, translation, velocity in
+                if model.path.isEmpty {
+                    return false
+                }
+                if !isBackGestureActivated && translation.x > 1 && translation.x > abs(translation.y) || isBackGestureActivated {
+                    appScale = min(1, 1 - translation.x / containerWidth)
+                    isBackGestureActivated = true
+                }
+                return false
+            }
+            .onEnd {
+                if appScale < 0.92 {
+                    withAnimation {
+                        _ = model.path.popLast()
+                        appScale = 1
+                        isBackGestureActivated = false
+                    }
+                } else {
+                    withAnimation {
+                        appScale = 1
+                        isBackGestureActivated = false
+                    }
+                }
+            }
+    }
+    
     func app(topLevel: TopLevel) -> some View {
         Group {
             switch topLevel {
             case .library:
                 libraryApp
             case .answer(let takeId):
-                AnswerView(takeId: takeId, namespace: namespace, data: $model.answerData)
+                AnswerView(takeId: takeId, namespace: namespace, data: $model.answerData, isGesturesEnabled: !isBackGestureActivated)
             }
         }
     }
- 
+    
     var libraryApp: some View {
         NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
             LibraryView(destination: $model.destination)
@@ -85,7 +132,7 @@ struct ContentView: View {
 extension View {
     fileprivate func displaceEffect(_ displacement: CGPoint) -> some View {
         clipShape(RoundedRectangle(cornerSize: .init(width: 12, height: 12)))
-        .scaleEffect(max(0.8, min(1, (500 - sqrt(pow(displacement.x, 2) + pow(displacement.y, 2))) / 500)))
+            .scaleEffect(max(0.8, min(1, (500 - sqrt(pow(displacement.x, 2) + pow(displacement.y, 2))) / 500)))
     }
 }
 
