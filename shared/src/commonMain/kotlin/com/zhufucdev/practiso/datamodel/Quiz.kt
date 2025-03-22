@@ -179,8 +179,8 @@ private fun QuizQueries.getPrioritizedTextFrames(quizId: Long): List<Prioritized
 
 fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
     starter.asFlow()
-        .distinctUntilChanged()
         .mapToList(Dispatchers.IO)
+        .distinctUntilChanged()
         .map { quizzes ->
             quizzes.map { quiz ->
                 val frames =
