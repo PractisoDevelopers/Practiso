@@ -21,9 +21,10 @@ struct ContentView: View {
             ZStack {
                 app(topLevel: model.pathPeek)
                     .animation(.easeInOut, value: appScale)
+                    .clipShape(isEnabled: isBackGestureActivated, shape: RoundedRectangle(cornerRadius: (1 - appScale) * 12 + 20))
                     .overlay {
                         if appScale < 1 {
-                            RoundedRectangle(cornerRadius: (1 - appScale) * 40)
+                            RoundedRectangle(cornerRadius: (1 - appScale) * 12 + 20)
                                 .stroke(lineWidth: 0.8)
                                 .fill(.foreground.opacity(0.8))
                         } else {
@@ -32,7 +33,6 @@ struct ContentView: View {
                     }
                     .scaleEffect(appScale)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .gesture(backGesture(containerWidth: window.size.width))
         }
         .alert(
@@ -50,8 +50,6 @@ struct ContentView: View {
                 Text(message)
             }
         }
-        .environmentObject(model)
-        .environmentObject(errorHandler)
     }
     
     func backGesture(containerWidth: Double) -> PanGesture {
@@ -91,6 +89,8 @@ struct ContentView: View {
                 AnswerView(takeId: takeId, namespace: namespace, data: $model.answerData, isGesturesEnabled: !isBackGestureActivated)
             }
         }
+        .environmentObject(model)
+        .environmentObject(errorHandler)
     }
     
     var libraryApp: some View {
