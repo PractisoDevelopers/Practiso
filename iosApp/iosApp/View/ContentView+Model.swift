@@ -7,7 +7,8 @@ extension ContentView {
         @Published var destination: Destination? = .session
         @Published var detail: Detail?
         @Published var path: [TopLevel] = []
-        
+        @Published var answerData: AnswerView.DataState = .pending
+
         var pathPeek: TopLevel {
             get {
                 if let top = path.last {

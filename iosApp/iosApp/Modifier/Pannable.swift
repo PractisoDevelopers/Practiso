@@ -1,31 +1,16 @@
 import Foundation
 import SwiftUI
 
-struct PanGestureSource : OptionSet {
-    let rawValue: Int
-    static let mouse = PanGestureSource(rawValue: 1 << 0)
-    static let trackpad = PanGestureSource(rawValue: 1 << 1)
-    static let touch = PanGestureSource(rawValue: 1 << 2)
-    
-    static let all: PanGestureSource = [.mouse, .touch, .trackpad]
-}
-
 final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRecognizerDelegate {
     private var change: PanChange? = nil
     private var end: PanEnd? = nil
     private var source: PanGestureSource = .all
     
-    private func setTypeMask(recognizer: UIPanGestureRecognizer) {
-        var mask = UIScrollTypeMask()
-        if source.contains(.mouse) {
-            mask.insert(.discrete)
-        }
-        if source.contains(.trackpad) {
-            mask.insert(.continuous)
-        }
-        recognizer.allowedScrollTypesMask = mask
+    let isEnabled: Bool
+    init(isEnabled: Bool = true) {
+        self.isEnabled = isEnabled
     }
-    
+
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let pgr = UIPanGestureRecognizer()
         setTypeMask(recognizer: pgr)
@@ -67,6 +52,7 @@ final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRe
     
     func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
         recognizer.delegate = self
+        recognizer.isEnabled = isEnabled
         setTypeMask(recognizer: recognizer)
     }
     
@@ -79,12 +65,27 @@ final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRe
         || source.contains(.touch) && touch.type == .direct
     }
     
-    func onChange(change: @escaping PanChange) -> Self {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+    
+    private func setTypeMask(recognizer: UIPanGestureRecognizer) {
+        var mask = UIScrollTypeMask()
+        if source.contains(.mouse) {
+            mask.insert(.discrete)
+        }
+        if source.contains(.trackpad) {
+            mask.insert(.continuous)
+        }
+        recognizer.allowedScrollTypesMask = mask
+    }
+
+    func onChange(_ change: @escaping PanChange) -> Self {
         self.change = change
         return self
     }
     
-    func onEnd(end: @escaping PanEnd) -> Self {
+    func onEnd(_ end: @escaping PanEnd) -> Self {
         self.end = end
         return self
     }
@@ -103,3 +104,11 @@ final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRe
 typealias PanChange = (_ location: CGPoint, _ translation: CGPoint, _ velocity: CGPoint) -> Bool
 typealias PanEnd = () -> Void
 
+struct PanGestureSource : OptionSet {
+    let rawValue: Int
+    static let mouse = PanGestureSource(rawValue: 1 << 0)
+    static let trackpad = PanGestureSource(rawValue: 1 << 1)
+    static let touch = PanGestureSource(rawValue: 1 << 2)
+    
+    static let all: PanGestureSource = [.mouse, .touch, .trackpad]
+}
