@@ -10,23 +10,19 @@ struct AnswerView : View {
     let takeId: Int64
     let namespace: Namespace.ID
     let service: TakeService
-    let initialQuizFrames: QuizFrames?
+    let isGesturesEnabled: Bool
     
-    @State private var data: DataState
+    @Binding private var data: DataState
     @StateObject private var page: SwiftUIPager.Page = .first()
     @State private var buffer = Buffer()
     
-    init(takeId: Int64, namespace: Namespace.ID, initialQuizFrames: QuizFrames? = nil) {
+    init(takeId: Int64, namespace: Namespace.ID, data: Binding<DataState>, isGesturesEnabled: Bool = true) {
         self.takeId = takeId
         self.namespace = namespace
         let service = TakeService(takeId: takeId, db: Database.shared.app)
         self.service = service
-        self.initialQuizFrames = initialQuizFrames
-        self.data = if let initial = initialQuizFrames {
-            .transition(qf: initial)
-        } else {
-            .pending
-        }
+        self._data = data
+        self.isGesturesEnabled = isGesturesEnabled
     }
     
     enum DataState {
@@ -63,7 +59,7 @@ struct AnswerView : View {
                         }
                     }
                     .gesture(
-                        PanGesture()
+                        PanGesture(isEnabled: isGesturesEnabled)
                             .source([.mouse, .trackpad])
                             .onChange { location, translation, velocity in
                                 if abs(translation.y) > 100 {

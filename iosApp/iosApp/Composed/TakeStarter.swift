@@ -69,13 +69,11 @@ struct TakeStarter : View {
         .frame(maxWidth: .infinity)
         .scalesOnTap()
         .onTapGesture {
-            let cache: QuizFrames? = if case .ok(let model) = getModel() {
-                model.quizFrames
-            } else {
-                nil
+            if case .ok(let model) = getModel() {
+                contentModel.answerData = .transition(qf: model.quizFrames)
             }
             withAnimation {
-                contentModel.pathPeek = .answer(takeId: stat.id, cache: cache)
+                contentModel.pathPeek = .answer(takeId: stat.id)
             }
         }
         .task {
