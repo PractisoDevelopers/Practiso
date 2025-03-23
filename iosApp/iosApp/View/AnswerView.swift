@@ -41,11 +41,11 @@ struct AnswerView : View {
                         Text("Loading Take...")
                     }
                 case .transition(let qf):
-                    Page(quizFrames: qf, answer: [], service: service, namespace: namespace)
+                    Page(quizFrames: qf, answer: [], namespace: namespace)
                         .pageDefaults(proxy: window, safeAreaTop: window.safeAreaInsets.top)
                 case .ok(let qf, let answers):
                     SwiftUIPager.Pager(page: page, data: qf, id: \.quiz.id) { qf in
-                        Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, service: service, namespace: namespace)
+                        Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, namespace: namespace)
                             .pageDefaults(proxy: window, safeAreaTop: window.safeAreaInsets.top)
                             .background()
                     }
@@ -119,6 +119,7 @@ struct AnswerView : View {
                     initative(quiz: quizzes, ans: ans, currId: curr)
                 }
             }
+            .environment(\.takeService, service)
         }
     }
     
