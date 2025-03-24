@@ -73,7 +73,7 @@ struct SessionDetailView : View {
                                 ToolbarItem(placement: .primaryAction) {
                                     Button("Create") {
                                         isTakeCreatorShown = false
-                                        Task {
+                                        Task.detached {
                                             await errorHandler.catchAndShowImmediately {
                                                 let creator = TakeCreator(take: takeParamsBuffer)
                                                 _ = try await creator.create()
