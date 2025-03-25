@@ -9,13 +9,14 @@ struct ContentView: View {
     
     @ObservedObject private var model = Model()
     @ObservedObject private var errorHandler = ErrorHandler()
+    @ObservedObject private var takeStarterCache = TakeStarter.Cache()
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State private var preferredColumn: NavigationSplitViewColumn = .content
     @State private var takeStatData: SessionView.DataState<TakeStat> = .pending
     @State private var sessionData: SessionView.DataState<OptionImpl<SessionOption>> = .pending
     @State private var appScale = 1.0
     @State private var isBackGestureActivated = false
-    
+
     var body: some View {
         GeometryReader { window in
             ZStack {
@@ -111,6 +112,7 @@ struct ContentView: View {
             default:
                 SessionView(namespace: namespace, sessions: $sessionData, takes: $takeStatData)
                     .navigationTitle("Session")
+                    .environment(\.takeStarterCache, takeStarterCache)
             }
         } detail: {
             switch model.detail {

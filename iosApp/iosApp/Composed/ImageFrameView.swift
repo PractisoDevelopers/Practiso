@@ -81,7 +81,7 @@ struct ImageFrameView : View {
             } else {
                 do {
                     let image = try loader.load(fileName: frame.filename)
-                    await cache.put(name: frame.filename, image: image)
+                    await cache.put(name: frame.filename, value: image)
                     __data = .ok(image: image)
                     data?.wrappedValue = __data
                 } catch ImageServiceError.invalidData {
