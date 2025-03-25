@@ -3,36 +3,27 @@ import SwiftUI
 @preconcurrency import ComposeApp
 
 struct TakeStarter : View {
-    enum ModelState {
+    enum DataState {
         case pending
-        case ok(Model)
+        case ok(QuizFrames)
         case empty
     }
     
     let stat: TakeStat
-    @Binding var model: ModelState
     let namespace: Namespace.ID
     
-    private let libraryService = LibraryService(db: Database.shared.app)
     @Environment(ContentView.Model.self) private var contentModel
+    @Environment(\.takeStarterCache) private var cache
     
-    private let useOwnModel: Bool
-    @State private var ownModel: ModelState = .pending
     @State private var isReady: Bool = false
     @State private var isLocked: Bool = false
+    @State private var data: DataState = .pending
     
-    init(stat: TakeStat, namespace: Namespace.ID, model: Binding<ModelState>? = nil) {
+    init(stat: TakeStat, namespace: Namespace.ID) {
         self.stat = stat
         self.namespace = namespace
-        if let m = model {
-            self._model = m
-            self.useOwnModel = false
-        } else {
-            self._model = Binding.constant(.pending)
-            self.useOwnModel = true
-        }
     }
-    
+
     var body: some View {
         VStack(alignment: .leading) {
             Spacer()
@@ -46,13 +37,13 @@ struct TakeStarter : View {
         .frame(idealHeight: 160)
         .background {
             Group {
-                switch getModel() {
+                switch data {
                 case .pending:
                     Spacer()
                 case .empty:
                     Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
-                case .ok(let model):
-                    Question(frames: model.quizFrames.frames, namespace: namespace)
+                case .ok(let qf):
+                    Question(frames: qf.frames, namespace: namespace)
                         .opacity(isReady ? 0.6 : 0)
                         .animation(.default, value: isReady)
                 }
@@ -69,40 +60,34 @@ struct TakeStarter : View {
         .frame(maxWidth: .infinity)
         .scalesOnTap()
         .onTapGesture {
-            if case .ok(let model) = getModel() {
-                contentModel.answerData = .transition(qf: model.quizFrames)
+            if case .ok(let qf) = data {
+                contentModel.answerData = .transition(qf: qf)
             }
             withAnimation {
                 contentModel.pathPeek = .answer(takeId: stat.id)
             }
         }
-        .task {
+        .task(id: stat.id) {
+            if let cached = await cache.get(name: stat.id) {
+                data = .ok(cached)
+            }
             let takeService = TakeService(takeId: stat.id, db: Database.shared.app)
             if let quiz = try? await takeService.getCurrentQuiz() {
-                updateModel(newValue: .ok(.init(quizFrames: quiz)))
+                updateModel(newValue: .ok(quiz))
             } else {
                 updateModel(newValue: .empty)
             }
         }
     }
     
-    private func getModel() -> ModelState {
-        if useOwnModel {
-            return ownModel
-        } else {
-            return model
-        }
-    }
-    
-    private func updateModel(newValue: ModelState) {
-        if useOwnModel {
-            ownModel = newValue
-        } else {
-            model = newValue
-        }
+    private func updateModel(newValue: DataState) {
+        data = newValue
         DispatchQueue.main.schedule {
             withAnimation {
-                if case .ok(_) = newValue {
+                if case .ok(let v) = newValue {
+                    Task {
+                        await cache.put(name: stat.id, value: v)
+                    }
                     isReady = true
                 } else {
                     isReady = false

@@ -195,7 +195,7 @@ struct ImageFrameEditor<Label : View> : View {
         let name = importService.importImage(namedSource: NamedSource(url: from))
         let cgImage = try loader.load(fileName: name)
         Task {
-            await cache.put(name: name, image: cgImage)
+            await cache.put(name: name, value: cgImage)
             frame = ImageFrame(id: frame.id, embeddingsId: frame.embeddingsId, filename: name, width: Int64(cgImage.width), height: Int64(cgImage.height), altText: nil)
         }
     }

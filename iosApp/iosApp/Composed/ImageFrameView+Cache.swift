@@ -2,42 +2,20 @@ import Foundation
 import ImageIO
 
 extension ImageFrameView {
-    actor Cache : Observable, ObservableObject {
-        let capacity: Double
-        private var store: Dictionary<String, CGImage> = Dictionary()
-        private var visit: [String] = []
+    struct ImageCacheDrop : CacheDrop {
+        let capacity: Double // in metabytes
         
-        init(capacity: Double = 10) { // 10 mega bytes
-            self.capacity = capacity
-        }
-        
-        func get(name: String) -> CGImage? {
-            if let image = store[name] {
-                if let vIndex = visit.firstIndex(of: name) {
-                    visit.remove(at: vIndex)
-                }
-                visit.append(name)
-                
-                return image
-            } else {
-                return nil
-            }
-        }
-        
-        func exceedsCapacity(image: CGImage) -> Bool {
+        func shouldDrop(inserting: CGImage, store: Dictionary<String, CGImage>, visit: [String]) -> Bool {
             let size = store.values.reduce(Int64(0)) { partialResult, image in
                 partialResult + Int64(image.height * image.width) * Int64(image.bitsPerPixel)
             }
             return size > Int64(capacity * Double(1 << 20))
         }
-        
-        func put(name: String, image: CGImage) {
-            visit.append(name)
-            if exceedsCapacity(image: image) {
-                let removing = visit.removeFirst()
-                store.removeValue(forKey: removing)
-            }
-            store[name] = image
+    }
+    
+    final class Cache : CacheCompositor<LruCache<ImageCacheDrop>>, @unchecked Sendable {
+        init(capacity: Double = 10) {
+            super.init(inner: .init(drop: .init(capacity: capacity)))
         }
     }
 }
