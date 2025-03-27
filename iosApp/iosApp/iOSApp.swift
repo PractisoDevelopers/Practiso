@@ -13,16 +13,22 @@ struct iOSApp: App {
     
     var body: some Scene {
         WindowGroup(id: "content") {
-            ContentView()
-                .onOpenURL { value in
-                    if supportsMultipleWindow {
-                        openWindow(id: "browser", value: value)
-                    } else {
-                        withAnimation {
-                            self.url = value
+            if let openingUrl = url {
+                ArchiveDocumentView(url: openingUrl) {
+                    self.url = nil
+                }
+            } else {
+                ContentView()
+                    .onOpenURL { value in
+                        if supportsMultipleWindow {
+                            openWindow(id: "browser", value: value)
+                        } else {
+                            withAnimation {
+                                self.url = value
+                            }
                         }
                     }
-                }
+            }
         }
         
         WindowGroup(id: "browser", for: URL.self) { $url in
