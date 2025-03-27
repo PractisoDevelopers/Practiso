@@ -28,7 +28,7 @@ struct AnswerView : View {
     enum DataState {
         case pending
         case transition(qf: QuizFrames)
-        case ok(qf: [QuizFrames], answers: [PractisoAnswer])
+        case ok(qf: [QuizFrames], answers: [PractisoAnswer], currentQuizId: Int64)
     }
     
     var body: some View {
@@ -43,7 +43,7 @@ struct AnswerView : View {
                 case .transition(let qf):
                     Page(quizFrames: qf, answer: [], namespace: namespace)
                         .pageDefaults(proxy: window, safeAreaTop: window.safeAreaInsets.top)
-                case .ok(let qf, let answers):
+                case .ok(let qf, let answers, _):
                     SwiftUIPager.Pager(page: page, data: qf, id: \.quiz.id) { qf in
                         Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, namespace: namespace)
                             .pageDefaults(proxy: window, safeAreaTop: window.safeAreaInsets.top)
@@ -76,6 +76,11 @@ struct AnswerView : View {
                                 return false
                             }
                     )
+                    .task {
+                        while true {
+                            try? await Task.sleep(for: .milliseconds(500))
+                        }
+                    }
                 }
             }
             .background()
@@ -92,20 +97,20 @@ struct AnswerView : View {
                     }
                     .ignoresSafeArea()
             }
+            .overlay(alignment: .bottom) {
+                AnswerView.Timer(takeId: takeId)
+                    .padding(.bottom, 20)
+            }
             .task(id: takeId) {
                 for await quiz in service.getQuizzes() {
                     buffer.qf = quiz
-                    if let ans = buffer.answers, let curr = buffer.currQuizId {
-                        initative(quiz: quiz, ans: ans, currId: curr)
-                    }
+                    initative()
                 }
             }
             .task(id: takeId) {
                 for await ans in service.getAnswers() {
                     buffer.answers = ans
-                    if let quizzes = buffer.qf, let curr = buffer.currQuizId {
-                        initative(quiz: quizzes, ans: ans, currId: curr)
-                    }
+                    initative()
                 }
             }
             .task(id: takeId) {
@@ -115,26 +120,27 @@ struct AnswerView : View {
                     -1
                 }
                 buffer.currQuizId = curr
-                if let quizzes = buffer.qf, let ans = buffer.answers {
-                    initative(quiz: quizzes, ans: ans, currId: curr)
-                }
+                initative()
             }
             .environment(\.takeService, service)
         }
     }
     
-    func initative(quiz: [QuizFrames], ans: [PractisoAnswer], currId: Int64) {
-        let firstInitativation = if case .ok(_, _) = data {
-            false
-        } else {
-            true
-        }
-        data = .ok(qf: quiz, answers: ans)
-        if firstInitativation {
-            page.index = if currId >= 0 {
-                quiz.firstIndex(where: { $0.quiz.id == currId }) ?? 0
+    func initative() {
+        let state = buffer.dataState()
+        if case .ok(let qf, let answers, let currentQuizId) = state {
+            let firstInitativation = if case .ok(_, _, _) = data {
+                false
             } else {
-                0
+                true
+            }
+            data = state
+            if firstInitativation {
+                page.index = if currentQuizId >= 0 {
+                    qf.firstIndex(where: { $0.quiz.id == currentQuizId }) ?? 0
+                } else {
+                    0
+                }
             }
         }
     }
@@ -151,6 +157,14 @@ struct AnswerView : View {
         var qf: [QuizFrames]? = nil
         var answers: [PractisoAnswer]? = nil
         var currQuizId: Int64? = nil
+        
+        func dataState() -> DataState {
+            if let qf = qf, let ans = answers, let currQuizId = currQuizId {
+                .ok(qf: qf, answers: ans, currentQuizId: currQuizId)
+            } else {
+                .pending
+            }
+        }
     }
 }
 

@@ -81,8 +81,8 @@ struct SessionTakeCreator {
     
     func create() async throws -> (sessionId: Int64, takeId: Int64) {
         let sessionId = try await SessionCreator(params: session).create()
-        let takeId = try await service.createTake(sessionId: sessionId, timers: take.timers.map { DurationKt(seconds: $0.timeout.components.seconds, attoseconds: $0.timeout.components.attoseconds) })
-        return (sessionId, takeId.int64Value)
+        let takeId = try await TakeCreator(take: TakeParameters(sessionId: sessionId, timers: take.timers)).create()
+        return (sessionId, takeId)
     }
 }
 
@@ -91,7 +91,7 @@ struct TakeCreator {
     let service = CreateService(db: Database.shared.app)
     
     func create() async throws -> (Int64) {
-        let takeId = try await service.createTake(sessionId: take.sessionId, timers: take.timers)
+        let takeId = try await service.createTake(sessionId: take.sessionId, timers: take.timers.map { DurationKt(seconds: $0.timeout.components.seconds, attoseconds: $0.timeout.components.attoseconds) })
         return takeId.int64Value
     }
 }
