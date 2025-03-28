@@ -48,16 +48,19 @@ extension AnswerView {
                     data = .empty
                 }
             }
-            .task {
+            .task(id: takeId) {
                 while true {
-                    try? await Task.sleep(for: .seconds(10))
-                    _ = await updateDbDuration()
+                    if let _ = try? await Task.sleep(for: .seconds(10)) {
+                        _ = await updateDbDuration()
+                    } else {
+                        break
+                    }
                 }
             }
             .onChange(of: scenePhase) { oldValue, newValue in
                 switch newValue {
                 case .background:
-                    if case .ok(let timers, let duration, let start) = data {
+                    if case .ok(_, let duration, let start) = data {
                         let duration = Date.now.timeIntervalSince(start) + TimeInterval(integerLiteral: duration)
                         buffer.duration = duration
                     }
@@ -77,7 +80,7 @@ extension AnswerView {
         }
         
         func updateDbDuration() async -> Bool {
-            if case .ok(let timers, let duration, let start) = data {
+            if case .ok(_, let duration, let start) = data {
                 let duration = Date.now.timeIntervalSince(start) + TimeInterval(integerLiteral: duration)
                 await errorHandler.catchAndShowImmediately {
                     try await service.updateDuration(durationInSeconds: Int64(round(duration)))
