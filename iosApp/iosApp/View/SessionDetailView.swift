@@ -49,7 +49,7 @@ struct SessionDetailView : View {
                                 }
                             }
                         })) { take in
-                            TakeStatHeader(stat: take)
+                            TakeDetailHeader(stat: take)
                         }
                         .listStyle(.plain)
                     }

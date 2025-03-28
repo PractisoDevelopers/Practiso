@@ -244,6 +244,9 @@
     "Loading Image..." : {
 
     },
+    "Loading Information..." : {
+
+    },
     "Loading Question..." : {
 
     },
@@ -374,6 +377,9 @@
 
     },
     "Take" : {
+
+    },
+    "Take %lld" : {
 
     },
     "Take is removed" : {
