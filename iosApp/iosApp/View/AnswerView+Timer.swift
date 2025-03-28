@@ -127,16 +127,25 @@ extension AnswerView {
                                     selectedTimer = -1
                                 }
                             })) {
-                                Text(Date.now..<Date.now.addingTimeInterval(timer), format: .timeDuration)
+                                Text(Duration.seconds(timer), format: .time(pattern: .hourMinuteSecond))
                             }
                         }
                     }
                 } label: {
                     HStack {
-                        Image(systemName: "alarm")
                         if let next = nextTimer, isActive {
-                            Text(timerInterval: Date.now...next, countsDown: true)
+                            if next <= Date.now {
+                                Group {
+                                    Image(systemName: "alarm")
+                                    Text("Time is Up")
+                                }
+                                .foregroundStyle(.tint)
+                            } else {
+                                Image(systemName: "alarm")
+                                Text(timerInterval: Date.now...next, countsDown: true)
+                            }
                         } else {
+                            Image(systemName: "timer")
                             Text("Timer")
                         }
                     }
