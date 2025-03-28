@@ -76,11 +76,6 @@ struct AnswerView : View {
                                 return false
                             }
                     )
-                    .task {
-                        while true {
-                            try? await Task.sleep(for: .milliseconds(500))
-                        }
-                    }
                 }
             }
             .background()
@@ -128,7 +123,7 @@ struct AnswerView : View {
     
     func initative() {
         let state = buffer.dataState()
-        if case .ok(let qf, let answers, let currentQuizId) = state {
+        if case .ok(let qf, _, let currentQuizId) = state {
             let firstInitativation = if case .ok(_, _, _) = data {
                 false
             } else {
