@@ -42,11 +42,11 @@ struct AnswerView : View {
                     }
                 case .transition(let qf):
                     Page(quizFrames: qf, answer: [], namespace: namespace)
-                        .pageDefaults(proxy: window, safeAreaTop: window.safeAreaInsets.top)
+                        .pageDefaults(safeAreaTop: window.safeAreaInsets.top)
                 case .ok(let qf, let answers, _):
                     SwiftUIPager.Pager(page: page, data: qf, id: \.quiz.id) { qf in
                         Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, namespace: namespace)
-                            .pageDefaults(proxy: window, safeAreaTop: window.safeAreaInsets.top)
+                            .pageDefaults(safeAreaTop: window.safeAreaInsets.top)
                             .background()
                     }
                     .vertical()
@@ -164,7 +164,7 @@ struct AnswerView : View {
 }
 
 extension View {
-    fileprivate func pageDefaults(proxy: GeometryProxy, safeAreaTop: Double) -> some View {
+    fileprivate func pageDefaults(safeAreaTop: Double) -> some View {
         padding()
             .offset(y: safeAreaTop < 56 ? 56 : 0)
             .frame(maxHeight: .infinity, alignment: .top)
