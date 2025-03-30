@@ -50,6 +50,8 @@ extension AnswerView {
     }
     
     struct StatefulFrame : View {
+        @AppStorage(.showAccuracy) private var showAccuracy = false
+        
         let quizId: Int64
         let data: FrameAnswerable
         let answers: [PractisoAnswer]
@@ -63,12 +65,20 @@ extension AnswerView {
         }
         
         var body: some View {
-            switch onEnum(of: data) {
-            case .options(let options):
-                if options.frames.count(where: {$0.isKey}) <= 1 {
-                    SingleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId, namespace: namespace)
-                } else {
-                    MultipleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId, namespace: namespace)
+            Group {
+                switch onEnum(of: data) {
+                case .options(let options):
+                    if options.frames.count(where: {$0.isKey}) <= 1 {
+                        SingleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId, namespace: namespace)
+                    } else {
+                        MultipleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId, namespace: namespace)
+                    }
+                }
+            }
+            .background()
+            .contextMenu {
+                Toggle(isOn: $showAccuracy) {
+                    Text("Show Accuracy")
                 }
             }
         }
@@ -76,17 +86,30 @@ extension AnswerView {
         struct SingleAnswerOptionsFrame : View {
             @Environment(ContentView.ErrorHandler.self) private var errorHandler
             @Environment(\.takeService) private var service
-            
+            @AppStorage(.showAccuracy) private var showAccuracy = false
+
             let options: FrameOptions
             let answers: [PractisoAnswer]
             let quizId: Int64
             let namespace: Namespace.ID
             
+            @State private var xOffsets: [Double]
+            
+            init(options: FrameOptions, answers: [PractisoAnswer], quizId: Int64, namespace: Namespace.ID) {
+                self.options = options
+                self.answers = answers
+                self.quizId = quizId
+                self.namespace = namespace
+                
+                self.xOffsets = Array(repeating: 0.0, count: options.frames.count)
+            }
+
             var body: some View {
                 VStack(alignment: .leading) {
                     ForEach(Array(options.frames.enumerated()), id: \.element.frame.utid) { index, option in
                         Checkmark(isOn: itemBindings[index]) {
                             StatelessFrame(data: option.frame, namespace: namespace)
+                                .offset(x: xOffsets[index])
                                 .onTapGesture {
                                     itemBindings[index].wrappedValue.toggle()
                                 }
@@ -121,6 +144,15 @@ extension AnswerView {
                                 try service.rollbackAnswer(model: answer)
                             }
                         }
+                        
+                        if showAccuracy && newValue && !option.isKey {
+                            CoreHapticFeedback.shared?.wobble()
+                            withAnimation(.wobbleAnimation) {
+                                xOffsets[index] = 1
+                            } completion: {
+                                xOffsets[index] = 0
+                            }
+                        }
                     })
                 }
             }
@@ -129,17 +161,30 @@ extension AnswerView {
         struct MultipleAnswerOptionsFrame : View {
             @Environment(ContentView.ErrorHandler.self) private var errorHandler
             @Environment(\.takeService) private var service
-            
+            @AppStorage(.showAccuracy) private var showAccuracy = false
+
             let options: FrameOptions
             let answers: [PractisoAnswer]
             let quizId: Int64
             let namespace: Namespace.ID
+            
+            @State private var xOffsets: [Double]
+            
+            init(options: FrameOptions, answers: [PractisoAnswer], quizId: Int64, namespace: Namespace.ID) {
+                self.options = options
+                self.answers = answers
+                self.quizId = quizId
+                self.namespace = namespace
+                
+                self.xOffsets = Array(repeating: 0.0, count: options.frames.count)
+            }
             
             var body: some View {
                 VStack(alignment: .leading) {
                     ForEach(Array(options.frames.enumerated()), id: \.element.frame.utid) { index, option in
                         CheckmarkSquare(isOn: itemBindings[index]) {
                             StatelessFrame(data: option.frame, namespace: namespace)
+                                .offset(x: xOffsets[index])
                                 .onTapGesture {
                                     itemBindings[index].wrappedValue.toggle()
                                 }
@@ -168,9 +213,23 @@ extension AnswerView {
                                 try service.rollbackAnswer(model: answer)
                             }
                         }
+                        if showAccuracy && newValue && !option.isKey {
+                            CoreHapticFeedback.shared?.wobble()
+                            withAnimation(.wobbleAnimation) {
+                                xOffsets[index] = 1
+                            } completion: {
+                                xOffsets[index] = 0
+                            }
+                        }
                     })
                 }
             }
         }
+    }
+}
+
+extension Animation {
+    static var wobbleAnimation: Animation {
+        .interpolatingSpring(.init(mass: 0.1, stiffness: 30, damping: 1.5), initialVelocity: 2000)
     }
 }

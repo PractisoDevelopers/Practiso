@@ -361,6 +361,9 @@
     "Sessions" : {
       "extractionState" : "manual"
     },
+    "Show Accuracy" : {
+
+    },
     "Skip" : {
 
     },

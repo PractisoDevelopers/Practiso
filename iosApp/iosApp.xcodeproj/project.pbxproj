@@ -10,6 +10,7 @@
 		058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557BA273AAA24004C7B11 /* Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		6A03DC1C2D2ADEAE00AF3F06 /* AHAP in Resources */ = {isa = PBXBuildFile; fileRef = 6A03DC1B2D2ADEA900AF3F06 /* AHAP */; };
+		6A2D44262D98E22E00E18022 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 6A2D44252D98E22E00E18022 /* Settings.bundle */; };
 		6A806BCC2D60E0F200453A72 /* Archive@x2.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A806BCB2D60E0F200453A72 /* Archive@x2.png */; };
 		6A9D7F892D54D83700A57747 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6A9D7F882D54D83700A57747 /* Localizable.xcstrings */; };
 		6AFCF2EB2D89AE8800C3B648 /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFCF2EA2D89AE8800C3B648 /* SwiftUIPager */; };
@@ -19,6 +20,7 @@
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		6A03DC1B2D2ADEA900AF3F06 /* AHAP */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AHAP; sourceTree = "<group>"; };
+		6A2D44252D98E22E00E18022 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		6A806BCB2D60E0F200453A72 /* Archive@x2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Archive@x2.png"; sourceTree = "<group>"; };
 		6A9D7F882D54D83700A57747 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		6ADA94532D37B33700381F73 /* CouchbaseLiteSwift.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CouchbaseLiteSwift.xcframework; path = "../../../../Downloads/couchbase-lite-swift_xc_community_3.1.9/CouchbaseLiteSwift.xcframework"; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 				6A11F1442D55EDC30062436E /* Model */,
 				6A9D7F7E2D548CC800A57747 /* View */,
 				6A806BCB2D60E0F200453A72 /* Archive@x2.png */,
+				6A2D44252D98E22E00E18022 /* Settings.bundle */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -177,6 +180,7 @@
 			files = (
 				058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */,
 				6A03DC1C2D2ADEAE00AF3F06 /* AHAP in Resources */,
+				6A2D44262D98E22E00E18022 /* Settings.bundle in Resources */,
 				6A806BCC2D60E0F200453A72 /* Archive@x2.png in Resources */,
 				6A9D7F892D54D83700A57747 /* Localizable.xcstrings in Resources */,
 			);
@@ -363,6 +367,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "${BUNDLE_ID}${TEAM_ID}";
 				PRODUCT_NAME = "${APP_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -389,6 +397,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "${BUNDLE_ID}${TEAM_ID}";
 				PRODUCT_NAME = "${APP_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
