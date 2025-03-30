@@ -151,6 +151,7 @@ extension AnswerView {
                     }
                     .shadow(color: .black, radius: 14)
                     .animation(.default, value: isActive)
+                    .background()
                     .onChange(of: scenePhase) { oldValue, newValue in
                         if newValue == .active {
                             isActive = true
