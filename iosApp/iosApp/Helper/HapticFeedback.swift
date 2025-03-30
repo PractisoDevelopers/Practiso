@@ -15,6 +15,9 @@ enum FeatureUnavailableError : Error {
 }
 
 class CoreHapticFeedback : Vibrator {
+    @MainActor
+    static let shared: CoreHapticFeedback? = try? .init()
+    
     let engine: CHHapticEngine
     
     init() throws {
