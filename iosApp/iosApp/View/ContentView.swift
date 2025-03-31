@@ -22,7 +22,6 @@ struct ContentView: View {
             ZStack {
                 app(topLevel: model.pathPeek)
                     .animation(.easeInOut, value: appScale)
-                    .clipShape(isEnabled: isBackGestureActivated, shape: RoundedRectangle(cornerRadius: (1 - appScale) * 12 + 20))
                     .overlay {
                         if appScale < 1 {
                             RoundedRectangle(cornerRadius: (1 - appScale) * 12 + 20)
