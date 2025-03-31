@@ -146,7 +146,9 @@ extension AnswerView {
                         }
                         
                         if showAccuracy && newValue && !option.isKey {
-                            CoreHapticFeedback.shared?.wobble()
+                            Task {
+                                await CoreHapticFeedback.shared?.wobble()
+                            }
                             withAnimation(.wobbleAnimation) {
                                 xOffsets[index] = 1
                             } completion: {
@@ -214,7 +216,9 @@ extension AnswerView {
                             }
                         }
                         if showAccuracy && newValue && !option.isKey {
-                            CoreHapticFeedback.shared?.wobble()
+                            Task {
+                                await CoreHapticFeedback.shared?.wobble()
+                            }
                             withAnimation(.wobbleAnimation) {
                                 xOffsets[index] = 1
                             } completion: {

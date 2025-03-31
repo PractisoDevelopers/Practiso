@@ -35,13 +35,28 @@ class CoreHapticFeedback : Vibrator {
         }
     }
     
+    private var wobbleUrl: URL? {
+        Bundle.main.url(forResource: "AHAP/Wobble", withExtension: "ahap")
+    }
+    
     func wobble() {
-        guard let url = Bundle.main.url(forResource: "AHAP/Wobble", withExtension: "ahap") else {
+        guard let url = wobbleUrl else {
             return
         }
-        
         do {
             try engine.start()
+            try engine.playPattern(from: url)
+        } catch let error {
+            print("Failed to play wobble pattern: \(error)")
+        }
+    }
+    
+    func wobble() async {
+        guard let url = wobbleUrl else {
+            return
+        }
+        do {
+            try await engine.start()
             try engine.playPattern(from: url)
         } catch let error {
             print("Failed to play wobble pattern: \(error)")
