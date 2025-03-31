@@ -18,16 +18,16 @@ struct CircularProgressView<Value : BinaryFloatingPoint> : View {
             }
             context.clip(to: donut, style: .init(eoFill: true))
             
-            let arcAngle = Angle(degrees: 360 * Double(value))
+            let arcAngle = Angle(degrees: 360 * Double(value) - 90)
             let arc = Path { p in
                 p.move(to: .zero)
-                p.addArc(center: .zero, radius: radius, startAngle: .zero, endAngle: arcAngle, clockwise: false)
+                p.addArc(center: .zero, radius: radius, startAngle: .degrees(-90), endAngle: arcAngle, clockwise: false)
                 p.closeSubpath()
             }
             context.fill(arc, with: .style(.tint))
             let closer = Path { p in
                 p.move(to: .zero)
-                p.addArc(center: .zero, radius: radius, startAngle: arcAngle, endAngle: .degrees(360), clockwise: false)
+                p.addArc(center: .zero, radius: radius, startAngle: arcAngle, endAngle: .degrees(270), clockwise: false)
                 p.closeSubpath()
             }
             context.fill(closer, with: .style(.foreground))
