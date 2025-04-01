@@ -69,8 +69,8 @@ import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
-import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
@@ -110,7 +110,7 @@ fun LibraryApp(
     composeFromBottomUp("fab") {
         val pickerLauncher =
             rememberFilePickerLauncher(
-                type = PickerType.File(listOf("psarchive")),
+                type = FileKitType.File(listOf("psarchive")),
                 title = stringResource(Res.string.import_from_practiso_archive_para)
             ) { file ->
                 if (file == null) {

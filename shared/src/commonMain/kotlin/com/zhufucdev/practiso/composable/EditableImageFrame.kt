@@ -37,8 +37,8 @@ import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.style.PaddingNormal
-import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
@@ -68,7 +68,7 @@ fun EditableImageFrame(
 
     val coroutine = rememberCoroutineScope()
     val pickerLauncher = rememberFilePickerLauncher(
-        type = PickerType.Image,
+        type = FileKitType.Image,
         title = stringResource(Res.string.pick_an_image_for_this_frame_para)
     ) { file ->
         if (file == null) {
