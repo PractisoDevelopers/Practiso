@@ -6,7 +6,7 @@ import com.zhufucdev.practiso.platform.AppDestination.Answer
 import com.zhufucdev.practiso.platform.AppDestination.MainView
 import com.zhufucdev.practiso.platform.AppDestination.QuizCreate
 
-class Application : PractisoApp() {
+class Application : PractisoApp(), Destinationable {
     override fun onCreate() {
         super.onCreate()
     }

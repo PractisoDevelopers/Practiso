@@ -27,7 +27,7 @@ struct SessionParameters {
     }
     
     init(from: ComposeApp.SessionCreator) {
-        self.name = from.sessionName ?? String(localized: "New suggestion")
+        self.name = SessionCreatorOption.from(sessionCreator: from).view.header
         self.selection = Selection(
             quizIds: Set(from.selection.quizIds.map(\.int64Value)),
             dimensionIds: Set(from.selection.dimensionIds.map(\.int64Value))

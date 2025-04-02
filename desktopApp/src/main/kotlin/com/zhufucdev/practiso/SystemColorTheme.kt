@@ -37,7 +37,7 @@ fun SystemColorTheme(animate: Boolean = false, content: @Composable () -> Unit) 
     }
 
     DynamicMaterialTheme(
-        primary = color.first ?: if (color.second) primaryDark else primaryLight,
+        primary = color.first?.toComposeColor() ?: if (color.second) primaryDark else primaryLight,
         useDarkTheme = color.second,
         animate = animate,
         typography = AppTypography

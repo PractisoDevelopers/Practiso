@@ -28,9 +28,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.serializer
-import org.jetbrains.compose.resources.getString
-import resources.Res
-import resources.image_emoji
 
 @Serializable
 sealed interface Frame {
@@ -63,7 +60,7 @@ sealed interface Frame {
         val imageFrame: ImageFrame = ImageFrame(-1, null, "", 0, 0, null),
     ) : Frame {
         override suspend fun getPreviewText(): String {
-            return imageFrame.altText ?: getString(Res.string.image_emoji)
+            return imageFrame.altText ?: "🖼️"
         }
 
         override fun toArchive() = FrameArchive.Image(

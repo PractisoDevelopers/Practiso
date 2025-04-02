@@ -1,20 +1,11 @@
-//
-//  Vibrator.swift
-//  iosApp
-//
-//  Created by Steve Reed on 2025/1/6.
-//  Copyright © 2025 orgName. All rights reserved.
-//
-
 import Foundation
-import ComposeApp
 import CoreHaptics
 
 enum FeatureUnavailableError : Error {
     case haptics
 }
 
-class CoreHapticFeedback : Vibrator {
+class CoreHapticFeedback {
     @MainActor
     static let shared: CoreHapticFeedback? = try? .init()
     

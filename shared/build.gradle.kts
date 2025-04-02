@@ -6,10 +6,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlinxSerialization)
-    alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.skie)
 }
 
@@ -38,6 +36,8 @@ kotlin {
         }
     }
 
+    applyDefaultHierarchyTemplate()
+
     targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().forEach {
         it.binaries.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.Framework>()
             .forEach { lib ->
@@ -47,34 +47,15 @@ kotlin {
     }
 
     sourceSets {
-        val desktopMain by getting
-
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.sqldelight.android.driver)
-            implementation(libs.onnx.runtime.android)
-        }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            api(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            api(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime.compose)
-            api(libs.androidx.navigation)
-            implementation(libs.material3.adaptative)
-            implementation(libs.material3.windowsize)
-            implementation(libs.sqldelight.runtime)
-            implementation(libs.sqldelight.coroutines)
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.serialization.protobuf)
-            implementation(libs.kotlinx.io.okio)
-            api(libs.filekit)
+            api(libs.sqldelight.runtime)
+            api(libs.sqldelight.coroutines)
+            api(libs.kotlinx.serialization.json)
+            api(libs.kotlinx.serialization.protobuf)
+            api(libs.kotlinx.datetime)
+            api(libs.kotlinx.io.okio)
+            api(libs.filekit.core)
             api(libs.okio)
-            implementation(libs.humanreadable)
             implementation(libs.settings.core)
             implementation(libs.settings.coroutine)
             implementation(libs.xmlutil.core)
@@ -84,15 +65,28 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.okio.fakefs)
         }
-        desktopMain.dependencies {
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.sqldelight.jvm.driver)
-            implementation(libs.nativeparameteraccess)
-            implementation(libs.onnx.runtime.jvm)
+
+        androidMain.dependencies {
+            implementation(libs.sqldelight.android.driver)
+            implementation(libs.onnx.runtime.android)
         }
-        iosMain.dependencies {
+
+        val desktopMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.swing)
+                implementation(libs.sqldelight.jvm.driver)
+                implementation(libs.nativeparameteraccess)
+                implementation(libs.onnx.runtime.jvm)
+            }
+        }
+
+        appleMain.dependencies {
             implementation(libs.sqldelight.native.driver)
         }
+    }
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 }
 
@@ -116,9 +110,4 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-}
-
-compose.resources {
-    generateResClass = always
-    packageOfResClass = "resources"
 }

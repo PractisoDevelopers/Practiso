@@ -24,6 +24,7 @@ import com.zhufucdev.practiso.platform.NavigationStateSnapshot
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
+import io.github.vinceglb.filekit.FileKit
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -52,6 +53,7 @@ private fun handleFileAssociations(args: Array<String>): ReceiveChannel<List<Fil
 }
 
 fun main(args: Array<String>) {
+    FileKit.init("Practiso")
     val openFileChannel = handleFileAssociations(args)
 
     singleWindowApplication(title = "Practiso") {

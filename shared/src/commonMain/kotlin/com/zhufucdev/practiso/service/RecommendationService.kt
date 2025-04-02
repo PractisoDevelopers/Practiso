@@ -15,12 +15,6 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
-import org.jetbrains.compose.resources.getPluralString
-import org.jetbrains.compose.resources.getString
-import resources.Res
-import resources.n_questions_in_dimension
-import resources.new_question_para
-import resources.x_and_n_more_para
 
 class RecommendationService(private val db: AppDatabase = Database.app) {
     fun getRecentRecommendations(): Flow<List<SessionCreator>> =
@@ -35,40 +29,24 @@ class RecommendationService(private val db: AppDatabase = Database.app) {
                         .collectLatest { dimensions ->
                             val emission = buildList {
                                 if (quizzes.isNotEmpty()) {
-                                    val firstName = quizzes.first().quiz.name
-                                        ?: getString(Res.string.new_question_para)
                                     add(
-                                        SessionCreator.ViaSelection(
+                                        SessionCreator.RecentlyCreatedQuizzes(
                                             selection = Selection(
                                                 quizIds = quizzes.map(PractisoOption::id).toSet()
                                             ),
-                                            type = SessionCreator.ViaSelection.Type.RecentlyCreated,
-                                            preview = if (quizzes.size > 1) {
-                                                getString(
-                                                    Res.string.x_and_n_more_para,
-                                                    firstName,
-                                                    quizzes.size - 1
-                                                )
-                                            } else {
-                                                firstName
-                                            }
+                                            leadingQuizName = quizzes.first().quiz.name
                                         )
                                     )
                                 }
 
                                 dimensions.forEach {
                                     add(
-                                        SessionCreator.ViaSelection(
+                                        SessionCreator.RecentlyCreatedDimension(
                                             selection = Selection(
                                                 dimensionIds = setOf(it.dimension.id)
                                             ),
-                                            type = SessionCreator.ViaSelection.Type.RecentlyCreated,
-                                            preview = getPluralString(
-                                                Res.plurals.n_questions_in_dimension,
-                                                it.quizCount,
-                                                it.quizCount,
-                                                it.dimension.name
-                                            )
+                                            quizCount = it.quizCount,
+                                            dimensionName = it.dimension.name,
                                         )
                                     )
                                 }
