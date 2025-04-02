@@ -117,6 +117,9 @@ struct AnswerView : View {
                 buffer.currQuizId = curr
                 initative()
             }
+            .task(id: takeId) {
+                try? await service.updateAccessTime()
+            }
             .environment(\.takeService, service)
         }
     }
