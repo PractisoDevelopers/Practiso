@@ -24,6 +24,7 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.service.LibraryService
+import com.zhufucdev.practiso.service.TakeService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -40,7 +41,7 @@ import kotlin.time.Duration.Companion.minutes
 
 @OptIn(SavedStateHandleSaveableApi::class, ExperimentalCoroutinesApi::class)
 class TakeStarterViewModel(
-    val db: AppDatabase,
+    private val db: AppDatabase,
     state: SavedStateHandle,
     private val createService: CreateService = CreateService(db),
     private val libraryService: LibraryService = LibraryService(db),

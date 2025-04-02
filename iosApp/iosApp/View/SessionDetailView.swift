@@ -40,18 +40,7 @@ struct SessionDetailView : View {
                     if array.isEmpty {
                         OptionListPlaceholder()
                     } else {
-                        List(array, id: \.id, selection: Binding(get: {
-                            Set<Int64>()
-                        }, set: { newValue in
-                            if let first = newValue.first {
-                                withAnimation {
-                                    contentModel.pathPeek = .answer(takeId: first)
-                                }
-                            }
-                        })) { take in
-                            TakeDetailHeader(stat: take)
-                        }
-                        .listStyle(.plain)
+                        takeList(array)
                     }
                 }
                 .toolbar {
@@ -93,5 +82,45 @@ struct SessionDetailView : View {
                 data = .ok(stats)
             }
         }
+    }
+    
+    func takeList(_ array: [TakeStat]) -> some View {
+        List(selection: Binding(get: {
+            Set<Int64>()
+        }, set: { newValue in
+            if let first = newValue.first {
+                withAnimation {
+                    contentModel.pathPeek = .answer(takeId: first)
+                }
+            }
+        })) {
+            Section {
+                ForEach(array.filter({ $0.hidden == 0 }), id: \.id) { take in
+                    TakeDetailHeader(stat: take)
+                        .swipeActions {
+                            Button("Hide", systemImage: "eye.slash", role: .destructive) {
+                                let service = TakeServiceSync(base: TakeService(takeId: take.id, db: Database.shared.app))
+                                errorHandler.catchAndShowImmediately {
+                                    try service.updateVisibility(hidden: true)
+                                }
+                            }
+                        }
+                }
+            }
+            Section("Hidden") {
+                ForEach(array.filter({ $0.hidden == 1 }), id: \.id) { take in
+                    TakeDetailHeader(stat: take)
+                        .swipeActions {
+                            Button("Unhide", systemImage: "arrow.up.to.line", role: .destructive) {
+                                let service = TakeServiceSync(base: TakeService(takeId: take.id, db: Database.shared.app))
+                                errorHandler.catchAndShowImmediately {
+                                    try service.updateVisibility(hidden: false)
+                                }
+                            }
+                        }
+                }
+            }
+        }
+        .listStyle(.plain)
     }
 }

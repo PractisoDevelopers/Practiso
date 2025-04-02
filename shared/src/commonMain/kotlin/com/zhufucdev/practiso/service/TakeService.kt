@@ -100,4 +100,10 @@ class TakeService(private val takeId: Long, private val db: AppDatabase = Databa
             db.sessionQueries.updateCurrentQuizId(currentQuizId, takeId)
         }
     }
+
+    suspend fun updateVisibility(hidden: Boolean) {
+        db.transaction {
+            db.sessionQueries.updateTakeVisibility(if (hidden) 1 else 0, takeId)
+        }
+    }
 }
