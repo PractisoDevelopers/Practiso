@@ -1,6 +1,5 @@
 package com.zhufucdev.practiso.platform
 
-import androidx.compose.ui.graphics.Color
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
@@ -12,6 +11,7 @@ import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
+import java.awt.Color
 import java.util.Properties
 import java.util.prefs.Preferences
 import kotlin.io.path.Path
@@ -112,10 +112,10 @@ class WindowsPlatform : JVMPlatform() {
             ).hexToInt(HexFormat { number.prefix = "0x" })
         }.getOrNull()?.let {
             Color(
-                alpha = it shr (24) and (0xFF),
-                blue = it shr (16) and (0xFF),
-                green = it shr (8) and (0xFF),
-                red = it and 0xFF
+                it and 0xFF,
+                it shr (8) and (0xFF),
+                it shr (16) and (0xFF),
+                it shr (24) and (0xFF)
             )
         }
 }

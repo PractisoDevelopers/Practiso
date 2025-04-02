@@ -4,7 +4,30 @@
     "" : {
 
     },
+    "%@ and %d more" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ and %2$d more"
+          }
+        }
+      }
+    },
+    "%@ and %lld more" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ and %2$lld more"
+          }
+        }
+      }
+    },
     "%@ Unavailable" : {
+
+    },
+    "%d items" : {
 
     },
     "%d questions" : {
@@ -25,6 +48,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%d questions in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$d questions in %2$@"
           }
         }
       }
@@ -192,6 +225,9 @@
     "Explore" : {
 
     },
+    "Have a review" : {
+
+    },
     "Home" : {
 
     },
@@ -221,9 +257,6 @@
       }
     },
     "Keep Questions" : {
-
-    },
-    "Least accessed" : {
 
     },
     "Less" : {
@@ -282,9 +315,6 @@
     },
     "New question" : {
       "extractionState" : "manual"
-    },
-    "New suggestion" : {
-
     },
     "Next" : {
 

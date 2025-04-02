@@ -56,6 +56,7 @@ compose.desktop {
 
 dependencies {
     implementation(projects.shared)
+    implementation(projects.composeShared)
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.materialkolor)

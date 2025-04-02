@@ -32,10 +32,17 @@ class OptionImpl<KtType> : Option where KtType : PractisoOption & PractisoOption
 
 struct SessionCreatorOption {
     static func from(sessionCreator: ComposeApp.SessionCreator) -> any Option {
-        if let kt = sessionCreator as? SessionCreatorViaSelection {
-            return OptionImpl<SessionCreatorViaSelection>(kt: kt)
-        } else {
-            fatalError()
+        switch onEnum(of: sessionCreator) {
+        case .dimensionOption(let kt):
+            OptionImpl(kt: kt)
+        case .recentlyCreatedDimension(let kt):
+            OptionImpl(kt: kt)
+        case .recentlyCreatedQuizzes(let kt):
+            OptionImpl(kt: kt)
+        case .failMuch(let kt):
+            OptionImpl(kt: kt)
+        case .leastAccessed(let kt):
+            OptionImpl(kt: kt)
         }
     }
 }
@@ -126,19 +133,57 @@ extension SessionOption : PractisoOptionViewable {
     }
 }
 
-extension SessionCreatorViaSelection : PractisoOptionViewable {
+extension SessionCreatorRecentlyCreatedQuizzes : PractisoOptionViewable {
     var view: PractisoOptionView {
-        let header = switch self.type {
-            case .recentlyCreated:
-                String(localized: "Recently created")
-            case .failMuch:
-                String(localized: "Recommended for you")
-            case .leastAccessed:
-                String(localized: "Least accessed")
-            }
+        let name = self.leadingQuizName ?? String(localized: "New question")
         return PractisoOptionView(
-            header: header,
-            subtitle: preview
+            header: String(localized: "Recently created"),
+            subtitle: selection.quizIds.count > 1 ? String(localized: "\(name) and \(selection.quizIds.count - 1) more") : name
+        )
+    }
+}
+
+extension SessionCreatorRecentlyCreatedDimension : PractisoOptionViewable {
+    var view: PractisoOptionView {
+        PractisoOptionView(
+            header: String(localized: "Recently created"),
+            subtitle: String(localized: "\(quizCount) questions in \(dimensionName)")
+        )
+    }
+}
+
+extension SessionCreatorFailMuch : PractisoOptionViewable {
+    var view: PractisoOptionView {
+        let subtitle = if let itemName = self.leadingItemName {
+            if itemCount > 1 {
+                String(localized: "\(itemName) and \(itemCount - 1) more")
+            } else {
+                itemName
+            }
+        } else {
+            String(localized: "\(itemCount) items")
+        }
+        return PractisoOptionView(
+            header: String(localized: "Recommended for you"),
+            subtitle: subtitle
+        )
+    }
+}
+
+extension SessionCreatorLeastAccessed : PractisoOptionViewable {
+    var view: PractisoOptionView {
+        let subtitle = if let itemName = self.leadingItemName {
+            if itemCount > 1 {
+                String(localized: "\(itemName) and \(itemCount - 1) more")
+            } else {
+                itemName
+            }
+        } else {
+            String(localized: "\(itemCount) items")
+        }
+        return PractisoOptionView(
+            header: String(localized: "Have a review"),
+            subtitle: subtitle
         )
     }
 }

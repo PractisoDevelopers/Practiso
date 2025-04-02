@@ -1,47 +1,26 @@
 package com.zhufucdev.practiso.datamodel
 
-import org.jetbrains.compose.resources.stringResource
-import resources.Res
-import resources.least_accessed_para
-import resources.recently_created_para
-import resources.recommended_for_you_para
-
 sealed interface SessionCreator : PractisoOption {
     val selection: Selection
-    val sessionName: String? get() = null
 
-    data class ViaSelection(
-        override val selection: Selection,
-        val type: Type,
-        val preview: String,
-    ) :
-        SessionCreator {
-        companion object {
-            private var id: Long = 0
-        }
+    data class RecentlyCreatedQuizzes(override val selection: Selection, val leadingQuizName: String?) : SessionCreator {
+        override val id = RandomAccess.id++
+    }
 
-        enum class Type {
-            RecentlyCreated, LeastAccessed, FailMuch
-        }
+    data class RecentlyCreatedDimension(override val selection: Selection, val quizCount: Int, val dimensionName: String) : SessionCreator {
+        override val id: Long = RandomAccess.id++
+    }
 
-        override val id: Long = Companion.id++
+    data class LeastAccessed(override val selection: Selection, val leadingItemName: String?, val itemCount: Int) : SessionCreator {
+        override val id: Long = RandomAccess.id++
+    }
 
-        override val view: PractisoOption.View
-            get() = PractisoOption.View(
-                title = {
-                    stringResource(
-                        when (type) {
-                            Type.RecentlyCreated -> Res.string.recently_created_para
-                            Type.LeastAccessed -> Res.string.least_accessed_para
-                            Type.FailMuch -> Res.string.recommended_for_you_para
-                        }
-                    )
-                },
-                preview = { preview }
-            )
+    data class FailMuch(override val selection: Selection, val leadingItemName: String?, val itemCount: Int) : SessionCreator {
+        override val id: Long = RandomAccess.id++
+    }
 
-        override val sessionName: String?
-            get() = preview
+    object RandomAccess {
+        var id: Long = 0
     }
 }
 

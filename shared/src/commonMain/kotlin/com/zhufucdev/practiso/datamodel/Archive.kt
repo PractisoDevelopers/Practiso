@@ -1,6 +1,5 @@
 package com.zhufucdev.practiso.datamodel
 
-import androidx.compose.ui.util.fastForEachIndexed
 import com.zhufucdev.practiso.database.AppDatabase
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -373,7 +372,7 @@ suspend fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?) {
         db.quizQueries.lastInsertRowId().executeAsOne()
     }
 
-    fastForEachIndexed { index, frame ->
+    forEachIndexed { index, frame ->
         frame.insertInto(db, quizId, index.toLong())
     }
 }
