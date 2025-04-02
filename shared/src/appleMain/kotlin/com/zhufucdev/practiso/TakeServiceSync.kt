@@ -15,4 +15,9 @@ class TakeServiceSync(private val base: TakeService) {
     fun rollbackAnswer(model: PractisoAnswer) = runBlocking {
         base.rollbackAnswer(model)
     }
+
+    @Throws(SQLiteException::class)
+    fun updateVisibility(hidden: Boolean) = runBlocking {
+        base.updateVisibility(hidden)
+    }
 }

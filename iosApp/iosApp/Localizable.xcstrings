@@ -228,6 +228,12 @@
     "Have a review" : {
 
     },
+    "Hidden" : {
+
+    },
+    "Hide" : {
+
+    },
     "Home" : {
 
     },
@@ -443,6 +449,9 @@
 
     },
     "Undo" : {
+
+    },
+    "Unhide" : {
 
     },
     "Unknown frame type %@" : {
