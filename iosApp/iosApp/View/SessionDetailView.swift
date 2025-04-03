@@ -18,6 +18,7 @@ struct SessionDetailView : View {
     @State private var data: DataState = .pending
     @State private var isTakeCreatorShown = false
     @State private var takeParamsBuffer: TakeParameters
+    @State private var isHiddenSectonExpanded = false
     
     init(option: SessionOption, namespace: Namespace.ID) {
         self.option = option
@@ -107,7 +108,7 @@ struct SessionDetailView : View {
                         }
                 }
             }
-            Section("Hidden") {
+            Section(isExpanded: $isHiddenSectonExpanded) {
                 ForEach(array.filter({ $0.hidden == 1 }), id: \.id) { take in
                     TakeDetailHeader(stat: take)
                         .swipeActions {
@@ -119,8 +120,37 @@ struct SessionDetailView : View {
                             }
                         }
                 }
+            } header: {
+                hiddenSectionHeader
             }
         }
         .listStyle(.plain)
+    }
+    
+    var hiddenSectionHeader: some View {
+        HStack {
+            Text("Hidden").fontWeight(.bold).foregroundStyle(.secondary)
+            Spacer()
+            Button {
+                withAnimation {
+                    isHiddenSectonExpanded.toggle()
+                }
+            } label: {
+                Image(systemName: "chevron.down")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 12, height: 12)
+                    .rotationEffect(isHiddenSectonExpanded ? .zero : .degrees(-90))
+                    .animation(.default, value: isHiddenSectonExpanded)
+                    .foregroundStyle(.tint)
+            }
+            .buttonStyle(.plain)
+        }
+        .background()
+        .onTapGesture {
+            withAnimation {
+                isHiddenSectonExpanded.toggle()
+            }
+        }
     }
 }
