@@ -96,34 +96,47 @@ struct ContentView: View {
         NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
             LibraryView(destination: $model.destination)
                 .navigationTitle("Library")
+                .onAppear {
+                    preferredColumn = .sidebar
+                }
         } content: {
-            switch model.destination {
-            case .template:
-                TemplateView()
-                    .navigationTitle("Template")
-            case .dimension:
-                DimensionView()
-                    .navigationTitle("Dimension")
-            case .question:
-                QuestionView()
-                    .navigationTitle("Question")
-            default:
-                SessionView(namespace: namespace, sessions: $sessionData, takes: $takeStatData)
-                    .navigationTitle("Session")
-                    .environment(\.takeStarterCache, takeStarterCache)
+            Group {
+                switch model.destination {
+                case .template:
+                    TemplateView()
+                        .navigationTitle("Template")
+                case .dimension:
+                    DimensionView()
+                        .navigationTitle("Dimension")
+                case .question:
+                    QuestionView()
+                        .navigationTitle("Question")
+                default:
+                    SessionView(namespace: namespace, sessions: $sessionData, takes: $takeStatData)
+                        .navigationTitle("Session")
+                        .environment(\.takeStarterCache, takeStarterCache)
+                }
+            }
+            .onAppear {
+                preferredColumn = .content
             }
         } detail: {
-            switch model.detail {
-            case .question(let quizOption):
-                QuestionDetailView(option: quizOption)
-            case .dimension(let dimensionOption):
-                DimensionDetailView(option: dimensionOption)
-            case .template(let templateOption):
-                TemplateDetailView()
-            case .session(let sessionOption):
-                SessionDetailView(option: sessionOption, namespace: namespace)
-            case .none:
-                Text("Select an Item to Show")
+            Group {
+                switch model.detail {
+                case .question(let quizOption):
+                    QuestionDetailView(option: quizOption)
+                case .dimension(let dimensionOption):
+                    DimensionDetailView(option: dimensionOption)
+                case .template(let templateOption):
+                    TemplateDetailView()
+                case .session(let sessionOption):
+                    SessionDetailView(option: sessionOption, namespace: namespace)
+                case .none:
+                    Text("Select an Item to Show")
+                }
+            }
+            .onAppear {
+                preferredColumn = .detail
             }
         }
     }
