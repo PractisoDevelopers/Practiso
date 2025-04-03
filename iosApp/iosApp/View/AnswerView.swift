@@ -10,19 +10,19 @@ struct AnswerView : View {
     let takeId: Int64
     let namespace: Namespace.ID
     let service: TakeService
-    let isGesturesEnabled: Bool
     
     @Binding private var data: DataState
+    @Binding private var isGesturesEnabled: Bool
     @StateObject private var page: SwiftUIPager.Page = .first()
     @State private var buffer = Buffer()
     
-    init(takeId: Int64, namespace: Namespace.ID, data: Binding<DataState>, isGesturesEnabled: Bool = true) {
+    init(takeId: Int64, namespace: Namespace.ID, data: Binding<DataState>, isGesturesEnabled: Binding<Bool> = .constant(true)) {
         self.takeId = takeId
         self.namespace = namespace
         let service = TakeService(takeId: takeId, db: Database.shared.app)
         self.service = service
         self._data = data
-        self.isGesturesEnabled = isGesturesEnabled
+        self._isGesturesEnabled = isGesturesEnabled
     }
     
     enum DataState {
@@ -59,22 +59,20 @@ struct AnswerView : View {
                         }
                     }
                     .gesture(
-                        PanGesture(isEnabled: isGesturesEnabled)
-                            .source([.mouse, .trackpad])
-                            .onChange { location, translation, velocity in
-                                if abs(translation.y) > 100 {
-                                    withAnimation {
-                                        if translation.y < 0 {
-                                            page.update(.next)
-                                        } else {
-                                            page.update(.previous)
-                                        }
-                                        dbUpdateCurrentQuiz(quizId: qf[page.index].quiz.id)
+                        PanGesture(isEnabled: $isGesturesEnabled, source: [.mouse, .trackpad]) { location, translation, velocity in
+                            if abs(translation.y) > 100 {
+                                withAnimation {
+                                    if translation.y < 0 {
+                                        page.update(.next)
+                                    } else {
+                                        page.update(.previous)
                                     }
-                                    return true
+                                    dbUpdateCurrentQuiz(quizId: qf[page.index].quiz.id)
                                 }
-                                return false
+                                return true
                             }
+                            return false
+                        }
                     )
                 }
             }

@@ -1,20 +1,24 @@
 import Foundation
 import SwiftUI
 
-final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRecognizerDelegate {
-    private var change: PanChange? = nil
-    private var end: PanEnd? = nil
-    private var source: PanGestureSource = .all
+struct PanGesture : UIGestureRecognizerRepresentable {
+    private let change: PanChange
+    private let end: PanEnd?
+    private let source: PanGestureSource
+    @Binding private var isEnabled: Bool
     
-    let isEnabled: Bool
-    init(isEnabled: Bool = true) {
-        self.isEnabled = isEnabled
+    init(isEnabled: Binding<Bool> = .constant(true), source: PanGestureSource = .all, change: @escaping PanChange, end: PanEnd? = nil) {
+        self._isEnabled = isEnabled
+        self.source = source
+        self.change = change
+        self.end = end
     }
-
+    
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let pgr = UIPanGestureRecognizer()
         setTypeMask(recognizer: pgr)
-        pgr.delegate = self
+        pgr.delegate = context.coordinator.gestureDelegate
+        pgr.isEnabled = isEnabled
         context.coordinator.panStateObservation = pgr.observe(\.state) { gr, change in
             DispatchQueue.main.async {
                 switch gr.state {
@@ -36,37 +40,30 @@ final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRe
         return pgr
     }
     
+    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+        Coordinator()
+    }
+
     func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
-        if let change = self.change {
-            let location = context.converter.localLocation
-            let translation = context.converter.localTranslation!
-            let end = context.coordinator.endingTranslation
-            let relativeTranslation = CGPoint(x: translation.x - end.x, y: translation.y - end.y)
-            
-            let velocity = context.converter.localVelocity!
-            if change(location, relativeTranslation, velocity) {
-                context.coordinator.endingTranslation = translation
-            }
+        if !isEnabled {
+            return
+        }
+        
+        let location = context.converter.localLocation
+        let translation = context.converter.localTranslation!
+        let end = context.coordinator.endingTranslation
+        let relativeTranslation = CGPoint(x: translation.x - end.x, y: translation.y - end.y)
+        
+        let velocity = context.converter.localVelocity!
+        if change(location, relativeTranslation, velocity) {
+            context.coordinator.endingTranslation = translation
         }
     }
     
     func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
-        recognizer.delegate = self
+        context.coordinator.gestureDelegate.source = source
         recognizer.isEnabled = isEnabled
         setTypeMask(recognizer: recognizer)
-    }
-    
-    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
-        Coordinator()
-    }
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        return source.contains(.mouse) && source.contains(.trackpad) && touch.type == .indirect
-        || source.contains(.touch) && touch.type == .direct
-    }
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
     }
     
     private func setTypeMask(recognizer: UIPanGestureRecognizer) {
@@ -80,24 +77,28 @@ final class PanGesture : NSObject, UIGestureRecognizerRepresentable, UIGestureRe
         recognizer.allowedScrollTypesMask = mask
     }
 
-    func onChange(_ change: @escaping PanChange) -> Self {
-        self.change = change
-        return self
-    }
-    
-    func onEnd(_ end: @escaping PanEnd) -> Self {
-        self.end = end
-        return self
-    }
-    
-    func source(_ value: PanGestureSource) -> Self {
-        self.source = value
-        return self
-    }
-    
+    @MainActor
     class Coordinator {
         var endingTranslation: CGPoint = .zero
         var panStateObservation: NSKeyValueObservation? = nil
+        var gestureDelegate: GestureDelegate = .init(source: .all)
+    }
+    
+    final class GestureDelegate : NSObject, UIGestureRecognizerDelegate {
+        var source: PanGestureSource
+        
+        init(source: PanGestureSource) {
+            self.source = source
+        }
+        
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            return source.contains(.mouse) && source.contains(.trackpad) && touch.type == .indirect
+            || source.contains(.touch) && touch.type == .direct
+        }
+        
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+            return true
+        }
     }
 }
 

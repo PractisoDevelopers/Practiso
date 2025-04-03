@@ -97,21 +97,19 @@ struct ArchiveDocumentView : View {
         .singlePagination(sensitivity: .high)
         .interactive(opacity: 0.8)
         .gesture(
-            PanGesture()
-                .source([.mouse, .trackpad])
-                .onChange { location, translation, velocity in
-                    if abs(translation.y) > 100 {
-                        withAnimation {
-                            if translation.y < 0 {
-                                page.update(.next)
-                            } else {
-                                page.update(.previous)
-                            }
+            PanGesture(source: [.mouse, .trackpad]) { location, translation, velocity in
+                if abs(translation.y) > 100 {
+                    withAnimation {
+                        if translation.y < 0 {
+                            page.update(.next)
+                        } else {
+                            page.update(.previous)
                         }
-                        return true
                     }
-                    return false
+                    return true
                 }
+                return false
+            }
         )
         .navigationTitle(questions[page.index].name ?? String(localized: "Unnamed question"))
         .navigationBarTitleDisplayMode(.inline)
