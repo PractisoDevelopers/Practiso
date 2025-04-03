@@ -52,31 +52,29 @@ struct ContentView: View {
     }
     
     func backGesture(containerWidth: Double) -> PanGesture {
-        PanGesture()
-            .onChange { location, translation, velocity in
-                if model.path.isEmpty {
-                    return false
-                }
-                if !isBackGestureActivated && translation.x > 1 && translation.x > abs(translation.y) || isBackGestureActivated {
-                    appScale = min(1, 1 - translation.x / containerWidth)
-                    isBackGestureActivated = true
-                }
+        PanGesture { location, translation, velocity in
+            if model.path.isEmpty {
                 return false
             }
-            .onEnd {
-                if appScale < 0.92 {
-                    withAnimation {
-                        _ = model.path.popLast()
-                        appScale = 1
-                        isBackGestureActivated = false
-                    }
-                } else {
-                    withAnimation {
-                        appScale = 1
-                        isBackGestureActivated = false
-                    }
+            if !isBackGestureActivated && translation.x > 1 && translation.x > abs(translation.y) || isBackGestureActivated {
+                appScale = min(1, 1 - translation.x / containerWidth)
+                isBackGestureActivated = true
+            }
+            return false
+        } end: {
+            if appScale < 0.92 {
+                withAnimation {
+                    _ = model.path.popLast()
+                    appScale = 1
+                    isBackGestureActivated = false
+                }
+            } else {
+                withAnimation {
+                    appScale = 1
+                    isBackGestureActivated = false
                 }
             }
+        }
     }
     
     func app(topLevel: TopLevel) -> some View {
@@ -85,7 +83,10 @@ struct ContentView: View {
             case .library:
                 libraryApp
             case .answer(let takeId):
-                AnswerView(takeId: takeId, namespace: namespace, data: $model.answerData, isGesturesEnabled: !isBackGestureActivated)
+                AnswerView(takeId: takeId, namespace: namespace, data: $model.answerData, isGesturesEnabled: Binding(get: {
+                    !isBackGestureActivated
+                }, set: { _ in
+                }))
             }
         }
         .environmentObject(model)
