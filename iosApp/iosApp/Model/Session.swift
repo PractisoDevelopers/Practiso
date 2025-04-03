@@ -27,7 +27,7 @@ struct SessionParameters {
     }
     
     init(from: ComposeApp.SessionCreator) {
-        self.name = SessionCreatorOption.from(sessionCreator: from).view.header
+        self.name = SessionCreatorOption.from(sessionCreator: from).view.subtitle ?? ""
         self.selection = Selection(
             quizIds: Set(from.selection.quizIds.map(\.int64Value)),
             dimensionIds: Set(from.selection.dimensionIds.map(\.int64Value))
