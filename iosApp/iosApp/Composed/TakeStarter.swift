@@ -58,8 +58,7 @@ struct TakeStarter : View {
         }
         .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)
-        .scalesOnTap()
-        .onTapGesture {
+        .scalesOnRelease {
             if case .ok(let qf) = data {
                 contentModel.answerData = .transition(qf: qf)
             }
