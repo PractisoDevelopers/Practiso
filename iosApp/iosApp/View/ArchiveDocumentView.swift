@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import SwiftUIPager
 import ComposeApp
 
 struct ArchiveDocumentView : View {
@@ -14,6 +15,7 @@ struct ArchiveDocumentView : View {
     @State private var importState: ImportState = .idle
     @State private var isImporting = false
     @State private var isImportCompletionShown = false
+    @StateObject private var page: SwiftUIPager.Page = .first()
     
     init(url: URL, onClose: @escaping () -> Void) {
         self.url = url
@@ -26,32 +28,13 @@ struct ArchiveDocumentView : View {
         }
     }
     
-    @Namespace private var internel
     
     var body: some View {
         NavigationStack {
             switch data {
             case .ok(let questions):
-                if let question = questions.first {
-                    ScrollView {
-                        Question(frames: question.frames, namespace: internel)
-                            .environment(\.imageService, CachedImageService(data: Dictionary(quizDoc: question)))
-                            .padding(.horizontal)
-                    }
-                    .navigationTitle(question.name ?? String(localized: "Unnamed question"))
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .primaryAction) {
-                            Menu("More", systemImage: "ellipsis.circle") {
-                                Button("Import Archive", systemImage: "square.and.arrow.down") {
-                                    isImporting = true
-                                }
-                            }
-                        }
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Home", systemImage: "house", action: onClose)
-                        }
-                    }
+                if questions.count > 0 {
+                    browser(questions: questions)
                 } else {
                     Text("This archive is empty")
                 }
@@ -100,6 +83,60 @@ struct ArchiveDocumentView : View {
                 isImportCompletionShown = false
             }
             isImporting = false
+        }
+    }
+    
+    func browser(questions: [QuizDocument]) -> some View {
+        SwiftUIPager.Pager(page: page, data: questions.indices, id: \.self) { index in
+            QuizDocumentView(data: questions[index])
+                .frame(maxHeight: .infinity, alignment: .top)
+                .background()
+        }
+        .vertical()
+        .alignment(.start)
+        .singlePagination(sensitivity: .high)
+        .interactive(opacity: 0.8)
+        .gesture(
+            PanGesture()
+                .source([.mouse, .trackpad])
+                .onChange { location, translation, velocity in
+                    if abs(translation.y) > 100 {
+                        withAnimation {
+                            if translation.y < 0 {
+                                page.update(.next)
+                            } else {
+                                page.update(.previous)
+                            }
+                        }
+                        return true
+                    }
+                    return false
+                }
+        )
+        .navigationTitle(questions[page.index].name ?? String(localized: "Unnamed question"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu("More", systemImage: "ellipsis.circle") {
+                    Button("Import Archive", systemImage: "square.and.arrow.down") {
+                        isImporting = true
+                    }
+                }
+            }
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Home", systemImage: "house", action: onClose)
+            }
+        }
+    }
+    
+    private struct QuizDocumentView : View {
+        let data: QuizDocument
+        @Namespace private var internel
+
+        var body: some View {
+            Question(frames: data.frames, namespace: internel)
+                .environment(\.imageService, CachedImageService(data: Dictionary(quizDoc: data)))
+                .padding(.horizontal)
         }
     }
 }
