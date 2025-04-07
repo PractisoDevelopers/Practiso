@@ -96,28 +96,31 @@ struct ImageFrameView : View {
             }
         }
         .fullScreenCover(isPresented: $isFullscreen) {
-            switch data?.wrappedValue ?? __data {
-            case .ok(let image):
-                ZoomableScrollView(scale: $fullscreenScale, maxScale: 10) {
-                    Image(image, scale: 1, label: Text(frame.altText ?? ""))
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .overlay(alignment: .topTrailing) {
-                    ClosePushButton()
-                        .onTapGesture {
-                            isFullscreen = false
-                        }
-                        .padding(12)
-                }
-                .onTapGesture {
-                    if frame.altText?.isEmpty == false {
-                        isAltTextShown = true
+            Group {
+                switch data?.wrappedValue ?? __data {
+                case .ok(let image):
+                    ZoomableScrollView(scale: $fullscreenScale, maxScale: 10) {
+                        Image(image, scale: 1, label: Text(frame.altText ?? ""))
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        if frame.altText?.isEmpty == false {
+                            isAltTextShown = true
+                        }
+                    }
+                default:
+                    Text("Resource Unavailable")
                 }
-            default:
-                Text("Resource Unavailable")
+            }
+            .overlay(alignment: .topTrailing) {
+                ClosePushButton()
+                    .onTapGesture {
+                        isFullscreen = false
+                    }
+                    .padding(12)
             }
         }
         .alert("Alternative Text", isPresented: $isAltTextShown) {
