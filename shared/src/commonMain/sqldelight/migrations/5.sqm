@@ -1,0 +1,4 @@
+CREATE TABLE settings(
+    key TEXT PRIMARY KEY AUTOINCREMENT,
+    value TEXT NOT NULL
+);

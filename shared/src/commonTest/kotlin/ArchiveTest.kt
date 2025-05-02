@@ -1,5 +1,3 @@
-package com.zhufucdev.practiso
-
 import com.zhufucdev.practiso.datamodel.DimensionArchive
 import com.zhufucdev.practiso.datamodel.FrameArchive
 import com.zhufucdev.practiso.datamodel.QuizArchive
