@@ -1,0 +1,21 @@
+CREATE TABLE settingsText(
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE settingsInt(
+    key TEXT PRIMARY KEY,
+    value INTEGER NOT NULL
+);
+
+getTextByKey:
+SELECT value FROM settingsText WHERE key = ?;
+
+getIntByKey:
+SELECT value FROM settingsInt WHERE key = ?;
+
+setText:
+INSERT OR REPLACE INTO settingsText VALUES (?, ?);
+
+setInt:
+INSERT OR REPLACE INTO settingsInt VALUES (?, ?);

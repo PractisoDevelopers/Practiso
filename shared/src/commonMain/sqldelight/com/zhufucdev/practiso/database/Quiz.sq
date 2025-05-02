@@ -3,7 +3,7 @@ import kotlinx.datetime.Instant;
 
 CREATE TABLE textFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    embeddingsId TEXT,
+    embeddingsId INTEGER,
     content TEXT NOT NULL
 );
 
@@ -114,6 +114,11 @@ FROM quizByDimension
 WHERE dimensionId = ?
 );
 
+
+getAllTextFrames:
+SELECT *
+FROM textFrame;
+
 getTextFramesByQuizId:
 SELECT T.*, priority
 FROM textFrame T JOIN frameByQuiz Q ON T.id = Q.textFrameId
@@ -152,6 +157,10 @@ UPDATE textFrame SET content = ? WHERE id = ?;
 removeTextFrame:
 DELETE FROM textFrame WHERE id = ?;
 
+
+getAllImageFrames:
+SELECT *
+FROM imageFrame;
 
 getImageFramesByQuizId:
 SELECT I.*, priority
@@ -194,6 +203,10 @@ UPDATE imageFrame SET altText = ? WHERE id = ?;
 removeImageFrame:
 DELETE FROM imageFrame WHERE id = ?;
 
+
+getAllOptionsFrames:
+SELECT *
+FROM optionsFrame;
 
 insertOptionsFrame:
 INSERT INTO optionsFrame(name)

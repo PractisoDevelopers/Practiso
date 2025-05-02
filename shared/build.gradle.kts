@@ -25,14 +25,17 @@ kotlin {
     jvm("desktop")
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
         macosArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
+    ).forEach { nativeTarget ->
+        nativeTarget.binaries {
+            framework {
+                baseName = "ComposeApp"
+                isStatic = true
+            }
+            sharedLib()
+            staticLib()
         }
     }
 
@@ -60,6 +63,8 @@ kotlin {
             implementation(libs.settings.coroutine)
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
+            implementation(libs.hgtk.core)
+            implementation(libs.usearch.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -68,7 +73,7 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)
-            implementation(libs.onnx.runtime.android)
+            implementation(libs.mlkit.langid)
         }
 
         val desktopMain by getting {
@@ -77,6 +82,7 @@ kotlin {
                 implementation(libs.sqldelight.jvm.driver)
                 implementation(libs.nativeparameteraccess)
                 implementation(libs.onnx.runtime.jvm)
+                implementation(libs.lingua)
             }
         }
 
