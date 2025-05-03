@@ -224,14 +224,14 @@ private class TextSerializer : KSerializer<Frame.Text> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor(TextFrameSerialName) {
         element("link_id", serialDescriptor<Long>())
         element("id", serialDescriptor<Long>())
-        element("embeddings_id", serialDescriptor<String?>())
+        element("embeddings_id", serialDescriptor<Long?>())
         element("content", serialDescriptor<String>())
     }
 
     override fun deserialize(decoder: Decoder): Frame.Text = decoder.decodeStructure(descriptor) {
         var exId = -1L
         var id = -1L
-        var eId: String? = ""
+        var eId: Long? = null
         var content = ""
         while (true) {
             when (val index = decodeElementIndex(descriptor)) {
@@ -243,7 +243,7 @@ private class TextSerializer : KSerializer<Frame.Text> {
             }
         }
 
-        if (id < 0 || eId?.isEmpty() == true || content.isEmpty()) {
+        if (id < 0 || content.isEmpty()) {
             error("Missing id or content while deserializing Frame.Text")
         }
 

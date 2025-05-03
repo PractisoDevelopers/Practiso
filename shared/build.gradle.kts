@@ -32,7 +32,8 @@ kotlin {
         nativeTarget.binaries {
             framework {
                 baseName = "ComposeApp"
-                isStatic = true
+                isStatic = false
+                linkerOpts += "-lsqlite3"
             }
             sharedLib()
             staticLib()
@@ -40,14 +41,6 @@ kotlin {
     }
 
     applyDefaultHierarchyTemplate()
-
-    targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().forEach {
-        it.binaries.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.Framework>()
-            .forEach { lib ->
-                lib.isStatic = false
-                lib.linkerOpts.add("-lsqlite3")
-            }
-    }
 
     sourceSets {
         commonMain.dependencies {
@@ -59,6 +52,7 @@ kotlin {
             api(libs.kotlinx.io.okio)
             api(libs.filekit.core)
             api(libs.okio)
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.settings.core)
             implementation(libs.settings.coroutine)
             implementation(libs.xmlutil.core)
