@@ -52,7 +52,11 @@ class RemoveService(private val db: AppDatabase) {
 
     suspend fun removeDimensionWithQuizzes(id: Long) {
         db.transaction {
-            db.quizQueries.removeQuizWithinDimension(id)
+            db.quizQueries.getQuizByDimension(id)
+                .executeAsList()
+                .forEach {
+                    db.quizQueries.removeQuiz(it.id)
+                }
             db.dimensionQueries.removeDimension(id)
         }
     }
