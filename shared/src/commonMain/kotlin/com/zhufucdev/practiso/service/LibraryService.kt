@@ -21,14 +21,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class LibraryService(private val db: AppDatabase = Database.app) {
-    init {
-        db.quizQueries.getAllTextFrames()
-            .executeAsList()
-            .let {
-                println("${it.size} text frames detected")
-            }
-    }
-
     fun getTemplates() =
         db.templateQueries.getAllTemplates()
             .asFlow()

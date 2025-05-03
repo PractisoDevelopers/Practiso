@@ -107,6 +107,8 @@ WHERE id = ?;
 removeQuiz {
 DELETE FROM imageFrame WHERE id IN (SELECT imageFrameId FROM frameByQuiz WHERE quizId = :id);
 DELETE FROM textFrame WHERE id IN (SELECT textFrameId FROM frameByQuiz WHERE quizId = :id);
+DELETE FROM textFrame WHERE id IN (SELECT textFrameId FROM frameByOptionsFrame WHERE optionsFrameId IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId = :id));
+DELETE FROM imageFrame WHERE id IN (SELECT imageFrameId FROM frameByOptionsFrame WHERE optionsFrameId IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId = :id));
 DELETE FROM optionsFrame WHERE id IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId = :id);
 DELETE FROM quiz WHERE id = :id;
 }
