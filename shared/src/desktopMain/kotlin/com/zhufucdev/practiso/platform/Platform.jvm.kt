@@ -53,6 +53,9 @@ abstract class JVMPlatform : Platform() {
             if (notExists()) createDirectory()
         }.toOkioPath()
     }
+
+    override val logicalProcessorsCount: Int
+        get() = Runtime.getRuntime().availableProcessors()
 }
 
 fun getUserHome() = System.getProperty("user.home")!!

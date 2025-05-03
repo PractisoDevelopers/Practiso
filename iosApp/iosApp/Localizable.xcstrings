@@ -126,6 +126,9 @@
     "An error has occurred in %@." : {
 
     },
+    "An error occurred" : {
+
+    },
     "An error occurred and the document is failed to load" : {
 
     },
@@ -144,6 +147,9 @@
     "Change Intensity" : {
 
     },
+    "Collecting Frames..." : {
+
+    },
     "Confirmation" : {
 
     },
@@ -160,6 +166,12 @@
 
     },
     "Creation" : {
+
+    },
+    "Current model doesn't support features:" : {
+
+    },
+    "Currently no ML model is available. A model with following features is required:" : {
 
     },
     "Data is invalid because it is compound." : {
@@ -262,6 +274,9 @@
         }
       }
     },
+    "Inferring %d items..." : {
+
+    },
     "Keep Questions" : {
 
     },
@@ -301,6 +316,9 @@
     "Loading Take..." : {
 
     },
+    "Missing Models" : {
+
+    },
     "Modification" : {
 
     },
@@ -331,9 +349,6 @@
     "OK" : {
 
     },
-    "Operation failed" : {
-
-    },
     "Options" : {
 
     },
@@ -341,6 +356,9 @@
 
     },
     "Proceed" : {
+
+    },
+    "Proceed Anyway" : {
 
     },
     "Question" : {

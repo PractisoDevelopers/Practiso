@@ -39,6 +39,9 @@ object AndroidPlatform : Platform() {
     override val resourcePath: Path by lazy {
         PractisoApp.instance.filesDir.toOkioPath()
     }
+
+    override val logicalProcessorsCount: Int
+        get() = Runtime.getRuntime().availableProcessors()
 }
 
 actual fun getPlatform(): Platform = AndroidPlatform

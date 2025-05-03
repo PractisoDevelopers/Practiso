@@ -10,6 +10,7 @@ abstract class Platform {
     abstract val resourcePath: Path
     abstract val filesystem: FileSystem
     abstract val settingsFactory: Settings.Factory
+    abstract val logicalProcessorsCount: Int
     abstract fun createDbDriver(): SqlDriver
 
     val defaultSettings: Settings by lazy {
