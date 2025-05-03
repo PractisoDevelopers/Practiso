@@ -26,7 +26,6 @@ import okio.buffer
 import okio.gzip
 import okio.use
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.jvm.JvmInline
 
 sealed interface ImportState {
     data object Idle : ImportState
@@ -48,8 +47,7 @@ sealed interface ImportState {
     ) : ImportState
 }
 
-@JvmInline
-value class ImportService(private val db: AppDatabase = Database.app) {
+class ImportService(private val db: AppDatabase = Database.app) {
     @Throws(IOException::class)
     fun unarchive(it: NamedSource): ArchivePack =
         it.source.gzip().buffer().unarchive()

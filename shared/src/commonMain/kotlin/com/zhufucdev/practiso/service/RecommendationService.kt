@@ -15,10 +15,8 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.jvm.JvmInline
 
-@JvmInline
-value class RecommendationService(private val db: AppDatabase = Database.app) {
+class RecommendationService(private val db: AppDatabase = Database.app) {
     fun getRecentRecommendations(): Flow<List<SessionCreator>> =
         channelFlow {
             db.quizQueries.getQuizFrames(db.quizQueries.getRecentQuiz())

@@ -19,10 +19,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlin.jvm.JvmInline
 
-@JvmInline
-value class LibraryService(private val db: AppDatabase = Database.app) {
+class LibraryService(private val db: AppDatabase = Database.app) {
     init {
         db.quizQueries.getAllTextFrames()
             .executeAsList()

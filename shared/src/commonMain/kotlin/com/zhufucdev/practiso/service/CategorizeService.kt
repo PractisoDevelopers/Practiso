@@ -1,10 +1,8 @@
 package com.zhufucdev.practiso.service
 
 import com.zhufucdev.practiso.database.AppDatabase
-import kotlin.jvm.JvmInline
 
-@JvmInline
-value class CategorizeService(private val db: AppDatabase) {
+class CategorizeService(private val db: AppDatabase) {
     suspend fun associate(quizId: Long, dimensionId: Long) {
         db.dimensionQueries.associateQuizWithDimension(quizId, dimensionId, 1.0)
     }
