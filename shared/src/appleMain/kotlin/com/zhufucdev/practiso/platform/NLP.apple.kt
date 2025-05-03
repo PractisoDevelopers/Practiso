@@ -215,13 +215,15 @@ private class SingleOutputResultProducer(val featureName: String) : MLFeatureRes
 actual suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInference =
     suspendCoroutine { c ->
         if (model == JinaV2SmallEn) {
-            val url =
-                NSBundle.mainBundle.URLForResource("CoreML/JinaV2EnSmall", withExtension = "mlmodelc")!!
+            val url = NSBundle.mainBundle.URLForResource("CoreML/JinaV2EnSmall", "mlmodelc")!!
             CoreMLModel.loadContentsOfURL(url, MLModelConfiguration()) { m, e ->
                 if (e != null) {
                     c.resumeWithException(IllegalStateException(e.localizedDescription))
                 } else {
-                    val url = NSBundle.mainBundle.URLForResource("CoreML/JinaV2EnSmallTokenizer", "json")!!
+                    val url = NSBundle.mainBundle.URLForResource(
+                        "CoreML/JinaV2EnSmallTokenizer",
+                        "json"
+                    )!!
                     val ba = NSData.dataWithContentsOfURL(url)!!.toByteArray()
                     val tokenizer = Tokenizer.fromBytes(ba)
                     c.resume(
