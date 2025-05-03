@@ -35,10 +35,15 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import usearch.Index
 import usearch.IndexOptions
@@ -176,110 +181,118 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             }
         }
 
-        getFeiModel().collectLatest { model ->
-            if (model == null) {
-                send(
-                    FeiDbState.MissingModel(
-                        null,
-                        withContext(Dispatchers.IO) {
-                            getMissingFeatures(
-                                null,
-                                textFrames.complete,
-                                imageFrames.complete
-                            )
-                        }
-                    )
-                )
-                return@collectLatest
-            }
-
-            val index = withContext(Dispatchers.IO) {
-                getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).apply {
-                    if (shouldReadIndexFile) {
-                        maybeLoad()
-                        shouldReadIndexFile = false
-                    }
-                }
-            }
-
-            send(FeiDbState.Collecting)
-
-            var nextEmbeddingKey =
-                db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
-
-            while (coroutineContext.isActive) {
-                if (updateChannel.receive() < 2) {
-                    continue
-                }
-
-                val missingFeatures =
-                    withContext(Dispatchers.Default) {
-                        getMissingFeatures(model, textFrames.complete, imageFrames.complete)
-                    }
-                if (missingFeatures.isNotEmpty()) {
-                    val proceedAnyway = Channel<MissingModelResponse>()
-                    send(FeiDbState.MissingModel(model, missingFeatures, proceedAnyway))
-                    when (proceedAnyway.receive()) {
-                        MissingModelResponse.Cancel -> {
-                            send(FeiDbState.Ready(index))
-                            continue
-                        }
-                        MissingModelResponse.ProceedAnyway -> {}
-                    }
-                }
-
-                val totalFramesCount = textFrames.addition.size + textFrames.removal.size
-                var completedFramesCount = 0
-
-                coroutineScope {
-                    launch(Dispatchers.Default) {
-                        if (!model.features.any { it is LanguageInput }) {
-                            return@launch
-                        }
-
-                        textFrames.removal.forEach { frame ->
-                            frame.embeddingsId?.let {
-                                index.remove(
-                                    it.toULong()
+        getFeiModel().zip(
+            updateChannel.consumeAsFlow().filter { it >= 2 }) { model, u -> model to u }
+            .collectLatest { (model, u) ->
+                if (model == null) {
+                    send(
+                        FeiDbState.MissingModel(
+                            null,
+                            withContext(Dispatchers.IO) {
+                                getMissingFeatures(
+                                    null,
+                                    textFrames.complete,
+                                    imageFrames.complete
                                 )
                             }
-                        }
-                        getEmbeddings(textFrames.addition, model)
-                            .collect {
-                                when (it) {
-                                    is InferenceState.Complete -> {
-                                        it.results<TextFrame>().forEach { (frame, embedding) ->
-                                            val key = frame.embeddingsId ?: nextEmbeddingKey++
-                                            index.asF32.add(key.toULong(), embedding)
-                                        }
-                                    }
+                        )
+                    )
+                    return@collectLatest
+                }
 
-                                    is InferenceState.Inferring -> {
-                                        completedFramesCount += it.done
-                                        send(
-                                            FeiDbState.InProgress(
-                                                total = totalFramesCount,
-                                                done = completedFramesCount
-                                            )
-                                        )
-                                    }
+                val index = withContext(Dispatchers.IO) {
+                    getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).apply {
+                        if (shouldReadIndexFile) {
+                            maybeLoad()
+                            shouldReadIndexFile = false
+                        }
+                    }
+                }
+
+                send(FeiDbState.Collecting)
+
+                val nextEmbeddingKeyMutex = Mutex()
+                var nextEmbeddingKey =
+                    db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
+
+                while (coroutineContext.isActive) {
+                    val missingFeatures =
+                        withContext(Dispatchers.Default) {
+                            getMissingFeatures(model, textFrames.complete, imageFrames.complete)
+                        }
+                    if (missingFeatures.isNotEmpty()) {
+                        val proceedAnyway = Channel<MissingModelResponse>()
+                        send(FeiDbState.MissingModel(model, missingFeatures, proceedAnyway))
+                        when (proceedAnyway.receive()) {
+                            MissingModelResponse.Cancel -> {
+                                send(FeiDbState.Ready(index))
+                                continue
+                            }
+
+                            MissingModelResponse.ProceedAnyway -> {}
+                        }
+                    }
+
+                    val totalFramesCount = textFrames.addition.size + textFrames.removal.size
+                    var completedFramesCount = 0
+
+                    coroutineScope {
+                        launch(Dispatchers.Default) {
+                            if (!model.features.any { it is LanguageInput }) {
+                                return@launch
+                            }
+
+                            textFrames.removal.forEach { frame ->
+                                frame.embeddingsId?.let {
+                                    index.remove(
+                                        it.toULong()
+                                    )
                                 }
                             }
+                            try {
+                                getEmbeddings(textFrames.addition, model)
+                                    .collect {
+                                        when (it) {
+                                            is InferenceState.Complete -> {
+                                                it.results<TextFrame>()
+                                                    .forEach { (frame, embedding) ->
+                                                        val key = frame.embeddingsId
+                                                            ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
+                                                        index.asF32.add(key.toULong(), embedding)
+                                                    }
+                                            }
+
+                                            is InferenceState.Inferring -> {
+                                                completedFramesCount += it.done
+                                                send(
+                                                    FeiDbState.InProgress(
+                                                        total = totalFramesCount,
+                                                        done = completedFramesCount
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                            } finally {
+                                // to avoid poisoning the database
+                                nextEmbeddingKeyMutex.withLock {
+                                    db.settingsQueries.setInt(EMBEDDING_TOP_KEY, nextEmbeddingKey)
+                                }
+                            }
+                        }
+
+                        launch(Dispatchers.Default) {
+                            // TODO: image inference
+                        }
                     }
 
-                    launch(Dispatchers.Default) {
-                        // TODO: image inference
+                    send(FeiDbState.Ready(index))
+
+                    withContext(Dispatchers.IO) {
+                        index.saveTo(getPlatform().filesystem.sink(INDEX_PATH))
                     }
-                }
-
-                db.settingsQueries.setInt(EMBEDDING_TOP_KEY, nextEmbeddingKey)
-                send(FeiDbState.Ready(index))
-
-                withContext(Dispatchers.IO) {
-                    index.saveTo(getPlatform().filesystem.sink(INDEX_PATH))
                 }
             }
-        }
     }.shareIn(coroutineScope, started = SharingStarted.Eagerly, replay = 1)
 
     fun getUpgradeState(): Flow<FeiDbState> = upgradeStateFlow
