@@ -11,10 +11,8 @@
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		6A03DC1C2D2ADEAE00AF3F06 /* AHAP in Resources */ = {isa = PBXBuildFile; fileRef = 6A03DC1B2D2ADEA900AF3F06 /* AHAP */; };
 		6A2D44262D98E22E00E18022 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 6A2D44252D98E22E00E18022 /* Settings.bundle */; };
-		6A5A8E322DAD56EB0073A8EE /* JinaV2EnTokenizer.json in Resources */ = {isa = PBXBuildFile; fileRef = 6A5A8E312DAD56EB0073A8EE /* JinaV2EnTokenizer.json */; };
 		6A806BCC2D60E0F200453A72 /* Archive@x2.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A806BCB2D60E0F200453A72 /* Archive@x2.png */; };
 		6A9D7F892D54D83700A57747 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6A9D7F882D54D83700A57747 /* Localizable.xcstrings */; };
-		6ADCDA402DACEACE0053DE93 /* JinaV2EnBase.mlmodelc in Resources */ = {isa = PBXBuildFile; fileRef = 6ADCDA3F2DACEACE0053DE93 /* JinaV2EnBase.mlmodelc */; };
 		6AFCF2EB2D89AE8800C3B648 /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFCF2EA2D89AE8800C3B648 /* SwiftUIPager */; };
 /* End PBXBuildFile section */
 
@@ -33,11 +31,9 @@
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		6A03DC1B2D2ADEA900AF3F06 /* AHAP */ = {isa = PBXFileReference; lastKnownFileType = folder; path = AHAP; sourceTree = "<group>"; };
 		6A2D44252D98E22E00E18022 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
-		6A5A8E312DAD56EB0073A8EE /* JinaV2EnTokenizer.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = JinaV2EnTokenizer.json; sourceTree = "<group>"; };
 		6A806BCB2D60E0F200453A72 /* Archive@x2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Archive@x2.png"; sourceTree = "<group>"; };
 		6A9D7F882D54D83700A57747 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		6ABC794D2DAF542A00BC8C74 /* PractisoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PractisoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		6ADCDA3F2DACEACE0053DE93 /* JinaV2EnBase.mlmodelc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = JinaV2EnBase.mlmodelc; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* Practiso.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Practiso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB3632DC29227652001CCB65 /* Config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
@@ -50,6 +46,7 @@
 		6A1438AC2DC5E19400A43071 /* commonMain */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = commonMain; path = ../shared/src/commonMain; sourceTree = SOURCE_ROOT; };
 		6A1438B32DC5E19400A43071 /* iosMain */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = iosMain; path = ../shared/src/iosMain; sourceTree = SOURCE_ROOT; };
 		6A1438BA2DC5E19400A43071 /* macosMain */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = macosMain; path = ../shared/src/macosMain; sourceTree = SOURCE_ROOT; };
+		6A1438BB2DC60CEF00A43071 /* CoreML */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = CoreML; sourceTree = "<group>"; };
 		6A3EF6F52D5AF32D0088589B /* Service */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Service; sourceTree = "<group>"; };
 		6A567C2E2D5837C700D97C1D /* Composed */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Composed; sourceTree = "<group>"; };
 		6A9D7F7E2D548CC800A57747 /* View */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = View; sourceTree = "<group>"; };
@@ -110,10 +107,9 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				6A1438BB2DC60CEF00A43071 /* CoreML */,
 				6A03DC1B2D2ADEA900AF3F06 /* AHAP */,
 				6A2D44252D98E22E00E18022 /* Settings.bundle */,
-				6A5A8E312DAD56EB0073A8EE /* JinaV2EnTokenizer.json */,
-				6ADCDA3F2DACEACE0053DE93 /* JinaV2EnBase.mlmodelc */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				6A806BCB2D60E0F200453A72 /* Archive@x2.png */,
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
@@ -179,6 +175,7 @@
 			fileSystemSynchronizedGroups = (
 				6A0E3A022D5F72E70087FD38 /* Helper */,
 				6A11F1442D55EDC30062436E /* Model */,
+				6A1438BB2DC60CEF00A43071 /* CoreML */,
 				6A3EF6F52D5AF32D0088589B /* Service */,
 				6A567C2E2D5837C700D97C1D /* Composed */,
 				6A9D7F7E2D548CC800A57747 /* View */,
@@ -248,10 +245,8 @@
 			files = (
 				058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */,
 				6A03DC1C2D2ADEAE00AF3F06 /* AHAP in Resources */,
-				6A5A8E322DAD56EB0073A8EE /* JinaV2EnTokenizer.json in Resources */,
 				6A2D44262D98E22E00E18022 /* Settings.bundle in Resources */,
 				6A806BCC2D60E0F200453A72 /* Archive@x2.png in Resources */,
-				6ADCDA402DACEACE0053DE93 /* JinaV2EnBase.mlmodelc in Resources */,
 				6A9D7F892D54D83700A57747 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
