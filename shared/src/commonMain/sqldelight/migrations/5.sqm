@@ -1,4 +1,9 @@
-CREATE TABLE settings(
-    key TEXT PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE settingsText(
+    key TEXT PRIMARY KEY,
     value TEXT NOT NULL
+);
+
+CREATE TABLE settingsInt(
+    key TEXT PRIMARY KEY,
+    value INTEGER NOT NULL
 );
