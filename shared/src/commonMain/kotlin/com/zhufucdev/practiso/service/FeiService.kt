@@ -35,12 +35,13 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.zip
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -48,7 +49,6 @@ import kotlinx.coroutines.withContext
 import usearch.Index
 import usearch.IndexOptions
 import usearch.ScalarKind
-import kotlin.math.abs
 
 class FeiService(private val db: AppDatabase = Database.app, private val parallelTasks: Int = 8) {
     companion object {
@@ -56,6 +56,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         const val EMBEDDING_TOP_KEY = "embedding_top"
         const val FEI_MODEL_KEY = "fei_model"
+        const val INFERRING_FRAME_TYPES = 2
     }
 
     fun getFeiModel(): Flow<MlModel?> =
@@ -113,7 +114,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 readFrom(fs.source(INDEX_PATH))
                 return true
             } catch (e: Exception) {
-                e.printStackTrace()
+                println(e.message)
             }
         }
         return false
@@ -147,75 +148,72 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
     private val upgradeStateFlow: SharedFlow<FeiDbState> = channelFlow {
         var shouldReadIndexFile = true
-        var textFrames: FrameUpdate<TextFrame> = emptyUpdate()
-        var imageFrames: FrameUpdate<ImageFrame> = emptyUpdate()
-        val updateChannel = Channel<Int>()
-
-        run {
-            var updateLock = 0
-
-            launch {
-                db.quizQueries.getAllTextFrames()
-                    .asFlow()
-                    .mapToList(Dispatchers.IO)
-                    .map { it.toSet() }
-                    .collectLatest {
-                        val addition = it - textFrames.complete
-                        val removal = textFrames.complete - it
-                        textFrames = FrameUpdate(addition, removal, it)
-                        updateChannel.send(abs(++updateLock))
-                    }
-            }
-
-            launch {
-                db.quizQueries.getAllImageFrames()
-                    .asFlow()
-                    .mapToList(Dispatchers.IO)
-                    .map { it.toSet() }
-                    .collectLatest {
-                        val addition = it - imageFrames.complete
-                        val removal = imageFrames.complete - it
-                        imageFrames = FrameUpdate(addition, removal, it)
-                        updateChannel.send(abs(++updateLock))
-                    }
-            }
-        }
-
-        getFeiModel().zip(
-            updateChannel.consumeAsFlow().filter { it >= 2 }) { model, u -> model to u }
-            .collectLatest { (model, u) ->
-                if (model == null) {
-                    send(
-                        FeiDbState.MissingModel(
-                            null,
-                            withContext(Dispatchers.IO) {
-                                getMissingFeatures(
-                                    null,
-                                    textFrames.complete,
-                                    imageFrames.complete
-                                )
-                            }
-                        )
-                    )
-                    return@collectLatest
+        val textFrameFlow =
+            db.quizQueries.getAllTextFrames()
+                .asFlow()
+                .mapToList(Dispatchers.IO)
+                .map { it.toSet() }
+                .runningFold(emptyUpdate<TextFrame>()) { last, current ->
+                    val addition = current - last.complete
+                    val removal = last.complete - current
+                    return@runningFold FrameUpdate(addition, removal, current)
                 }
+                .drop(1)
 
-                val index = withContext(Dispatchers.IO) {
-                    getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).apply {
-                        if (shouldReadIndexFile) {
-                            maybeLoad()
-                            shouldReadIndexFile = false
+        val imageFrameFlow =
+            db.quizQueries.getAllImageFrames()
+                .asFlow()
+                .mapToList(Dispatchers.IO)
+                .map { it.toSet() }
+                .runningFold(emptyUpdate<ImageFrame>()) { last, current ->
+                    val addition = current - last.complete
+                    val removal = last.complete - current
+                    return@runningFold FrameUpdate(addition, removal, current)
+                }
+                .drop(1)
+
+        getFeiModel().collectLatest { model ->
+            if (model == null) {
+                send(
+                    FeiDbState.MissingModel(
+                        null,
+                        withContext(Dispatchers.IO) {
+                            getMissingFeatures(
+                                null,
+                                textFrameFlow.first().complete,
+                                imageFrameFlow.first().complete
+                            )
                         }
+                    )
+                )
+                return@collectLatest
+            }
+
+            val index = withContext(Dispatchers.IO) {
+                getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).apply {
+                    if (shouldReadIndexFile) {
+                        maybeLoad()
                     }
                 }
+            }
 
-                send(FeiDbState.Collecting)
+            textFrameFlow.combine(imageFrameFlow, ::Pair)
+                .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
+                .collectLatest { (textFrames, imageFrames) ->
+                    if (index.size > 0u && shouldReadIndexFile) {
+                        // just collect the initial frames and exit
+                        // because index doesn't come clear
+                        shouldReadIndexFile = false
+                        return@collectLatest
+                    }
 
-                val nextEmbeddingKeyMutex = Mutex()
-                var nextEmbeddingKey =
-                    db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
 
-                while (coroutineContext.isActive) {
+                    send(FeiDbState.Collecting)
+
+                    val nextEmbeddingKeyMutex = Mutex()
+                    var nextEmbeddingKey =
+                        db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
+
                     val missingFeatures =
                         withContext(Dispatchers.Default) {
                             getMissingFeatures(model, textFrames.complete, imageFrames.complete)
@@ -226,7 +224,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         when (proceedAnyway.receive()) {
                             MissingModelResponse.Cancel -> {
                                 send(FeiDbState.Ready(index))
-                                continue
+                                return@collectLatest
                             }
 
                             MissingModelResponse.ProceedAnyway -> {}
@@ -236,20 +234,20 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                     val totalFramesCount = textFrames.addition.size + textFrames.removal.size
                     var completedFramesCount = 0
 
-                    coroutineScope {
-                        launch(Dispatchers.Default) {
-                            if (!model.features.any { it is LanguageInput }) {
-                                return@launch
-                            }
-
-                            textFrames.removal.forEach { frame ->
-                                frame.embeddingsId?.let {
-                                    index.remove(
-                                        it.toULong()
-                                    )
+                    try {
+                        coroutineScope {
+                            launch(Dispatchers.Default) {
+                                if (!model.features.any { it is LanguageInput }) {
+                                    return@launch
                                 }
-                            }
-                            try {
+
+                                textFrames.removal.forEach { frame ->
+                                    frame.embeddingsId?.let {
+                                        index.remove(
+                                            it.toULong()
+                                        )
+                                    }
+                                }
                                 getEmbeddings(textFrames.addition, model)
                                     .collect {
                                         when (it) {
@@ -258,7 +256,10 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                                                     .forEach { (frame, embedding) ->
                                                         val key = frame.embeddingsId
                                                             ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
-                                                        index.asF32.add(key.toULong(), embedding)
+                                                        index.asF32.add(
+                                                            key.toULong(),
+                                                            embedding
+                                                        )
                                                     }
                                             }
 
@@ -273,16 +274,19 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                                             }
                                         }
                                     }
-                            } finally {
-                                // to avoid poisoning the database
-                                nextEmbeddingKeyMutex.withLock {
-                                    db.settingsQueries.setInt(EMBEDDING_TOP_KEY, nextEmbeddingKey)
-                                }
+                            }
+
+                            launch(Dispatchers.Default) {
+                                // TODO: image inference
                             }
                         }
-
-                        launch(Dispatchers.Default) {
-                            // TODO: image inference
+                    } finally {
+                        // to avoid poisoning the database
+                        nextEmbeddingKeyMutex.withLock {
+                            db.settingsQueries.setInt(
+                                EMBEDDING_TOP_KEY,
+                                nextEmbeddingKey
+                            )
                         }
                     }
 
@@ -292,7 +296,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         index.saveTo(getPlatform().filesystem.sink(INDEX_PATH))
                     }
                 }
-            }
+        }
     }.shareIn(coroutineScope, started = SharingStarted.Eagerly, replay = 1)
 
     fun getUpgradeState(): Flow<FeiDbState> = upgradeStateFlow
@@ -315,7 +319,13 @@ sealed class FeiDbState {
     data class InProgress(val total: Int, val done: Int) : FeiDbState()
 }
 
-private data class FrameUpdate<T>(val addition: Set<T>, val removal: Set<T>, val complete: Set<T>)
+private data class FrameUpdate<T>(
+    val addition: Set<T>,
+    val removal: Set<T>,
+    val complete: Set<T>,
+) {
+    fun isEmpty() = addition.isEmpty() && removal.isEmpty()
+}
 
 private fun <T> emptyUpdate() = FrameUpdate<T>(emptySet(), emptySet(), emptySet())
 
