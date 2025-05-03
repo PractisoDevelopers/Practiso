@@ -28,8 +28,8 @@ struct QuestionView: View {
                 selection = newValue
             }),
             onDelete: { options in
-                for option in options {
-                    errorHandler.catchAndShowImmediately {
+                errorHandler.catchAndShowImmediately {
+                    for option in options {
                         try removeService.removeQuizWithResources(id: option)
                     }
                 }

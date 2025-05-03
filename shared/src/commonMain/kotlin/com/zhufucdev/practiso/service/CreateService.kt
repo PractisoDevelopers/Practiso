@@ -9,11 +9,9 @@ import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.toQuizOptionFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
-import kotlin.jvm.JvmInline
 import kotlin.time.Duration
 
-@JvmInline
-value class CreateService(private val db: AppDatabase = Database.app) {
+class CreateService(private val db: AppDatabase = Database.app) {
     suspend fun createNewQuiz(): QuizOption {
         val id = db.transactionWithResult {
             db.quizQueries.insertQuiz(null, Clock.System.now(), null)
