@@ -11,8 +11,10 @@ import com.zhufucdev.practiso.platform.getPlatform
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import okio.Source
+import kotlin.jvm.JvmInline
 
-class ExportService(private val db: AppDatabase = Database.app) {
+@JvmInline
+value class ExportService(private val db: AppDatabase = Database.app) {
     suspend fun exportAsSource(quizIds: Collection<Long>): Source {
         val platform = getPlatform()
         return db.quizQueries
