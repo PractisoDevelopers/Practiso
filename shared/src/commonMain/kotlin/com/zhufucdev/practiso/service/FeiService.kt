@@ -220,7 +220,10 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                     val proceedAnyway = Channel<MissingModelResponse>()
                     send(FeiDbState.MissingModel(model, missingFeatures, proceedAnyway))
                     when (proceedAnyway.receive()) {
-                        MissingModelResponse.Cancel -> return@collectLatest
+                        MissingModelResponse.Cancel -> {
+                            send(FeiDbState.Ready(index))
+                            continue
+                        }
                         MissingModelResponse.ProceedAnyway -> {}
                     }
                 }
