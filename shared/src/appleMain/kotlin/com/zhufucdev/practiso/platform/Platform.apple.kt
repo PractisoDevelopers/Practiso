@@ -11,6 +11,7 @@ import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import platform.Foundation.NSApplicationSupportDirectory
+import platform.Foundation.NSProcessInfo
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 
@@ -38,4 +39,7 @@ abstract class ApplePlatform : Platform() {
             .toString()
             .toPath()
     }
+
+    override val logicalProcessorsCount: Int
+        get() = NSProcessInfo().activeProcessorCount.toInt()
 }

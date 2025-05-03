@@ -46,6 +46,10 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6A0E3A022D5F72E70087FD38 /* Helper */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Helper; sourceTree = "<group>"; };
 		6A11F1442D55EDC30062436E /* Model */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Model; sourceTree = "<group>"; };
+		6A1438712DC5E19400A43071 /* appleMain */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = appleMain; path = ../shared/src/appleMain; sourceTree = SOURCE_ROOT; };
+		6A1438AC2DC5E19400A43071 /* commonMain */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = commonMain; path = ../shared/src/commonMain; sourceTree = SOURCE_ROOT; };
+		6A1438B32DC5E19400A43071 /* iosMain */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = iosMain; path = ../shared/src/iosMain; sourceTree = SOURCE_ROOT; };
+		6A1438BA2DC5E19400A43071 /* macosMain */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = macosMain; path = ../shared/src/macosMain; sourceTree = SOURCE_ROOT; };
 		6A3EF6F52D5AF32D0088589B /* Service */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Service; sourceTree = "<group>"; };
 		6A567C2E2D5837C700D97C1D /* Composed */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Composed; sourceTree = "<group>"; };
 		6A9D7F7E2D548CC800A57747 /* View */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = View; sourceTree = "<group>"; };
@@ -72,11 +76,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		42799AB246E5F90AF97AA0EF /* Frameworks */ = {
+		6A14385A2DC5E15000A43071 /* Kotlin */ = {
 			isa = PBXGroup;
 			children = (
+				6A1438712DC5E19400A43071 /* appleMain */,
+				6A1438AC2DC5E19400A43071 /* commonMain */,
+				6A1438B32DC5E19400A43071 /* iosMain */,
+				6A1438BA2DC5E19400A43071 /* macosMain */,
 			);
-			name = Frameworks;
+			path = Kotlin;
 			sourceTree = "<group>";
 		};
 		7555FF72242A565900829871 = {
@@ -86,7 +94,7 @@
 				7555FF7D242A565900829871 /* iosApp */,
 				6ABC794E2DAF542A00BC8C74 /* PractisoTests */,
 				7555FF7C242A565900829871 /* Products */,
-				42799AB246E5F90AF97AA0EF /* Frameworks */,
+				6A14385A2DC5E15000A43071 /* Kotlin */,
 			);
 			sourceTree = "<group>";
 		};

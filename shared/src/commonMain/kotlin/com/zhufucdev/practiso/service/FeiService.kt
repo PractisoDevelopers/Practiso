@@ -16,6 +16,8 @@ import com.zhufucdev.practiso.datamodel.ImageInput
 import com.zhufucdev.practiso.datamodel.LanguageInput
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.datamodel.ModelFeature
+import com.zhufucdev.practiso.helper.readFrom
+import com.zhufucdev.practiso.helper.saveTo
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.Language
 import com.zhufucdev.practiso.platform.LanguageIdentifier
@@ -33,13 +35,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okio.buffer
 import usearch.Index
 import usearch.IndexOptions
 import usearch.ScalarKind
@@ -61,8 +61,8 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
     suspend fun getLanguages(frames: Set<TextFrame>): Set<Language> = coroutineScope {
         val identifier = LanguageIdentifier()
-        frames.chunked(frames.size / parallelTasks)
-            .map { async { it.map { f -> identifier.getLanguage(f.content) }.toSet() } }
+        frames.chunked(frames.size / parallelTasks + 1)
+            .map { async { it.map { f -> identifier.getLanguage(f.content) } } }
             .awaitAll()
             .flatten()
             .toSet()
@@ -71,26 +71,27 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     fun getEmbeddings(
         frames: Set<TextFrame>,
         model: MlModel,
-    ): Flow<InferenceState> = flow {
+    ): Flow<InferenceState> = channelFlow {
         val fei = FrameEmbeddingInference(model)
         val total = frames.size
         var done = 0
-        val chunkSize = frames.size / parallelTasks
+        val chunkSize = frames.size / parallelTasks + 1
         coroutineScope {
             val jobs = frames.chunked(chunkSize)
                 .map { frames ->
                     async {
-                        try {
-                            fei.getEmbeddings(frames.map { Frame.Text(it.id, it) })
-                                .mapIndexed { idx, r -> frames[idx] to r }
-                        } finally {
-                            done += chunkSize
-                            emit(InferenceState.Inferring(done, total))
-                        }
+                        val frames = frames.map { Frame.Text(it.id, it) }
+                        fei.getEmbeddings(frames)
+                            .mapIndexed { idx, r -> frames[idx] to r }
+                            .also {
+                                done += chunkSize
+                                send(InferenceState.Inferring(done, total))
+                            }
                     }
                 }
 
-            emit(InferenceState.Complete(jobs.awaitAll().flatten()))
+            val result = jobs.awaitAll().flatten()
+            send(InferenceState.Complete(result))
         }
     }
 
@@ -103,9 +104,12 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             fs.createDirectories(INDEX_PATH.parent!!, true)
         }
         if (fs.exists(INDEX_PATH)) {
-            val ba = fs.source(INDEX_PATH).buffer().readByteArray()
-            loadBuffer(ba)
-            return true
+            try {
+                readFrom(fs.source(INDEX_PATH))
+                return true
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         return false
     }
@@ -125,7 +129,9 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             val hasImageFeature = model?.features?.any { it is ImageInput } ?: false
             val hasEmbeddingOutput = model?.features?.any { it is EmbeddingOutput } ?: false
 
-            add(LanguageInput(getLanguages(textFrames) - supportedLanguages))
+            (getLanguages(textFrames) - supportedLanguages)
+                .takeIf { it.isNotEmpty() }
+                ?.let { add(LanguageInput(it)) }
             if (!hasImageFeature && imageFrames.isNotEmpty()) {
                 add(ImageInput)
             }
@@ -134,7 +140,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             }
         }
 
-    private val upgradeStateFlow: SharedFlow<DbUpgradeState> = channelFlow {
+    private val upgradeStateFlow: SharedFlow<FeiDbState> = channelFlow {
         var shouldReadIndexFile = true
         var textFrames: FrameUpdate<TextFrame> = emptyUpdate()
         var imageFrames: FrameUpdate<ImageFrame> = emptyUpdate()
@@ -152,7 +158,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         val addition = it - textFrames.complete
                         val removal = textFrames.complete - it
                         textFrames = FrameUpdate(addition, removal, it)
-                        updateChannel.send(abs(updateLock++))
+                        updateChannel.send(abs(++updateLock))
                     }
             }
 
@@ -165,7 +171,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         val addition = it - imageFrames.complete
                         val removal = imageFrames.complete - it
                         imageFrames = FrameUpdate(addition, removal, it)
-                        updateChannel.send(abs(updateLock++))
+                        updateChannel.send(abs(++updateLock))
                     }
             }
         }
@@ -173,7 +179,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         getFeiModel().collectLatest { model ->
             if (model == null) {
                 send(
-                    DbUpgradeState.MissingModel(
+                    FeiDbState.MissingModel(
                         null,
                         withContext(Dispatchers.IO) {
                             getMissingFeatures(
@@ -196,7 +202,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
             }
 
-            send(DbUpgradeState.Collecting)
+            send(FeiDbState.Collecting)
 
             var nextEmbeddingKey =
                 db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
@@ -207,10 +213,12 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
 
                 val missingFeatures =
-                    getMissingFeatures(model, textFrames.complete, imageFrames.complete)
+                    withContext(Dispatchers.Default) {
+                        getMissingFeatures(model, textFrames.complete, imageFrames.complete)
+                    }
                 if (missingFeatures.isNotEmpty()) {
                     val proceedAnyway = Channel<MissingModelResponse>()
-                    send(DbUpgradeState.MissingModel(model, missingFeatures, proceedAnyway))
+                    send(FeiDbState.MissingModel(model, missingFeatures, proceedAnyway))
                     when (proceedAnyway.receive()) {
                         MissingModelResponse.Cancel -> return@collectLatest
                         MissingModelResponse.ProceedAnyway -> {}
@@ -220,48 +228,58 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 val totalFramesCount = textFrames.addition.size + textFrames.removal.size
                 var completedFramesCount = 0
 
-                launch(Dispatchers.IO) {
-                    if (!model.features.any { it is LanguageInput }) {
-                        return@launch
-                    }
-
-                    textFrames.removal.forEach { frame ->
-                        frame.embeddingsId?.let {
-                            index.remove(
-                                it.toULong()
-                            )
+                coroutineScope {
+                    launch(Dispatchers.Default) {
+                        if (!model.features.any { it is LanguageInput }) {
+                            return@launch
                         }
-                    }
-                    getEmbeddings(textFrames.addition, model)
-                        .collect {
-                            when (it) {
-                                is InferenceState.Complete -> {
-                                    it.results<TextFrame>().forEach { (frame, embedding) ->
-                                        val key = frame.embeddingsId ?: nextEmbeddingKey++
-                                        index.asF32.add(key.toULong(), embedding)
-                                    }
-                                }
 
-                                is InferenceState.Inferring -> {
-                                    completedFramesCount += it.done
-                                    send(
-                                        DbUpgradeState.InProgress(
-                                            total = totalFramesCount,
-                                            done = completedFramesCount
-                                        )
-                                    )
-                                }
+                        textFrames.removal.forEach { frame ->
+                            frame.embeddingsId?.let {
+                                index.remove(
+                                    it.toULong()
+                                )
                             }
                         }
+                        getEmbeddings(textFrames.addition, model)
+                            .collect {
+                                when (it) {
+                                    is InferenceState.Complete -> {
+                                        it.results<TextFrame>().forEach { (frame, embedding) ->
+                                            val key = frame.embeddingsId ?: nextEmbeddingKey++
+                                            index.asF32.add(key.toULong(), embedding)
+                                        }
+                                    }
 
-                    db.settingsQueries.setInt(EMBEDDING_TOP_KEY, nextEmbeddingKey)
-                    send(DbUpgradeState.Ready(index))
+                                    is InferenceState.Inferring -> {
+                                        completedFramesCount += it.done
+                                        send(
+                                            FeiDbState.InProgress(
+                                                total = totalFramesCount,
+                                                done = completedFramesCount
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                    }
+
+                    launch(Dispatchers.Default) {
+                        // TODO: image inference
+                    }
+                }
+
+                db.settingsQueries.setInt(EMBEDDING_TOP_KEY, nextEmbeddingKey)
+                send(FeiDbState.Ready(index))
+
+                withContext(Dispatchers.IO) {
+                    index.saveTo(getPlatform().filesystem.sink(INDEX_PATH))
                 }
             }
         }
     }.shareIn(coroutineScope, started = SharingStarted.Eagerly, replay = 1)
 
-    fun getUpgradeState(): Flow<DbUpgradeState> = upgradeStateFlow
+    fun getUpgradeState(): Flow<FeiDbState> = upgradeStateFlow
 }
 
 sealed class MissingModelResponse {
@@ -269,16 +287,16 @@ sealed class MissingModelResponse {
     data object Cancel : MissingModelResponse()
 }
 
-sealed class DbUpgradeState {
-    data class Ready(val index: Index) : DbUpgradeState()
-    object Collecting : DbUpgradeState()
+sealed class FeiDbState {
+    data class Ready(val index: Index) : FeiDbState()
+    object Collecting : FeiDbState()
     data class MissingModel(
         val current: MlModel?,
         val missingFeatures: Set<ModelFeature>,
         val proceed: SendChannel<MissingModelResponse>? = null,
-    ) : DbUpgradeState()
+    ) : FeiDbState()
 
-    data class InProgress(val total: Int, val done: Int) : DbUpgradeState()
+    data class InProgress(val total: Int, val done: Int) : FeiDbState()
 }
 
 private data class FrameUpdate<T>(val addition: Set<T>, val removal: Set<T>, val complete: Set<T>)
