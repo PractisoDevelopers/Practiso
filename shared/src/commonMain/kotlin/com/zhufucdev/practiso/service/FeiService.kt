@@ -56,7 +56,6 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         const val EMBEDDING_TOP_KEY = "embedding_top"
         const val FEI_MODEL_KEY = "fei_model"
-        const val INFERRING_FRAME_TYPES = 2
     }
 
     fun getFeiModel(): Flow<MlModel?> =
@@ -102,7 +101,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     }
 
     private fun getSearchIndex(embeddingFeature: EmbeddingOutput) =
-        Index(IndexOptions(embeddingFeature.dimensions, embeddingFeature.metric, ScalarKind.F32))
+        Index(IndexOptions(embeddingFeature.dimensions, embeddingFeature.metric, ScalarKind.F16))
 
     private fun Index.maybeLoad(): Boolean {
         val fs = getPlatform().filesystem
