@@ -23,7 +23,7 @@ material-kolor = "2.1.1"
 human-readable = "1.11.0"
 mlkit-langid = "17.0.6"
 lingua = "1.2.2"
-usearch = "0.2.2"
+usearch = "0.2.4"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }

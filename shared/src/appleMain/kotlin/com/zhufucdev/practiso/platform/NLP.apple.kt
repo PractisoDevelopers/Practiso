@@ -47,6 +47,7 @@ actual class LanguageIdentifier {
             "en" -> Language.English
             "de" -> Language.German
             "es" -> Language.Spanish
+            null -> Language.Default
             else -> Language.World
         }
     }

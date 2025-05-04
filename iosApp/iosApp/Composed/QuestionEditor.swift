@@ -65,9 +65,23 @@ struct QuestionEditor : View {
         history.append(mod)
         redo(mod)
     }
+    
+    func nextId() -> Int64 {
+        func id(of: Frame) -> Int64 {
+            if let options = of as? FrameOptions {
+                max(of.id, options.frames.max(by: {$0.frame.id < $1.frame.id})?.frame.id ?? of.id)
+            } else {
+                of.id
+            }
+        }
+        
+        return (data.max { first, second in
+            id(of: first) < id(of: second)
+        }?.id ?? 0) + 1
+    }
 
     func appendFrame(itemType: Frame.Type) {
-        let nextId = (data.max(by: { $0.id < $1.id })?.id ?? 0) + 1
+        let nextId = nextId()
         let newFrame = createFrameFromType(id: nextId, itemType: itemType)
         let mod: Modification = .push(frame: newFrame, at: data.count)
         history.append(mod)
