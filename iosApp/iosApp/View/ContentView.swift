@@ -99,7 +99,6 @@ struct ContentView: View {
         .environmentObject(errorHandler)
     }
     
-    @State private var missingModelState: FeiDbState.MissingModel? = nil
     var libraryApp: some View {
         NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
             LibraryView(destination: $model.destination)
@@ -128,9 +127,7 @@ struct ContentView: View {
             .onAppear {
                 preferredColumn = .content
             }
-            .toolbar {
-                statusToolbarItem
-            }
+            .modifier(StatusBarModifier(feiState: feiState))
         } detail: {
             Group {
                 switch model.detail {
@@ -150,31 +147,6 @@ struct ContentView: View {
                 preferredColumn = .detail
             }
         }
-        .missingModelAlert(stateBinding: $missingModelState)
-    }
-    
-    var statusToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .status) {
-            switch onEnum(of: feiState) {
-            case .collecting(_):
-                Text("Collecting Frames...")
-                    .font(.caption)
-            case .inProgress(let progress):
-                Text("Inferring \(progress.total) items...")
-                    .font(.caption)
-            case .missingModel(let state):
-                HStack {
-                    Button("Missing Models") {
-                        missingModelState = state
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.red)
-                }
-                .font(.caption)
-            default:
-                EmptyView()
-            }
-        }
     }
 }
 
@@ -184,32 +156,6 @@ extension View {
             .scaleEffect(max(0.8, min(1, (500 - sqrt(pow(displacement.x, 2) + pow(displacement.y, 2))) / 500)))
     }
     
-    fileprivate func missingModelAlert(stateBinding: Binding<FeiDbState.MissingModel?>) -> some View {
-        alert("Missing Models", isPresented: Binding(get: {
-            stateBinding.wrappedValue != nil
-        }, set: { shown in
-            if (!shown) {
-                stateBinding.wrappedValue = nil
-            }
-        }), presenting: stateBinding) { missing in
-            if let proceed = missing.wrappedValue!.proceed {
-                Button("Proceed Anyway", role: .destructive) {
-                    proceed.trySend(element: MissingModelResponse.ProceedAnyway.shared)
-                    missing.wrappedValue = nil
-                }
-                Button("Cancel", role: .cancel) {
-                    proceed.trySend(element: MissingModelResponse.Cancel.shared)
-                    missing.wrappedValue = nil
-                }
-            } else {
-                Button("Cancel", role: .cancel) {
-                    missing.wrappedValue = nil
-                }
-            }
-        } message: { missing in
-            Text(missing.wrappedValue!.descriptiveMessage)
-        }
-    }
 }
 
 extension FeiDbState.MissingModel {
