@@ -216,7 +216,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
                     val missingFeatures =
                         withContext(Dispatchers.Default) {
-                            getMissingFeatures(model, textFrames.complete, imageFrames.complete)
+                            getMissingFeatures(model, textFrames.addition, imageFrames.addition)
                         }
                     if (missingFeatures.isNotEmpty()) {
                         val proceedAnyway = Channel<MissingModelResponse>()

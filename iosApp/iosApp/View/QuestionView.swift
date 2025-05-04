@@ -14,6 +14,7 @@ struct QuestionView: View {
     @State var data = OptionListData<OptionImpl<QuizOption>>()
     
     @State private var isArchiveImporterShown = false
+    @State private var isDeletingDialogShown = false
     @State private var editMode: EditMode = .inactive
     @State private var selection = Set<Int64>()
 
@@ -28,12 +29,7 @@ struct QuestionView: View {
                 selection = newValue
             }),
             onDelete: { options in
-                errorHandler.catchAndShowImmediately {
-                    for option in options {
-                        try removeService.removeQuizWithResources(id: option)
-                    }
-                }
-                selection = Set()
+                isDeletingDialogShown = true
             }
         ) { option in
             OptionListItem(data: option)
@@ -57,7 +53,28 @@ struct QuestionView: View {
                     QuestionPreview(data: option.kt.quiz)
                         .padding()
                 }
-
+        }
+        .alert("Deleting \(selection.count) questions", isPresented: $isDeletingDialogShown) {
+            Button("Delete", role: .destructive) {
+                errorHandler.catchAndShowImmediately {
+                    for quizId in selection {
+                        try removeService.removeQuizWithResources(id: quizId)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                isDeletingDialogShown = false
+            }
+        } message: {
+            if selection.count > 1 {
+                Text("Would you like to delete these questions? This operation is inreversible.")
+            } else if selection.count > 0 {
+                if let selectedId = selection.first {
+                    if let selectedName = data.items.first(where: { $0.id == selectedId  })?.view.header {
+                        Text("Would you like to remove \"\(selectedName)\"? This operation is inreversible.")
+                    }
+                }
+            }
         }
         .toolbar {
             if editMode == .inactive {
