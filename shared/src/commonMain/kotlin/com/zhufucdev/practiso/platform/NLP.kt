@@ -4,7 +4,12 @@ import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 
 enum class Language {
-    World, English, Chinese, German, Spanish
+    World, English, Chinese, German, Spanish,
+
+    /**
+     * Code, numbers, punctuations, and unknown text
+     */
+    Default
 }
 
 expect class LanguageIdentifier() {

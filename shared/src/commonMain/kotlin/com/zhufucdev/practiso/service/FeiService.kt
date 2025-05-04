@@ -55,7 +55,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         val INDEX_PATH = getPlatform().resourcePath.resolve("search").resolve("embeddings.index")
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         const val EMBEDDING_TOP_KEY = "embedding_top"
-        const val FEI_MODEL_KEY = "fei_model"
+        const val FEI_MODEL_KEY = "fei_model" // Frame Embedding Inference
     }
 
     fun getFeiModel(): Flow<MlModel?> =
@@ -171,6 +171,10 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
                 .drop(1)
 
+        val nextEmbeddingKeyMutex = Mutex()
+        var nextEmbeddingKey =
+            db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
+
         getFeiModel().collectLatest { model ->
             if (model == null) {
                 send(
@@ -196,14 +200,10 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
             }
 
-            textFrameFlow.combine(imageFrameFlow, ::Pair)
+            textFrameFlow.drop(1).combine(imageFrameFlow.drop(1), ::Pair)
                 .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
                 .collectLatest { (textFrames, imageFrames) ->
                     send(FeiDbState.Collecting)
-
-                    val nextEmbeddingKeyMutex = Mutex()
-                    var nextEmbeddingKey =
-                        db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
 
                     val missingFeatures =
                         withContext(Dispatchers.Default) {
@@ -224,6 +224,8 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
                     val totalFramesCount = textFrames.addition.size + textFrames.removal.size
                     var completedFramesCount = 0
+
+                    send(FeiDbState.InProgress(totalFramesCount, completedFramesCount))
 
                     try {
                         coroutineScope {
@@ -273,12 +275,10 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         }
                     } finally {
                         // to avoid poisoning the database
-                        nextEmbeddingKeyMutex.withLock {
-                            db.settingsQueries.setInt(
-                                EMBEDDING_TOP_KEY,
-                                nextEmbeddingKey
-                            )
-                        }
+                        db.settingsQueries.setInt(
+                            EMBEDDING_TOP_KEY,
+                            nextEmbeddingKey
+                        )
                     }
 
                     send(FeiDbState.Ready(index))
