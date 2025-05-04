@@ -200,14 +200,6 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             textFrameFlow.combine(imageFrameFlow, ::Pair)
                 .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
                 .collectLatest { (textFrames, imageFrames) ->
-                    if (index.size > 0u && shouldReadIndexFile) {
-                        // just collect the initial frames and exit
-                        // because index doesn't come clear
-                        shouldReadIndexFile = false
-                        return@collectLatest
-                    }
-
-
                     send(FeiDbState.Collecting)
 
                     val nextEmbeddingKeyMutex = Mutex()
