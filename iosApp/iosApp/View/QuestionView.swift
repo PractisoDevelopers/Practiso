@@ -61,6 +61,7 @@ struct QuestionView: View {
                         try removeService.removeQuizWithResources(id: quizId)
                     }
                 }
+                editMode = .inactive
             }
             Button("Cancel", role: .cancel) {
                 isDeletingDialogShown = false
