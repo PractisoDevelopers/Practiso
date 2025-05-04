@@ -192,6 +192,28 @@
     "Delete Options" : {
 
     },
+    "Deleting %lld questions" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Deleting %lld question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Deleting %lld questions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Deleting Dimension" : {
 
     },
@@ -490,7 +512,32 @@
     "Would you like to delete questions contained as well?" : {
 
     },
+    "Would you like to delete these questions? This operation is inreversible." : {
+
+    },
     "Would you like to import %d questions?" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Would you like to import %d question?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Would you like to import %d questions?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Would you like to remove \"%@\"? This operation is inreversible." : {
 
     },
     "Would you like to start the newly created session immediately?" : {
