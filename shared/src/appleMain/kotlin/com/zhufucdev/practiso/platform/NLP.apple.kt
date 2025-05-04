@@ -17,7 +17,7 @@ import platform.CoreML.MLFeatureProviderProtocol
 import platform.CoreML.MLFeatureValue
 import platform.CoreML.MLModelConfiguration
 import platform.CoreML.MLMultiArray
-import platform.CoreML.MLMultiArrayDataTypeFloat32
+import platform.CoreML.MLMultiArrayDataTypeFloat16
 import platform.CoreML.MLMultiArrayDataTypeInt32
 import platform.CoreML.create
 import platform.CoreML.objectAtIndexedSubscript
@@ -133,14 +133,14 @@ class CoreMLInference(
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private class JinaModelProviderProducer(
-    val contextWindowSize: Int = 128,
+    val sequenceLength: Int = 128,
     val tokenizer: Tokenizer,
 ) : MLFeatureProviderProducer {
     private fun Encoding.getIdMLArray(): MLMultiArray = memScoped {
         val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
         val inputIds = MLMultiArray.create(
-            shape = listOf(1, contextWindowSize),
-            dataType = MLMultiArrayDataTypeFloat32,
+            shape = listOf(1, sequenceLength),
+            dataType = MLMultiArrayDataTypeFloat16,
             error = errPtr.value
         )
         errPtr.value?.let {
@@ -156,7 +156,7 @@ private class JinaModelProviderProducer(
     private fun Encoding.getAttentionMaskMLArray(): MLMultiArray = memScoped {
         val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
         val mask = MLMultiArray.create(
-            shape = listOf(1, contextWindowSize),
+            shape = listOf(1, sequenceLength),
             dataType = MLMultiArrayDataTypeInt32,
             error = errPtr.value
         )
@@ -169,7 +169,6 @@ private class JinaModelProviderProducer(
             }
         }
     }
-
 
     override fun one(frame: Frame): Map<String, MLFeatureValue> =
         when (frame) {
@@ -205,10 +204,11 @@ private class JinaModelProviderProducer(
 
 @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
 private class SingleOutputResultProducer(val featureName: String) : MLFeatureResultProducer by {
-    val value = it.featureValueForName(featureName)!!.multiArrayValue!!
+    val feature = it.featureValueForName(featureName)!!
+    val value = feature.multiArrayValue!!
     val shape = value.shape as List<NSNumber>
     assert(shape.size == 2 && (shape.first() as NSNumber).intValue == 1) { "shape error, (1, n) expected, got (${value.shape.joinToString()})" }
-    assert(value.dataType == MLMultiArrayDataTypeFloat32) { "type error" }
+    assert(value.dataType == MLMultiArrayDataTypeFloat16) { "type error" }
     FloatArray(shape[1].intValue) { idx -> value.objectAtIndexedSubscript(idx.toLong()).floatValue }
 }
 
@@ -230,7 +230,10 @@ actual suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInfere
                         CoreMLInference(
                             model = model,
                             ml = m!!,
-                            providerProducer = JinaModelProviderProducer(tokenizer = tokenizer),
+                            providerProducer = JinaModelProviderProducer(
+                                sequenceLength = 512,
+                                tokenizer = tokenizer
+                            ),
                             resultProducer = SingleOutputResultProducer(featureName = "pooler_output")
                         )
                     )
