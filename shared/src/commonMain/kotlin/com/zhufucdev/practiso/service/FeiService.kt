@@ -37,9 +37,12 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
@@ -199,9 +202,9 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
             }
 
-            textFrameFlow.drop(1).combine(imageFrameFlow.drop(1), ::Pair)
+            textFrameFlow.replaceFirst().combine(imageFrameFlow.replaceFirst(), ::Pair)
                 .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
-                .collectLatest { (textFrames, imageFrames) ->
+                .collect { (textFrames, imageFrames) ->
                     send(FeiDbState.Collecting)
 
                     val missingFeatures =
@@ -214,7 +217,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         when (proceedAnyway.receive()) {
                             MissingModelResponse.Cancel -> {
                                 send(FeiDbState.Ready(index))
-                                return@collectLatest
+                                return@collect
                             }
 
                             MissingModelResponse.ProceedAnyway -> {}
@@ -318,6 +321,11 @@ private data class FrameUpdate<T>(
 }
 
 private fun <T> emptyUpdate() = FrameUpdate<T>(emptySet(), emptySet(), emptySet())
+
+/**
+ * Replaces the first emission with [emptyUpdate]
+ */
+private fun <T> Flow<FrameUpdate<T>>.replaceFirst() = flowOf(emptyUpdate<T>()).onCompletion { emitAll(this@replaceFirst.drop(1)) }
 
 sealed class InferenceState {
     data class Complete(val results: List<Pair<Any, FloatArray>>) : InferenceState() {
