@@ -54,7 +54,7 @@ struct QuestionView: View {
                         .padding()
                 }
         }
-        .alert("Deleting \(selection.count) questions", isPresented: $isDeletingDialogShown) {
+        .confirmationDialog("Deleting \(selection.count) questions", isPresented: $isDeletingDialogShown) {
             Button("Delete", role: .destructive) {
                 errorHandler.catchAndShowImmediately {
                     for quizId in selection {
