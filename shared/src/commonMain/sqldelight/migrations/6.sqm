@@ -1,0 +1,16 @@
+ALTER TABLE imageFrame DROP COLUMN embeddingsId;
+ALTER TABLE textFrame DROP COLUMN embeddingsId;
+
+CREATE TABLE textFrameEmbeddingIndex(
+    frameId INTEGER NOT NULL,
+    indexId INTEGER NOT NULL,
+    PRIMARY KEY (frameId, indexId),
+    FOREIGN KEY (frameId) REFERENCES textFrame(id) ON DELETE CASCADE
+);
+
+CREATE TABLE imageFrameEmbeddingIndex(
+    frameId INTEGER NOT NULL,
+    indexId INTEGER NOT NULL,
+    PRIMARY KEY (frameId, indexId),
+    FOREIGN KEY (frameId) REFERENCES imageFrame(id) ON DELETE CASCADE
+);

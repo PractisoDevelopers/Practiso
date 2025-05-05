@@ -137,10 +137,10 @@ struct QuestionEditor : View {
 
 #Preview {
     @Previewable @State var frames: [Frame] = [
-        FrameText(id: 0, textFrame: TextFrame(id: 0, embeddingsId: nil, content: "What's the meaning of life?")),
-        FrameImage(id: 1, imageFrame: ImageFrame(id: 0, embeddingsId: nil, filename: "", width: -1, height: -1, altText: nil)),
+        FrameText(id: 0, textFrame: TextFrame(id: 0, content: "What's the meaning of life?")),
+        FrameImage(id: 1, imageFrame: ImageFrame(id: 0, filename: "", width: -1, height: -1, altText: nil)),
         FrameOptions(optionsFrame: OptionsFrame(id: 2, name: nil), frames: [
-            KeyedPrioritizedFrame(frame: FrameText(id: 1, textFrame: TextFrame(id: 1, embeddingsId: nil, content: "To have fun")), isKey: true, priority: 0)
+            KeyedPrioritizedFrame(frame: FrameText(id: 1, textFrame: TextFrame(id: 1, content: "To have fun")), isKey: true, priority: 0)
         ])
     ]
     @Previewable @Namespace var namespace
@@ -304,9 +304,9 @@ private struct Item : View {
 
 private func createFrameFromType(id: Int64, itemType: Frame.Type) -> any Frame {
     let item: Frame? = if itemType is FrameImage.Type {
-        FrameImage(id: id, imageFrame: ImageFrame(id: id, embeddingsId: nil, filename: "", width: 0, height: 0, altText: nil))
+        FrameImage(id: id, imageFrame: ImageFrame(id: id, filename: "", width: 0, height: 0, altText: nil))
     } else if itemType is FrameText.Type {
-        FrameText(id: id, textFrame: TextFrame(id: id, embeddingsId: nil, content: ""))
+        FrameText(id: id, textFrame: TextFrame(id: id, content: ""))
     } else if itemType is FrameOptions.Type {
         FrameOptions(optionsFrame: OptionsFrame(id: id, name: nil), frames: [])
     } else {

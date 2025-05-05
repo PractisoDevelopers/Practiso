@@ -19,7 +19,7 @@ struct FrameEditor<ImageFrameEditorLabel : View, TextFrameEditor : View> : View 
                 if newValue == text.textFrame.content {
                     return
                 }
-                let textFrame = TextFrame(id: text.textFrame.id, embeddingsId: text.textFrame.embeddingsId, content: newValue)
+                let textFrame = TextFrame(id: text.textFrame.id, content: newValue)
                 frame = FrameText(id: frame.id, textFrame: textFrame)
             }))
             .onKeyPress(.delete) {
@@ -168,7 +168,7 @@ struct ImageFrameEditor<Label : View> : View {
                 if altTextBuffer?.isEmpty == true {
                     altTextBuffer = nil
                 }
-                frame = ImageFrame(id: frame.id, embeddingsId: frame.embeddingsId, filename: frame.filename, width: frame.width, height: frame.height, altText: altTextBuffer)
+                frame = ImageFrame(id: frame.id, filename: frame.filename, width: frame.width, height: frame.height, altText: altTextBuffer)
             }
             Button("Cancel", role: .cancel) {
             }
@@ -196,7 +196,7 @@ struct ImageFrameEditor<Label : View> : View {
         let cgImage = try loader.load(fileName: name)
         Task {
             await cache.put(name: name, value: cgImage)
-            frame = ImageFrame(id: frame.id, embeddingsId: frame.embeddingsId, filename: name, width: Int64(cgImage.width), height: Int64(cgImage.height), altText: nil)
+            frame = ImageFrame(id: frame.id, filename: name, width: Int64(cgImage.width), height: Int64(cgImage.height), altText: nil)
         }
     }
 }

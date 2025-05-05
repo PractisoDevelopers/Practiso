@@ -240,38 +240,48 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                                 }
 
                                 textFrames.removal.forEach { frame ->
-                                    frame.embeddingsId?.let {
-                                        index.remove(
-                                            it.toULong()
-                                        )
-                                    }
+                                    db.quizQueries.getTextFrameEmbeddingIndex(frame.id)
+                                        .executeAsOneOrNull()
+                                        ?.let {
+                                            index.remove(it.toULong())
+                                        }
                                 }
-                                getEmbeddings(textFrames.addition, model)
-                                    .collect {
-                                        when (it) {
-                                            is InferenceState.Complete -> {
-                                                it.results<TextFrame>()
-                                                    .forEach { (frame, embedding) ->
-                                                        val key = frame.embeddingsId
-                                                            ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
-                                                        index.asF32.add(
-                                                            key.toULong(),
-                                                            embedding
+                                getEmbeddings(textFrames.addition, model).collect {
+                                    when (it) {
+                                        is InferenceState.Complete -> {
+                                            it.results<TextFrame>().forEach { (frame, ebd) ->
+                                                db.transaction {
+                                                    val dbKey = db.quizQueries
+                                                        .getTextFrameEmbeddingIndex(frame.id)
+                                                        .executeAsOneOrNull()
+
+                                                    val key = dbKey
+                                                        ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
+                                                    index.asF32.add(
+                                                        key.toULong(),
+                                                        ebd
+                                                    )
+                                                    if (dbKey == null) {
+                                                        db.quizQueries.insertTextFrameEmbeddingIndex(
+                                                            frame.id,
+                                                            key
                                                         )
                                                     }
-                                            }
-
-                                            is InferenceState.Inferring -> {
-                                                completedFramesCount += it.done
-                                                send(
-                                                    FeiDbState.InProgress(
-                                                        total = totalFramesCount,
-                                                        done = completedFramesCount
-                                                    )
-                                                )
+                                                }
                                             }
                                         }
+
+                                        is InferenceState.Inferring -> {
+                                            completedFramesCount += it.done
+                                            send(
+                                                FeiDbState.InProgress(
+                                                    total = totalFramesCount,
+                                                    done = completedFramesCount
+                                                )
+                                            )
+                                        }
                                     }
+                                }
                             }
 
                             launch(Dispatchers.Default) {
