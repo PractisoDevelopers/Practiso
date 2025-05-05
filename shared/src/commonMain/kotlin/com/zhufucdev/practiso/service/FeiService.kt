@@ -37,12 +37,10 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
@@ -102,7 +100,13 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     }
 
     private fun getSearchIndex(embeddingFeature: EmbeddingOutput) =
-        Index(IndexOptions(embeddingFeature.dimensions, embeddingFeature.metric, embeddingFeature.precision))
+        Index(
+            IndexOptions(
+                embeddingFeature.dimensions,
+                embeddingFeature.metric,
+                embeddingFeature.precision
+            )
+        )
 
     private fun Index.maybeLoad(): Boolean {
         val fs = getPlatform().filesystem
@@ -201,7 +205,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
             }
 
-            textFrameFlow.replaceFirst().combine(imageFrameFlow.replaceFirst(), ::Pair)
+            textFrameFlow.drop(1).addPacing().combine(imageFrameFlow.drop(1).addPacing(), ::Pair)
                 .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
                 .collect { (textFrames, imageFrames) ->
                     send(FeiDbState.Collecting)
@@ -322,9 +326,17 @@ private data class FrameUpdate<T>(
 private fun <T> emptyUpdate() = FrameUpdate<T>(emptySet(), emptySet(), emptySet())
 
 /**
- * Replaces the first emission with [emptyUpdate]
+ * Add [emptyUpdate] before each emission
  */
-private fun <T> Flow<FrameUpdate<T>>.replaceFirst() = flowOf(emptyUpdate<T>()).onCompletion { emitAll(this@replaceFirst.drop(1)) }
+private fun <T> Flow<FrameUpdate<T>>.addPacing() =
+    flow {
+        emit(emptyUpdate<T>())
+        this@addPacing.collect {
+            emit(it)
+            emit(emptyUpdate())
+        }
+    }
+
 
 sealed class InferenceState {
     data class Complete(val results: List<Pair<Any, FloatArray>>) : InferenceState() {
