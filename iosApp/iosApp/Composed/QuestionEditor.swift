@@ -27,32 +27,37 @@ struct QuestionEditor : View {
         .environment(\.editMode, Binding.constant(.inactive))
         .listStyle(.plain)
         .toolbar {
-            Button("Undo", systemImage: "arrow.uturn.backward.circle") {
-                if let mod = history.undo() {
-                    undo(mod)
-                }
-            }
-            .disabled(!history.canUndo)
-            Button("Redo", systemImage: "arrow.uturn.forward.circle") {
-                if let mod = history.redo() {
-                    redo(mod)
-                }
-            }
-            .disabled(!history.canRedo)
-            Menu("Add", systemImage: "plus") {
-                Button("Text", systemImage: "character.textbox") {
-                    withAnimation {
-                        appendFrame(itemType: FrameText.self)
+            ToolbarItemGroup(placement: .secondaryAction) {
+                Button("Undo", systemImage: "arrow.uturn.backward.circle") {
+                    if let mod = history.undo() {
+                        undo(mod)
                     }
                 }
-                Button("Image", systemImage: "photo") {
-                    withAnimation {
-                        appendFrame(itemType: FrameImage.self)
+                .disabled(!history.canUndo)
+                Button("Redo", systemImage: "arrow.uturn.forward.circle") {
+                    if let mod = history.redo() {
+                        redo(mod)
                     }
                 }
-                Button("Options", systemImage: "checklist") {
-                    withAnimation {
-                        appendFrame(itemType: FrameOptions.self)
+                .disabled(!history.canRedo)
+            }
+            
+            ToolbarItem(placement: .primaryAction) {
+                Menu("Add", systemImage: "plus") {
+                    Button("Text", systemImage: "character.textbox") {
+                        withAnimation {
+                            appendFrame(itemType: FrameText.self)
+                        }
+                    }
+                    Button("Image", systemImage: "photo") {
+                        withAnimation {
+                            appendFrame(itemType: FrameImage.self)
+                        }
+                    }
+                    Button("Options", systemImage: "checklist") {
+                        withAnimation {
+                            appendFrame(itemType: FrameOptions.self)
+                        }
                     }
                 }
             }

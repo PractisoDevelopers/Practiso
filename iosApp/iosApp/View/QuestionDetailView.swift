@@ -62,7 +62,7 @@ struct QuestionDetailView : View {
                 }
                 .environment(\.editMode, $editMode)
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
+                    ToolbarItem(placement: .topBarTrailing) {
                         if editMode.isEditing {
                             Button("Done") {
                                 if !editHistory.isEmpty {
