@@ -58,6 +58,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         const val EMBEDDING_TOP_KEY = "embedding_top"
         const val FEI_MODEL_KEY = "fei_model" // Frame Embedding Inference
+        const val MAX_BATCH_SIZE = 128
     }
 
     fun getFeiModel(): Flow<MlModel?> =
@@ -81,18 +82,16 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     ): Flow<InferenceState> = channelFlow {
         val fei = FrameEmbeddingInference(model)
         val total = frames.size
-        var done = 0
-        val chunkSize = frames.size / parallelTasks + 1
+        val batchSize = minOf(frames.size / parallelTasks + 1, MAX_BATCH_SIZE)
         coroutineScope {
-            val jobs = frames.chunked(chunkSize)
+            val jobs = frames.chunked(batchSize)
                 .map { frames ->
                     async {
                         val frames = frames.map { Frame.Text(it.id, it) }
                         fei.getEmbeddings(frames)
                             .mapIndexed { idx, r -> frames[idx] to r }
                             .also {
-                                done += chunkSize
-                                send(InferenceState.Inferring(done, total))
+                                send(InferenceState.Inferring(frames.size, total))
                             }
                     }
                 }
