@@ -3,13 +3,11 @@ import kotlinx.datetime.Instant;
 
 CREATE TABLE textFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    embeddingsId INTEGER,
     content TEXT NOT NULL
 );
 
 CREATE TABLE imageFrame(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    embeddingsId TEXT,
     filename TEXT NOT NULL,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
@@ -52,6 +50,20 @@ CREATE TABLE quiz(
     name TEXT,
     creationTimeISO TEXT AS Instant NOT NULL,
     modificationTimeISO TEXT AS Instant
+);
+
+CREATE TABLE textFrameEmbeddingIndex(
+    frameId INTEGER NOT NULL,
+    indexId INTEGER NOT NULL,
+    PRIMARY KEY (frameId, indexId),
+    FOREIGN KEY (frameId) REFERENCES textFrame(id) ON DELETE CASCADE
+);
+
+CREATE TABLE imageFrameEmbeddingIndex(
+    frameId INTEGER NOT NULL,
+    indexId INTEGER NOT NULL,
+    PRIMARY KEY (frameId, indexId),
+    FOREIGN KEY (frameId) REFERENCES imageFrame(id) ON DELETE CASCADE
 );
 
 getAllQuiz:
@@ -235,3 +247,16 @@ SELECT last_insert_rowid();
 
 updateIsKey:
 UPDATE frameByOptionsFrame SET isKey = ? WHERE id = ?;
+
+
+getTextFrameEmbeddingIndex:
+SELECT indexId FROM textFrameEmbeddingIndex WHERE frameId = ?;
+
+insertTextFrameEmbeddingIndex:
+INSERT INTO textFrameEmbeddingIndex VALUES (?, ?);
+
+getImageFrameEmbeddingIndex:
+SELECT indexId FROM imageFrameEmbeddingIndex WHERE frameId = ?;
+
+insertImageFrameEmbeddingIndex:
+INSERT INTO imageFrameEmbeddingIndex VALUES (?, ?);

@@ -17,12 +17,11 @@ import okio.gzip
 object DocumentService {
     private fun createFrameFromArchive(archive: FrameArchive, id: Long): Pair<Frame, Int> =
         when (archive) {
-            is FrameArchive.Text -> Frame.Text(id, TextFrame(id, null, archive.content)) to 1
+            is FrameArchive.Text -> Frame.Text(id, TextFrame(id, archive.content)) to 1
             is FrameArchive.Image -> Frame.Image(
                 id,
                 ImageFrame(
                     id,
-                    null,
                     archive.filename,
                     archive.width,
                     archive.height,
