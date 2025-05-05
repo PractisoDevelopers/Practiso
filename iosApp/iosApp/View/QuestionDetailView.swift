@@ -108,8 +108,26 @@ struct QuestionDetailView : View {
                 try editService.saveModification(data: [Modification.renameQuiz(oldName: oldValue, newName: newValue)], quizId: option.id)
             }
         }
+        .onChange(of: editMode) { oldValue, newValue in
+            Task {
+                await onEditModeChange(oldValue: oldValue, newValue: newValue)
+            }
+        }
         .navigationTitle($titleBuffer)
         .navigationBarTitleDisplayMode(.inline)
         .navigationDocument(option, preview: SharePreview(option.view.header))
+    }
+    
+    func onEditModeChange(oldValue: EditMode, newValue: EditMode) async {
+        if newValue != .inactive {
+            return
+        }
+        if let newData = await libraryService.getQuizFrames(quizId: option.id)
+            .makeAsyncIterator()
+            .next() {
+            if let present = newData {
+                data = .ok(present)
+            }
+        }
     }
 }
