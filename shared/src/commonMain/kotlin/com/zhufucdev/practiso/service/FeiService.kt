@@ -48,7 +48,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import usearch.Index
 import usearch.IndexOptions
-import usearch.ScalarKind
 
 class FeiService(private val db: AppDatabase = Database.app, private val parallelTasks: Int = 8) {
     companion object {
@@ -101,7 +100,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     }
 
     private fun getSearchIndex(embeddingFeature: EmbeddingOutput) =
-        Index(IndexOptions(embeddingFeature.dimensions, embeddingFeature.metric, ScalarKind.F16))
+        Index(IndexOptions(embeddingFeature.dimensions, embeddingFeature.metric, embeddingFeature.precision))
 
     private fun Index.maybeLoad(): Boolean {
         val fs = getPlatform().filesystem
