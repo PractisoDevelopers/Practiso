@@ -18,7 +18,6 @@ import platform.CoreML.MLFeatureValue
 import platform.CoreML.MLModelConfiguration
 import platform.CoreML.MLMultiArray
 import platform.CoreML.MLMultiArrayDataTypeFloat16
-import platform.CoreML.MLMultiArrayDataTypeInt32
 import platform.CoreML.create
 import platform.CoreML.objectAtIndexedSubscript
 import platform.CoreML.setObject
@@ -137,39 +136,35 @@ private class JinaModelProviderProducer(
     val sequenceLength: Int = 128,
     val tokenizer: Tokenizer,
 ) : MLFeatureProviderProducer {
-    private fun Encoding.getIdMLArray(): MLMultiArray = memScoped {
+    private fun createSequenceMultiArray(dataType: Long = MLMultiArrayDataTypeFloat16): MLMultiArray = memScoped {
         val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
-        val inputIds = MLMultiArray.create(
+        val array = MLMultiArray.create(
             shape = listOf(1, sequenceLength),
-            dataType = MLMultiArrayDataTypeFloat16,
+            dataType = dataType,
             error = errPtr.value
         )
         errPtr.value?.let {
             throw IllegalStateException(it.pointed.value!!.localizedDescription)
         }
-        inputIds!!.apply {
+        array ?: throw NullPointerException("MLMultiArray")
+    }
+
+    private fun Encoding.getIdMLArray(): MLMultiArray =
+        createSequenceMultiArray().apply {
             ids.forEachIndexed { idx, it ->
                 setObject(NSNumber(it.toInt()), atIndexedSubscript = idx.toLong())
             }
         }
-    }
 
-    private fun Encoding.getAttentionMaskMLArray(): MLMultiArray = memScoped {
-        val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
-        val mask = MLMultiArray.create(
-            shape = listOf(1, sequenceLength),
-            dataType = MLMultiArrayDataTypeInt32,
-            error = errPtr.value
-        )
-        errPtr.value?.let {
-            throw IllegalStateException(it.pointed.value!!.localizedDescription)
-        }
-        mask!!.apply {
+    private fun Encoding.getAttentionMaskMLArray(): MLMultiArray =
+        createSequenceMultiArray().apply {
             attentionMask.forEachIndexed { idx, it ->
                 setObject(NSNumber(it.toInt()), atIndexedSubscript = idx.toLong())
             }
+            (attentionMask.size until sequenceLength).forEach { idx ->
+                setObject(NSNumber(0), atIndexedSubscript = idx.toLong())
+            }
         }
-    }
 
     override fun one(frame: Frame): Map<String, MLFeatureValue> =
         when (frame) {
