@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.datamodel
 
 import com.zhufucdev.practiso.platform.Language
 import usearch.MetricKind
+import usearch.ScalarKind
 
 sealed class ModelFeature
 
@@ -15,7 +16,7 @@ data class LanguageInput(val supports: Set<Language>) : ModelFeature() {
 
 data object ImageInput : ModelFeature()
 
-data class EmbeddingOutput(val metric: MetricKind, val dimensions: ULong) : ModelFeature()
+data class EmbeddingOutput(val metric: MetricKind, val dimensions: ULong, val precision: ScalarKind) : ModelFeature()
 
 data object AnyEmbeddingOutput : ModelFeature()
 
