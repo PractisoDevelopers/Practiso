@@ -36,34 +36,22 @@ struct QuestionDetailView : View {
                 }
                 
             case .ok(let quizFrames):
-                Group {
-                    if editMode.isEditing == true {
-                        QuestionEditor(
-                            data: Binding {
-                                staging ?? quizFrames.frames.map(\.frame)
-                            } set: {
-                                staging = $0
-                            },
-                            namespace: question,
-                            history: $editHistory
-                        )
-                        .onAppear {
-                            staging = quizFrames.frames.map(\.frame)
-                        }
-                    } else {
-                        ScrollView {
-                            Question(
-                                frames: quizFrames.frames,
-                                namespace: question
-                            )
-                        }
-                        .padding(.horizontal)
+                if editMode.isEditing == true {
+                    QuestionEditor(
+                        data: Binding {
+                            staging ?? quizFrames.frames.map(\.frame)
+                        } set: {
+                            staging = $0
+                        },
+                        namespace: question,
+                        history: $editHistory
+                    )
+                    .onAppear {
+                        staging = quizFrames.frames.map(\.frame)
                     }
-                }
-                .environment(\.editMode, $editMode)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        if editMode.isEditing {
+                    .navigationTitle($titleBuffer)
+                    .toolbar {
+                        ToolbarItem {
                             Button("Done") {
                                 if !editHistory.isEmpty {
                                     errorHandler.catchAndShowImmediately {
@@ -78,7 +66,20 @@ struct QuestionDetailView : View {
                                     }
                                 }
                             }
-                        } else {
+                        }
+                    }
+                } else {
+                    ScrollView {
+                        Question(
+                            frames: quizFrames.frames,
+                            namespace: question
+                        )
+                    }
+                    .padding(.horizontal)
+                    .navigationTitle(titleBuffer)
+                    .navigationDocument(option, preview: SharePreview(option.view.header))
+                    .toolbar {
+                        ToolbarItem {
                             Button("Edit") {
                                 editHistory = History() // editor always starts with empty history
                                 withAnimation {
@@ -88,11 +89,17 @@ struct QuestionDetailView : View {
                         }
                     }
                 }
-
+                
             case .unavailable:
                 Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("Question Unavailable"))
             }
         }
+        .onChange(of: titleBuffer) { oldValue, newValue in
+            errorHandler.catchAndShowImmediately {
+                try editService.saveModification(data: [Modification.renameQuiz(oldName: oldValue, newName: newValue)], quizId: option.id)
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
         .task(id: option.id) {
             for await qf in libraryService.getQuizFrames(quizId: option.id) {
                 if let qf = qf {
@@ -103,19 +110,11 @@ struct QuestionDetailView : View {
                 }
             }
         }
-        .onChange(of: titleBuffer) { oldValue, newValue in
-            errorHandler.catchAndShowImmediately {
-                try editService.saveModification(data: [Modification.renameQuiz(oldName: oldValue, newName: newValue)], quizId: option.id)
-            }
-        }
         .onChange(of: editMode) { oldValue, newValue in
             Task {
                 await onEditModeChange(oldValue: oldValue, newValue: newValue)
             }
         }
-        .navigationTitle($titleBuffer)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationDocument(option, preview: SharePreview(option.view.header))
     }
     
     func onEditModeChange(oldValue: EditMode, newValue: EditMode) async {
