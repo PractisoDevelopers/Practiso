@@ -30,7 +30,7 @@ struct SuggestionSelector : View {
                 .foregroundStyle(.secondary)
             case .ok(let array):
                 LazyVStack(spacing: 0) {
-                    ForEach({ if searchText.isEmpty { array } else { try! array.filter(isIncluded) }}(), id: \.id) { option in
+                    ForEach({ if searchText.isEmpty { array } else { array.filter(isIncluded) }}(), id: \.id) { option in
                         Divider()
                             .padding(.leading)
                         Button {

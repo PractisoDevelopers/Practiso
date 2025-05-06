@@ -128,14 +128,14 @@ struct SessionDetailView : View {
     }
     
     var hiddenSectionHeader: some View {
-        HStack {
-            Text("Hidden").fontWeight(.bold).foregroundStyle(.secondary)
-            Spacer()
-            Button {
-                withAnimation {
-                    isHiddenSectonExpanded.toggle()
-                }
-            } label: {
+        Button {
+            withAnimation {
+                isHiddenSectonExpanded.toggle()
+            }
+        } label: {
+            HStack {
+                Text("Hidden").fontWeight(.bold).foregroundStyle(.secondary)
+                Spacer()
                 Image(systemName: "chevron.down")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -144,13 +144,9 @@ struct SessionDetailView : View {
                     .animation(.default, value: isHiddenSectonExpanded)
                     .foregroundStyle(.tint)
             }
-            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity)
         }
-        .background()
-        .onTapGesture {
-            withAnimation {
-                isHiddenSectonExpanded.toggle()
-            }
-        }
+        .buttonStyle(.plain)
     }
 }
