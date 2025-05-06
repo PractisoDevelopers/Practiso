@@ -78,7 +78,7 @@ struct SessionDetailView : View {
             }
         }
         .navigationTitle(option.view.header)
-        .task {
+        .task(id: option.id) {
             for await stats in libraryService.getTakesBySession(id: option.id) {
                 data = .ok(stats)
             }
