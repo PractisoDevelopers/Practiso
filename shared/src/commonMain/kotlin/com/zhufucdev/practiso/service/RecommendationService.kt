@@ -17,12 +17,12 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 
 class RecommendationService(private val db: AppDatabase = Database.app) {
-    fun getRecentRecommendations(): Flow<List<SessionCreator>> =
+    fun getRecentRecommendations(count: Long = 5): Flow<List<SessionCreator>> =
         channelFlow {
             db.quizQueries.getQuizFrames(db.quizQueries.getRecentQuiz())
                 .toQuizOptionFlow()
                 .collectLatest { quizzes ->
-                    db.dimensionQueries.getRecentDimensions(5)
+                    db.dimensionQueries.getRecentDimensions(count)
                         .asFlow()
                         .mapToList(Dispatchers.IO)
                         .toDimensionOptionFlow(db.quizQueries)

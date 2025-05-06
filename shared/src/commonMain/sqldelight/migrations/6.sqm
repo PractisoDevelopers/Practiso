@@ -1,16 +1,12 @@
 ALTER TABLE imageFrame DROP COLUMN embeddingsId;
 ALTER TABLE textFrame DROP COLUMN embeddingsId;
 
-CREATE TABLE textFrameEmbeddingIndex(
-    frameId INTEGER NOT NULL,
-    indexId INTEGER NOT NULL,
-    PRIMARY KEY (frameId, indexId),
-    FOREIGN KEY (frameId) REFERENCES textFrame(id) ON DELETE CASCADE
-);
-
-CREATE TABLE imageFrameEmbeddingIndex(
-    frameId INTEGER NOT NULL,
-    indexId INTEGER NOT NULL,
-    PRIMARY KEY (frameId, indexId),
-    FOREIGN KEY (frameId) REFERENCES imageFrame(id) ON DELETE CASCADE
+CREATE TABLE frameEmbeddingIndex(
+    textFrameId INTEGER,
+    imageFrameId INTEGER,
+    indexKey INTEGER NOT NULL,
+    PRIMARY KEY (textFrameId, imageFrameId, indexKey),
+    FOREIGN KEY (textFrameId) REFERENCES textFrame(id) ON DELETE CASCADE,
+    FOREIGN KEY (imageFrameId) REFERENCES imageFrame(id) ON DELETE CASCADE,
+    CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
 );
