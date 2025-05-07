@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.datamodel
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.zhufucdev.practiso.database.Answer
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.SessionQueries
 import kotlinx.coroutines.Dispatchers
@@ -67,21 +68,12 @@ fun SessionQueries.getAnswersDataModel(takeId: Long): Flow<List<PractisoAnswer>>
         .map { answers ->
             answers
                 .sortedBy { it.priority }
-                .map {
-                    when {
-                        it.textFrameId != null -> PractisoAnswer.Text(
-                            it.answerText!!,
-                            it.textFrameId,
-                            it.quizId
-                        )
-
-                        it.optionsFrameId != null -> PractisoAnswer.Option(
-                            it.answerOptionId!!,
-                            it.optionsFrameId,
-                            it.quizId
-                        )
-
-                        else -> error("Either answer option nor text is present. This database is so broken.")
-                    }
-                }
+                .map { it.toDataModel() }
         }
+
+fun Answer.toDataModel(): PractisoAnswer =
+    when {
+        textFrameId != null -> PractisoAnswer.Text(answerText!!, textFrameId, quizId)
+        optionsFrameId != null -> PractisoAnswer.Option(answerOptionId!!, optionsFrameId, quizId)
+        else -> error("Either answer option nor text is present. This database is so broken.")
+    }

@@ -47,6 +47,7 @@ CREATE TABLE answer(
     textFrameId INTEGER,
     answerOptionId INTEGER,
     answerText TEXT,
+    time TEXT AS Instant NOT NULL,
     priority INTEGER NOT NULL,
     PRIMARY KEY (takeId, quizId, optionsFrameId, textFrameId),
     FOREIGN KEY (answerOptionId) REFERENCES frameByOptionsFrame(id) ON DELETE CASCADE,
@@ -73,6 +74,8 @@ JOIN (
     GROUP BY sessionId
 ) QT ON QT.sessionId = S.id;
 
+CREATE VIEW time AS SELECT strftime('%Y-%m-%dT%H:%M:%SZ', 'now') AS currentISO;
+
 CREATE VIEW sessionOptionView AS
 SELECT S.*, count(Q.quizId) AS quizCount
 FROM session S
@@ -96,9 +99,9 @@ SELECT S.*
 FROM session S JOIN take T ON T.sessionId = S.id
 WHERE T.id = ?;
 
-insertSession:
+insertSesion:
 INSERT INTO session(name, creationTimeISO)
-VALUES (?, ?);
+VALUES (?, (SELECT currentISO FROM time));
 
 assoicateQuizWithSession:
 INSERT INTO quizBySession(quizId, sessionId)
@@ -115,7 +118,7 @@ DELETE FROM session WHERE id == ?;
 
 insertTake:
 INSERT INTO take(sessionId, creationTimeISO)
-VALUES (?, ?);
+VALUES (?, (SELECT currentISO FROM time));
 
 getTakeById:
 SELECT *
@@ -155,6 +158,9 @@ SELECT Q.*
 FROM take T JOIN quizBySession S ON S.sessionId = T.sessionId JOIN quiz Q ON Q.id = S.quizId
 WHERE T.id = ?;
 
+getAllTakes:
+SELECT * FROM take;
+
 getAllTakeStats:
 SELECT *
 FROM takeStat;
@@ -181,13 +187,17 @@ getQuizCountBySession:
 SELECT count(*)
 FROM quizBySession WHERE sessionId = ?;
 
+getAllAnswers:
+SELECT answer.*, strftime('%s', answer.time) AS time, quiz.modificationTimeISO FROM answer JOIN quiz ON answer.quizId = quiz.id
+ORDER BY time DESC;
+
 setTextAnswer:
-INSERT OR REPLACE INTO answer(quizId, takeId, textFrameId, answerText, priority)
-VALUES (?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO answer(quizId, takeId, textFrameId, answerText, priority, time)
+VALUES (?, ?, ?, ?, ?, (SELECT currentISO FROM time));
 
 setOptionAnswer:
-INSERT OR REPLACE INTO answer(quizId, takeId, optionsFrameId, answerOptionId, priority)
-VALUES (?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO answer(quizId, takeId, optionsFrameId, answerOptionId, priority, time)
+VALUES (?, ?, ?, ?, ?, (SELECT currentISO FROM time));
 
 getAnswersByTakeId:
 SELECT *

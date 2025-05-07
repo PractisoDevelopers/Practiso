@@ -16,7 +16,7 @@ data class LanguageInput(val supports: Set<Language>) : ModelFeature() {
 
 data object ImageInput : ModelFeature()
 
-data class EmbeddingOutput(val metric: MetricKind, val dimensions: ULong, val precision: ScalarKind) : ModelFeature()
+data class EmbeddingOutput(val metric: MetricKind, val dimensions: ULong, val precision: ScalarKind, val normalizer: Normalizer) : ModelFeature()
 
 data object AnyEmbeddingOutput : ModelFeature()
 

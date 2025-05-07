@@ -43,6 +43,8 @@ struct SessionCreatorOption {
             OptionImpl(kt: kt)
         case .leastAccessed(let kt):
             OptionImpl(kt: kt)
+        case .failMuchDimension(let kt):
+            OptionImpl(kt: kt)
         }
     }
 }
@@ -164,7 +166,7 @@ extension SessionCreatorFailMuch : PractisoOptionViewable {
             String(localized: "\(itemCount) items")
         }
         return PractisoOptionView(
-            header: String(localized: "Recommended for you"),
+            header: String(localized: "Have a review"),
             subtitle: subtitle
         )
     }
@@ -185,5 +187,11 @@ extension SessionCreatorLeastAccessed : PractisoOptionViewable {
             header: String(localized: "Have a review"),
             subtitle: subtitle
         )
+    }
+}
+
+extension SessionCreatorFailMuchDimension : PractisoOptionViewable {
+    var view: PractisoOptionView {
+        return PractisoOptionView(header: String(localized: "\(itemCount) items in \(dimension.name)"))
     }
 }

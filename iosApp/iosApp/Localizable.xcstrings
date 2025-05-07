@@ -30,6 +30,16 @@
     "%d items" : {
 
     },
+    "%d items in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$d items in %2$@"
+          }
+        }
+      }
+    },
     "%d questions" : {
       "localizations" : {
         "en" : {
@@ -390,9 +400,6 @@
 
     },
     "Recently created" : {
-
-    },
-    "Recommended for you" : {
 
     },
     "Redo" : {

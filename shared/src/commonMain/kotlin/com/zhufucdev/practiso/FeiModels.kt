@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso
 
+import com.zhufucdev.practiso.datamodel.CosineNormalizer
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.LanguageInput
 import com.zhufucdev.practiso.datamodel.MlModel
@@ -11,7 +12,7 @@ data object JinaV2SmallEn : MlModel(
     hfId = "jinaai/jina-embeddings-v2-small-en",
     features = setOf(
         LanguageInput.of(Language.English, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 512u, ScalarKind.F16)
+        EmbeddingOutput(MetricKind.Cos, 512u, ScalarKind.F16, CosineNormalizer)
     )
 )
 
@@ -19,7 +20,7 @@ data object JinaV2EnZh : MlModel(
     hfId = "jinaai/jina-embeddings-v2-base-zh",
     features = setOf(
         LanguageInput.of(Language.English, Language.Chinese, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16)
+        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineNormalizer)
     )
 )
 
@@ -27,7 +28,7 @@ data object JinaV2EnEs : MlModel(
     hfId = "jinaai/jina-embeddings-v2-base-es",
     features = setOf(
         LanguageInput.of(Language.English, Language.Spanish, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16)
+        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineNormalizer)
     )
 )
 
@@ -35,7 +36,7 @@ data object JinaV2EnDe : MlModel(
     hfId = "jinaai/jina-embeddings-v2-base-de",
     features = setOf(
         LanguageInput.of(Language.English, Language.German, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16)
+        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineNormalizer)
     )
 )
 

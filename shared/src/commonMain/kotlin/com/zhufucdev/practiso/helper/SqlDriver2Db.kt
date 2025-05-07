@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.helper
 
 import app.cash.sqldelight.ColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
+import com.zhufucdev.practiso.database.Answer
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.Session
@@ -40,6 +41,9 @@ fun SqlDriver.toDatabase(): AppDatabase {
         takeAdapter = Take.Adapter(
             creationTimeISOAdapter = DateTimeAdapter,
             lastAccessTimeISOAdapter = DateTimeAdapter
+        ),
+        answerAdapter = Answer.Adapter(
+            timeAdapter = DateTimeAdapter
         )
     )
 }

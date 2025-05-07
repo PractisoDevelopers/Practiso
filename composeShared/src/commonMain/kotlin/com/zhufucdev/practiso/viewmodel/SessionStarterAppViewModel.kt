@@ -30,7 +30,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateHandle) :
@@ -91,7 +90,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
                     event.createSession.onReceive { name ->
                         withContext(Dispatchers.IO) {
                             val sessionId = db.transactionWithResult {
-                                db.sessionQueries.insertSession(name, Clock.System.now())
+                                db.sessionQueries.insertSesion(name)
                                 db.quizQueries.lastInsertRowId().executeAsOne()
                             }
 

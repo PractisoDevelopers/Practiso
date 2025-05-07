@@ -197,6 +197,13 @@ fun QuizQueries.getQuizFrames(starter: Query<Quiz>): Flow<List<QuizFrames>> =
             }
         }
 
+fun QuizQueries.getQuizByFrame(frame: Frame) =
+    when (frame) {
+        is Frame.Options -> getQuizByOptionsFrameId(frame.optionsFrame.id)
+        is Frame.Image -> getQuizByImageFrameId(frame.imageFrame.id)
+        is Frame.Text -> getQuizByTextFrameId(frame.textFrame.id)
+    }
+
 data class ResourceRequester(val name: String, val frame: Frame)
 
 fun List<Frame>.resources(): List<ResourceRequester> = buildList {

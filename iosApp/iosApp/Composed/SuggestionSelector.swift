@@ -3,7 +3,7 @@ import SwiftUI
 @preconcurrency import ComposeApp
 
 struct SuggestionSelector : View {
-    let service = RecommendationService(db: Database.shared.app)
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
     enum DataState {
         case pending
@@ -58,8 +58,10 @@ struct SuggestionSelector : View {
             }
         }
         .task {
-            for await options in service.getSmartRecommendations() {
-                data = .ok(options.map(SessionCreatorOption.from))
+            await errorHandler.catchAndShowImmediately {
+                for try await options in AppRecommendationService.shared.getCombined() {
+                    data = .ok(options.map(SessionCreatorOption.from))
+                }
             }
         }
     }
