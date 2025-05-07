@@ -192,6 +192,6 @@ extension SessionCreatorLeastAccessed : PractisoOptionViewable {
 
 extension SessionCreatorFailMuchDimension : PractisoOptionViewable {
     var view: PractisoOptionView {
-        return PractisoOptionView(header: String(localized: "\(itemCount) items in \(dimension.name)"))
+        return PractisoOptionView(header: String(localized: "Have a review"), subtitle: String(localized: "\(itemCount) items in \(dimension.name)"))
     }
 }
