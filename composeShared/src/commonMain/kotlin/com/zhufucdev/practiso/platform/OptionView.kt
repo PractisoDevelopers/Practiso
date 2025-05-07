@@ -103,11 +103,11 @@ fun createSessionCreatorView(model: SessionCreator): OptionView =
             OptionView(
                 title = { stringResource(Res.string.recently_created_para) },
                 preview = {
-                     pluralStringResource(
+                    pluralStringResource(
                         Res.plurals.n_questions_in_dimension,
                         model.quizCount,
                         model.quizCount,
-                         model.dimensionName
+                        model.dimensionName
                     )
                 }
             )
@@ -126,7 +126,11 @@ fun createSessionCreatorView(model: SessionCreator): OptionView =
                             )
 
                         itemName != null -> itemName
-                        else -> pluralStringResource(Res.plurals.n_items_span, model.itemCount, model.itemCount)
+                        else -> pluralStringResource(
+                            Res.plurals.n_items_span,
+                            model.itemCount,
+                            model.itemCount
+                        )
                     }
                 }
             )
@@ -145,8 +149,25 @@ fun createSessionCreatorView(model: SessionCreator): OptionView =
                             )
 
                         itemName != null -> itemName
-                        else -> pluralStringResource(Res.plurals.n_items_span, model.itemCount, model.itemCount)
+                        else -> pluralStringResource(
+                            Res.plurals.n_items_span,
+                            model.itemCount,
+                            model.itemCount
+                        )
                     }
+                }
+            )
+
+        is SessionCreator.FailMuchDimension ->
+            OptionView(
+                title = { stringResource(Res.string.have_a_review_para) },
+                preview = {
+                    pluralStringResource(
+                        Res.plurals.n_questions_in_dimension,
+                        model.itemCount,
+                        model.itemCount,
+                        model.dimension.name
+                    )
                 }
             )
     }

@@ -89,6 +89,28 @@ SELECT Q.*
 FROM quiz Q JOIN quizByDimension D ON D.quizId = Q.id
 WHERE D.dimensionId = ?;
 
+getQuizByOptionsFrameId:
+SELECT Q.*
+FROM quiz Q JOIN frameByQuiz F ON Q.id = F.quizId
+WHERE F.optionsFrameId = ?;
+
+
+getQuizByImageFrameId:
+SELECT Q.*
+FROM quiz Q JOIN frameByQuiz F ON Q.id = F.quizId LEFT JOIN frameByOptionsFrame FO ON FO.optionsFrameId = F.optionsFrameId
+WHERE F.imageFrameId = :id OR FO.imageFrameId = :id;
+
+
+getQuizByTextFrameId:
+SELECT Q.*
+FROM quiz Q JOIN frameByQuiz F ON Q.id = F.quizId LEFT JOIN frameByOptionsFrame FO ON FO.optionsFrameId = F.optionsFrameId
+WHERE F.textFrameId = :id OR FO.textFrameId = :id;
+
+getFrameByQuiz:
+SELECT *
+FROM frameByQuiz;
+
+
 getStrandedQuiz:
 SELECT Q.*
 FROM quiz Q
@@ -131,6 +153,9 @@ SELECT T.*, priority
 FROM textFrame T JOIN frameByQuiz Q ON T.id = Q.textFrameId
 WHERE Q.quizId = ?;
 
+getTextFrameById:
+SELECT * FROM textFrame WHERE id = ?;
+
 getTextFrameByOptionsFrameId:
 SELECT T.*, F.id AS linkId, isKey, priority
 FROM textFrame T JOIN frameByOptionsFrame F ON F.textFrameId = T.id
@@ -168,6 +193,9 @@ DELETE FROM textFrame WHERE id = ?;
 getAllImageFrames:
 SELECT *
 FROM imageFrame;
+
+getImageFrameById:
+SELECT * FROM imageFrame WHERE id = ?;
 
 getImageFramesByQuizId:
 SELECT I.*, priority
@@ -244,6 +272,9 @@ SELECT last_insert_rowid();
 updateIsKey:
 UPDATE frameByOptionsFrame SET isKey = ? WHERE id = ?;
 
+
+getFrameEmbeddingIndexByKey:
+SELECT * FROM frameEmbeddingIndex WHERE indexKey = ?;
 
 getTextFrameEmbeddingIndex:
 SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ?;

@@ -22,6 +22,7 @@ import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.Language
 import com.zhufucdev.practiso.platform.LanguageIdentifier
 import com.zhufucdev.practiso.platform.getPlatform
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -205,6 +206,8 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
             }
 
+            send(FeiDbState.Ready(index, db, model))
+
             textFrameFlow.drop(1).addPacing().combine(imageFrameFlow.drop(1).addPacing(), ::Pair)
                 .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
                 .collect { (textFrames, imageFrames) ->
@@ -219,7 +222,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         send(FeiDbState.MissingModel(model, missingFeatures, proceedAnyway))
                         when (proceedAnyway.receive()) {
                             MissingModelResponse.Cancel -> {
-                                send(FeiDbState.Ready(index))
+                                send(FeiDbState.Ready(index, db, model))
                                 return@collect
                             }
 
@@ -296,7 +299,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         )
                     }
 
-                    send(FeiDbState.Ready(index))
+                    send(FeiDbState.Ready(index, db, model))
 
                     withContext(Dispatchers.IO) {
                         index.saveTo(getPlatform().filesystem.sink(INDEX_PATH))
@@ -314,7 +317,7 @@ sealed class MissingModelResponse {
 }
 
 sealed class FeiDbState {
-    data class Ready(val index: Index) : FeiDbState()
+    data class Ready(val index: Index, val db: AppDatabase, val model: MlModel) : FeiDbState()
     object Collecting : FeiDbState()
     data class MissingModel(
         val current: MlModel?,
@@ -354,4 +357,50 @@ sealed class InferenceState {
     }
 
     data class Inferring(val done: Int, val total: Int) : InferenceState()
+}
+
+class FrameNotIndexedException(frame: Frame) :
+    IllegalStateException("${frame::class.simpleName}[id=${frame.id}]")
+
+class FrameIndexNotSupportedException : UnsupportedOperationException()
+
+@Throws(FrameIndexNotSupportedException::class, FrameNotIndexedException::class,
+    CancellationException::class)
+suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
+    frame: Frame,
+    count: Int,
+): List<Pair<Frame, Float>>  {
+    val key = when (frame) {
+        is Frame.Image -> db.quizQueries.getImageFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
+        is Frame.Text -> db.quizQueries.getTextFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
+        else -> throw FrameIndexNotSupportedException()
+    }
+    if (key == null) {
+        throw FrameNotIndexedException(frame)
+    }
+
+    val embeddings = index.asF32[key.toULong()]
+    val matches =
+        index.search(embeddings ?: throw FrameNotIndexedException(frame), count)
+
+    return coroutineScope {
+        matches
+            .map { (key, distance) ->
+                async(Dispatchers.IO) {
+                    val fei = db.quizQueries.getFrameEmbeddingIndexByKey(key.toLong())
+                        .executeAsOneOrNull() ?: error("Index key has no associated frame.")
+                    val frame = if (fei.textFrameId != null) {
+                        db.quizQueries.getTextFrameById(fei.textFrameId).executeAsOne()
+                            .let { Frame.Text(id = it.id, textFrame = it) }
+                    } else if (fei.imageFrameId != null) {
+                        db.quizQueries.getImageFrameById(fei.imageFrameId).executeAsOne()
+                            .let { Frame.Image(id = it.id, imageFrame = it) }
+                    } else {
+                        error("This database is so broken.")
+                    }
+                    frame to distance
+                }
+            }
+            .awaitAll()
+    }
 }

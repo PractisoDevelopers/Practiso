@@ -25,7 +25,7 @@ class CreateService(private val db: AppDatabase = Database.app) {
 
     suspend fun createSession(name: String, selection: Selection): Long {
         val sessionId = db.transactionWithResult {
-            db.sessionQueries.insertSession(name, Clock.System.now())
+            db.sessionQueries.insertSesion(name)
             db.quizQueries.lastInsertRowId().executeAsOne()
         }
 
@@ -34,6 +34,9 @@ class CreateService(private val db: AppDatabase = Database.app) {
         }.flatten()
 
         val quizzes = selection.quizIds + quizIdsByDimensions
+        if (quizzes.isEmpty()) {
+            throw NullPointerException("session would be empty")
+        }
         db.transaction {
             quizzes.forEach {
                 db.sessionQueries.assoicateQuizWithSession(it, sessionId)
@@ -49,10 +52,7 @@ class CreateService(private val db: AppDatabase = Database.app) {
                 Clock.System.now(),
                 sessionId
             )
-            db.sessionQueries.insertTake(
-                sessionId = sessionId,
-                creationTimeISO = Clock.System.now(),
-            )
+            db.sessionQueries.insertTake(sessionId)
             db.quizQueries.lastInsertRowId().executeAsOne()
         }
 

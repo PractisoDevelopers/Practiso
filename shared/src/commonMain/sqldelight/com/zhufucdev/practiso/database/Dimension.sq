@@ -16,6 +16,10 @@ getAllDimensions:
 SELECT *
 FROM dimension;
 
+getDimensionQuizIds:
+SELECT dimension.*, quizByDimension.quizId
+FROM dimension JOIN quizByDimension ON dimension.id = quizByDimension.dimensionId;
+
 getRecentDimensions:
 SELECT *
 FROM dimension
