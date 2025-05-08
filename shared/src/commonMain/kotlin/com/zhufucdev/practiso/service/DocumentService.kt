@@ -10,6 +10,7 @@ import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.QuizDocument
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
+import nl.adaptivity.xmlutil.serialization.XmlParsingException
 import okio.IOException
 import okio.buffer
 import okio.gzip
@@ -41,7 +42,7 @@ object DocumentService {
                 }) to archive.content.size + 1
         }
 
-    @Throws(IOException::class)
+    @Throws(IOException::class, XmlParsingException::class)
     fun unarchive(namedSource: NamedSource): List<QuizDocument> {
         val pack = namedSource.source.gzip().buffer().unarchive()
         return pack.archives.quizzes.map {
