@@ -35,6 +35,7 @@ struct QuestionPreview : View {
                 Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("\(data.name ?? "Qeustion") Unavailable"))
             }
         }
+        .frame(idealHeight: 400)
         .task {
             for await qf in libraryService.getQuizFrames(quizId: data.id) {
                 if let qf = qf {
