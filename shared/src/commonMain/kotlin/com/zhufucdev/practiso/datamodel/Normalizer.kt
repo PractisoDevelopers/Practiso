@@ -6,4 +6,4 @@ package com.zhufucdev.practiso.datamodel
  */
 typealias Normalizer = (Float) -> Float
 
-data object CosineNormalizer : Normalizer by { if (it > 0) it else 0f }
+data object CosineNormalizer : Normalizer by { if (it > 0) 1f - it else 0f }

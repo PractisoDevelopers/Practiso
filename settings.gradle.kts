@@ -26,6 +26,7 @@ dependencyResolutionManagement {
         }
         mavenCentral()
         maven("https://repo.kotlin.link") // kmath
+        mavenLocal()
     }
 }
 

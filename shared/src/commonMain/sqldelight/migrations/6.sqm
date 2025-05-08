@@ -6,7 +6,5 @@ CREATE TABLE frameEmbeddingIndex(
     imageFrameId INTEGER,
     indexKey INTEGER NOT NULL,
     PRIMARY KEY (textFrameId, imageFrameId, indexKey),
-    FOREIGN KEY (textFrameId) REFERENCES textFrame(id) ON DELETE CASCADE,
-    FOREIGN KEY (imageFrameId) REFERENCES imageFrame(id) ON DELETE CASCADE,
     CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
 );
