@@ -10,15 +10,8 @@ struct ScaleRelease : ViewModifier {
     func body(content: Content) -> some View {
         content
             .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged{ _ in
-                        changes += 1
-                    }
-                    .onEnded { gesture in
-                        if changes > 1 || gesture.translation.width > 3 || gesture.translation.height > 3 {
-                            changes = 0
-                            return
-                        }
+                TapGesture()
+                    .onEnded {
                         withAnimation(.linear(duration: 0.1)) {
                             isPressed = true
                         } completion: {
