@@ -20,6 +20,7 @@ import nl.adaptivity.xmlutil.XmlReader
 import nl.adaptivity.xmlutil.XmlWriter
 import nl.adaptivity.xmlutil.localPart
 import nl.adaptivity.xmlutil.serialization.XML
+import nl.adaptivity.xmlutil.serialization.XmlParsingException
 import nl.adaptivity.xmlutil.serialization.XmlSerialName
 import nl.adaptivity.xmlutil.serialization.XmlValue
 import nl.adaptivity.xmlutil.writeAttribute
@@ -479,6 +480,7 @@ fun List<QuizArchive>.archive(resourceSource: (String) -> Source): Source = Buff
         }
 }
 
+@Throws(XmlParsingException::class)
 fun BufferedSource.unarchive(): ArchivePack {
     var i = indexOf(0)
     val xmlText = if (i < 0) readUtf8() else readUtf8(i).also { skip(1) }
