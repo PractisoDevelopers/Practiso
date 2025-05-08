@@ -51,10 +51,10 @@ import kotlinx.coroutines.withContext
 import usearch.Index
 import usearch.IndexOptions
 
-class FeiService(private val db: AppDatabase = Database.app, private val parallelTasks: Int = 8) {
+class FeiService(private val db: AppDatabase = Database.app, private val parallelTasks: Int = 8) :
+    CoroutineScope by CoroutineScope(Dispatchers.Main) {
     companion object {
         val INDEX_PATH = getPlatform().resourcePath.resolve("search").resolve("embeddings.index")
-        val coroutineScope = CoroutineScope(Dispatchers.Main)
         const val EMBEDDING_TOP_KEY = "embedding_top"
         const val FEI_MODEL_KEY = "fei_model" // Frame Embedding Inference
         const val MAX_BATCH_SIZE = 128
@@ -202,6 +202,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).apply {
                     if (shouldReadIndexFile) {
                         maybeLoad()
+                        shouldReadIndexFile = false
                     }
                 }
             }
@@ -242,13 +243,22 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                                     return@launch
                                 }
 
-                                textFrames.removal.forEach { frame ->
-                                    db.quizQueries.getTextFrameEmbeddingIndex(frame.id)
-                                        .executeAsOneOrNull()
-                                        ?.let {
-                                            index.remove(it.toULong())
-                                        }
-                                }
+                                textFrames.removal
+                                    .mapNotNull { frame ->
+                                        db.quizQueries.getTextFrameEmbeddingIndex(frame.id)
+                                            .executeAsOneOrNull()
+                                            ?.let {
+                                                index.remove(it.toULong())
+                                                async(Dispatchers.IO) {
+                                                    db.transaction {
+                                                        db.quizQueries.deleteFrameEmbeddingIndexByKey(
+                                                            it
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                    }
+                                    .awaitAll()
                                 getEmbeddings(textFrames.addition, model).collect {
                                     when (it) {
                                         is InferenceState.Complete -> {
@@ -306,7 +316,9 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                     }
                 }
         }
-    }.shareIn(coroutineScope, started = SharingStarted.Eagerly, replay = 1)
+    }.shareIn(
+        this, started = SharingStarted.Eagerly, replay = 1
+    )
 
     fun getUpgradeState(): Flow<FeiDbState> = upgradeStateFlow
 }
@@ -364,12 +376,14 @@ class FrameNotIndexedException(frame: Frame) :
 
 class FrameIndexNotSupportedException : UnsupportedOperationException()
 
-@Throws(FrameIndexNotSupportedException::class, FrameNotIndexedException::class,
-    CancellationException::class)
+@Throws(
+    FrameIndexNotSupportedException::class, FrameNotIndexedException::class,
+    CancellationException::class
+)
 suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
     frame: Frame,
     count: Int,
-): List<Pair<Frame, Float>>  {
+): List<Pair<Frame, Float>> {
     val key = when (frame) {
         is Frame.Image -> db.quizQueries.getImageFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
         is Frame.Text -> db.quizQueries.getTextFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
@@ -379,9 +393,9 @@ suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
         throw FrameNotIndexedException(frame)
     }
 
-    val embeddings = index.asF32[key.toULong()]
+    val embeddings = index.asF32[key.toULong()] ?: throw FrameNotIndexedException(frame)
     val matches =
-        index.search(embeddings ?: throw FrameNotIndexedException(frame), count)
+        index.search(embeddings, count)
 
     return coroutineScope {
         matches

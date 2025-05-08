@@ -18,7 +18,7 @@ suspend fun PlatformFile.copyTo(sink: Sink) {
 fun Platform.resourceSink(name: String) = filesystem.sink(resourcePath.resolve(name))
 
 fun Index.saveTo(sink: Sink) {
-    val ba = ByteArray(memoryUsage.toInt())
+    val ba = ByteArray(serializedLength.toInt())
     saveBuffer(ba)
     sink.buffer().write(ba)
 }

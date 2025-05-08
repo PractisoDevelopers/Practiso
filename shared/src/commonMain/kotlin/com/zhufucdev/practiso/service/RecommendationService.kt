@@ -97,16 +97,27 @@ class RecommendationService(
                         .entries
                         .filter { it.value < 1 }
                         .sortedByDescending { it.value }
-                        .takeLast(config.idealItemCount)
                         .map { (occurrence, _) ->
                             occurrence.quiz.frames
-                                .map {
-                                    async(Dispatchers.Default) {
+                                .map { option ->
+                                    async {
                                         try {
-                                            fei.getApproximateNearestNeighbors(it.frame, config.searchK)
-                                                .mapNotNull { (key, distance) -> key.takeIf { embedding.normalizer(distance) <= config.idealSimilarity } }
+                                            fei.getApproximateNearestNeighbors(
+                                                option.frame,
+                                                config.searchK
+                                            )
+                                                .mapNotNull { (key, distance) ->
+                                                    key.takeIf {
+                                                        embedding.normalizer(
+                                                            distance
+                                                        ) >= config.idealSimilarity
+                                                    }
+                                                }
                                         } catch (_: FrameIndexNotSupportedException) {
                                             // ignore unsupported frames
+                                            emptyList()
+                                        } catch (_: FrameNotIndexedException) {
+                                            // TODO: remove this line, ignore for now
                                             emptyList()
                                         }
                                     }
@@ -140,20 +151,26 @@ class RecommendationService(
                     dimensionQuizIds.forEach { (dimension, value) ->
                         val selection = Selection(
                             quizIds = value.filter { it.quizId in quizFailedMuchIds }
-                                .map(GetDimensionQuizIds::id)
+                                .map(GetDimensionQuizIds::quizId)
                                 .toSet()
                         )
-                        add(SessionCreator.FailMuchDimension(
-                            dimension = dimension,
-                            selection = selection,
-                            itemCount = value.size
-                        ))
+                        if (selection.quizIds.isNotEmpty()) {
+                            add(
+                                SessionCreator.FailMuchDimension(
+                                    dimension = dimension,
+                                    selection = selection,
+                                    itemCount = selection.quizIds.size
+                                )
+                            )
+                        }
                     }
-                    add(SessionCreator.FailMuch(
-                        selection = Selection(quizFailedMuchIds),
-                        leadingItemName = quizFailedMuch.firstNotNullOfOrNull { it.name },
-                        itemCount = quizFailedMuch.size
-                    ))
+                    add(
+                        SessionCreator.FailMuch(
+                            selection = Selection(quizFailedMuchIds),
+                            leadingItemName = quizFailedMuch.firstNotNullOfOrNull { it.name },
+                            itemCount = quizFailedMuch.size
+                        )
+                    )
                 }
             }
 }
