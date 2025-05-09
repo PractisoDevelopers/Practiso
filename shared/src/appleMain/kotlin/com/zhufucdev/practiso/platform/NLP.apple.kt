@@ -183,13 +183,13 @@ private class JinaModelProviderProducer(
                 throw UnsupportedOperationException("Embedding inference is not supported on nested frames.")
             }
 
-            else -> emptyMap()
+            else -> throw UnsupportedOperationException("Embedding inference on ${frame::class.simpleName} is not supported.")
         }
 
     override fun many(frames: List<Frame>): Map<String, List<MLFeatureValue>> =
         buildMap {
             val textEncodings =
-                tokenizer.encode(frames.filterIsInstance<Frame.Text>().map { it.textFrame.content }, addSpecialTokens = true)
+                tokenizer.encode(frames.filterIsInstance<Frame.Text>().map { it.textFrame.content }, withSpecialTokens = true)
             val ids =
                 textEncodings.map { MLFeatureValue.featureValueWithMultiArray(it.getIdMLArray()) }
             val attentionMasks =

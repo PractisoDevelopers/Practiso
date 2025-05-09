@@ -86,7 +86,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
     }
 
     companion object : AppNavigator {
-        val backstack = mutableListOf(NavigatorStackItem(AppDestination.MainView, emptyList()))
+        val backstack = mutableListOf<NavigatorStackItem>()
         private var pointer: Int = 0
 
         private var shared: NavigatorComponentActivity? = null
