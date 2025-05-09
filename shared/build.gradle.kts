@@ -68,6 +68,9 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)
             implementation(libs.mlkit.langid)
+            implementation(libs.litert)
+            implementation(libs.litert.gpu)
+            implementation(libs.litert.support)
         }
 
         val desktopMain by getting {

@@ -109,7 +109,7 @@ fun LibraryApp(
     composeFromBottomUp("fab") {
         val pickerLauncher =
             rememberFilePickerLauncher(
-                type = FileKitType.File(listOf("psarchive")),
+                type = FileKitType.File(setOf("psarchive")),
                 title = stringResource(Res.string.import_from_practiso_archive_para)
             ) { file ->
                 if (file == null) {
