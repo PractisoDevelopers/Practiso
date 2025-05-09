@@ -136,18 +136,19 @@ private class JinaModelProviderProducer(
     val sequenceLength: Int = 128,
     val tokenizer: Tokenizer,
 ) : MLFeatureProviderProducer {
-    private fun createSequenceMultiArray(dataType: Long = MLMultiArrayDataTypeFloat16): MLMultiArray = memScoped {
-        val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
-        val array = MLMultiArray.create(
-            shape = listOf(1, sequenceLength),
-            dataType = dataType,
-            error = errPtr.value
-        )
-        errPtr.value?.let {
-            throw IllegalStateException(it.pointed.value!!.localizedDescription)
+    private fun createSequenceMultiArray(dataType: Long = MLMultiArrayDataTypeFloat16): MLMultiArray =
+        memScoped {
+            val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
+            val array = MLMultiArray.create(
+                shape = listOf(1, sequenceLength),
+                dataType = dataType,
+                error = errPtr.value
+            )
+            errPtr.value?.let {
+                throw IllegalStateException(it.pointed.value!!.localizedDescription)
+            }
+            array ?: throw NullPointerException("MLMultiArray")
         }
-        array ?: throw NullPointerException("MLMultiArray")
-    }
 
     private fun Encoding.getIdMLArray(): MLMultiArray =
         createSequenceMultiArray().apply {
@@ -169,7 +170,7 @@ private class JinaModelProviderProducer(
     override fun one(frame: Frame): Map<String, MLFeatureValue> =
         when (frame) {
             is Frame.Text -> {
-                val tokens = tokenizer.encode(frame.textFrame.content)
+                val tokens = tokenizer.encode(frame.textFrame.content, withSpecialTokens = true)
                 val ids = tokens.getIdMLArray()
                 val attentionMask = tokens.getAttentionMaskMLArray()
                 mapOf(
@@ -188,7 +189,7 @@ private class JinaModelProviderProducer(
     override fun many(frames: List<Frame>): Map<String, List<MLFeatureValue>> =
         buildMap {
             val textEncodings =
-                tokenizer.encode(frames.filterIsInstance<Frame.Text>().map { it.textFrame.content })
+                tokenizer.encode(frames.filterIsInstance<Frame.Text>().map { it.textFrame.content }, addSpecialTokens = true)
             val ids =
                 textEncodings.map { MLFeatureValue.featureValueWithMultiArray(it.getIdMLArray()) }
             val attentionMasks =
