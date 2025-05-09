@@ -40,7 +40,6 @@ class NLPTest {
             Frame.Text(
                 textFrame = TextFrame(
                     id = 0,
-                    embeddingsId = null,
                     content = "One of the following text is correct. What is it?"
                 )
             )
