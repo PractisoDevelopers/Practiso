@@ -10,6 +10,6 @@ abstract class PractisoApp : Application() {
     }
 
     companion object {
-        lateinit var instance: PractisoApp
+        var instance: PractisoApp? = null
     }
 }
