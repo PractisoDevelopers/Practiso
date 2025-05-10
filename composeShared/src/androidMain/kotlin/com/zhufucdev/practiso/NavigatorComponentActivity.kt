@@ -88,7 +88,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
 
         private val shared: NavigatorComponentActivity?
             get() {
-                val am = PractisoApp.instance.getSystemService<ActivityManager>()
+                val am = SharedContext.getSystemService<ActivityManager>()
                 return am?.appTasks?.firstOrNull()?.taskInfo?.topActivity?.let {
                     backstack.lastOrNull { (_, activity) -> activity::class.qualifiedName == it.className }
                         ?.second

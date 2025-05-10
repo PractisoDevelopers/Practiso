@@ -4,25 +4,21 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.content.ContextCompat
-import com.zhufucdev.practiso.PractisoApp
+import com.zhufucdev.practiso.SharedContext
 
 private fun Vibrator.simpleWobble() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-        vibrate(500)
-    } else {
-        vibrate(
-            VibrationEffect.createWaveform(
-                longArrayOf(10, 50, 100, 100, 100),
-                intArrayOf(200, 127, 50, 10, 0),
-                -1
-            )
+    vibrate(
+        VibrationEffect.createWaveform(
+            longArrayOf(10, 50, 100, 100, 100),
+            intArrayOf(200, 127, 50, 10, 0),
+            -1
         )
-    }
+    )
 }
 
 actual fun wobbleHapticFeedback() {
     val vibrator =
-        ContextCompat.getSystemService(PractisoApp.instance, Vibrator::class.java) ?: return
+        ContextCompat.getSystemService(SharedContext, Vibrator::class.java) ?: return
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val composition = VibrationEffect.startComposition()

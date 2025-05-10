@@ -72,6 +72,9 @@ kotlin {
             implementation(libs.litert.gpu)
             implementation(libs.litert.support)
         }
+        androidInstrumentedTest.dependencies {
+            implementation(libs.bundles.androidx.test)
+        }
 
         val desktopMain by getting {
             dependencies {
@@ -108,6 +111,7 @@ android {
     compileSdk = androidApp.sdk.target
     defaultConfig {
         minSdk = androidApp.sdk.min
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

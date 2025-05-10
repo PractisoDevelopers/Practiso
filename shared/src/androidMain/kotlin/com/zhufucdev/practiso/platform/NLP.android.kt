@@ -3,14 +3,16 @@ package com.zhufucdev.practiso.platform
 import android.content.res.AssetFileDescriptor
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.zhufucdev.practiso.JinaV2SmallEn
-import com.zhufucdev.practiso.PractisoApp
 import com.zhufucdev.practiso.R
+import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.gpu.CompatibilityList
+import org.tensorflow.lite.gpu.GpuDelegate
 import tokenizers.Encoding
 import tokenizers.Tokenizer
 import java.io.FileInputStream
@@ -19,21 +21,15 @@ import java.nio.channels.FileChannel
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-fun Language(bcp47Code: String): Language {
-    if (bcp47Code.startsWith("en")) {
-        return Language.English
+fun Language(bcp47Code: String): Language =
+    when (bcp47Code) {
+        "en" -> Language.English
+        "zh" -> Language.Chinese
+        "de" -> Language.German
+        "es" -> Language.Spanish
+        "und", "km" -> Language.Default
+        else -> Language.World
     }
-    if (bcp47Code.startsWith("zh")) {
-        return Language.Chinese
-    }
-    if (bcp47Code.startsWith("de")) {
-        return Language.German
-    }
-    if (bcp47Code.startsWith("es")) {
-        return Language.Spanish
-    }
-    return Language.World
-}
 
 actual class LanguageIdentifier {
     actual suspend fun getLanguage(text: String): Language = suspendCancellableCoroutine { c ->
@@ -54,20 +50,20 @@ actual class LanguageIdentifier {
 actual suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInference {
     val compatibilityList = CompatibilityList()
     val options = Interpreter.Options().apply {
-        numThreads = getPlatform().logicalProcessorsCount
-//        if (compatibilityList.isDelegateSupportedOnThisDevice) {
-//            addDelegate(GpuDelegate(compatibilityList.bestOptionsForThisDevice))
-//        } else {
-//        }
+        if (compatibilityList.isDelegateSupportedOnThisDevice) {
+            addDelegate(GpuDelegate(compatibilityList.bestOptionsForThisDevice))
+        } else {
+            numThreads = getPlatform().logicalProcessorsCount
+        }
     }
     return when (model) {
         is JinaV2SmallEn -> {
             val tokenizer =
-                PractisoApp.instance.resources.openRawResource(R.raw.jina_v2_en_small_tokenizer)
+                SharedContext.resources.openRawResource(R.raw.jina_v2_en_small_tokenizer)
                     .use { Tokenizer.fromBytes(it.readBytes()) }
             val interpreter =
                 Interpreter(
-                    PractisoApp.instance.resources
+                    SharedContext.resources
                         .openRawResourceFd(R.raw.jina_v2_en_small)
                         .toMappedByteBuffer(),
                     options
@@ -102,29 +98,33 @@ class LiteRtInference(
     val interpreter: InterpreterApi,
     val inputProducer: LiteRtInputProducer,
 ) : FrameEmbeddingInference {
-    val inputIdsTensor = interpreter.getInputTensor(0) ?: error("No input_ids slot.")
-    val attentionMaskTensor = interpreter.getInputTensor(1) ?: error("No attention_mask slot.")
+    private val outputTensors =
+        (0 until interpreter.outputTensorCount).associateWith { interpreter.getOutputTensor(it) }
+    private val poolerOutTensor =
+        outputTensors.entries.firstOrNull { (idx, t) -> t.shape()[0] == 1 && t.shape().size == 2 }
+            ?: error("No output slot.")
 
-    override suspend fun getEmbeddings(frame: Frame): FloatArray {
-        val (inputIds, attentionMask) = inputProducer.one(frame)
-        val input = arrayOf(inputIds, attentionMask)
-        val output = mutableMapOf<String, FloatArray>()
-        interpreter.run(input, output)
-        return output.values.first()
+    private val inputIdsTensor = interpreter.getInputTensor(0) ?: error("No input_ids slot.")
+    private val attentionMaskTensor =
+        interpreter.getInputTensor(1) ?: error("No attention_mask slot.")
+
+    private fun getEmbeddings(input: LiteRtInput): FloatArray {
+        val input = arrayOf(input.inputIds, input.attentionMask)
+        val output = buildMap {
+            put(poolerOutTensor.key, arrayOf(FloatArray(poolerOutTensor.value.shape()[1])))
+        }
+        interpreter.runForMultipleInputsOutputs(input, output)
+        return output.values.first().first()
     }
 
-    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> {
-        val inputs = inputProducer.many(frames).let {
-            arrayOf(
-                it.map { (inputIds, _) -> inputIds }.toTypedArray(),
-                it.map { (_, attentionMask) -> attentionMask }.toTypedArray()
-            )
-        }
-        val outputs = mutableMapOf<Int, Any>()
-        interpreter.runForMultipleInputsOutputs(inputs, outputs)
-        return outputs.entries
-            .sortedBy { it.key }
-            .map { (_, value) -> (value as Map<String, FloatArray>).values.first() }
+    override suspend fun getEmbeddings(frame: Frame): FloatArray {
+        val rtInput = inputProducer.one(frame)
+        return getEmbeddings(rtInput)
+    }
+
+    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> = coroutineScope {
+        inputProducer.many(frames)
+            .map(::getEmbeddings)
     }
 }
 
