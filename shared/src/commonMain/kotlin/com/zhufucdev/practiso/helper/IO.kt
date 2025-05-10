@@ -20,7 +20,7 @@ fun Platform.resourceSink(name: String) = filesystem.sink(resourcePath.resolve(n
 fun Index.saveTo(sink: Sink) {
     val ba = ByteArray(serializedLength.toInt())
     saveBuffer(ba)
-    sink.buffer().write(ba)
+    sink.buffer().write(ba).flush()
 }
 
 fun Index.readFrom(source: Source) {
