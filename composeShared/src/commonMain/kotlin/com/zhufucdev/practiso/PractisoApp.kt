@@ -61,6 +61,7 @@ import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.BackdropKey
 import com.zhufucdev.practiso.composable.ExtensiveSnackbar
+import com.zhufucdev.practiso.composable.FeiStatus
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.ImportDialog
 import com.zhufucdev.practiso.composable.PractisoOptionView
@@ -259,10 +260,13 @@ private fun ScaffoldedApp(
         buc?.compose(BackdropKey)
     }
 
-    val state by importViewModel.state.collectAsState()
-    if (state != ImportState.Idle) {
-        ImportDialog(state)
+    val importState by importViewModel.state.collectAsState()
+    if (importState != ImportState.Idle) {
+        ImportDialog(importState)
     }
+
+    val feiState by Database.fei.getUpgradeState().collectAsState(null)
+    feiState?.let { FeiStatus(it) }
 }
 
 internal enum class TopLevelDestination(

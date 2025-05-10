@@ -159,4 +159,19 @@
         <item quantity="other">%1$d items</item>
     </plurals>
     <string name="have_a_review_para">Have a review</string>
+    <string name="collecting_questions_para">Collecting questions…</string>
+    <plurals name="inferring_n_items_para">
+        <item quantity="one">Inferring %1$d item…</item>
+        <item quantity="other">Inferring %1$d items…</item>
+    </plurals>
+    <string name="missing_model_para">Missing model</string>
+    <string name="details_para">Details</string>
+    <string name="proceed_anyway_para">Proceed Anyway</string>
+    <plurals name="current_model_is_missing_following_features">
+        <item quantity="one">Current model is missing the following feature:</item>
+        <item quantity="other">Current model is missing the following features:</item>
+    </plurals>
+    <string name="language_input_x_span">language input (%1$s)</string>
+    <string name="image_input_span">image input</string>
+    <string name="embedding_output_span">embedding output</string>
 </resources>

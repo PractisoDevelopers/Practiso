@@ -36,4 +36,6 @@ class ExtensiveSnackbarState(
 sealed interface SnackbarExtension {
     data class ProgressBar(val progress: StateFlow<Float>, val animated: Boolean = true) :
         SnackbarExtension
+
+    data class Identifier<T>(val id: T) : SnackbarExtension
 }
