@@ -50,6 +50,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import usearch.Index
 import usearch.IndexOptions
+import usearch.ScalarKind
 
 class FeiService(private val db: AppDatabase = Database.app, private val parallelTasks: Int = 8) :
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
@@ -105,7 +106,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             IndexOptions(
                 embeddingFeature.dimensions,
                 embeddingFeature.metric,
-                embeddingFeature.precision
+                ScalarKind.F32 // TODO: fix usearch binding in f16 quantization
             )
         )
 
