@@ -7,8 +7,9 @@ import com.zhufucdev.practiso.R
 import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -104,9 +105,12 @@ class LiteRtInference(
         outputTensors.entries.firstOrNull { (idx, t) -> t.shape()[0] == 1 && t.shape().size == 2 }
             ?: error("No output slot.")
 
-    private val inputIdsTensor = interpreter.getInputTensor(0) ?: error("No input_ids slot.")
-    private val attentionMaskTensor =
+    private val mutex = Mutex()
+
+    init {
+        interpreter.getInputTensor(0) ?: error("No input_ids slot.")
         interpreter.getInputTensor(1) ?: error("No attention_mask slot.")
+    }
 
     private fun getEmbeddings(input: LiteRtInput): FloatArray {
         val input = arrayOf(input.inputIds, input.attentionMask)
@@ -117,12 +121,12 @@ class LiteRtInference(
         return output.values.first().first()
     }
 
-    override suspend fun getEmbeddings(frame: Frame): FloatArray {
+    override suspend fun getEmbeddings(frame: Frame): FloatArray = mutex.withLock {
         val rtInput = inputProducer.one(frame)
         return getEmbeddings(rtInput)
     }
 
-    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> = coroutineScope {
+    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> = mutex.withLock {
         inputProducer.many(frames)
             .map(::getEmbeddings)
     }
@@ -150,9 +154,6 @@ data class LiteRtInput(val inputIds: IntArray, val attentionMask: IntArray) {
         var result = inputIds.contentHashCode()
         result = 31 * result + attentionMask.contentHashCode()
         return result
-    }
-
-    companion object {
     }
 }
 
