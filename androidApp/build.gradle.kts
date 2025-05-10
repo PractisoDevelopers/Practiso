@@ -67,7 +67,6 @@ dependencies {
     implementation(projects.composeShared)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
     implementation(libs.kotlinx.serialization.protobuf)
