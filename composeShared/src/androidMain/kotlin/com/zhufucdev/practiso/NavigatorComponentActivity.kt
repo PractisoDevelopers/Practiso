@@ -1,8 +1,10 @@
 package com.zhufucdev.practiso
 
+import android.app.ActivityManager
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.AppNavigator
@@ -50,7 +52,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                 }
                 ?: emptyList()
 
-        backstack.add(NavigatorStackItem(destination, navigationOptions))
+        backstack.add(NavigatorStackItem(destination, navigationOptions) to this)
         pointer = backstack.lastIndex
         lifecycleScope.launch {
             state.emit(
@@ -67,18 +69,13 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        shared = this
-    }
-
     override fun finish() {
         pointer--
         lifecycleScope.launch {
             stateChannel.send(
                 NavigationStateSnapshot(
                     Navigation.Backward,
-                    backstack[pointer].destination
+                    backstack[pointer].first.destination
                 )
             )
         }
@@ -86,10 +83,17 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
     }
 
     companion object : AppNavigator {
-        val backstack = mutableListOf<NavigatorStackItem>()
+        val backstack = mutableListOf<Pair<NavigatorStackItem, NavigatorComponentActivity>>()
         private var pointer: Int = 0
 
-        private var shared: NavigatorComponentActivity? = null
+        private val shared: NavigatorComponentActivity?
+            get() {
+                val am = PractisoApp.instance.getSystemService<ActivityManager>()
+                return am?.appTasks?.firstOrNull()?.taskInfo?.topActivity?.let {
+                    backstack.lastOrNull { (_, activity) -> activity::class.qualifiedName == it.className }
+                        ?.second
+                }
+            }
         private val state =
             MutableStateFlow(NavigationStateSnapshot(Navigation.Home, Navigation.Home.destination))
         override val current: StateFlow<NavigationStateSnapshot> = state.asStateFlow()
@@ -116,12 +120,12 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                         error("Backstack cannot move forwards")
                     }
                     val dest = backstack[++pointer]
-                    startActivity(dest.destination, dest.options + options)
+                    startActivity(dest.first.destination, dest.first.options + options)
                     stateChannel.send(
                         NavigationStateSnapshot(
                             navigation,
-                            dest.destination,
-                            dest.options + options
+                            dest.first.destination,
+                            dest.first.options + options
                         )
                     )
                 }
