@@ -33,6 +33,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.materialicons.core)
             api(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             api(libs.androidx.navigation)
@@ -56,6 +57,9 @@ compose.resources {
 android {
     namespace = "com.zhufucdev.practiso"
     compileSdk = androidApp.sdk.target
+    buildFeatures {
+        compose = true
+    }
     defaultConfig {
         minSdk = androidApp.sdk.min
     }
