@@ -4,7 +4,10 @@ import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
+import com.zhufucdev.practiso.platform.getPlatform
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -30,16 +33,23 @@ class FeiTest {
     @Test
     fun inferenceMany() = runBlocking {
         val inference = FrameEmbeddingInference(JinaV2SmallEn)
-        val embs = inference.getEmbeddings(
-            listOf(
-                newTextFrame("I love cats the most"),
-                newTextFrame("How can the stock market fall so harshly?"),
-                newTextFrame("Capybaras are cute animal")
-            )
-        )
-        val feature = inference.model.embeddingsFeature()
-        embs.forEach {
-            assertEquals("Output dimensions mismatch", feature.dimensions.toInt(), it.size)
+        repeat(getPlatform().logicalProcessorsCount) {
+            async(Dispatchers.Default) {
+                val embs = inference.getEmbeddings(
+                    listOf(
+                        newTextFrame("I love cats the most"),
+                        newTextFrame("How can the stock market fall so harshly?"),
+                        newTextFrame("Capybaras are cute animal"),
+                        newTextFrame("What"),
+                        newTextFrame("Core dumped and segmentation fault are bad logcat"),
+                    )
+                )
+                val feature = inference.model.embeddingsFeature()
+
+                embs.forEach {
+                    assertEquals("Output dimensions mismatch", feature.dimensions.toInt(), it.size)
+                }
+            }
         }
     }
 }
