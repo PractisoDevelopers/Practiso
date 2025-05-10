@@ -84,11 +84,11 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         val batchSize = minOf(frames.size / parallelTasks + 1, MAX_BATCH_SIZE)
         coroutineScope {
             val jobs = frames.chunked(batchSize)
-                .map { frames ->
+                .map { textFrames ->
                     async {
-                        val frames = frames.map { Frame.Text(it.id, it) }
+                        val frames = textFrames.map { Frame.Text(it.id, it) }
                         fei.getEmbeddings(frames)
-                            .mapIndexed { idx, r -> frames[idx] to r }
+                            .mapIndexed { idx, r -> textFrames[idx] to r }
                             .also {
                                 send(InferenceState.Inferring(frames.size, total))
                             }
