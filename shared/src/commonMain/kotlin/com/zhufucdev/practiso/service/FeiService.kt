@@ -198,18 +198,22 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 return@collectLatest
             }
 
-            val index = withContext(Dispatchers.IO) {
-                getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).apply {
+            val (index, indexInvalid) = withContext(Dispatchers.IO) {
+                getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).let {
                     if (shouldReadIndexFile) {
-                        maybeLoad()
                         shouldReadIndexFile = false
+                        it to !it.maybeLoad()
+                    } else {
+                        it to false
                     }
                 }
             }
 
             send(FeiDbState.Ready(index, db, model))
 
-            textFrameFlow.drop(1).addPacing().combine(imageFrameFlow.drop(1).addPacing(), ::Pair)
+            val initialDrops = if (indexInvalid) 0 else 1
+            textFrameFlow.drop(initialDrops).addPacing()
+                .combine(imageFrameFlow.drop(initialDrops).addPacing(), ::Pair)
                 .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
                 .collect { (textFrames, imageFrames) ->
                     send(FeiDbState.Collecting)
