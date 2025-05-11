@@ -15,11 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -35,43 +32,30 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.zhufucdev.practiso.composition.ExclusionLock
+import com.zhufucdev.practiso.composition.withExclusionLock
 import com.zhufucdev.practiso.style.PaddingSmall
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
 import kotlin.math.roundToInt
 
-data class ExclusionLock(val current: MutableStateFlow<Int?> = MutableStateFlow(null))
-
-val SharedHorizontalDraggableExclusionLock = ExclusionLock()
-
-private var id = 0
-private val idMutex = Mutex()
+val SharedHorizontalDraggableExclusion = ExclusionLock()
 
 @Composable
 fun HorizontalDraggable(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    mutex: ExclusionLock = SharedHorizontalDraggableExclusionLock,
+    lock: ExclusionLock = SharedHorizontalDraggableExclusion,
     targetWidth: Dp,
     controls: @Composable RowScope.() -> Unit,
     content: @Composable () -> Unit,
-) {
+) = withExclusionLock(lock) {
     val dragAnimator = remember { Animatable(0f) }
     val coroutine = rememberCoroutineScope()
     var dragOffset by remember { mutableFloatStateOf(0f) }
-    val localId by produceState(-1) {
-        idMutex.lock()
-        value = id++
-        idMutex.unlock()
-    }
-    val currentLockId by mutex.current.collectAsState()
 
-    LaunchedEffect(currentLockId) {
-        if (currentLockId != localId) {
-            dragAnimator.animateTo(0f) {
-                dragOffset = value
-            }
+    LaunchOstracization {
+        dragAnimator.animateTo(0f) {
+            dragOffset = value
         }
     }
 
@@ -101,7 +85,7 @@ fun HorizontalDraggable(
                     detectHorizontalDragGestures(
                         onDragStart = {
                             coroutine.launch {
-                                mutex.current.emit(localId)
+                                lock()
                             }
                         },
                         onHorizontalDrag = { change, amount ->

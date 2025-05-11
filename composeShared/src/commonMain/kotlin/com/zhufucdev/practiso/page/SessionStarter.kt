@@ -284,6 +284,7 @@ fun SessionStarter(
                         value = model.newSessionName,
                         onValueChange = { model.newSessionName = it },
                         label = { Text(stringResource(Res.string.session_name_para)) },
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Row(
@@ -296,7 +297,7 @@ fun SessionStarter(
                             Text(stringResource(Res.string.cancel_para))
                         }
                         Button(
-                            enabled = model.newSessionName.isNotEmpty(),
+                            enabled = model.newSessionName.isNotBlank(),
                             onClick = {
                                 coroutine.launch {
                                     collapse()

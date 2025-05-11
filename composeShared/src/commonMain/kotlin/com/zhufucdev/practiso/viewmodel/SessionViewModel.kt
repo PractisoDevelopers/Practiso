@@ -63,6 +63,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
         val toggleRecommendations: Channel<Boolean> = Channel(),
         val toggleCreator: Channel<Int> = Channel(),
         val deleteSession: Channel<Long> = Channel(),
+        val renameSession: Channel<Pair<Long, String>> = Channel(),
         val startTake: Channel<Long> = Channel(),
         val toggleTakePin: Channel<Long> = Channel(),
     )
@@ -104,6 +105,13 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
                             Navigation.Goto(AppDestination.Answer),
                             options = listOf(NavigationOption.OpenTake(it))
                         )
+                    }
+
+                    event.renameSession.onReceive {
+                        val (id, name) = it
+                        db.transaction {
+                            db.sessionQueries.renameSession(name.trim(), id)
+                        }
                     }
                 }
             }
