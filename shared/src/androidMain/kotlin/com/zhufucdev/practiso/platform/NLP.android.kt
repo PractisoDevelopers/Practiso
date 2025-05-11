@@ -101,34 +101,40 @@ class LiteRtInference(
 ) : FrameEmbeddingInference {
     private val outputTensors =
         (0 until interpreter.outputTensorCount).associateWith { interpreter.getOutputTensor(it) }
+
+    private val inputIdsTensor = interpreter.getInputTensor(0) ?: error("No input_ids slot.")
+    private val attentionMaskTensor =
+        interpreter.getInputTensor(1) ?: error("No attention_mask slot.")
     private val poolerOutTensor =
-        outputTensors.entries.firstOrNull { (idx, t) -> t.shape()[0] == 1 && t.shape().size == 2 }
+        outputTensors.entries.firstOrNull { (idx, t) -> t.shape()[0] == 5 && t.shape().size == 2 }
             ?: error("No output slot.")
 
     private val mutex = Mutex()
 
-    init {
-        interpreter.getInputTensor(0) ?: error("No input_ids slot.")
-        interpreter.getInputTensor(1) ?: error("No attention_mask slot.")
-    }
+    private val modelBatchSize get() = inputIdsTensor.shape()[0]
+    private val modelSeqLen get() = inputIdsTensor.shape()[1]
+    private val modelOutputLen get() = poolerOutTensor.value.shape()[1]
 
-    private fun getEmbeddings(input: LiteRtInput): FloatArray {
-        val input = arrayOf(input.inputIds, input.attentionMask)
-        val output = buildMap {
-            put(poolerOutTensor.key, arrayOf(FloatArray(poolerOutTensor.value.shape()[1])))
-        }
-        interpreter.runForMultipleInputsOutputs(input, output)
-        return output.values.first().first()
-    }
-
-    override suspend fun getEmbeddings(frame: Frame): FloatArray = mutex.withLock {
-        val rtInput = inputProducer.one(frame)
-        return getEmbeddings(rtInput)
-    }
+    override suspend fun getEmbeddings(frame: Frame): FloatArray = getEmbeddings(listOf(frame)).first()
 
     override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> = mutex.withLock {
+        val zeros by lazy {
+            IntArray(modelSeqLen)
+        }
         inputProducer.many(frames)
-            .map(::getEmbeddings)
+            .chunked(modelBatchSize)
+            .map { chunk ->
+                val inputs = arrayOf(
+                    (chunk.map { (ids, _) -> ids } + List(modelBatchSize - chunk.size) { zeros }).toTypedArray(),
+                    (chunk.map { (_, mask) -> mask } + List(modelBatchSize - chunk.size) { zeros }).toTypedArray()
+                )
+                val outputs = buildMap {
+                    put(poolerOutTensor.key, Array(modelBatchSize) { FloatArray(modelOutputLen) })
+                }
+                interpreter.runForMultipleInputsOutputs(inputs, outputs)
+                outputs.values.first().toList().slice(0 until chunk.size)
+            }
+            .flatten()
     }
 }
 
