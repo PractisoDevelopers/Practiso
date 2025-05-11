@@ -27,6 +27,7 @@ mlkit-langid = "17.0.6"
 lingua = "1.2.2"
 usearch = "0.4.2"
 litert = "1.2.0"
+kmath = "0.4.2"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -74,6 +75,7 @@ litert-support = { module = "com.google.ai.edge.litert:litert-support", version.
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test-core" }
 androidx-test-core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidx-test-core" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
+kmath-core = { module = "space.kscience:kmath-core", version.ref = "kmath" }
 
 [bundles]
 androidx-test = ["androidx-test-core", "androidx-test-core-ktx", "androidx-test-runner"]
