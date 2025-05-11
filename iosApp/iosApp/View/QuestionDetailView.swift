@@ -18,12 +18,10 @@ struct QuestionDetailView : View {
     @State private var data: DataState = .pending
     @State private var staging: [Frame]? = nil
     @State private var editHistory = History()
-    @State private var titleBuffer: String
     @Namespace private var question
     
     init(option: QuizOption) {
         self.option = option
-        titleBuffer = option.quiz.name ?? String(localized: "New question")
     }
     
     var body: some View {
@@ -49,7 +47,7 @@ struct QuestionDetailView : View {
                     .onAppear {
                         staging = quizFrames.frames.map(\.frame)
                     }
-                    .navigationTitle($titleBuffer)
+                    .navigationTitle(titleBinding)
                     .toolbar {
                         ToolbarItem {
                             Button("Done") {
@@ -76,7 +74,7 @@ struct QuestionDetailView : View {
                         )
                     }
                     .padding(.horizontal)
-                    .navigationTitle(titleBuffer)
+                    .navigationTitle(titleBinding.wrappedValue)
                     .navigationDocument(option, preview: SharePreview(option.view.header))
                     .toolbar {
                         ToolbarItem {
@@ -94,38 +92,45 @@ struct QuestionDetailView : View {
                 Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("Question Unavailable"))
             }
         }
-        .onChange(of: titleBuffer) { oldValue, newValue in
-            errorHandler.catchAndShowImmediately {
-                try editService.saveModification(data: [Modification.renameQuiz(oldName: oldValue, newName: newValue)], quizId: option.id)
-            }
-        }
         .navigationBarTitleDisplayMode(.inline)
         .task(id: option.id) {
+            alteredTitled = nil
             for await qf in libraryService.getQuizFrames(quizId: option.id) {
                 if let qf = qf {
                     data = .ok(qf)
-                    titleBuffer = qf.quiz.name ?? String(localized: "New question")
                 } else {
                     data = .unavailable
                 }
             }
         }
         .onChange(of: editMode) { oldValue, newValue in
-            Task {
-                await onEditModeChange(oldValue: oldValue, newValue: newValue)
+            onEditModeChange(oldValue: oldValue, newValue: newValue)
+        }
+    }
+    
+    func onEditModeChange(oldValue: EditMode, newValue: EditMode) {
+        if newValue != .inactive {
+            return
+        }
+        Task {
+            if let newData = await libraryService.getQuizFrames(quizId: option.id)
+                .makeAsyncIterator()
+                .next() {
+                if let present = newData {
+                    data = .ok(present)
+                }
             }
         }
     }
     
-    func onEditModeChange(oldValue: EditMode, newValue: EditMode) async {
-        if newValue != .inactive {
-            return
-        }
-        if let newData = await libraryService.getQuizFrames(quizId: option.id)
-            .makeAsyncIterator()
-            .next() {
-            if let present = newData {
-                data = .ok(present)
+    @State private var alteredTitled: String?
+    private var titleBinding: Binding<String> {
+        Binding {
+            alteredTitled ?? option.quiz.name ?? String(localized: "New question")
+        } set: { newValue in
+            errorHandler.catchAndShowImmediately {
+                try editService.saveModification(data: [Modification.renameQuiz(oldName: option.quiz.name, newName: newValue)], quizId: option.id)
+                alteredTitled = newValue
             }
         }
     }
