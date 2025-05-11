@@ -1,3 +1,4 @@
+import android.util.Log
 import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
@@ -13,10 +14,11 @@ import org.junit.Test
 import space.kscience.kmath.PerformancePitfall
 import space.kscience.kmath.linear.Float64LinearSpace
 import space.kscience.kmath.linear.asMatrix
-import space.kscience.kmath.nd.Floa64FieldOpsND.Companion.div
-import space.kscience.kmath.nd.Floa64FieldOpsND.Companion.plus
+import space.kscience.kmath.linear.transposed
 import space.kscience.kmath.nd.Floa64FieldOpsND.Companion.pow
-import space.kscience.kmath.nd.Floa64FieldOpsND.Companion.sqrt
+import space.kscience.kmath.nd.as2D
+import space.kscience.kmath.structures.Buffer
+import kotlin.math.abs
 
 class FeiTest {
     @Test
@@ -25,6 +27,7 @@ class FeiTest {
         val emb = inference.getEmbeddings(newTextFrame("How's the weather like today?"))
         val embeddingsFeature = inference.model.embeddingsFeature()
         assertEquals("Output dimensions mismatch", embeddingsFeature.dimensions.toInt(), emb.size)
+        emb.forEach { d -> assert(d.isFinite()) { "Got non-finite output" } }
     }
 
     @Test
@@ -45,6 +48,7 @@ class FeiTest {
 
                 embs.forEach {
                     assertEquals("Output dimensions mismatch", feature.dimensions.toInt(), it.size)
+                    it.forEach { d -> assert(d.isFinite()) { "Got non-finite output" } }
                 }
             }
         }
@@ -52,20 +56,41 @@ class FeiTest {
 
     @Test
     fun similarity() = runBlocking {
+        val tag = "Similarity test"
         val inference = FrameEmbeddingInference(JinaV2SmallEn)
-        val similarEmbeddings = listOf(
-            inference.getEmbeddings(
+        val similarPhrases = listOf(
+            "How's the weather today?" to "What's the weather like today?",
+            "I love cats the most." to "Cats are my favorite"
+        )
+        Log.d(tag, "Similar phrases:")
+        for (phrase in similarPhrases) {
+            val ebd = inference.getEmbeddings(
                 listOf(
-                    newTextFrame("How's the weather today?"),
-                    newTextFrame("What's the weather like today?")
+                    newTextFrame(phrase.first),
+                    newTextFrame(phrase.second)
                 )
             )
-        )
-        println("Similar phrases:")
-        for (ebd in similarEmbeddings) {
             val sim = cosineSimilarity(ebd[0], ebd[1])
-            println(sim)
-            assert(sim > 0.8)
+            Log.d(tag, sim.toString())
+            assert(abs(sim) < 0.2)
+        }
+        val dissimilarPhrases = listOf(
+            "The stock market is crashing" to "Pizza doesn't make any sense to me",
+            "God loves people" to "Lava is hot",
+            "Ground floor? We call it 1st floor here." to "Jesus Christ, why are we here"
+        )
+
+        Log.d(tag, "Dissimilar phrases:")
+        for (phrase in dissimilarPhrases) {
+            val ebd = inference.getEmbeddings(
+                listOf(
+                    newTextFrame(phrase.first),
+                    newTextFrame(phrase.second)
+                )
+            )
+            val sim = cosineSimilarity(ebd[0], ebd[1])
+            Log.d(tag, sim.toString())
+            assert(abs(sim) > 0.2)
         }
     }
 
@@ -80,14 +105,24 @@ class FeiTest {
     private fun MlModel.embeddingsFeature() = features.firstNotNullOf { it as? EmbeddingOutput }
 
     @OptIn(PerformancePitfall::class)
-    private fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
+    private fun cosineSimilarity(a: FloatArray, b: FloatArray): Double {
         assertEquals(a.size, b.size)
         with(Float64LinearSpace) {
             val matrixA = buildVector(a.size) { a[it].toDouble() }.asMatrix()
             val matrixB = buildVector(b.size) { b[it].toDouble() }.asMatrix()
 
-            return ((matrixA dot matrixB) / sqrt((matrixA pow 2) + (matrixB pow 2))).elements()
-                .first().second.toFloat()
+            return (matrixA.transposed() dot matrixB)[0, 0] /
+                        ((matrixA pow 2).as2D().columns.first()
+                            .sum()).let { kotlin.math.sqrt(it) } /
+                        ((matrixB pow 2).as2D().columns.first().sum()).let { kotlin.math.sqrt(it) }
         }
+    }
+
+    private fun Buffer<Double>.sum(): Double {
+        var s = 0.0
+        for (i in 0 until size) {
+            s += get(i)
+        }
+        return s
     }
 }
