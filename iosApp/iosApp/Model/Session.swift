@@ -68,7 +68,7 @@ struct SessionCreator {
     
     func create() async throws -> Int64 {
         try await service.createSession(
-            name: params.name,
+            name: params.name.trimmingCharacters(in: .whitespacesAndNewlines),
             selection: .init(quizIds: .init(params.selection.quizIds.map(KotlinLong.init)), dimensionIds: .init(params.selection.dimensionIds.map(KotlinLong.init)))
         ).int64Value
     }

@@ -17,6 +17,15 @@ class EditService(private val db: AppDatabase) {
 
     @Throws(SQLiteException::class)
     fun saveEdit(data: List<Edit>, quizId: Long) = runBlocking {
-        data.optimized().applyTo(db, quizId)
+        db.transaction {
+            data.optimized().applyTo(db, quizId)
+        }
+    }
+
+    @Throws(SQLiteException::class)
+    fun renameSession(sessionId: Long, newName: String) = runBlocking {
+        db.transaction {
+            db.sessionQueries.renameSession(newName, sessionId)
+        }
     }
 }
