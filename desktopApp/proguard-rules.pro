@@ -1,6 +1,7 @@
 -dontwarn nl.adaptivity.xmlutil.jdk.StAXWriter
 -dontwarn ai.onnxruntime.platform.Fp16Conversions
 -dontwarn io.objectbox.ideasonly.ModelModifier$PropertyModifier
+-dontwarn javax.annotation.*
 -optimizations !method/specialization/**
 -keep class kotlinx.coroutines.internal.MainDispatcherFactory { *; }
 -keep class kotlinx.coroutines.swing.SwingDispatcherFactory { *; }
