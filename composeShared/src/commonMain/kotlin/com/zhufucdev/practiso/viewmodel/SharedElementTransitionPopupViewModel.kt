@@ -14,6 +14,10 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -29,9 +33,17 @@ class SharedElementTransitionPopupViewModel(state: SavedStateHandle) : ViewModel
 
     data class Events(
         val expand: Channel<Unit> = Channel(),
-        val collapse: Channel<Unit> = Channel()
+        val collapse: Channel<Unit> = Channel(),
+        val transitionComplete: SharedFlow<Unit>,
     )
-    val event = Events()
+
+    private val transitionComplete = Channel<Unit>()
+    val event = Events(
+        transitionComplete = transitionComplete.receiveAsFlow().shareIn(
+            viewModelScope,
+            SharingStarted.Eagerly
+        )
+    )
 
     init {
         viewModelScope.launch {
@@ -41,12 +53,14 @@ class SharedElementTransitionPopupViewModel(state: SavedStateHandle) : ViewModel
                         visible = true
                         delay(50)
                         expanded = true
+                        transitionComplete.send(Unit)
                     }
 
                     event.collapse.onReceive {
                         expanded = false
                         delay(500)
                         visible = false
+                        transitionComplete.send(Unit)
                     }
                 }
             }
