@@ -21,7 +21,6 @@ import resources.new_question_para
 import resources.new_template_para
 import resources.no_description_para
 import resources.recently_created_para
-import resources.recommended_for_you_para
 import resources.x_and_n_more_para
 
 data class OptionView(
@@ -114,7 +113,7 @@ fun createSessionCreatorView(model: SessionCreator): OptionView =
 
         is SessionCreator.FailMuch ->
             OptionView(
-                title = { stringResource(Res.string.recommended_for_you_para) },
+                title = { stringResource(Res.string.have_a_review_para) },
                 preview = {
                     val itemName = model.leadingItemName
                     when {
