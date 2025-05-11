@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.composition
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,6 +23,14 @@ fun withExclusionLock(lock: ExclusionLock, composable: @Composable ExclusionLock
         }
     }
     val currentLockId by lock.current.collectAsState()
+
+    DisposableEffect(localId) {
+        onDispose {
+            if (localId == currentLockId) {
+                lock.current.tryEmit(null)
+            }
+        }
+    }
 
     composable(object : ExclusionLockScope {
         override val localId: Int
