@@ -843,7 +843,7 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
         val currentName =
             items?.takeIf { currentIndex >= 0 }
                 ?.let { createSessionCreatorView(it[currentIndex]) }
-                ?.title()
+                ?.preview()
         FilledTonalButton(
             enabled = currentIndex >= 0 && currentName != null,
             onClick = {
