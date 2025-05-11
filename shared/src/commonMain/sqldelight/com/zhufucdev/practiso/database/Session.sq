@@ -116,6 +116,9 @@ UPDATE session SET lastAccessTimeISO = ? WHERE id = (SELECT sessionId FROM take 
 removeSession:
 DELETE FROM session WHERE id == ?;
 
+renameSession:
+UPDATE session SET name = ? WHERE id = ?;
+
 insertTake:
 INSERT INTO take(sessionId, creationTimeISO)
 VALUES (?, (SELECT currentISO FROM time));

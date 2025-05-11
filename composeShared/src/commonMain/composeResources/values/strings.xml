@@ -174,4 +174,5 @@
     <string name="language_input_x_span">language input (%1$s)</string>
     <string name="image_input_span">image input</string>
     <string name="embedding_output_span">embedding output</string>
+    <string name="rename_session_para">Rename session</string>
 </resources>

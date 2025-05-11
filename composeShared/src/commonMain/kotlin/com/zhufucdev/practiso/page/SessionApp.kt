@@ -46,6 +46,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -85,9 +86,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
+import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.FabCreate
 import com.zhufucdev.practiso.composable.FlipCard
 import com.zhufucdev.practiso.composable.HorizontalControl
@@ -99,10 +102,13 @@ import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopupScope
+import com.zhufucdev.practiso.composable.SharedHorizontalDraggableExclusion
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
+import com.zhufucdev.practiso.composition.withExclusionLock
+import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.calculateTakeCorrectQuizCount
@@ -159,7 +165,10 @@ import resources.pin_para
 import resources.quickly_start_new_session_para
 import resources.recently_used_para
 import resources.remove_para
+import resources.rename_para
+import resources.rename_session_para
 import resources.see_all_options_para
+import resources.session_name_para
 import resources.session_para
 import resources.sessions_para
 import resources.show_hidden_para
@@ -184,6 +193,7 @@ fun SessionApp(
     val takeStats by model.recentTakeStats.collectAsState(Dispatchers.IO)
     val sessions by model.sessions.collectAsState(Dispatchers.IO)
     val coroutine = rememberCoroutineScope()
+    var renamingSession by remember { mutableStateOf<Session?>(null) }
 
     SharedElementTransitionPopup(
         key = "quickstart",
@@ -358,7 +368,9 @@ fun SessionApp(
                         item("session_" + option.session.id) {
                             ListItem(
                                 separator = index < sessions.lastIndex,
-                                onEdit = {},
+                                onEdit = {
+                                    renamingSession = option.session
+                                },
                                 onDelete = {
                                     coroutine.launch {
                                         model.event.deleteSession.send(option.session.id)
@@ -437,6 +449,24 @@ fun SessionApp(
                     Spacer(Modifier.height(PaddingSpace))
                 }
             }
+        }
+    }
+
+    renamingSession?.let { session ->
+        withExclusionLock(SharedHorizontalDraggableExclusion) {
+            LaunchedEffect(true) {
+                lock()
+            }
+
+            SessionRenameDialog(
+                currentName = session.name,
+                onDismissRequest = { renamingSession = null },
+                onRename = {
+                    coroutine.launch {
+                        model.event.renameSession.send(session.id to it)
+                    }
+                }
+            )
         }
     }
 }
@@ -1392,6 +1422,51 @@ private fun TimerSkeleton(
             modifier = modifier
         ) {
             Content()
+        }
+    }
+}
+
+@Composable
+private fun SessionRenameDialog(currentName: String, onDismissRequest: () -> Unit, onRename: (String) -> Unit) {
+    var nameBuffer by remember { mutableStateOf(currentName) }
+    val coroutine = rememberCoroutineScope()
+    Dialog(
+        onDismissRequest = onDismissRequest
+    ) {
+        Card {
+            DialogContentSkeleton(
+                icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                title = { Text(stringResource(Res.string.rename_session_para)) },
+                modifier = Modifier.padding(PaddingBig)
+            ) {
+                OutlinedTextField(
+                    value = nameBuffer,
+                    onValueChange = { nameBuffer = it },
+                    label = { Text(stringResource(Res.string.session_name_para)) },
+                    singleLine = true
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall, Alignment.End),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedButton(
+                        onClick = onDismissRequest
+                    ) {
+                        Text(stringResource(Res.string.cancel_para))
+                    }
+                    Button(
+                        enabled = nameBuffer.isNotBlank(),
+                        onClick = {
+                            coroutine.launch {
+                                onRename(nameBuffer)
+                                onDismissRequest()
+                            }
+                        }
+                    ) {
+                        Text(stringResource(Res.string.rename_para))
+                    }
+                }
+            }
         }
     }
 }
