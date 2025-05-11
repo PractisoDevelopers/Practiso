@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -64,10 +65,12 @@ fun SharedElementTransitionPopup(
 
         override suspend fun expand() {
             model.event.expand.send(Unit)
+            model.event.transitionComplete.first()
         }
 
         override suspend fun collapse() {
             model.event.collapse.send(Unit)
+            model.event.transitionComplete.first()
         }
     }
 
