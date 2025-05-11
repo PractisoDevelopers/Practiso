@@ -78,6 +78,9 @@ struct SessionDetailView : View {
                 }
             }
         }
+        .onAppear {
+            takeParamsBuffer = .init(sessionId: option.id)
+        }
         .navigationTitle(Binding(get: {
             option.session.name
         }, set: { newValue in
