@@ -91,6 +91,7 @@ struct SessionDetailView : View {
         }))
         .navigationBarTitleDisplayMode(.inline)
         .task(id: option.id) {
+            data = .pending
             for await stats in libraryService.getTakesBySession(id: option.id) {
                 data = .ok(stats)
             }
