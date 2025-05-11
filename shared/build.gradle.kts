@@ -74,6 +74,7 @@ kotlin {
         }
         androidInstrumentedTest.dependencies {
             implementation(libs.bundles.androidx.test)
+            implementation(libs.kmath.core)
         }
 
         val desktopMain by getting {
