@@ -5,6 +5,7 @@ import ComposeApp
 struct SessionDetailView : View {
     let libraryService = LibraryService(db: Database.shared.app)
     let createService = CreateService(db: Database.shared.app)
+    let editService = EditService(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ContentView.Model.self) private var contentModel
     
@@ -77,7 +78,15 @@ struct SessionDetailView : View {
                 }
             }
         }
-        .navigationTitle(option.view.header)
+        .navigationTitle(Binding(get: {
+            option.session.name
+        }, set: { newValue in
+            errorHandler.catchAndShowImmediately {
+                try editService.renameSession(sessionId: option.session.id,
+                                              newName: newValue.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }))
+        .navigationBarTitleDisplayMode(.inline)
         .task(id: option.id) {
             for await stats in libraryService.getTakesBySession(id: option.id) {
                 data = .ok(stats)
