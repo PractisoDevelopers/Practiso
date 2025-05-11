@@ -21,6 +21,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
+
       - name: Extract Android Keystore
         run: echo "$ks" | base64 -d > androidApp/keystore_android
         env:
@@ -53,6 +57,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -77,6 +84,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -101,6 +111,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
