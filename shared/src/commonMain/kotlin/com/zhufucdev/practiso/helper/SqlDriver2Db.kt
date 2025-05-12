@@ -11,10 +11,27 @@ import com.zhufucdev.practiso.database.Template
 import kotlinx.datetime.Instant
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.char
 
-private object DateTimeAdapter : ColumnAdapter<Instant, String> {
+internal object DateTimeAdapter : ColumnAdapter<Instant, String> {
     override fun decode(databaseValue: String): Instant {
-        return Instant.parse(databaseValue)
+        return try {
+            Instant.parse(databaseValue)
+        } catch (_: IllegalArgumentException) {
+            Instant.parse(databaseValue, DateTimeComponents.Format {
+                year()
+                char('-')
+                monthNumber()
+                char('-')
+                dayOfMonth()
+                char(' ')
+                hour()
+                char(':')
+                minute()
+                char(':')
+                second()
+            })
+        }
     }
 
     override fun encode(value: Instant): String {
