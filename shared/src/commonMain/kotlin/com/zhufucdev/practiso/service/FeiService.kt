@@ -220,7 +220,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                     send(FeiDbState.Collecting)
 
                     val missingFeatures =
-                        withContext(Dispatchers.Default) {
+                        withContext(Dispatchers.IO) {
                             getMissingFeatures(model, textFrames.addition, imageFrames.addition)
                         }
                     if (missingFeatures.isNotEmpty()) {
