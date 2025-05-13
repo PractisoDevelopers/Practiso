@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.TakeStat
+import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.AppDestination
@@ -17,6 +18,7 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.service.LibraryService
 import com.zhufucdev.practiso.service.RecommendationService
 import kotlinx.coroutines.Dispatchers
@@ -28,8 +30,9 @@ import kotlinx.coroutines.selects.select
 
 class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     ViewModel() {
-    private val libraryService = LibraryService()
-    private val recommendationService = RecommendationService()
+    private val libraryService = LibraryService(db)
+    private val recommendationService = RecommendationService(db)
+    private val createService = CreateService(db)
 
     val sessions by lazy {
         MutableStateFlow<List<SessionOption>?>(null).apply {
@@ -62,6 +65,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     data class Events(
         val toggleRecommendations: Channel<Boolean> = Channel(),
         val toggleCreator: Channel<Int> = Channel(),
+        val createSessionStartImmediately: Channel<Pair<String, Selection>> = Channel(),
         val deleteSession: Channel<Long> = Channel(),
         val renameSession: Channel<Pair<Long, String>> = Channel(),
         val startTake: Channel<Long> = Channel(),
@@ -85,6 +89,22 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
                         } else {
                             currentCreatorIndex.emit(it)
                         }
+                    }
+
+                    event.createSessionStartImmediately.onReceive {
+                        val (name, selection) = it
+                        val sessionId = createService.createSession(
+                            name = name,
+                            selection = selection,
+                        )
+                        val takeId = createService.createTake(
+                            sessionId = sessionId,
+                            timers = listOf(),
+                        )
+                        Navigator.navigate(
+                            Navigation.Goto(AppDestination.Answer),
+                            options = listOf(NavigationOption.OpenTake(takeId))
+                        )
                     }
 
                     event.deleteSession.onReceive {

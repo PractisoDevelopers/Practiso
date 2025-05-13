@@ -119,7 +119,6 @@ import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createOptionView
 import com.zhufucdev.practiso.platform.createSessionCreatorView
-import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -186,10 +185,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
 @Composable
-fun SessionApp(
-    model: SessionViewModel = viewModel(factory = SessionViewModel.Factory),
-    createService: CreateService = CreateService(),
-) {
+fun SessionApp(model: SessionViewModel = viewModel(factory = SessionViewModel.Factory)) {
     val takeStats by model.recentTakeStats.collectAsState(Dispatchers.IO)
     val sessions by model.sessions.collectAsState(Dispatchers.IO)
     val coroutine = rememberCoroutineScope()
@@ -213,17 +209,6 @@ fun SessionApp(
                         columnScope = this,
                         popupScope = this@SharedElementTransitionPopup,
                         onCreate = { creator, name ->
-                            coroutine.launch {
-                                val sessionId = createService.createSession(
-                                    name = name,
-                                    selection = creator.selection,
-                                )
-                                val takeId = createService.createTake(
-                                    sessionId = sessionId,
-                                    timers = listOf(),
-                                )
-                                model.event.startTake.send(takeId)
-                            }
                         }
                     )
                 }
@@ -877,8 +862,11 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
         FilledTonalButton(
             enabled = currentIndex >= 0 && currentName != null,
             onClick = {
-                items?.let {
-                    onCreate(it[currentIndex], currentName!!)
+                items?.let { items ->
+                    coroutine.launch {
+                        model.event.createSessionStartImmediately
+                            .send(currentName!! to items[currentIndex].selection)
+                    }
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -1427,7 +1415,11 @@ private fun TimerSkeleton(
 }
 
 @Composable
-private fun SessionRenameDialog(currentName: String, onDismissRequest: () -> Unit, onRename: (String) -> Unit) {
+private fun SessionRenameDialog(
+    currentName: String,
+    onDismissRequest: () -> Unit,
+    onRename: (String) -> Unit,
+) {
     var nameBuffer by remember { mutableStateOf(currentName) }
     val coroutine = rememberCoroutineScope()
     Dialog(
