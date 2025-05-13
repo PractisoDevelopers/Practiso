@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
@@ -25,9 +26,11 @@ import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.ImageInput
 import com.zhufucdev.practiso.datamodel.LanguageInput
 import com.zhufucdev.practiso.datamodel.ModelFeature
+import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.service.FeiDbState
 import com.zhufucdev.practiso.service.MissingModelResponse
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -50,28 +53,34 @@ import resources.proceed_anyway_para
 fun FeiStatus(state: FeiDbState) {
     val snackbar = LocalExtensiveSnackbarState.current
     var detailsDialog by remember { mutableStateOf<MissingModelDialog>(MissingModelDialog.Hidden) }
+    val coroutine = rememberCoroutineScope()
 
     LaunchedEffect(state) {
+        println(state)
         when (state) {
             FeiDbState.Collecting -> snackbar.showSnackbar(
                 getString(Res.string.collecting_questions_para),
-                SnackbarExtension.Identifier(FeiStatusBarDefault),
+                SnackbarExtension.Identifier(FeiStatusBarDefaultId),
                 duration = SnackbarDuration.Indefinite
             )
 
             is FeiDbState.InProgress -> {
-                if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id is FeiStatusBarWithProgress }) {
-                    val p = snackbar.extensions.firstNotNullOf { it as? SnackbarExtension.ProgressBar }
-                        .progress as MutableStateFlow<Float>
-                    p.value = state.done.toFloat() / state.total
-                } else {
+                if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id is FeiStatusBarDefaultId }) {
+                    val emitter = (snackbar.extensions.filterFirstIsInstanceOrNull<SnackbarExtension.ProgressBar>()
+                            ?.progress as? MutableStateFlow<Float>)
+                    if (emitter != null) {
+                        emitter.emit(state.done.toFloat() / state.total)
+                        return@LaunchedEffect
+                    }
+                }
+                coroutine.launch {
                     snackbar.showSnackbar(
                         getPluralString(
                             Res.plurals.inferring_n_items_para,
                             state.total,
                             state.total
                         ),
-                        SnackbarExtension.Identifier(FeiStatusBarWithProgress),
+                        SnackbarExtension.Identifier(FeiStatusBarDefaultId),
                         SnackbarExtension.ProgressBar(MutableStateFlow(state.done.toFloat() / state.total)),
                         duration = SnackbarDuration.Indefinite
                     )
@@ -81,7 +90,7 @@ fun FeiStatus(state: FeiDbState) {
             is FeiDbState.MissingModel -> {
                 val response = snackbar.showSnackbar(
                     getString(Res.string.missing_model_para),
-                    SnackbarExtension.Identifier(FeiStatusBarDefault),
+                    SnackbarExtension.Identifier(FeiStatusBarDefaultId),
                     actionLabel = getString(Res.string.details_para),
                     withDismissAction = state.proceed == null,
                     duration = SnackbarDuration.Indefinite
@@ -99,7 +108,7 @@ fun FeiStatus(state: FeiDbState) {
             }
 
             is FeiDbState.Ready -> {
-                if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id is FeiStatusBar }) {
+                if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id is FeiStatusBarDefaultId }) {
                     snackbar.host.currentSnackbarData?.dismiss()
                 }
             }
@@ -173,9 +182,7 @@ fun FeiStatus(state: FeiDbState) {
     }
 }
 
-private sealed interface FeiStatusBar
-data object FeiStatusBarDefault : FeiStatusBar
-data object FeiStatusBarWithProgress : FeiStatusBar
+data object FeiStatusBarDefaultId
 
 private sealed class MissingModelDialog {
     data object Hidden : MissingModelDialog()

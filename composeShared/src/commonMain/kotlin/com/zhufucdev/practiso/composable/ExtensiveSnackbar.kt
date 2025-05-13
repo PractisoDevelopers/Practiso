@@ -52,6 +52,7 @@ fun ExtensiveSnackbar(state: ExtensiveSnackbarState, data: SnackbarData) {
         modifier = modifier.drawWithContent {
             val widthPx = width.toPx()
             drawContent()
+            println(progressProxy)
             drawLine(
                 color = primaryColor,
                 start = Offset(x = 0f, y = widthPx / 2),

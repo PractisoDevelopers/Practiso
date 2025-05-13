@@ -28,8 +28,12 @@ class ExtensiveSnackbarState(
         withDismissAction: Boolean = false,
         duration: SnackbarDuration = SnackbarDuration.Long,
     ): SnackbarResult {
-        _extensions = extensions.toList()
-        return host.showSnackbar(message, actionLabel, withDismissAction, duration)
+        try {
+            _extensions = extensions.toList()
+            return host.showSnackbar(message, actionLabel, withDismissAction, duration)
+        } finally {
+            _extensions = emptyList()
+        }
     }
 }
 
