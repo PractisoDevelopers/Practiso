@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Practiso</string>
+    <string name="session_para">Session</string>
+    <string name="library_para">Library</string>
+    <string name="deactivate_global_search_span">deactivate global search</string>
+    <string name="search_app_para">Search Practiso…</string>
+    <string name="recently_used_para">Recently used</string>
+    <string name="take_completeness">take completeness</string>
+    <plurals name="done_questions_completed_in_total">
+        <item quantity="other">%1$d questions out of %2$d done</item>
+    </plurals>
+    <string name="welcome_to_app_para">Welcome to Practiso!</string>
+    <string name="get_started_by_para">Get started by creating a session</string>
+    <string name="create_para">Create</string>
+    <string name="use_smart_recommendations_para">Use smart recommendations</string>
+    <string name="quickly_start_new_session_para">Quickly start a new session</string>
+    <string name="new_question_span">new question</string>
+    <string name="image_span">image</string>
+    <string name="image_emoji">🖼️</string>
+    <string name="no_recommendations_span">no recommendations</string>
+    <string name="loading_recommendations_span">loading recommendations</string>
+    <string name="see_all_options_para">See all options</string>
+    <string name="start_para">Start</string>
+    <string name="empty_span">empty</string>
+    <plurals name="n_questions_span">
+        <item quantity="other">%1$d questions</item>
+    </plurals>
+    <string name="loading_options_span">loading options…</string>
+    <string name="no_options_available_para">No options available</string>
+    <string name="head_to_library_to_create">Head to library to create</string>
+    <string name="import_para">Import</string>
+    <string name="templates_para">Templates</string>
+    <string name="questions_para">Questions</string>
+    <string name="dimensions_para">Dimensions</string>
+    <string name="library_is_empty_para">Library is empty</string>
+    <string name="add_item_to_get_started_para">Add item to get started</string>
+    <string name="new_question_para">New question</string>
+    <string name="navigate_up_para">Navigate up</string>
+    <string name="question_name_para">Name of question</string>
+    <string name="confirm_para">Confirm</string>
+    <string name="rename_para">Rename</string>
+    <string name="cancel_para">Cancel</string>
+    <string name="sample_text_para">Sample text…</string>
+    <string name="text_frame_span">text frame</string>
+    <string name="add_frame_para">Add frame</string>
+    <string name="sample_image_para">Sample image</string>
+    <string name="frame_type_span">frame type…</string>
+    <string name="image_frame_span">image frame</string>
+    <string name="question_is_empty_para">Question is empty</string>
+    <string name="get_started_by_checking_sheet_para">Get started by checking the bottom sheet</string>
+    <string name="expand_para">Expand</string>
+    <string name="sample_option_para">Sample option…</string>
+    <string name="options_frame_span">options frame</string>
+    <string name="empty_text_para">Empty text</string>
+    <string name="remove_para">Remove</string>
+    <string name="new_options_frame_para">New options frame</string>
+    <string name="new_option_para">New option</string>
+    <string name="text_option_para">Text option</string>
+    <string name="image_option_para">Image option</string>
+    <string name="set_as_key_span">set as key</string>
+    <string name="remove_from_keys_span">remove from keys</string>
+    <string name="new_image_frame_para">New image frame</string>
+    <string name="image_is_missing_or_empty_span">image is missing or empty</string>
+    <string name="pick_an_image_for_this_frame_para">Pick an image for this frame</string>
+    <string name="replace_para">Replace</string>
+    <string name="clear_para">Clear</string>
+    <string name="save_para">Save</string>
+    <string name="requested_quiz_not_found_para">The requested question was not found</string>
+    <string name="undo_para">Undo</string>
+    <string name="redo_para">Redo</string>
+    <string name="stranded_quizzes_para">Stranded problems</string>
+    <string name="select_category_to_begin_para">Select a category to begin</string>
+    <string name="finish_para">Finish</string>
+    <string name="create_session_para">Create session</string>
+    <string name="session_name_para">Session name</string>
+    <string name="sessions_para">Sessions</string>
+    <plurals name="n_questions_dot_created_date_para">
+        <item quantity="other">%1$d questions · created %2$s</item>
+    </plurals>
+    <string name="continue_or_start_new_take_para">Continue or start new take</string>
+    <string name="new_take_para">New take</string>
+    <string name="edit_para">Edit</string>
+    <string name="will_be_identified_as_x_para">Will be identified as %1$s</string>
+    <string name="take_n_para">Take %1$d</string>
+    <string name="new_timer_para">New timer</string>
+    <string name="no_take_available_span">no take available</string>
+    <string name="loading_takes_para">Loading takes</string>
+    <string name="n_percentage">%1$d%</string>
+    <string name="show_hidden_para">Show hidden</string>
+    <string name="loading_quizzes_para">Loading questions…</string>
+    <string name="missing_take_to_open_para">Missing take to open</string>
+    <string name="horizontal_pager_para">Horizontal pager</string>
+    <string name="vertical_pager_para">Vertical pager</string>
+    <string name="continuous_scrolling_para">Continuous scrolling</string>
+    <string name="show_accuracy_para">Show accuracy</string>
+    <string name="minutes_span">minutes</string>
+    <string name="time_is_up_para">Time is up</string>
+    <string name="import_from_practiso_archive_para">Import from Practiso archive</string>
+    <string name="library_intent_model_span">library intent model</string>
+    <string name="error_at_n_para">Error at %1$s</string>
+    <string name="untracked_error_para">Untracked error</string>
+    <string name="internal_message_n_para">Internal message: %1$s</string>
+    <string name="invalid_file_format_para">Invalid file format</string>
+    <string name="resource_x_for_quiz_y_was_not_found_para">Resource %1$s for quiz %2$s was not found</string>
+    <string name="failed_to_copy_resource_x_for_quiz_y_para">Failed to copy resource %1$s for quiz %2$s</string>
+    <plurals name="importing_x_items_y_done">
+        <item quantity="other">Importing %1$d items, %2$d done</item>
+    </plurals>
+    <plurals name="will_import_n_items_to_library">
+        <item quantity="other">Will import %1$d new items to the library</item>
+    </plurals>
+    <string name="continue_para">Continue</string>
+    <string name="dismiss_para">Dismiss</string>
+    <string name="skip_para">Skip</string>
+    <string name="ignore_para">Ignore</string>
+    <string name="retry_para">Retry</string>
+    <string name="unarchiving_this_file_ellipsis_para">Unarchiving this file…</string>
+    <string name="removing_x_para">Removing %1$s</string>
+    <plurals name="n_questions_are_within_this_dimension_what_to_do_with_it_para">
+        <item quantity="other">%1$d questions are within this dimension. What do you want to do with them?</item>
+    </plurals>
+    <string name="keep_para">Keep</string>
+    <string name="show_more_para">Show more</string>
+    <string name="created_x_para">Created %1$s</string>
+    <string name="spent_x_para">Spent %1$s</string>
+    <string name="accuracy_slash_completeness_para">Accuracy / completeness</string>
+    <plurals name="n_questions_correct_span">
+        <item quantity="other">%1$d questions correct</item>
+    </plurals>
+    <plurals name="n_questions_incorrect_span">
+        <item quantity="other">%1$d questions incorrect</item>
+    </plurals>
+    <string name="x_and_more_span">%1$s and more</string>
+    <string name="recently_created_para">Recently created</string>
+    <string name="least_accessed_para">Least accessed</string>
+    <string name="recommended_for_you_para">Recommended for you</string>
+    <string name="new_session_para">New session</string>
+    <string name="x_and_n_more_para">%1$s and %2$d more</string>
+    <plurals name="n_questions_in_dimension">
+        <item quantity="other">%1$d questions in %2$s</item>
+    </plurals>
+    <string name="new_take_from_x_para">New take from %1$s</string>
+    <string name="generic_file_para">Generic file</string>
+    <string name="pin_para">Pin</string>
+    <string name="new_template_para">New template</string>
+    <string name="no_description_para">No description</string>
+    <string name="x_and_y_span">%1$s and %2$s</string>
+    <plurals name="n_items_span">
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="have_a_review_para">Have a review</string>
+    <string name="collecting_questions_para">Collecting questions…</string>
+    <plurals name="inferring_n_items_para">
+        <item quantity="other">Inferring %1$d items…</item>
+    </plurals>
+    <string name="missing_model_para">Missing model</string>
+    <string name="details_para">Details</string>
+    <string name="proceed_anyway_para">Proceed Anyway</string>
+    <plurals name="current_model_is_missing_following_features">
+        <item quantity="other">Current model is missing the following features:</item>
+    </plurals>
+    <string name="language_input_x_span">language input (%1$s)</string>
+    <string name="image_input_span">image input</string>
+    <string name="embedding_output_span">embedding output</string>
+    <string name="rename_session_para">Rename session</string>
+</resources>
