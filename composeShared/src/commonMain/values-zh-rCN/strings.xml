@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Practiso</string>
-    <string name="session_para">Session</string>
-    <string name="library_para">Library</string>
-    <string name="deactivate_global_search_span">deactivate global search</string>
-    <string name="search_app_para">Search Practiso…</string>
-    <string name="recently_used_para">Recently used</string>
-    <string name="take_completeness">take completeness</string>
+    <string name="session_para">题集</string>
+    <string name="library_para">题库</string>
+    <string name="deactivate_global_search_span">禁用全局搜索&lt;</string>
+    <string name="search_app_para">搜索Practiso…</string>
+    <string name="recently_used_para">最近使用</string>
+    <string name="take_completeness">任务完整度</string>
     <plurals name="done_questions_completed_in_total">
         <item quantity="other">%1$d questions out of %2$d done</item>
     </plurals>
