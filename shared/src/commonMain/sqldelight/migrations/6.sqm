@@ -8,3 +8,5 @@ CREATE TABLE frameEmbeddingIndex(
     PRIMARY KEY (textFrameId, imageFrameId, indexKey),
     CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
 );
+
+ALTER TABLE take ADD COLUMN time TEXT AS Instant NOT NULL DEFAULT CURRENT_TIMESTAMP;

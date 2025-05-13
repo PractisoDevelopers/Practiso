@@ -1,3 +1,0 @@
-import kotlin.time.Instant;
-
-ALTER TABLE take ADD COLUMN time TEXT AS Instant NOT NULL DEFAULT CURRENT_TIMESTAMP;
