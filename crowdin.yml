@@ -1,6 +1,6 @@
 files:
   - source: /composeShared/src/commonMain/composeResources/values/strings.xml
-    translation: /composeShared/src/commonMain/values-%android_code%/strings.xml
+    translation: /composeShared/src/commonMain/composeResources/values-%android_code%/strings.xml
   - source: /iosApp/iosApp/Localizable.xcstrings
     translation: /iosApp/iosApp/Localizable.xcstrings
     multilingual: 1
