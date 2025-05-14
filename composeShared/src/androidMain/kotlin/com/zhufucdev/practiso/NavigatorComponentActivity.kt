@@ -71,13 +71,15 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
 
     override fun finish() {
         pointer--
-        lifecycleScope.launch {
-            stateChannel.send(
-                NavigationStateSnapshot(
-                    Navigation.Backward,
-                    backstack[pointer].first.destination
+        if (pointer >= 0) {
+            lifecycleScope.launch {
+                stateChannel.send(
+                    NavigationStateSnapshot(
+                        Navigation.Backward,
+                        backstack[pointer].first.destination
+                    )
                 )
-            )
+            }
         }
         super.finish()
     }
