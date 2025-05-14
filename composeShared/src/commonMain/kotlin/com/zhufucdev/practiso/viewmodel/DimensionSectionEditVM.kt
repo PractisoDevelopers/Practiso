@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.core.bundle.Bundle
+import androidx.core.bundle.bundleOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
@@ -52,10 +53,12 @@ class DimensionSectionEditVM(
                 select {
                     events.removeKeepQuizzes.onReceive {
                         removeService.removeDimensionKeepQuizzes(selection)
+                        _selection.clear()
                     }
 
                     events.removeWithQuizzes.onReceive {
                         removeService.removeDimensionWithQuizzes(selection)
+                        _selection.clear()
                     }
 
                     events.newTakeFromSelection.onReceive {
@@ -133,7 +136,10 @@ class DimensionSectionEditVM(
             key: String,
             value: Startpoint,
         ) {
-            bundle.putLong(key, value.dimensionId)
+            bundle.putBundle(key, bundleOf(
+                DimensionIdKey to value.dimensionId,
+                TopItemIndexKey to value.topItemIndex
+            ))
         }
     }
 }
