@@ -1,3 +1,5 @@
+import kotlin.time.Instant;
+
 ALTER TABLE imageFrame DROP COLUMN embeddingsId;
 ALTER TABLE textFrame DROP COLUMN embeddingsId;
 
@@ -9,4 +11,4 @@ CREATE TABLE frameEmbeddingIndex(
     CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
 );
 
-ALTER TABLE take ADD COLUMN time TEXT AS Instant NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE answer ADD COLUMN time TEXT AS Instant NOT NULL DEFAULT '2025-05-14T23:47:02Z';
