@@ -39,6 +39,7 @@ class QuizSectionEditVM(
                 select {
                     events.removeSection.onReceive {
                         removeService.removeQuizWithResources(selection)
+                        _selection.clear()
                     }
                 }
             }
