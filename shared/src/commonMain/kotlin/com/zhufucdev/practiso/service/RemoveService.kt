@@ -48,9 +48,7 @@ class RemoveService(private val db: AppDatabase = Database.app) {
     }
 
     suspend fun removeQuizWithResources(id: Long) {
-        db.transaction {
-            removeQuizWithResources(listOf(id))
-        }
+        removeQuizWithResources(listOf(id))
     }
 
     suspend fun removeDimensionKeepQuizzes(id: Long) {
