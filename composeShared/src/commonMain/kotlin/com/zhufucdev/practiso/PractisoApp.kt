@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,7 +23,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,10 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -70,134 +69,191 @@ import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
+import com.zhufucdev.practiso.composition.LocalTopLevelDestination
+import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.currentNavController
+import com.zhufucdev.practiso.composition.currentTopLevelDestination
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
+import com.zhufucdev.practiso.page.DimensionSectionEditApp
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
+import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
-import resources.baseline_library_books
 import resources.deactivate_global_search_span
-import resources.library_para
 import resources.search_app_para
-import resources.session_para
 import kotlin.reflect.typeOf
 
 @Composable
-fun PractisoApp(
-    navController: NavHostController,
-    searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
-    importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
-) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+fun PractisoApp(navController: NavHostController) {
+    val libraryVM: LibraryAppViewModel =
+        viewModel(factory = LibraryAppViewModel.Factory)
+    val searchVM: SearchViewModel =
+        viewModel(factory = SearchViewModel.Factory)
 
-    BottomUpComposableScope { buc ->
-        CompositionLocalProvider(
-            LocalNavController provides navController,
-            LocalBottomUpComposable provides buc,
+    BottomUpComposableScope {
+        NavHost(
+            navController = navController,
+            startDestination = TopLevelDestination.Session.route,
+            enterTransition = { fadeIn() },
+            exitTransition = { fadeOut() }
         ) {
-            when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
-                WindowWidthSizeClass.COMPACT ->
-                    ScaffoldedApp(
-                        importViewModel,
-                        searchViewModel,
-                        windowAdaptiveInfo,
-                        navController
-                    )
-
-                WindowWidthSizeClass.MEDIUM -> Row {
-                    val coroutine = rememberCoroutineScope()
-                    NavigationRail {
-                        Spacer(Modifier.padding(top = PaddingNormal))
-                        TopLevelDestination.entries.forEach {
-                            NavigationRailItem(
-                                selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
-                                onClick = {
-                                    coroutine.launch {
-                                        searchViewModel.event.close.send(Unit)
-                                    }
-                                    if (navBackStackEntry?.destination?.route != it.route) {
-                                        navController.navigate(it.route) {
-                                            launchSingleTop = true
-                                        }
-                                    }
-                                },
-                                icon = it.icon,
-                                label = { Text(stringResource(it.nameRes)) },
-                            )
-                        }
+            composable(TopLevelDestination.Session.route) {
+                AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                    ScaffoldedApp(it, searchVM) {
+                        SessionApp()
                     }
-                    ScaffoldedApp(
-                        importViewModel,
-                        searchViewModel,
-                        windowAdaptiveInfo,
-                        navController
-                    )
                 }
-
-                WindowWidthSizeClass.EXPANDED -> Row {
-                    PermanentDrawerSheet {
-                        val coroutine = rememberCoroutineScope()
-                        Spacer(Modifier.padding(top = PaddingNormal))
-                        TopLevelDestination.entries.forEach {
-                            NavigationDrawerItem(
-                                selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
-                                onClick = {
-                                    coroutine.launch {
-                                        searchViewModel.event.close.send(Unit)
-                                    }
-                                    if (navBackStackEntry?.destination?.route != it.route) {
-                                        navController.navigate(it.route) {
-                                            launchSingleTop = true
-                                        }
-                                    }
-                                },
-                                icon = it.icon,
-                                label = { Text(stringResource(it.nameRes)) },
-                            )
-                        }
+            }
+            composable(TopLevelDestination.Library.route) {
+                LaunchedEffect(libraryVM) {
+                    libraryVM.event.removeReveal.send(Unit)
+                }
+                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                    ScaffoldedApp(it, searchVM) {
+                        LibraryApp(model = libraryVM)
                     }
-                    ScaffoldedApp(
-                        importViewModel,
-                        searchViewModel,
-                        windowAdaptiveInfo,
-                        navController
+                }
+            }
+            composable<LibraryAppViewModel.Revealable>(
+                typeMap = mapOf(
+                    typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
+                    typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
+                )
+            ) { backtrace ->
+                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                    ScaffoldedApp(it, searchVM) {
+                        LaunchedEffect(backtrace) {
+                            libraryVM.event.reveal.send(backtrace.toRoute())
+                        }
+                        LibraryApp(
+                            model = libraryVM
+                        )
+                    }
+                }
+            }
+            composable("${TopLevelDestination.Session.route}/new") {
+                AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                    ScaffoldedApp(it, searchVM) {
+                        SessionStarter()
+                    }
+                }
+            }
+            composable<DimensionSectionEditVM.Startpoint>(
+                typeMap = mapOf(
+                    typeOf<DimensionSectionEditVM.Startpoint>() to DimensionSectionEditVM.StartpointNavType
+                )
+            ) { stackEntry ->
+                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                    DimensionSectionEditApp(
+                        startpoint = stackEntry.toRoute(),
+                        libraryVm = libraryVM
                     )
                 }
             }
+        }
 
-            buc.compose(SharedElementTransitionKey)
+        CompositionLocalProvider(
+            LocalNavController provides navController
+        ) {
+            LocalBottomUpComposable.current!!.compose(SharedElementTransitionKey)
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AdaptiveApp(
+    navController: NavHostController,
+    destination: TopLevelDestination,
+    searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
+    content: @Composable (WindowAdaptiveInfo) -> Unit,
+) {
+    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    CompositionLocalProvider(
+        LocalNavController provides navController,
+        LocalTopLevelDestination provides destination
+    ) {
+        when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
+            WindowWidthSizeClass.COMPACT -> content(windowAdaptiveInfo)
+
+            WindowWidthSizeClass.MEDIUM -> Row {
+                val coroutine = rememberCoroutineScope()
+                NavigationRail {
+                    Spacer(Modifier.padding(top = PaddingNormal))
+                    TopLevelDestination.entries.forEach {
+                        NavigationRailItem(
+                            selected = it == destination,
+                            onClick = {
+                                coroutine.launch {
+                                    searchViewModel.event.close.send(Unit)
+                                }
+                                if (navBackStackEntry?.destination?.route != it.route) {
+                                    navController.navigate(it.route) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            },
+                            icon = it.icon,
+                            label = { Text(stringResource(it.nameRes)) },
+                        )
+                    }
+                }
+                content(windowAdaptiveInfo)
+            }
+
+            WindowWidthSizeClass.EXPANDED -> Row {
+                PermanentDrawerSheet {
+                    val coroutine = rememberCoroutineScope()
+                    Spacer(Modifier.padding(top = PaddingNormal))
+                    TopLevelDestination.entries.forEach {
+                        NavigationDrawerItem(
+                            selected = it == destination,
+                            onClick = {
+                                coroutine.launch {
+                                    searchViewModel.event.close.send(Unit)
+                                }
+                                if (navBackStackEntry?.destination?.route != it.route) {
+                                    navController.navigate(it.route) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            },
+                            icon = it.icon,
+                            label = { Text(stringResource(it.nameRes)) },
+                        )
+                    }
+                }
+                content(windowAdaptiveInfo)
+            }
+        }
+    }
+}
+
 @Composable
 private fun ScaffoldedApp(
-    importViewModel: ImportViewModel,
-    searchViewModel: SearchViewModel,
     windowAdaptiveInfo: WindowAdaptiveInfo,
-    navController: NavHostController,
+    searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
+    content: @Composable () -> Unit,
 ) {
+    val navController = currentNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val buc = LocalBottomUpComposable.current
     val snackbars = LocalExtensiveSnackbarState.current
 
     Scaffold(
         topBar = {
-            TopSearchBar(searchViewModel) {
+            TopSearchBar(model = searchViewModel) {
                 navController.navigate(
                     LibraryAppViewModel.Revealable(
                         id = it.id,
@@ -216,9 +272,10 @@ private fun ScaffoldedApp(
                 WindowWidthSizeClass.COMPACT -> {
                     NavigationBar {
                         val coroutine = rememberCoroutineScope()
+                        val destination = currentTopLevelDestination()
                         TopLevelDestination.entries.forEach {
                             NavigationBarItem(
-                                selected = navBackStackEntry?.destination?.let { d -> it.isCurrent(d) } == true,
+                                selected = destination == it,
                                 onClick = {
                                     coroutine.launch {
                                         searchViewModel.event.close.send(Unit)
@@ -255,11 +312,12 @@ private fun ScaffoldedApp(
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            NavigatedApp(importViewModel)
+            content()
         }
         buc?.compose(BackdropKey)
     }
 
+    val importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
     val importState by importViewModel.state.collectAsState()
     if (importState != ImportState.Idle) {
         ImportDialog(importState)
@@ -269,65 +327,13 @@ private fun ScaffoldedApp(
     feiState?.let { FeiStatus(it) }
 }
 
-internal enum class TopLevelDestination(
-    val nameRes: StringResource,
-    val icon: @Composable () -> Unit,
-    val route: String,
-    val isCurrent: (NavDestination) -> Boolean,
-) {
-    Session(
-        nameRes = Res.string.session_para,
-        icon = { Icon(Icons.Default.Star, "") },
-        route = "session",
-        isCurrent = {
-            it.route?.startsWith("session") == true
-        }
-    ),
-    Library(
-        nameRes = Res.string.library_para,
-        icon = { Icon(painterResource(Res.drawable.baseline_library_books), "") },
-        route = "library",
-        isCurrent = {
-            it.route?.startsWith("library") == true || it.hasRoute(LibraryAppViewModel.Revealable::class)
-        }
-    ),
-}
-
-@Composable
-private fun NavigatedApp(importer: ImportViewModel) {
-    val rootOwner = LocalViewModelStoreOwner.current
-    NavHost(
-        navController = currentNavController(),
-        startDestination = TopLevelDestination.Session.route,
-    ) {
-        composable(TopLevelDestination.Session.route) {
-            SessionApp()
-        }
-        composable(TopLevelDestination.Library.route) {
-            LibraryApp(importer = importer)
-        }
-        composable<LibraryAppViewModel.Revealable>(
-            typeMap = mapOf(
-                typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
-                typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
-            )
-        ) { backtrace ->
-            val model: LibraryAppViewModel =
-                viewModel(factory = LibraryAppViewModel.Factory, viewModelStoreOwner = rootOwner!!)
-            LaunchedEffect(backtrace) {
-                model.event.reveal.send(backtrace.toRoute())
-            }
-            LibraryApp(model, importer)
-        }
-        composable("${TopLevelDestination.Session.route}/new") {
-            SessionStarter()
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopSearchBar(model: SearchViewModel, onSearchResultClick: (PractisoOption) -> Unit) {
+private fun TopSearchBar(
+    modifier: Modifier = Modifier,
+    model: SearchViewModel,
+    onSearchResultClick: (PractisoOption) -> Unit,
+) {
     val query by model.query.collectAsState()
     val active by model.active.collectAsState()
 
@@ -393,6 +399,7 @@ private fun TopSearchBar(model: SearchViewModel, onSearchResultClick: (PractisoO
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = padding.value.dp)
+                    then modifier
     ) {
         BackHandlerOrIgnored {
             coroutine.launch {

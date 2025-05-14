@@ -32,7 +32,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -47,8 +46,11 @@ interface SharedElementTransitionPopupScope {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedElementTransitionPopup(
-    model: SharedElementTransitionPopupViewModel = viewModel(factory = SharedElementTransitionPopupViewModel.Factory),
     key: String,
+    model: SharedElementTransitionPopupViewModel = viewModel(
+        key = key,
+        factory = SharedElementTransitionPopupViewModel.Factory
+    ),
     popup: @Composable SharedElementTransitionPopupScope.() -> Unit,
     sharedElement: @Composable (Modifier) -> Unit,
     content: @Composable SharedElementTransitionPopupScope.() -> Unit,
@@ -64,13 +66,11 @@ fun SharedElementTransitionPopup(
                 .alpha(if (model.visible) 0f else 1f)
 
         override suspend fun expand() {
-            model.event.expand.send(Unit)
-            model.event.transitionComplete.first()
+            model.expand()
         }
 
         override suspend fun collapse() {
-            model.event.collapse.send(Unit)
-            model.event.transitionComplete.first()
+            model.collapse()
         }
     }
 
@@ -85,7 +85,7 @@ fun SharedElementTransitionPopup(
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
-                            onClick = { coroutine.launch { model.event.collapse.send(Unit) } }
+                            onClick = { coroutine.launch { model.collapse() } }
                         )
                 ) {
                     AnimatedVisibility(
@@ -98,7 +98,7 @@ fun SharedElementTransitionPopup(
                         suspend fun release(velocityTracker: VelocityTracker) {
                             val velocity = velocityTracker.calculateVelocity().y
                             if (abs(releaseAnimator.value) > 40 || velocity > 10) {
-                                model.event.collapse.send(Unit)
+                                model.collapse()
                             } else {
                                 releaseAnimator.animateTo(0f)
                             }

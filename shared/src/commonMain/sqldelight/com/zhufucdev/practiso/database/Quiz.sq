@@ -69,6 +69,11 @@ SELECT *
 FROM quiz
 WHERE id = ?;
 
+getQuizByIds:
+SELECT *
+FROM quiz
+WHERE id IN ?;
+
 getQuizByIdSet:
 SELECT *
 FROM quiz
@@ -82,10 +87,10 @@ WHERE (SELECT strftime('%s', creationTimeISO) AS time
       ORDER BY time DESC
       LIMIT 1) - strftime('%s', Q1.creationTimeISO) < 60;
 
-getQuizByDimension:
+getQuizByDimensions:
 SELECT Q.*
 FROM quiz Q JOIN quizByDimension D ON D.quizId = Q.id
-WHERE D.dimensionId = ?;
+WHERE D.dimensionId IN ?;
 
 getQuizByOptionsFrameId:
 SELECT Q.*
@@ -107,7 +112,6 @@ WHERE F.textFrameId = :id OR FO.textFrameId = :id;
 getFrameByQuiz:
 SELECT *
 FROM frameByQuiz;
-
 
 getStrandedQuiz:
 SELECT Q.*
@@ -132,15 +136,14 @@ updateQuizModificationTime:
 UPDATE quiz SET modificationTimeISO = ?
 WHERE id = ?;
 
-removeQuiz {
-DELETE FROM imageFrame WHERE id IN (SELECT imageFrameId FROM frameByQuiz WHERE quizId = :id);
-DELETE FROM textFrame WHERE id IN (SELECT textFrameId FROM frameByQuiz WHERE quizId = :id);
-DELETE FROM textFrame WHERE id IN (SELECT textFrameId FROM frameByOptionsFrame WHERE optionsFrameId IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId = :id));
-DELETE FROM imageFrame WHERE id IN (SELECT imageFrameId FROM frameByOptionsFrame WHERE optionsFrameId IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId = :id));
-DELETE FROM optionsFrame WHERE id IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId = :id);
-DELETE FROM quiz WHERE id = :id;
+removeQuizzesWithFrames {
+DELETE FROM imageFrame WHERE id IN (SELECT imageFrameId FROM frameByQuiz WHERE quizId IN :id);
+DELETE FROM textFrame WHERE id IN (SELECT textFrameId FROM frameByQuiz WHERE quizId IN :id);
+DELETE FROM textFrame WHERE id IN (SELECT textFrameId FROM frameByOptionsFrame WHERE optionsFrameId IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId IN :id));
+DELETE FROM imageFrame WHERE id IN (SELECT imageFrameId FROM frameByOptionsFrame WHERE optionsFrameId IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId IN :id));
+DELETE FROM optionsFrame WHERE id IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId IN :id);
+DELETE FROM quiz WHERE id IN :id;
 }
-
 
 getAllTextFrames:
 SELECT *

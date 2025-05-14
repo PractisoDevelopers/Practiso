@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.BasicAlertDialog
@@ -40,6 +42,8 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.Backdrop
@@ -56,6 +60,7 @@ import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SharedHorizontalDraggableExclusion
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.PractisoOption
@@ -67,11 +72,11 @@ import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
+import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -93,9 +98,11 @@ import resources.new_take_from_x_para
 import resources.questions_para
 import resources.remove_para
 import resources.removing_x_para
+import resources.select_para
 import resources.show_more_para
 import resources.templates_para
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun LibraryApp(
     model: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
@@ -161,10 +168,16 @@ fun LibraryApp(
         }
     }
 
-    val templates by model.templates.collectAsState(null, Dispatchers.IO)
-    val dimensions by model.dimensions.collectAsState(null, Dispatchers.IO)
-    val quizzes by model.quiz.collectAsState(null, Dispatchers.IO)
+    val navController = currentNavController()
+    val templates by model.templates.collectAsState(null)
+    val dimensions by model.dimensions.collectAsState(null)
+    val quizzes by model.quiz.collectAsState(null)
     val revealing by model.revealing.collectAsState()
+    val offsets = buildList {
+        add(0)
+        add(last() + (templates?.size ?: 0) + 1)
+        add(last() + (dimensions?.size ?: 0) + 1)
+    }
 
     AnimatedContent(templates?.isEmpty() == true && dimensions?.isEmpty() == true && quizzes?.isEmpty() == true) { empty ->
         if (empty) {
@@ -183,12 +196,6 @@ fun LibraryApp(
                 }
 
                 revealing?.let {
-                    val offsets = buildList {
-                        add(0)
-                        add(last() + (templates?.size ?: 0) + 1)
-                        add(last() + (dimensions?.size ?: 0) + 1)
-                    }
-
                     when (it.type) {
                         LibraryAppViewModel.RevealableType.Dimension -> {
                             coroutine.launch {
@@ -223,9 +230,10 @@ fun LibraryApp(
                         Box {
                             ListItem(
                                 option = it,
+                                lazyItemScope = this@flatContent,
                                 onDelete = {
                                     TODO()
-                                }
+                                },
                             )
                         }
                     },
@@ -246,8 +254,10 @@ fun LibraryApp(
                     content = {
                         var removalDialogExpanded by remember { mutableStateOf(false) }
                         var menuExpanded by remember { mutableStateOf(false) }
+                        val hapticFeedback = LocalHapticFeedback.current
                         Box {
                             ListItem(
+                                lazyItemScope = this@flatContent,
                                 option = it,
                                 onDelete = {
                                     if (it.quizCount > 0) {
@@ -258,11 +268,13 @@ fun LibraryApp(
                                         }
                                     }
                                 },
-                                modifier = Modifier.combineClickable(
-                                    onSecondaryClick = {
-                                        menuExpanded = true
-                                    }
-                                )
+                                modifier =
+                                    Modifier.combineClickable(
+                                        onSecondaryClick = {
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            menuExpanded = true
+                                        }
+                                    )
                             )
 
                             DropdownMenu(
@@ -288,6 +300,19 @@ fun LibraryApp(
                                         coroutine.launch {
                                             model.event.newTakeFromDimension.send(it.id)
                                         }
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Check, contentDescription = null)
+                                    },
+                                    text = {
+                                        Text(stringResource(Res.string.select_para))
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        listState.firstVisibleItemScrollOffset
+                                        navController.navigate(DimensionSectionEditVM.Startpoint(it.dimension.id, listState.firstVisibleItemIndex - offsets[1]))
                                     }
                                 )
                             }
@@ -331,16 +356,18 @@ fun LibraryApp(
                     },
                     content = {
                         ListItem(
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                coroutine.launch {
-                                    Navigator.navigate(
-                                        Navigation.Goto(AppDestination.QuizCreate),
-                                        options = listOf(
-                                            NavigationOption.OpenQuiz(it.quiz.id)
+                            modifier =
+                                Modifier.fillMaxWidth().clickable {
+                                    coroutine.launch {
+                                        Navigator.navigate(
+                                            Navigation.Goto(AppDestination.QuizCreate),
+                                            options = listOf(
+                                                NavigationOption.OpenQuiz(it.quiz.id)
+                                            )
                                         )
-                                    )
-                                }
-                            },
+                                    }
+                                },
+                            lazyItemScope = this@flatContent,
                             option = it,
                             onDelete = {
                                 coroutine.launch {
@@ -371,14 +398,15 @@ fun LibraryApp(
 }
 
 @Composable
-private fun LazyItemScope.ListItem(
+private fun ListItem(
     modifier: Modifier = Modifier,
+    lazyItemScope: LazyItemScope,
     swipable: Boolean = true,
     option: PractisoOption,
     onDelete: () -> Unit,
 ) {
     HorizontalDraggable(
-        modifier = Modifier.animateItem(),
+        modifier = with(lazyItemScope) { Modifier.animateItem() },
         enabled = swipable,
         targetWidth = HorizontalDraggingControlTargetWidth + PaddingSmall * 2,
         controls = {

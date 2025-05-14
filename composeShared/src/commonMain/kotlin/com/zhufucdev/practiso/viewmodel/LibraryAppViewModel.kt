@@ -11,7 +11,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavType
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.AppDestination
@@ -23,29 +22,30 @@ import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.service.LibraryService
 import com.zhufucdev.practiso.service.RemoveService
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.serialization.Serializable
 
 class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) : ViewModel() {
-    private val libraryService = LibraryService()
-    private val createService = CreateService()
+    private val libraryService = LibraryService(db)
+    private val createService = CreateService(db)
 
-    val templates by lazy {
+    val templates =
         libraryService.getTemplates()
-    }
+            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
-    val quiz: Flow<List<QuizOption>> by lazy {
+    val quiz =
         libraryService.getQuizzes()
-    }
+            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
-    val dimensions by lazy {
+    val dimensions =
         libraryService.getDimensions()
-    }
+            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
     private val removeService = RemoveService(db)
 
@@ -116,6 +116,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
         val removeDimensionWithQuizzes: Channel<Long> = Channel(),
         val removeDimensionKeepQuizzes: Channel<Long> = Channel(),
         val reveal: Channel<Revealable> = Channel(),
+        val removeReveal: Channel<Unit> = Channel(),
         val newTakeFromDimension: Channel<Long> = Channel(),
         val updateCaps: Channel<Caps> = Channel(),
     )
@@ -140,6 +141,10 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
 
                     event.reveal.onReceive {
                         _revealing.emit(it)
+                    }
+
+                    event.removeReveal.onReceive {
+                        _revealing.emit(null)
                     }
 
                     event.newTakeFromDimension.onReceive {

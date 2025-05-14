@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.composition
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
@@ -51,7 +52,11 @@ private class BottomUpComposableImpl : BottomUpComposable {
 @Composable
 fun BottomUpComposableScope(content: @Composable (BottomUpComposable) -> Unit) {
     val impl = remember { BottomUpComposableImpl() }
-    content(impl)
+    CompositionLocalProvider(
+        LocalBottomUpComposable provides impl
+    ) {
+        content(impl)
+    }
 }
 
 @Composable

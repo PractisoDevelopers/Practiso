@@ -175,4 +175,18 @@
     <string name="image_input_span">image input</string>
     <string name="embedding_output_span">embedding output</string>
     <string name="rename_session_para">Rename session</string>
+    <string name="select_para">Select</string>
+    <plurals name="n_items_selected_para">
+        <item quantity="one">%1$d item selected</item>
+        <item quantity="other">%1$d items selected</item>
+    </plurals>
+    <string name="select_all_para">Select all</string>
+    <plurals name="removing_n_items_para">
+        <item quantity="one">Removing %1$d item</item>
+        <item quantity="other">Removing %1$d items</item>
+    </plurals>
+    <plurals name="n_questions_within_x_what_to_do_with_them">
+        <item quantity="one">%1$d question is within %2$s. What do you want to do with it?</item>
+        <item quantity="other">%1$d questions are within %2$s. What do you want to do with them?</item>
+    </plurals>
 </resources>

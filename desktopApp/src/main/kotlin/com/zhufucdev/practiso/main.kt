@@ -93,10 +93,7 @@ fun main(args: Array<String>) {
                     transitionSpec = mainFrameTransitionSpec
                 ) { state ->
                     when (state.destination) {
-                        AppDestination.MainView -> PractisoApp(
-                            navController,
-                            importViewModel = importer
-                        )
+                        AppDestination.MainView -> PractisoApp(navController)
 
                         AppDestination.QuizCreate -> {
                             val appModel: QuizCreateViewModel =

@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.helper
 
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.snapshots.SnapshotStateSet
 import androidx.compose.runtime.toMutableStateList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -15,6 +16,23 @@ inline fun <reified T> protoBufStateListSaver() = listSaver(
     },
     restore = {
         it.map { b -> ProtoBuf.decodeFromByteArray(serializer<T>(), b) }.toMutableStateList()
+    }
+)
+
+@OptIn(ExperimentalSerializationApi::class)
+inline fun <reified T> protoBufStateSetSaver() = listSaver(
+    save = {
+        it.map { v -> ProtoBuf.encodeToByteArray(serializer<T>(), v) }
+    },
+    restore = {
+        SnapshotStateSet<T>().apply {
+            addAll(it.map { b ->
+                ProtoBuf.decodeFromByteArray(
+                    serializer<T>(),
+                    b
+                )
+            })
+        }
     }
 )
 

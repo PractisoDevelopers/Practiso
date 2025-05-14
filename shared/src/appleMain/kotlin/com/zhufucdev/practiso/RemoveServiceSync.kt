@@ -10,7 +10,9 @@ class RemoveServiceSync(private val db: AppDatabase = Database.app) {
 
     @Throws(SQLiteException::class)
     fun removeQuizWithResources(id: Long) = runBlocking {
-        service.removeQuizWithResources(id)
+        db.transaction {
+            service.removeQuizWithResources(id)
+        }
     }
 
     @Throws(SQLiteException::class)

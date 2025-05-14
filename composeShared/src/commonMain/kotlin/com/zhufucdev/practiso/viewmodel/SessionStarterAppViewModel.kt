@@ -137,7 +137,7 @@ class SessionStarterAppViewModel(private val db: AppDatabase, state: SavedStateH
                 .map {
                     it.map { dimension ->
                         db.quizQueries
-                            .getQuizFrames(db.quizQueries.getQuizByDimension(dimension.id))
+                            .getQuizFrames(db.quizQueries.getQuizByDimensions(listOf(dimension.id)))
                             .toQuizOptionFlow()
                             .map { options ->
                                 Item.Categorized(

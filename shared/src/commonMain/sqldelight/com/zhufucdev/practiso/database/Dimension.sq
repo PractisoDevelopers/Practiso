@@ -31,6 +31,11 @@ SELECT *
 FROM dimension
 WHERE id = ?;
 
+getDimensionsByIds:
+SELECT *
+FROM dimension
+WHERE id IN ?;
+
 getDimensionByName:
 SELECT *
 FROM dimension
@@ -75,3 +80,11 @@ DELETE FROM quizByDimension WHERE quizId = ? AND dimensionId = ?;
 
 removeDimension:
 DELETE FROM dimension WHERE id = ?;
+
+removeDimensions:
+DELETE FROM dimension WHERE id IN ?;
+
+getQuizCountByDimensions:
+SELECT count(DISTINCT quizId)
+FROM quizByDimension
+WHERE dimensionId IN ?;

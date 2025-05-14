@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -19,6 +20,7 @@ import com.zhufucdev.practiso.style.PaddingSmall
 
 @Composable
 fun PractisoOptionSkeleton(
+    modifier: Modifier = Modifier,
     label: @Composable () -> Unit = {
         Spacer(
             Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
@@ -33,7 +35,6 @@ fun PractisoOptionSkeleton(
                 .shimmerBackground()
         )
     },
-    modifier: Modifier = Modifier,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(PaddingSmall),
@@ -50,7 +51,6 @@ fun PractisoOptionSkeleton(
         ) {
             preview?.invoke()
         }
-
     }
 }
 
@@ -61,7 +61,7 @@ fun PractisoOptionView(
     previewOverflow: TextOverflow = TextOverflow.Ellipsis,
     modifier: Modifier = Modifier,
 ) {
-    val view = createOptionView(option)
+    val view = remember(option) { createOptionView(option) }
     PractisoOptionSkeleton(
         label = { Text(view.title()) },
         preview = {

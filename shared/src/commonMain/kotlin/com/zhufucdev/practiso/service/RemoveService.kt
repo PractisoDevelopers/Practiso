@@ -1,7 +1,10 @@
 package com.zhufucdev.practiso.service
 
+import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.datamodel.PrioritizedFrame
+import com.zhufucdev.practiso.datamodel.QuizFrames
 import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.platform.getPlatform
@@ -9,26 +12,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.withContext
 
-class RemoveService(private val db: AppDatabase) {
-    suspend fun removeQuizWithResources(id: Long) {
+class RemoveService(private val db: AppDatabase = Database.app) {
+    /**
+     * internal method not wrapped in a [app.cash.sqldelight.Transacter.Transaction]
+     */
+    private suspend fun _removeQuizWithResources(id: Collection<Long>) {
         val quizFrames = db.quizQueries
-            .getQuizFrames(db.quizQueries.getQuizById(id))
+            .getQuizFrames(db.quizQueries.getQuizByIds(id))
             .firstOrNull()
         if (quizFrames.isNullOrEmpty()) {
             return
         }
 
-        withContext(Dispatchers.IO) {
+        coroutineScope {
             val platform = getPlatform()
-            quizFrames.first()
-                .frames
+            quizFrames.map(QuizFrames::frames)
+                .flatten()
                 .map(PrioritizedFrame::frame)
                 .resources()
                 .map { (name) ->
-                    async {
+                    async(Dispatchers.IO) {
                         platform.filesystem.delete(
                             platform.resourcePath.resolve(
                                 name
@@ -39,8 +45,12 @@ class RemoveService(private val db: AppDatabase) {
                 .awaitAll()
         }
 
+        db.quizQueries.removeQuizzesWithFrames(id)
+    }
+
+    suspend fun removeQuizWithResources(id: Long) {
         db.transaction {
-            db.quizQueries.removeQuiz(id)
+            _removeQuizWithResources(listOf(id))
         }
     }
 
@@ -50,14 +60,31 @@ class RemoveService(private val db: AppDatabase) {
         }
     }
 
+    suspend fun removeDimensionKeepQuizzes(ids: Collection<Long>) {
+        db.transaction {
+            db.dimensionQueries.removeDimensions(ids)
+        }
+    }
+
     suspend fun removeDimensionWithQuizzes(id: Long) {
         db.transaction {
-            db.quizQueries.getQuizByDimension(id)
+            val quizIds = db.quizQueries.getQuizByDimensions(listOf(id))
                 .executeAsList()
-                .forEach {
-                    db.quizQueries.removeQuiz(it.id)
-                }
+                .map(Quiz::id)
+
+            db.quizQueries.removeQuizzesWithFrames(quizIds)
             db.dimensionQueries.removeDimension(id)
+        }
+    }
+
+    suspend fun removeDimensionWithQuizzes(ids: Collection<Long>) {
+        db.transaction {
+            val quizIds = db.quizQueries.getQuizByDimensions(ids)
+                .executeAsList()
+                .map(Quiz::id)
+
+            db.quizQueries.removeQuizzesWithFrames(quizIds)
+            db.dimensionQueries.removeDimensions(ids)
         }
     }
 

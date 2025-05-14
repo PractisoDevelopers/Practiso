@@ -29,9 +29,8 @@ class CreateService(private val db: AppDatabase = Database.app) {
             db.quizQueries.lastInsertRowId().executeAsOne()
         }
 
-        val quizIdsByDimensions = selection.dimensionIds.map {
-            db.quizQueries.getQuizByDimension(it).executeAsList().map(Quiz::id)
-        }.flatten()
+        val quizIdsByDimensions =
+            db.quizQueries.getQuizByDimensions(selection.dimensionIds).executeAsList().map(Quiz::id)
 
         val quizzes = selection.quizIds + quizIdsByDimensions
         if (quizzes.isEmpty()) {

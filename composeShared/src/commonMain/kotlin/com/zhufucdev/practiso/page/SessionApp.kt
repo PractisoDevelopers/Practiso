@@ -88,7 +88,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.TopLevelDestination
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.FabCreate
@@ -104,13 +103,13 @@ import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopupScope
 import com.zhufucdev.practiso.composable.SharedHorizontalDraggableExclusion
 import com.zhufucdev.practiso.composable.shimmerBackground
+import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.composition.withExclusionLock
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.TakeStat
-import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.calculateTakeCorrectQuizCount
 import com.zhufucdev.practiso.datamodel.calculateTakeNumber
 import com.zhufucdev.practiso.platform.AppDestination
@@ -207,9 +206,7 @@ fun SessionApp(model: SessionViewModel = viewModel(factory = SessionViewModel.Fa
                     SimplifiedSessionCreationModalContent(
                         model = model,
                         columnScope = this,
-                        popupScope = this@SharedElementTransitionPopup,
-                        onCreate = { creator, name ->
-                        }
+                        popupScope = this@SharedElementTransitionPopup
                     )
                 }
             }
@@ -258,8 +255,8 @@ fun SessionApp(model: SessionViewModel = viewModel(factory = SessionViewModel.Fa
                         item("start_spacer") {
                             Spacer(Modifier)
                         }
-                        takeStats?.let {
-                            items(it, TakeStat::id) { takeStat ->
+                        takeStats?.let { stats ->
+                            items(stats, TakeStat::id) { takeStat ->
                                 val key = "take_" + takeStat.id
                                 SharedElementTransitionPopup(
                                     model = viewModel(
@@ -349,73 +346,68 @@ fun SessionApp(model: SessionViewModel = viewModel(factory = SessionViewModel.Fa
                 }
 
                 sessions?.let { sessions ->
-                    sessions.forEachIndexed { index, option ->
-                        item("session_" + option.session.id) {
-                            ListItem(
-                                separator = index < sessions.lastIndex,
-                                onEdit = {
-                                    renamingSession = option.session
-                                },
-                                onDelete = {
-                                    coroutine.launch {
-                                        model.event.deleteSession.send(option.session.id)
-                                    }
-                                },
-                                modifier = Modifier.animateItem()
-                            ) {
-                                val key = "session_" + option.session.id
-                                SharedElementTransitionPopup(
-                                    model = viewModel(
+                    items(sessions.size, key = { "session_${sessions[it].id}" }) { index ->
+                        val option = sessions[index]
+                        ListItem(
+                            separator = index < sessions.lastIndex,
+                            onEdit = {
+                                renamingSession = option.session
+                            },
+                            onDelete = {
+                                coroutine.launch {
+                                    model.event.deleteSession.send(option.session.id)
+                                }
+                            },
+                            modifier = Modifier.animateItem()
+                        ) {
+                            val key = "session_" + option.session.id
+                            SharedElementTransitionPopup(
+                                key = key,
+                                popup = {
+                                    val tsModel: TakeStarterViewModel = viewModel(
                                         key = key,
-                                        factory = SharedElementTransitionPopupViewModel.Factory
-                                    ),
-                                    key = key,
-                                    popup = {
-                                        val tsModel: TakeStarterViewModel = viewModel(
-                                            key = key,
-                                            factory = TakeStarterViewModel.Factory
-                                        )
+                                        factory = TakeStarterViewModel.Factory
+                                    )
 
-                                        LaunchedEffect(option) {
-                                            tsModel.load(option, coroutine)
-                                        }
+                                    LaunchedEffect(option) {
+                                        tsModel.load(option, coroutine)
+                                    }
 
-                                        FlipCard(
-                                            modifier = Modifier.clickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = null,
-                                                onClick = {}
-                                            ),
-                                            state = tsModel.flipCardState
-                                        ) { page ->
-                                            Column(Modifier.padding(PaddingBig).height(450.dp)) {
-                                                when (page) {
-                                                    0 -> TakeStarterContent(model = tsModel)
-                                                    1 -> NewTakeContent(
-                                                        model = tsModel
-                                                    )
-                                                }
+                                    FlipCard(
+                                        modifier = Modifier.clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = {}
+                                        ),
+                                        state = tsModel.flipCardState
+                                    ) { page ->
+                                        Column(Modifier.padding(PaddingBig).height(450.dp)) {
+                                            when (page) {
+                                                0 -> TakeStarterContent(model = tsModel)
+                                                1 -> NewTakeContent(
+                                                    model = tsModel
+                                                )
                                             }
                                         }
-                                    },
-                                    sharedElement = {
-                                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                                            PractisoOptionView(
-                                                option,
-                                                modifier = it.padding(PaddingNormal)
-                                            )
-                                        }
                                     }
-                                ) {
-                                    Box(
-                                        Modifier.sharedElement()
-                                            .clickable { coroutine.launch { expand() } }
-                                    ) {
+                                },
+                                sharedElement = {
+                                    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                                         PractisoOptionView(
                                             option,
-                                            modifier = Modifier.padding(PaddingNormal)
+                                            modifier = it.padding(PaddingNormal)
                                         )
                                     }
+                                }
+                            ) {
+                                Box(
+                                    Modifier.sharedElement()
+                                        .clickable { coroutine.launch { expand() } }
+                                ) {
+                                    PractisoOptionView(
+                                        option,
+                                        modifier = Modifier.padding(PaddingNormal)
+                                    )
                                 }
                             }
                         }
@@ -717,7 +709,6 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
     model: SessionViewModel,
     columnScope: ColumnScope,
     popupScope: SharedElementTransitionPopupScope,
-    onCreate: (SessionCreator, String) -> Unit,
 ) {
     val useRecommendations by model.useRecommendations.collectAsState()
     val items by (
