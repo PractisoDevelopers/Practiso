@@ -68,7 +68,7 @@
     <string name="save_para">保存</string>
     <string name="requested_quiz_not_found_para">未找到相应题目</string>
     <string name="undo_para">撤销</string>
-    <string name="redo_para">重试</string>
+    <string name="redo_para">重做</string>
     <string name="stranded_quizzes_para">未分类题目</string>
     <string name="select_category_to_begin_para">选择一个类别以开始</string>
     <string name="finish_para">完成</string>
@@ -85,25 +85,25 @@
     <string name="take_n_para">练习%1$d</string>
     <string name="new_timer_para">新计时器</string>
     <string name="no_take_available_span">无可用练习</string>
-    <string name="loading_takes_para">加载练习</string>
+    <string name="loading_takes_para">正在加载练习</string>
     <string name="n_percentage">%1$d%</string>
     <string name="show_hidden_para">显示隐藏内容</string>
     <string name="loading_quizzes_para">正在加载题目…</string>
     <string name="missing_take_to_open_para">找不到要打开的练习</string>
     <string name="horizontal_pager_para">水平分页</string>
     <string name="vertical_pager_para">垂直分页</string>
-    <string name="continuous_scrolling_para">持续滚动</string>
+    <string name="continuous_scrolling_para">连续滚动</string>
     <string name="show_accuracy_para">显示正确率</string>
     <string name="minutes_span">分钟</string>
-    <string name="time_is_up_para">时间到！</string>
+    <string name="time_is_up_para">时间到</string>
     <string name="import_from_practiso_archive_para">从 Practicso 存档中导入</string>
-    <string name="library_intent_model_span">题库意向模式</string>
+    <string name="library_intent_model_span">题库意图模型</string>
     <string name="error_at_n_para">%1$s 错误</string>
     <string name="untracked_error_para">未跟踪错误</string>
     <string name="internal_message_n_para">内部通知： %1$s</string>
     <string name="invalid_file_format_para">无效文件格式</string>
-    <string name="resource_x_for_quiz_y_was_not_found_para">未找到测试 %2$s 的资源 %1$s</string>
-    <string name="failed_to_copy_resource_x_for_quiz_y_para">无法为测验 %2$s复制资源 %1$s</string>
+    <string name="resource_x_for_quiz_y_was_not_found_para">未找到题目 %2$s 的资源 %1$s</string>
+    <string name="failed_to_copy_resource_x_for_quiz_y_para">无法为题目 %2$s复制资源 %1$s</string>
     <plurals name="importing_x_items_y_done">
         <item quantity="other">正在导入 %1$d 项, %2$d 项已完成</item>
     </plurals>
@@ -123,8 +123,8 @@
     <string name="keep_para">保存</string>
     <string name="show_more_para">展开</string>
     <string name="created_x_para">已创建%1$s</string>
-    <string name="spent_x_para">已花费 %1$s</string>
-    <string name="accuracy_slash_completeness_para">正确率/完成度</string>
+    <string name="spent_x_para">已花费%1$s</string>
+    <string name="accuracy_slash_completeness_para">正确率 / 完成度</string>
     <plurals name="n_questions_correct_span">
         <item quantity="other">%1$d questions correct</item>
     </plurals>
