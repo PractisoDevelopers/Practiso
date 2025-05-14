@@ -89,21 +89,74 @@ class ImportService(private val db: AppDatabase = Database.app) {
                     )
                 )
 
-                var shouldBreak = false
+                var shouldReturn = false
 
-                db.transaction {
-                    quizArchive.importTo(db)
-                    val resources = quizArchive.frames.resources()
-                    val platform = getPlatform()
-                    resources.forEachIndexed { i, (name, requester) ->
-                        val source = pack.resources[name]
-                        if (source == null) {
-                            val skipChannel = Channel<Unit>()
-                            val ignoreChannel = Channel<Unit>()
+                val importedQuiz = quizArchive.importTo(db)
+                val resources = quizArchive.frames.resources()
+                val platform = getPlatform()
+
+                suspend fun rollback(resourcesIndicates: IntRange) {
+                    db.transaction {
+                        db.quizQueries.removeQuizzesWithFrames(listOf(importedQuiz))
+                    }
+                    resources.slice(resourcesIndicates).forEach { (name) ->
+                        platform.filesystem.delete(platform.resourcePath.resolve(name))
+                    }
+                }
+
+                for (i in resources.indices) {
+                    val (name, requester) = resources[i]
+
+                    var shouldBreak = false
+                    val source = pack.resources[name]
+                    if (source == null) {
+                        val skipChannel = Channel<Unit>()
+                        val ignoreChannel = Channel<Unit>()
+                        send(
+                            ImportState.Error(
+                                model = ErrorModel(
+                                    scope = AppScope.LibraryIntentModel,
+                                    message = ErrorMessage.CopyResource(
+                                        requester.name ?: name,
+                                        quizArchive.name
+                                    )
+                                ),
+                                cancel = cancelChannel,
+                                skip = skipChannel,
+                                ignore = ignoreChannel
+                            )
+                        )
+
+                        select<Unit> {
+                            skipChannel.onReceive {
+                                rollback(0..i)
+                                shouldBreak = true
+                            }
+
+                            cancelChannel.onReceive {
+                                rollback(0..i)
+                                shouldReturn = true
+                            }
+
+                            ignoreChannel.onReceive {
+                            }
+                        }
+                    } else {
+                        val skipChannel = Channel<Unit>()
+                        val ignoreChannel = Channel<Unit>()
+                        try {
+                            platform.filesystem
+                                .sink(platform.resourcePath.resolve(name))
+                                .buffer()
+                                .use { b ->
+                                    b.writeAll(source())
+                                }
+                        } catch (e: Exception) {
                             send(
                                 ImportState.Error(
                                     model = ErrorModel(
                                         scope = AppScope.LibraryIntentModel,
+                                        exception = e,
                                         message = ErrorMessage.CopyResource(
                                             requester.name ?: name,
                                             quizArchive.name
@@ -117,76 +170,28 @@ class ImportService(private val db: AppDatabase = Database.app) {
 
                             select<Unit> {
                                 skipChannel.onReceive {
-                                    resources.subList(0, i).forEach { (name) ->
-                                        platform.filesystem
-                                            .delete(platform.resourcePath.resolve(name))
-                                    }
-                                    rollback()
-                                }
-
-                                cancelChannel.onReceive {
+                                    rollback(0..i)
                                     shouldBreak = true
-                                    rollback()
                                 }
 
                                 ignoreChannel.onReceive {
                                 }
-                            }
-                        } else {
-                            val skipChannel = Channel<Unit>()
-                            val ignoreChannel = Channel<Unit>()
-                            try {
-                                platform.filesystem
-                                    .sink(platform.resourcePath.resolve(name))
-                                    .buffer()
-                                    .use { b ->
-                                        b.writeAll(source())
-                                    }
-                            } catch (e: Exception) {
-                                send(
-                                    ImportState.Error(
-                                        model = ErrorModel(
-                                            scope = AppScope.LibraryIntentModel,
-                                            exception = e,
-                                            message = ErrorMessage.CopyResource(
-                                                requester.name ?: name,
-                                                quizArchive.name
-                                            )
-                                        ),
-                                        cancel = cancelChannel,
-                                        skip = skipChannel,
-                                        ignore = ignoreChannel
-                                    )
-                                )
 
-                                select<Unit> {
-                                    skipChannel.onReceive {
-                                        resources.subList(0, i).forEach { (name) ->
-                                            platform.filesystem
-                                                .delete(
-                                                    platform.resourcePath.resolve(
-                                                        name
-                                                    )
-                                                )
-                                        }
-                                        rollback()
-                                    }
-
-                                    ignoreChannel.onReceive {
-                                    }
-
-                                    cancelChannel.onReceive {
-                                        shouldBreak = true
-                                        rollback()
-                                    }
+                                cancelChannel.onReceive {
+                                    rollback(0..i)
+                                    shouldReturn = true
                                 }
                             }
                         }
                     }
+
+                    if (shouldReturn || shouldBreak) {
+                        break
+                    }
                 }
 
-                if (shouldBreak) {
-                    break
+                if (shouldReturn) {
+                    return@withContext
                 }
             }
         }
