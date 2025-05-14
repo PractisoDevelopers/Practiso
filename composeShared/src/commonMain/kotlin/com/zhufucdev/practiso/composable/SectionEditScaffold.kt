@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -101,8 +100,7 @@ fun <T : PractisoOption, M : SectionEditViewModel<T>> SectionEditScaffold(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(PaddingNormal)
                     ) {
-                        PractisoOptionView(option)
-                        Spacer(Modifier.weight(1f))
+                        PractisoOptionView(option, modifier = Modifier.weight(1f))
                         Checkbox(checked = checked, onCheckedChange = null)
                     }
                 }

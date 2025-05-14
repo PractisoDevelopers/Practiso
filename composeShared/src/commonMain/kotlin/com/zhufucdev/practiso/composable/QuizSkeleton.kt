@@ -20,6 +20,7 @@ import com.zhufucdev.practiso.style.PaddingSmall
 
 @Composable
 fun QuizSkeleton(
+    modifier: Modifier = Modifier,
     label: @Composable () -> Unit = {
         Spacer(
             Modifier.fillMaxWidth().height(LocalTextStyle.current.lineHeight.value.dp)
@@ -35,7 +36,6 @@ fun QuizSkeleton(
         }
     },
     tailingIcon: @Composable () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall), modifier = Modifier.weight(1f)) {

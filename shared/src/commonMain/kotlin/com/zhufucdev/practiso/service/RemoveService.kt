@@ -16,10 +16,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 
 class RemoveService(private val db: AppDatabase = Database.app) {
-    /**
-     * internal method not wrapped in a [app.cash.sqldelight.Transacter.Transaction]
-     */
-    private suspend fun _removeQuizWithResources(id: Collection<Long>) {
+    suspend fun removeQuizWithResources(id: Collection<Long>) {
         val quizFrames = db.quizQueries
             .getQuizFrames(db.quizQueries.getQuizByIds(id))
             .firstOrNull()
@@ -45,12 +42,14 @@ class RemoveService(private val db: AppDatabase = Database.app) {
                 .awaitAll()
         }
 
-        db.quizQueries.removeQuizzesWithFrames(id)
+        db.transaction {
+            db.quizQueries.removeQuizzesWithFrames(id)
+        }
     }
 
     suspend fun removeQuizWithResources(id: Long) {
         db.transaction {
-            _removeQuizWithResources(listOf(id))
+            removeQuizWithResources(listOf(id))
         }
     }
 

@@ -75,6 +75,7 @@ import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
+import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
@@ -312,7 +313,12 @@ fun LibraryApp(
                                     onClick = {
                                         menuExpanded = false
                                         listState.firstVisibleItemScrollOffset
-                                        navController.navigate(DimensionSectionEditVM.Startpoint(it.dimension.id, listState.firstVisibleItemIndex - offsets[1]))
+                                        navController.navigate(
+                                            DimensionSectionEditVM.Startpoint(
+                                                it.dimension.id,
+                                                listState.firstVisibleItemIndex - offsets[1]
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -357,7 +363,7 @@ fun LibraryApp(
                     content = {
                         ListItem(
                             modifier =
-                                Modifier.fillMaxWidth().clickable {
+                                Modifier.fillMaxWidth().combineClickable(onClick = {
                                     coroutine.launch {
                                         Navigator.navigate(
                                             Navigation.Goto(AppDestination.QuizCreate),
@@ -366,7 +372,14 @@ fun LibraryApp(
                                             )
                                         )
                                     }
-                                },
+                                }, onSecondaryClick = {
+                                    navController.navigate(
+                                        QuizSectionEditVM.Startpoint(
+                                            it.quiz.id,
+                                            listState.firstVisibleItemIndex - offsets[2]
+                                        )
+                                    )
+                                }),
                             lazyItemScope = this@flatContent,
                             option = it,
                             onDelete = {

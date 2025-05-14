@@ -78,6 +78,7 @@ import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.page.DimensionSectionEditApp
 import com.zhufucdev.practiso.page.LibraryApp
+import com.zhufucdev.practiso.page.QuizSectionEditApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.service.ImportState
@@ -85,6 +86,7 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
+import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -157,6 +159,18 @@ fun PractisoApp(navController: NavHostController) {
                     DimensionSectionEditApp(
                         startpoint = stackEntry.toRoute(),
                         libraryVm = libraryVM
+                    )
+                }
+            }
+            composable<QuizSectionEditVM.Startpoint>(
+                typeMap = mapOf(
+                    typeOf<QuizSectionEditVM.Startpoint>() to QuizSectionEditVM.StartpointNavType
+                )
+            ) { stackEntry ->
+                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                    QuizSectionEditApp(
+                        startpoint = stackEntry.toRoute(),
+                        libraryVM = libraryVM
                     )
                 }
             }

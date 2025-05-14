@@ -189,4 +189,8 @@
         <item quantity="one">%1$d question is within %2$s. What do you want to do with it?</item>
         <item quantity="other">%1$d questions are within %2$s. What do you want to do with them?</item>
     </plurals>
+    <plurals name="would_you_like_to_remove_n_items_para">
+        <item quantity="one">Would you like to remove %1$d item? This operation is irreversible.</item>
+        <item quantity="other">Would you like to remove %1$d items? This operation is irreversible.</item>
+    </plurals>
 </resources>
