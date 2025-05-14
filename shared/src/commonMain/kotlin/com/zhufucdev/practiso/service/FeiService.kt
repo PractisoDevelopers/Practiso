@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -79,8 +80,15 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     fun getEmbeddings(
         frames: Set<TextFrame>,
         model: MlModel,
-    ): Flow<InferenceState> = channelFlow {
+    ): Flow<InferenceState> = flow {
         val fei = FrameEmbeddingInference(model)
+        emitAll(getEmbeddings(frames, fei))
+    }
+
+    private fun getEmbeddings(
+        frames: Set<TextFrame>,
+        fei: FrameEmbeddingInference,
+    ): Flow<InferenceState> = channelFlow {
         val total = frames.size
         val batchSize = minOf(frames.size / parallelTasks + 1, MAX_BATCH_SIZE)
         coroutineScope {
@@ -212,6 +220,8 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
             send(FeiDbState.Ready(index, db, model))
 
+            val fei = withContext(Dispatchers.Default) { FrameEmbeddingInference(model) }
+
             val initialDrops = if (indexInvalid) 0 else 1
             textFrameFlow.drop(initialDrops).addPacing()
                 .combine(imageFrameFlow.drop(initialDrops).addPacing(), ::Pair)
@@ -264,7 +274,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                                             }
                                     }
                                     .awaitAll()
-                                getEmbeddings(textFrames.addition, model).collect {
+                                getEmbeddings(textFrames.addition, fei).collect {
                                     when (it) {
                                         is InferenceState.Complete -> {
                                             it.results<TextFrame>().forEach { (frame, ebd) ->
