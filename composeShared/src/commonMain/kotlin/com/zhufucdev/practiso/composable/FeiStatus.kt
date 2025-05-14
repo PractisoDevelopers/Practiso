@@ -56,7 +56,6 @@ fun FeiStatus(state: FeiDbState) {
     val coroutine = rememberCoroutineScope()
 
     LaunchedEffect(state) {
-        println(state)
         when (state) {
             FeiDbState.Collecting -> snackbar.showSnackbar(
                 getString(Res.string.collecting_questions_para),
