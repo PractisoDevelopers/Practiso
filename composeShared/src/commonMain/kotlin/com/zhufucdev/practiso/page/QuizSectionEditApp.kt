@@ -1,5 +1,9 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
@@ -71,21 +75,27 @@ fun QuizSectionEditApp(
                     }
                 },
                 floatingActionButton = {
-                    PlainTooltipBox(stringResource(Res.string.archive_para)) {
-                        FloatingActionButton(
-                            onClick = {
-                                coroutine.launch {
-                                    val archiveFile = FileKit.openFileSaver(
-                                        suggestedName = model.describeSelection(),
-                                        extension = "psarchive"
-                                    )
-                                    if (archiveFile != null) {
-                                        model.events.exportToFile.send(archiveFile)
+                    AnimatedVisibility(
+                        visible = model.selection.isNotEmpty(),
+                        enter = scaleIn(tween()),
+                        exit = scaleOut()
+                    ) {
+                        PlainTooltipBox(stringResource(Res.string.archive_para)) {
+                            FloatingActionButton(
+                                onClick = {
+                                    coroutine.launch {
+                                        val archiveFile = FileKit.openFileSaver(
+                                            suggestedName = model.describeSelection(),
+                                            extension = "psarchive"
+                                        )
+                                        if (archiveFile != null) {
+                                            model.events.exportToFile.send(archiveFile)
+                                        }
                                     }
-                                }
+                                },
+                            ) {
+                                Icon(painterResource(Res.drawable.baseline_archive_arrow_down_outline), contentDescription = null)
                             }
-                        ) {
-                            Icon(painterResource(Res.drawable.baseline_archive_arrow_down_outline), contentDescription = null)
                         }
                     }
                 }

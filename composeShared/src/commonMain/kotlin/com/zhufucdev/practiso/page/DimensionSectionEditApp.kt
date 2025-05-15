@@ -2,7 +2,11 @@
 
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -97,18 +101,24 @@ fun DimensionSectionEditApp(
                     }
                 },
                 floatingActionButton = {
-                    PlainTooltipBox(stringResource(Res.string.new_take_para)) {
-                        FloatingActionButton(
-                            onClick = {
-                                coroutine.launch {
-                                    model.events.newTakeFromSelection.send(Unit)
+                    AnimatedVisibility(
+                        visible = model.selection.isNotEmpty(),
+                        enter = scaleIn(tween()),
+                        exit = scaleOut()
+                    ) {
+                        PlainTooltipBox(stringResource(Res.string.new_take_para)) {
+                            FloatingActionButton(
+                                onClick = {
+                                    coroutine.launch {
+                                        model.events.newTakeFromSelection.send(Unit)
+                                    }
                                 }
+                            ) {
+                                Icon(
+                                    painterResource(Res.drawable.baseline_flag_checkered),
+                                    contentDescription = null
+                                )
                             }
-                        ) {
-                            Icon(
-                                painterResource(Res.drawable.baseline_flag_checkered),
-                                contentDescription = null
-                            )
                         }
                     }
                 }

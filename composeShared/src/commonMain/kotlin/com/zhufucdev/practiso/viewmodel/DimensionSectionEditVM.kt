@@ -62,6 +62,10 @@ class DimensionSectionEditVM(
                     }
 
                     events.newTakeFromSelection.onReceive {
+                        if (selection.isEmpty()) {
+                            return@onReceive
+                        }
+
                         val sessionId = createService.createSession(
                             describeSelection(),
                             Selection(dimensionIds = selection)
