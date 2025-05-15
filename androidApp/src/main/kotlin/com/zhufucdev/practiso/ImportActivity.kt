@@ -16,6 +16,7 @@ import com.zhufucdev.practiso.composable.ImportDialog
 import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.style.PractisoTheme
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
+import kotlinx.coroutines.flow.first
 import okio.source
 
 class ImportActivity : ComponentActivity() {
@@ -50,7 +51,8 @@ class ImportActivity : ComponentActivity() {
                                     ?: getString(R.string.generic_file_para),
                                 source = it.source()
                             )
-                            importer.service.import(target)
+                            importer.event.import.send(target)
+                            importer.event.importComplete.first()
                         }
                     }
                     finish()
