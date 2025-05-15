@@ -193,4 +193,5 @@
         <item quantity="one">Would you like to remove %1$d item? This operation is irreversible.</item>
         <item quantity="other">Would you like to remove %1$d items? This operation is irreversible.</item>
     </plurals>
+    <string name="archive_para">Archive</string>
 </resources>

@@ -16,7 +16,7 @@ class ExportService(private val db: AppDatabase = Database.app) {
     suspend fun exportAsSource(quizIds: Collection<Long>): Source {
         val platform = getPlatform()
         return db.quizQueries
-            .getQuizFrames(db.quizQueries.getQuizByIdSet(quizIds))
+            .getQuizFrames(db.quizQueries.getQuizByIds(quizIds))
             .first()
             .map {
                 val dimensions = db.dimensionQueries.getDimensionByQuizId(it.quiz.id).executeAsList()

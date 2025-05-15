@@ -2,17 +2,15 @@ package com.zhufucdev.practiso.helper
 
 import com.zhufucdev.practiso.platform.Platform
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.readBytes
+import io.github.vinceglb.filekit.source
+import kotlinx.io.okio.asOkioSource
 import okio.Sink
 import okio.Source
 import okio.buffer
-import okio.use
 import usearch.Index
 
-suspend fun PlatformFile.copyTo(sink: Sink) {
-    sink.buffer().use {
-        it.write(readBytes())
-    }
+fun PlatformFile.copyTo(sink: Sink) {
+    this.source().asOkioSource().buffer().readAll(sink)
 }
 
 fun Platform.resourceSink(name: String) = filesystem.sink(resourcePath.resolve(name))

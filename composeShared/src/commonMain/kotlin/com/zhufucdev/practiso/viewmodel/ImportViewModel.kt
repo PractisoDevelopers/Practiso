@@ -11,14 +11,19 @@ import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.service.ImportState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 
 class ImportViewModel(db: AppDatabase) : ViewModel() {
-    val service = ImportService(db)
+    private val service = ImportService(db)
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
     private val mutex = Mutex()
 
@@ -26,9 +31,16 @@ class ImportViewModel(db: AppDatabase) : ViewModel() {
 
     data class Events(
         val import: Channel<NamedSource> = Channel(),
+        val importComplete: SharedFlow<Unit>,
     )
 
-    val event = Events()
+    val event = Events(
+        importComplete = _state.filter { it is ImportState.Idle }.map { Unit }
+            .shareIn(
+                viewModelScope,
+                SharingStarted.Lazily
+            )
+    )
 
     init {
         viewModelScope.launch {
@@ -38,6 +50,7 @@ class ImportViewModel(db: AppDatabase) : ViewModel() {
                         mutex.lock()
                         service.import(it).collect(_state)
                         mutex.unlock()
+
                     }
                 }
             }
