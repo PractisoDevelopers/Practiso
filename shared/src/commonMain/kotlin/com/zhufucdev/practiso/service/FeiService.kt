@@ -25,6 +25,7 @@ import com.zhufucdev.practiso.platform.getPlatform
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNot
@@ -52,6 +54,7 @@ import kotlinx.coroutines.withContext
 import usearch.Index
 import usearch.IndexOptions
 import usearch.ScalarKind
+import kotlin.time.Duration.Companion.seconds
 
 class FeiService(private val db: AppDatabase = Database.app, private val parallelTasks: Int = 8) :
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
@@ -60,6 +63,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         const val EMBEDDING_TOP_KEY = "embedding_top"
         const val FEI_MODEL_KEY = "fei_model" // Frame Embedding Inference
         const val MAX_BATCH_SIZE = 128
+        val DEBOUNCE_TIMEOUT = 1.seconds
     }
 
     fun getFeiModel(): Flow<MlModel?> =
@@ -160,12 +164,14 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             }
         }
 
+    @OptIn(FlowPreview::class)
     private val upgradeStateFlow: SharedFlow<FeiDbState> = channelFlow {
         var shouldReadIndexFile = true
         val textFrameFlow =
             db.quizQueries.getAllTextFrames()
                 .asFlow()
                 .mapToList(Dispatchers.IO)
+                .debounce(DEBOUNCE_TIMEOUT)
                 .map { it.toSet() }
                 .runningFold(emptyUpdate<TextFrame>()) { last, current ->
                     val addition = current - last.complete
@@ -178,6 +184,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             db.quizQueries.getAllImageFrames()
                 .asFlow()
                 .mapToList(Dispatchers.IO)
+                .debounce(DEBOUNCE_TIMEOUT)
                 .map { it.toSet() }
                 .runningFold(emptyUpdate<ImageFrame>()) { last, current ->
                     val addition = current - last.complete
