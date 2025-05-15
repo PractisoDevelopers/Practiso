@@ -3,10 +3,12 @@ package com.zhufucdev.practiso.composition
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.StateFlow
 
@@ -42,4 +44,9 @@ sealed interface SnackbarExtension {
         SnackbarExtension
 
     data class Identifier<T>(val id: T) : SnackbarExtension
+}
+
+@Composable
+fun rememberExtensiveSnackbarState(): ExtensiveSnackbarState {
+    return remember { ExtensiveSnackbarState() }
 }

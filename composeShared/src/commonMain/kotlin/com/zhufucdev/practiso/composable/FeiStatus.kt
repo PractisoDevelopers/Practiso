@@ -30,7 +30,6 @@ import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.service.FeiDbState
 import com.zhufucdev.practiso.service.MissingModelResponse
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -72,18 +71,16 @@ fun FeiStatus(state: FeiDbState) {
                         return@LaunchedEffect
                     }
                 }
-                coroutine.launch {
-                    snackbar.showSnackbar(
-                        getPluralString(
-                            Res.plurals.inferring_n_items_para,
-                            state.total,
-                            state.total
-                        ),
-                        SnackbarExtension.Identifier(FeiStatusBarDefaultId),
-                        SnackbarExtension.ProgressBar(MutableStateFlow(state.done.toFloat() / state.total)),
-                        duration = SnackbarDuration.Indefinite
-                    )
-                }
+                snackbar.showSnackbar(
+                    getPluralString(
+                        Res.plurals.inferring_n_items_para,
+                        state.total,
+                        state.total
+                    ),
+                    SnackbarExtension.Identifier(FeiStatusBarDefaultId),
+                    SnackbarExtension.ProgressBar(MutableStateFlow(state.done.toFloat() / state.total)),
+                    duration = SnackbarDuration.Indefinite
+                )
             }
 
             is FeiDbState.MissingModel -> {

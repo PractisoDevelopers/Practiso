@@ -4,6 +4,7 @@ package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -69,10 +70,12 @@ import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
+import com.zhufucdev.practiso.composition.LocalSharedImportViewModel
 import com.zhufucdev.practiso.composition.LocalTopLevelDestination
 import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.composition.currentTopLevelDestination
+import com.zhufucdev.practiso.composition.rememberExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
@@ -101,86 +104,95 @@ fun PractisoApp(navController: NavHostController) {
         viewModel(factory = LibraryAppViewModel.Factory)
     val searchVM: SearchViewModel =
         viewModel(factory = SearchViewModel.Factory)
+    val importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
 
     BottomUpComposableScope {
-        NavHost(
-            navController = navController,
-            startDestination = TopLevelDestination.Session.route,
-            enterTransition = { fadeIn() },
-            exitTransition = { fadeOut() }
+        CompositionLocalProvider(
+            LocalSharedImportViewModel provides importViewModel
         ) {
-            composable(TopLevelDestination.Session.route) {
-                AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
-                    ScaffoldedApp(it, searchVM) {
-                        SessionApp()
-                    }
-                }
-            }
-            composable(TopLevelDestination.Library.route) {
-                LaunchedEffect(libraryVM) {
-                    libraryVM.event.removeReveal.send(Unit)
-                }
-                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                    ScaffoldedApp(it, searchVM) {
-                        LibraryApp(model = libraryVM)
-                    }
-                }
-            }
-            composable<LibraryAppViewModel.Revealable>(
-                typeMap = mapOf(
-                    typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
-                    typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
-                )
-            ) { backtrace ->
-                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                    ScaffoldedApp(it, searchVM) {
-                        LaunchedEffect(backtrace) {
-                            libraryVM.event.reveal.send(backtrace.toRoute())
+            NavHost(
+                navController = navController,
+                startDestination = TopLevelDestination.Session.route,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { fadeOut() }
+            ) {
+                composable(TopLevelDestination.Session.route) {
+                    AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            SessionApp()
                         }
-                        LibraryApp(
-                            model = libraryVM
+                    }
+                }
+                composable(TopLevelDestination.Library.route) {
+                    LaunchedEffect(libraryVM) {
+                        libraryVM.event.removeReveal.send(Unit)
+                    }
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            LibraryApp(model = libraryVM)
+                        }
+                    }
+                }
+                composable<LibraryAppViewModel.Revealable>(
+                    typeMap = mapOf(
+                        typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
+                        typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
+                    )
+                ) { backtrace ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            LaunchedEffect(backtrace) {
+                                libraryVM.event.reveal.send(backtrace.toRoute())
+                            }
+                            LibraryApp(
+                                model = libraryVM
+                            )
+                        }
+                    }
+                }
+                composable("${TopLevelDestination.Session.route}/new") {
+                    AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            SessionStarter()
+                        }
+                    }
+                }
+                composable<DimensionSectionEditVM.Startpoint>(
+                    typeMap = mapOf(
+                        typeOf<DimensionSectionEditVM.Startpoint>() to DimensionSectionEditVM.StartpointNavType
+                    )
+                ) { stackEntry ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        DimensionSectionEditApp(
+                            startpoint = stackEntry.toRoute(),
+                            libraryVm = libraryVM
+                        )
+                    }
+                }
+                composable<QuizSectionEditVM.Startpoint>(
+                    typeMap = mapOf(
+                        typeOf<QuizSectionEditVM.Startpoint>() to QuizSectionEditVM.StartpointNavType
+                    )
+                ) { stackEntry ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        QuizSectionEditApp(
+                            startpoint = stackEntry.toRoute(),
+                            libraryVM = libraryVM
                         )
                     }
                 }
             }
-            composable("${TopLevelDestination.Session.route}/new") {
-                AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
-                    ScaffoldedApp(it, searchVM) {
-                        SessionStarter()
-                    }
-                }
-            }
-            composable<DimensionSectionEditVM.Startpoint>(
-                typeMap = mapOf(
-                    typeOf<DimensionSectionEditVM.Startpoint>() to DimensionSectionEditVM.StartpointNavType
-                )
-            ) { stackEntry ->
-                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                    DimensionSectionEditApp(
-                        startpoint = stackEntry.toRoute(),
-                        libraryVm = libraryVM
-                    )
-                }
-            }
-            composable<QuizSectionEditVM.Startpoint>(
-                typeMap = mapOf(
-                    typeOf<QuizSectionEditVM.Startpoint>() to QuizSectionEditVM.StartpointNavType
-                )
-            ) { stackEntry ->
-                AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                    QuizSectionEditApp(
-                        startpoint = stackEntry.toRoute(),
-                        libraryVM = libraryVM
-                    )
-                }
+            CompositionLocalProvider(
+                LocalNavController provides navController
+            ) {
+                LocalBottomUpComposable.current!!.compose(SharedElementTransitionKey)
             }
         }
+    }
 
-        CompositionLocalProvider(
-            LocalNavController provides navController
-        ) {
-            LocalBottomUpComposable.current!!.compose(SharedElementTransitionKey)
-        }
+    val importState by importViewModel.state.collectAsState()
+    if (importState != ImportState.Idle) {
+        ImportDialog(importState)
     }
 }
 
@@ -263,82 +275,80 @@ private fun ScaffoldedApp(
     val navController = currentNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val buc = LocalBottomUpComposable.current
-    val snackbars = LocalExtensiveSnackbarState.current
+    val snackbars = rememberExtensiveSnackbarState()
 
-    Scaffold(
-        topBar = {
-            TopSearchBar(model = searchViewModel) {
-                navController.navigate(
-                    LibraryAppViewModel.Revealable(
-                        id = it.id,
-                        type =
-                            when (it) {
-                                is DimensionOption -> LibraryAppViewModel.RevealableType.Dimension
-                                is QuizOption -> LibraryAppViewModel.RevealableType.Quiz
-                                else -> error("Unsupported revealing type: ${it::class.simpleName}")
-                            }
+    CompositionLocalProvider(
+        LocalExtensiveSnackbarState provides snackbars
+    ) {
+        Scaffold(
+            topBar = {
+                TopSearchBar(model = searchViewModel) {
+                    navController.navigate(
+                        LibraryAppViewModel.Revealable(
+                            id = it.id,
+                            type =
+                                when (it) {
+                                    is DimensionOption -> LibraryAppViewModel.RevealableType.Dimension
+                                    is QuizOption -> LibraryAppViewModel.RevealableType.Quiz
+                                    else -> error("Unsupported revealing type: ${it::class.simpleName}")
+                                }
+                        )
                     )
-                )
-            }
-        },
-        bottomBar = {
-            when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
-                WindowWidthSizeClass.COMPACT -> {
-                    NavigationBar {
-                        val coroutine = rememberCoroutineScope()
-                        val destination = currentTopLevelDestination()
-                        TopLevelDestination.entries.forEach {
-                            NavigationBarItem(
-                                selected = destination == it,
-                                onClick = {
-                                    coroutine.launch {
-                                        searchViewModel.event.close.send(Unit)
-                                    }
-                                    if (navBackStackEntry?.destination?.route != it.route) {
-                                        navController.navigate(it.route) {
-                                            launchSingleTop = true
+                }
+            },
+            bottomBar = {
+                when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
+                    WindowWidthSizeClass.COMPACT -> {
+                        NavigationBar {
+                            val coroutine = rememberCoroutineScope()
+                            val destination = currentTopLevelDestination()
+                            TopLevelDestination.entries.forEach {
+                                NavigationBarItem(
+                                    selected = destination == it,
+                                    onClick = {
+                                        coroutine.launch {
+                                            searchViewModel.event.close.send(Unit)
                                         }
-                                    }
-                                },
-                                icon = it.icon,
-                                label = { Text(stringResource(it.nameRes)) },
-                            )
+                                        if (navBackStackEntry?.destination?.route != it.route) {
+                                            navController.navigate(it.route) {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    },
+                                    icon = it.icon,
+                                    label = { Text(stringResource(it.nameRes)) },
+                                )
+                            }
                         }
                     }
                 }
-            }
-        },
-        floatingActionButton = {
-            AnimatedContent(
-                buc?.get("fab"),
-                contentAlignment = Alignment.BottomEnd,
-                transitionSpec = {
-                    scaleIn().togetherWith(scaleOut())
+            },
+            floatingActionButton = {
+                AnimatedContent(
+                    buc?.get("fab"),
+                    contentAlignment = Alignment.BottomEnd,
+                    transitionSpec = {
+                        scaleIn().togetherWith(scaleOut())
+                    }
+                ) { content ->
+                    content?.invoke()
                 }
-            ) { content ->
-                content?.invoke()
+            },
+            snackbarHost = {
+                SnackbarHost(hostState = snackbars.host) {
+                    ExtensiveSnackbar(state = snackbars, data = it)
+                }
             }
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbars.host) {
-                ExtensiveSnackbar(state = snackbars, data = it)
+        ) { padding ->
+            Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+                content()
             }
+            buc?.compose(BackdropKey)
         }
-    ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            content()
-        }
-        buc?.compose(BackdropKey)
-    }
 
-    val importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
-    val importState by importViewModel.state.collectAsState()
-    if (importState != ImportState.Idle) {
-        ImportDialog(importState)
+        val feiState by Database.fei.getUpgradeState().collectAsState(null)
+        feiState?.let { FeiStatus(it) }
     }
-
-    val feiState by Database.fei.getUpgradeState().collectAsState(null)
-    feiState?.let { FeiStatus(it) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
