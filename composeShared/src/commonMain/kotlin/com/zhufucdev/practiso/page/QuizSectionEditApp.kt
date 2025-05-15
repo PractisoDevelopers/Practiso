@@ -56,7 +56,8 @@ fun QuizSectionEditApp(
                     IconButton(
                         onClick = {
                             deleteDialogShown = true
-                        }
+                        },
+                        enabled = model.selection.isNotEmpty()
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null)
                     }

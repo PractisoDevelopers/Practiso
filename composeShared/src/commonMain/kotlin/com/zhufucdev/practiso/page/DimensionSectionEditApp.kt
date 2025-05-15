@@ -89,7 +89,8 @@ fun DimensionSectionEditApp(
                                         model.events.removeKeepQuizzes.send(Unit)
                                     }
                                 }
-                            }
+                            },
+                            enabled = model.selection.isNotEmpty()
                         ) {
                             Icon(Icons.Default.Delete, contentDescription = null)
                         }
