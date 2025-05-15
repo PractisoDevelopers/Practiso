@@ -35,6 +35,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -233,6 +234,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             textFrameFlow.drop(initialDrops).addPacing()
                 .combine(imageFrameFlow.drop(initialDrops).addPacing(), ::Pair)
                 .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
+                .buffer()
                 .collect { (textFrames, imageFrames) ->
                     send(FeiDbState.Collecting)
 

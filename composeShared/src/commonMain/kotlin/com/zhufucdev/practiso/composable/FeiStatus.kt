@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
@@ -52,7 +51,6 @@ import resources.proceed_anyway_para
 fun FeiStatus(state: FeiDbState) {
     val snackbar = LocalExtensiveSnackbarState.current
     var detailsDialog by remember { mutableStateOf<MissingModelDialog>(MissingModelDialog.Hidden) }
-    val coroutine = rememberCoroutineScope()
 
     LaunchedEffect(state) {
         when (state) {
