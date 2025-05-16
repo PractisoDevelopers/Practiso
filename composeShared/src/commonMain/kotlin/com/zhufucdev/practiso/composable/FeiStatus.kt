@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
@@ -28,7 +29,9 @@ import com.zhufucdev.practiso.datamodel.ModelFeature
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.service.FeiDbState
 import com.zhufucdev.practiso.service.MissingModelResponse
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -49,10 +52,16 @@ import resources.proceed_anyway_para
 
 @Composable
 fun FeiStatus(state: FeiDbState) {
+    val coroutine = rememberCoroutineScope()
     val snackbar = LocalExtensiveSnackbarState.current
-    var detailsDialog by remember { mutableStateOf<MissingModelDialog>(MissingModelDialog.Hidden) }
+    var detailsDialog: MissingModelDialog by remember { mutableStateOf(MissingModelDialog.Hidden) }
+    var snackbarProgressJob: Job? by remember { mutableStateOf(null) }
 
     LaunchedEffect(state) {
+        if (state !is FeiDbState.InProgress) {
+            snackbarProgressJob?.cancel()
+        }
+
         when (state) {
             FeiDbState.Collecting -> snackbar.showSnackbar(
                 getString(Res.string.collecting_questions_para),
@@ -62,23 +71,27 @@ fun FeiStatus(state: FeiDbState) {
 
             is FeiDbState.InProgress -> {
                 if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id is FeiStatusBarDefaultId }) {
-                    val emitter = (snackbar.extensions.filterFirstIsInstanceOrNull<SnackbarExtension.ProgressBar>()
+                    val emitter =
+                        (snackbar.extensions.filterFirstIsInstanceOrNull<SnackbarExtension.ProgressBar>()
                             ?.progress as? MutableStateFlow<Float>)
                     if (emitter != null) {
                         emitter.emit(state.done.toFloat() / state.total)
                         return@LaunchedEffect
                     }
                 }
-                snackbar.showSnackbar(
-                    getPluralString(
-                        Res.plurals.inferring_n_items_para,
-                        state.total,
-                        state.total
-                    ),
-                    SnackbarExtension.Identifier(FeiStatusBarDefaultId),
-                    SnackbarExtension.ProgressBar(MutableStateFlow(state.done.toFloat() / state.total)),
-                    duration = SnackbarDuration.Indefinite
-                )
+                snackbarProgressJob =
+                    coroutine.launch {
+                        snackbar.showSnackbar(
+                            getPluralString(
+                                Res.plurals.inferring_n_items_para,
+                                state.total,
+                                state.total
+                            ),
+                            SnackbarExtension.Identifier(FeiStatusBarDefaultId),
+                            SnackbarExtension.ProgressBar(MutableStateFlow(state.done.toFloat() / state.total)),
+                            duration = SnackbarDuration.Indefinite
+                        )
+                    }
             }
 
             is FeiDbState.MissingModel -> {
