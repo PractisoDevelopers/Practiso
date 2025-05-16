@@ -96,6 +96,10 @@ class CoreMLInference(
             }
         }
 
+    override fun close() {
+        // noop
+    }
+
     @OptIn(ExperimentalForeignApi::class)
     class FeatureProviderAdapter(val producer: MLFeatureProviderProducer, val frames: List<Frame>) :
         NSObject(), MLBatchProviderProtocol, MLFeatureProviderProtocol {

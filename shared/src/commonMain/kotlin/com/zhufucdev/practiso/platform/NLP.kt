@@ -16,7 +16,7 @@ expect class LanguageIdentifier() {
     suspend fun getLanguage(text: String): Language
 }
 
-interface FrameEmbeddingInference {
+interface FrameEmbeddingInference : AutoCloseable {
     val model: MlModel
     suspend fun getEmbeddings(frame: Frame): FloatArray
     suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray>

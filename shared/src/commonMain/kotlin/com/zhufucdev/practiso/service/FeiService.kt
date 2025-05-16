@@ -16,6 +16,7 @@ import com.zhufucdev.practiso.datamodel.ImageInput
 import com.zhufucdev.practiso.datamodel.LanguageInput
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.datamodel.ModelFeature
+import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.helper.readFrom
 import com.zhufucdev.practiso.helper.saveTo
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
@@ -62,8 +63,10 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     companion object {
         val INDEX_PATH = getPlatform().resourcePath.resolve("search").resolve("embeddings.index")
         const val EMBEDDING_TOP_KEY = "embedding_top"
+        const val DB_FEI_VERSION_KEY = "db_fei_version"
+        const val INDEX_FEI_VERSION_KEY = "index_fei_version"
         const val FEI_MODEL_KEY = "fei_model" // Frame Embedding Inference
-        const val MAX_BATCH_SIZE = 128
+        const val MAX_BATCH_SIZE = 16
         val DEBOUNCE_TIMEOUT = 1.seconds
     }
 
@@ -99,17 +102,15 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         coroutineScope {
             val jobs = frames.chunked(batchSize)
                 .map { textFrames ->
-                    async {
-                        val frames = textFrames.map { Frame.Text(it.id, it) }
-                        fei.getEmbeddings(frames)
-                            .mapIndexed { idx, r -> textFrames[idx] to r }
-                            .also {
-                                send(InferenceState.Inferring(frames.size, total))
-                            }
-                    }
+                    val frames = textFrames.map { Frame.Text(it.id, it) }
+                    fei.getEmbeddings(frames)
+                        .mapIndexed { idx, r -> textFrames[idx] to r }
+                        .also {
+                            send(InferenceState.Inferring(frames.size, total))
+                        }
                 }
 
-            val result = jobs.awaitAll().flatten()
+            val result = jobs.flatten()
             send(InferenceState.Complete(result))
         }
     }
@@ -215,16 +216,38 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 return@collectLatest
             }
 
-            val (index, indexInvalid) = withContext(Dispatchers.IO) {
-                getSearchIndex(model.features.first { it is EmbeddingOutput } as EmbeddingOutput).let {
-                    if (shouldReadIndexFile) {
-                        shouldReadIndexFile = false
-                        it to !it.maybeLoad()
-                    } else {
-                        it to false
-                    }
+            val dbFeiVersion =
+                db.settingsQueries.getIntByKey(DB_FEI_VERSION_KEY).executeAsOneOrNull()
+            val indexFeiVersion =
+                db.settingsQueries.getIntByKey(INDEX_FEI_VERSION_KEY).executeAsOneOrNull()
+
+            db.transaction {
+                if (dbFeiVersion == null) {
+                    db.settingsQueries.setInt(DB_FEI_VERSION_KEY, 0)
+                }
+                if (indexFeiVersion == null) {
+                    db.settingsQueries.setInt(INDEX_FEI_VERSION_KEY, 0)
                 }
             }
+
+            val (index, indexInvalid) = suspend {
+                val embeddingFeature =
+                    model.features.filterFirstIsInstanceOrNull<EmbeddingOutput>()!!
+                if (dbFeiVersion != null && dbFeiVersion == indexFeiVersion) {
+                    withContext(Dispatchers.IO) {
+                        getSearchIndex(embeddingFeature).let {
+                            if (shouldReadIndexFile) {
+                                shouldReadIndexFile = false
+                                it to !it.maybeLoad()
+                            } else {
+                                it to false
+                            }
+                        }
+                    }
+                } else {
+                    getSearchIndex(embeddingFeature) to true
+                }
+            }()
 
             send(FeiDbState.Ready(index, db, model))
 
@@ -237,6 +260,12 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 .buffer()
                 .collect { (textFrames, imageFrames) ->
                     send(FeiDbState.Collecting)
+
+                    withContext(Dispatchers.IO) {
+                        db.transaction {
+                            db.settingsQueries.bumpInt(DB_FEI_VERSION_KEY)
+                        }
+                    }
 
                     val missingFeatures =
                         withContext(Dispatchers.IO) {
@@ -337,6 +366,9 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
                     withContext(Dispatchers.IO) {
                         index.saveTo(getPlatform().filesystem.sink(INDEX_PATH))
+                        db.transaction {
+                            db.settingsQueries.copyInt(DB_FEI_VERSION_KEY, INDEX_FEI_VERSION_KEY)
+                        }
                     }
                 }
         }

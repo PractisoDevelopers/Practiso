@@ -1,15 +1,22 @@
 package com.zhufucdev.practiso.platform
 
 import android.content.res.AssetFileDescriptor
+import android.util.Log
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.R
 import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
+import com.zhufucdev.practiso.service.FeiService
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -62,18 +69,15 @@ actual suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInfere
             val tokenizer =
                 SharedContext.resources.openRawResource(R.raw.jina_v2_en_small_tokenizer)
                     .use { Tokenizer.fromBytes(it.readBytes()) }
-            val interpreter =
-                Interpreter(
-                    SharedContext.resources
-                        .openRawResourceFd(R.raw.jina_v2_en_small)
-                        .toMappedByteBuffer(),
-                    options
-                )
-
+            val bf = SharedContext.resources
+                .openRawResourceFd(R.raw.jina_v2_en_small)
+                .toMappedByteBuffer()
             LiteRtInference(
                 model = model,
                 inputProducer = JinaLiteRtInputProducer(tokenizer, 512),
-                interpreter = interpreter
+                interpreterProducer = {
+                    Interpreter(bf, options)
+                }
             )
         }
 
@@ -96,47 +100,83 @@ private fun AssetFileDescriptor.toMappedByteBuffer(): MappedByteBuffer {
 
 class LiteRtInference(
     override val model: MlModel,
-    val interpreter: InterpreterApi,
+    val interpreterProducer: InterpreterProducer,
     val inputProducer: LiteRtInputProducer,
+    maxParallelInferences: Int = FeiService.MAX_BATCH_SIZE,
 ) : FrameEmbeddingInference {
+    private val primaryInterpreter = interpreterProducer()
     private val outputTensors =
-        (0 until interpreter.outputTensorCount).associateWith { interpreter.getOutputTensor(it) }
+        (0 until primaryInterpreter.outputTensorCount).associateWith {
+            primaryInterpreter.getOutputTensor(
+                it
+            )
+        }
 
-    private val inputIdsTensor = interpreter.getInputTensor(0) ?: error("No input_ids slot.")
+    private val inputIdsTensor = primaryInterpreter.getInputTensor(0) ?: error("No input_ids slot.")
     private val attentionMaskTensor =
-        interpreter.getInputTensor(1) ?: error("No attention_mask slot.")
+        primaryInterpreter.getInputTensor(1) ?: error("No attention_mask slot.")
     private val poolerOutTensor =
-        outputTensors.entries.firstOrNull { (idx, t) -> t.shape()[0] == 5 && t.shape().size == 2 }
+        outputTensors.entries.firstOrNull { (idx, t) -> t.shape()[0] == modelBatchSize && t.shape().size == 2 }
             ?: error("No output slot.")
 
-    private val mutex = Mutex()
+    private val interpreterSemaphore = Semaphore(maxParallelInferences)
 
     private val modelBatchSize get() = inputIdsTensor.shape()[0]
     private val modelSeqLen get() = inputIdsTensor.shape()[1]
     private val modelOutputLen get() = poolerOutTensor.value.shape()[1]
 
-    override suspend fun getEmbeddings(frame: Frame): FloatArray = getEmbeddings(listOf(frame)).first()
-
-    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> = mutex.withLock {
-        val zeros by lazy {
-            IntArray(modelSeqLen)
-        }
-        inputProducer.many(frames)
-            .chunked(modelBatchSize)
-            .map { chunk ->
-                val inputs = arrayOf(
-                    (chunk.map { (ids, _) -> ids } + List(modelBatchSize - chunk.size) { zeros }).toTypedArray(),
-                    (chunk.map { (_, mask) -> mask } + List(modelBatchSize - chunk.size) { zeros }).toTypedArray()
-                )
-                val outputs = buildMap {
-                    put(poolerOutTensor.key, Array(modelBatchSize) { FloatArray(modelOutputLen) })
-                }
-                interpreter.runForMultipleInputsOutputs(inputs, outputs)
-                outputs.values.first().toList().slice(0 until chunk.size)
+    private val interpreterMutex = Mutex()
+    private val freeInterpreters = mutableListOf(primaryInterpreter)
+    private suspend fun <T> withInterpreter(block: suspend (InterpreterApi) -> T): T {
+        Log.d("LiteRT", "${interpreterSemaphore.availablePermits} interpreters available")
+        return interpreterSemaphore.withPermit {
+            val interpreter = interpreterMutex.withLock { freeInterpreters.removeLastOrNull() ?: interpreterProducer() }
+            try {
+                block(interpreter)
+            } finally {
+                freeInterpreters.add(interpreter)
             }
-            .flatten()
+        }
+    }
+
+    override suspend fun getEmbeddings(frame: Frame): FloatArray =
+        getEmbeddings(listOf(frame)).first()
+
+    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> =
+        coroutineScope {
+            inputProducer.many(frames)
+                .chunked(modelBatchSize)
+                .map { chunk ->
+                    async {
+                        withInterpreter { interpreter ->
+                            val zeros by lazy {
+                                IntArray(modelSeqLen)
+                            }
+                            val inputs = arrayOf(
+                                (chunk.map { (ids, _) -> ids } + List(modelBatchSize - chunk.size) { zeros }).toTypedArray(),
+                                (chunk.map { (_, mask) -> mask } + List(modelBatchSize - chunk.size) { zeros }).toTypedArray()
+                            )
+                            val outputs = buildMap {
+                                put(
+                                    poolerOutTensor.key,
+                                    Array(modelBatchSize) { FloatArray(modelOutputLen) })
+                            }
+
+                            interpreter.runForMultipleInputsOutputs(inputs, outputs)
+                            outputs.values.first().toList().slice(0 until chunk.size)
+                        }
+                    }
+                }
+                .awaitAll()
+                .flatten()
+        }
+
+    override fun close() {
+        freeInterpreters.onEach(InterpreterApi::close)
     }
 }
+
+typealias InterpreterProducer = () -> InterpreterApi
 
 interface LiteRtInputProducer {
     fun one(frame: Frame): LiteRtInput

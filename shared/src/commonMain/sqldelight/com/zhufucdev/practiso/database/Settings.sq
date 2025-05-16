@@ -19,3 +19,9 @@ INSERT OR REPLACE INTO settingsText VALUES (?, ?);
 
 setInt:
 INSERT OR REPLACE INTO settingsInt VALUES (?, ?);
+
+bumpInt:
+UPDATE settingsInt SET value = value + 1 WHERE key = :key;
+
+copyInt:
+UPDATE settingsInt SET value = (SELECT value FROM settingsInt WHERE key = :keyCopyFrom) WHERE key = :keyCopyTo;
