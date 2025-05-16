@@ -20,9 +20,11 @@ import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.helper.readFrom
 import com.zhufucdev.practiso.helper.saveTo
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
+import com.zhufucdev.practiso.platform.InferenceState
 import com.zhufucdev.practiso.platform.Language
 import com.zhufucdev.practiso.platform.LanguageIdentifier
 import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.platform.platformGetEmbeddings
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,14 +44,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -83,36 +84,6 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             .awaitAll()
             .flatten()
             .toSet()
-    }
-
-    fun getEmbeddings(
-        frames: Set<TextFrame>,
-        model: MlModel,
-    ): Flow<InferenceState> = flow {
-        val fei = FrameEmbeddingInference(model)
-        emitAll(getEmbeddings(frames, fei))
-    }
-
-    private fun getEmbeddings(
-        frames: Set<TextFrame>,
-        fei: FrameEmbeddingInference,
-    ): Flow<InferenceState> = channelFlow {
-        val total = frames.size
-        val batchSize = minOf(frames.size / parallelTasks + 1, MAX_BATCH_SIZE)
-        coroutineScope {
-            val jobs = frames.chunked(batchSize)
-                .map { textFrames ->
-                    val frames = textFrames.map { Frame.Text(it.id, it) }
-                    fei.getEmbeddings(frames)
-                        .mapIndexed { idx, r -> textFrames[idx] to r }
-                        .also {
-                            send(InferenceState.Inferring(frames.size, total))
-                        }
-                }
-
-            val result = jobs.flatten()
-            send(InferenceState.Complete(result))
-        }
     }
 
     private fun getSearchIndex(embeddingFeature: EmbeddingOutput) =
@@ -290,68 +261,54 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                     send(FeiDbState.InProgress(totalFramesCount, completedFramesCount))
 
                     try {
-                        coroutineScope {
-                            launch(Dispatchers.Default) {
-                                if (!model.features.any { it is LanguageInput }) {
-                                    return@launch
-                                }
+                        db.transaction {
+                            db.quizQueries.removeFrameEmeddbingIndexByFrameIds(
+                                textFrameId = textFrames.removal.map(TextFrame::id),
+                                imageFrameId = imageFrames.removal.map(ImageFrame::id)
+                            )
+                        }
 
-                                textFrames.removal
-                                    .mapNotNull { frame ->
-                                        db.quizQueries.getTextFrameEmbeddingIndex(frame.id)
-                                            .executeAsOneOrNull()
-                                            ?.let {
-                                                index.remove(it.toULong())
-                                                async(Dispatchers.IO) {
-                                                    db.transaction {
-                                                        db.quizQueries.deleteFrameEmbeddingIndexByKey(
-                                                            it
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                    }
-                                    .awaitAll()
-                                getEmbeddings(textFrames.addition, fei).collect {
-                                    when (it) {
-                                        is InferenceState.Complete -> {
-                                            it.results<TextFrame>().forEach { (frame, ebd) ->
-                                                db.transaction {
-                                                    val dbKey = db.quizQueries
-                                                        .getTextFrameEmbeddingIndex(frame.id)
-                                                        .executeAsOneOrNull()
-
-                                                    val key = dbKey
-                                                        ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
-                                                    index.asF32.add(
-                                                        key.toULong(),
-                                                        ebd
-                                                    )
-                                                    if (dbKey == null) {
-                                                        db.quizQueries.insertTextFrameEmbeddingIndex(
-                                                            frame.id,
-                                                            key
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        is InferenceState.Inferring -> {
-                                            completedFramesCount += it.done
-                                            send(
-                                                FeiDbState.InProgress(
-                                                    total = totalFramesCount,
-                                                    done = completedFramesCount
+                        platformGetEmbeddings(
+                            textFrames.addition,
+                            imageFrames.addition,
+                            fei,
+                            parallelTasks
+                        ).flowOn(Dispatchers.IO).collect { state ->
+                            when (state) {
+                                is InferenceState.Complete -> {
+                                    db.transaction {
+                                        state.results.forEach { (row, ebd) ->
+                                            val dbKey = db.quizQueries
+                                                .getFrameEmbeddingIndexKey(
+                                                    row.textFrameId,
+                                                    row.imageFrameId
                                                 )
-                                            )
+                                                .executeAsOneOrNull()
+                                            val key = dbKey
+                                                ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
+
+                                            index.asF32.add(key.toULong(), ebd)
+                                            if (dbKey == null) {
+                                                db.quizQueries.insertFrameEmbeddingIndex(
+                                                    row.textFrameId,
+                                                    row.imageFrameId,
+                                                    key
+                                                )
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            launch(Dispatchers.Default) {
-                                // TODO: image inference
+
+                                is InferenceState.Inferring -> {
+                                    completedFramesCount += state.done
+                                    send(
+                                        FeiDbState.InProgress(
+                                            total = totalFramesCount,
+                                            done = completedFramesCount
+                                        )
+                                    )
+                                }
                             }
                         }
                     } finally {
@@ -418,14 +375,6 @@ private fun <T> Flow<FrameUpdate<T>>.addPacing() =
         }
     }
 
-
-sealed class InferenceState {
-    data class Complete(val results: List<Pair<Any, FloatArray>>) : InferenceState() {
-        fun <C> results() = results as List<Pair<C, FloatArray>>
-    }
-
-    data class Inferring(val done: Int, val total: Int) : InferenceState()
-}
 
 class FrameNotIndexedException(frame: Frame) :
     IllegalStateException("${frame::class.simpleName}[id=${frame.id}]")

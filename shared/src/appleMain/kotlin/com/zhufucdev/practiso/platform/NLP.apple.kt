@@ -56,7 +56,7 @@ typealias MLFeatureResultProducer = (MLFeatureProviderProtocol) -> FloatArray
 
 interface MLFeatureProviderProducer {
     fun one(frame: Frame): Map<String, MLFeatureValue>
-    fun many(frames: List<Frame>): Map<String, List<MLFeatureValue>>
+    fun <T : Frame> many(frames: List<T>): Map<String, List<MLFeatureValue>>
 }
 
 class CoreMLInference(
@@ -77,7 +77,7 @@ class CoreMLInference(
     }
 
     @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> =
+    override suspend fun <T : Frame> getEmbeddings(frames: List<T>): List<FloatArray> =
         suspendCoroutine { c ->
             memScoped {
                 val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
@@ -101,7 +101,10 @@ class CoreMLInference(
     }
 
     @OptIn(ExperimentalForeignApi::class)
-    class FeatureProviderAdapter(val producer: MLFeatureProviderProducer, val frames: List<Frame>) :
+    class FeatureProviderAdapter<T : Frame>(
+        val producer: MLFeatureProviderProducer,
+        val frames: List<T>,
+    ) :
         NSObject(), MLBatchProviderProtocol, MLFeatureProviderProtocol {
         private val features: Map<String, List<MLFeatureValue>> by lazy {
             if (frames.size == 1) {
@@ -190,16 +193,32 @@ private class JinaModelProviderProducer(
             else -> throw UnsupportedOperationException("Embedding inference on ${frame::class.simpleName} is not supported.")
         }
 
-    override fun many(frames: List<Frame>): Map<String, List<MLFeatureValue>> =
+    override fun <T : Frame> many(frames: List<T>): Map<String, List<MLFeatureValue>> =
         buildMap {
-            val textEncodings =
-                tokenizer.encode(frames.filterIsInstance<Frame.Text>().map { it.textFrame.content }, withSpecialTokens = true)
-            val ids =
-                textEncodings.map { MLFeatureValue.featureValueWithMultiArray(it.getIdMLArray()) }
-            val attentionMasks =
-                textEncodings.map { MLFeatureValue.featureValueWithMultiArray(it.getAttentionMaskMLArray()) }
-            set("input_ids", ids)
-            set("attention_mask", attentionMasks)
+            if (frames.isEmpty()) {
+                set("input_ids", emptyList())
+                set("attention_mask", emptyList())
+                return@buildMap
+            }
+            when (frames[0]) {
+                is Frame.Text -> {
+                    val textEncodings =
+                        tokenizer.encode(
+                            frames.map { (it as Frame.Text).textFrame.content },
+                            withSpecialTokens = true
+                        )
+                    val ids =
+                        textEncodings.map { MLFeatureValue.featureValueWithMultiArray(it.getIdMLArray()) }
+                    val attentionMasks =
+                        textEncodings.map { MLFeatureValue.featureValueWithMultiArray(it.getAttentionMaskMLArray()) }
+                    set("input_ids", ids)
+                    set("attention_mask", attentionMasks)
+                }
+
+                else -> {
+                    throw UnsupportedOperationException("Embedding inference on ${frames[0]::class.simpleName} is not supported.")
+                }
+            }
         }
 }
 

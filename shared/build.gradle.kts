@@ -71,6 +71,7 @@ kotlin {
             implementation(libs.litert)
             implementation(libs.litert.gpu)
             implementation(libs.litert.support)
+            implementation(libs.androidx.lifecycle.service)
         }
         androidInstrumentedTest.dependencies {
             implementation(libs.bundles.androidx.test)

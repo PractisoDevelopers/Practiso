@@ -272,6 +272,12 @@ UPDATE frameByOptionsFrame SET isKey = ? WHERE id = ?;
 getFrameEmbeddingIndexByKey:
 SELECT * FROM frameEmbeddingIndex WHERE indexKey = ?;
 
+getFrameEmbeddingIndexKey:
+SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ? AND imageFrameId = ?;
+
+insertFrameEmbeddingIndex:
+INSERT INTO frameEmbeddingIndex VALUES (?, ?, ?);
+
 getTextFrameEmbeddingIndex:
 SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ?;
 
@@ -284,5 +290,8 @@ SELECT indexKey FROM frameEmbeddingIndex WHERE imageFrameId = ?;
 insertImageFrameEmbeddingIndex:
 INSERT INTO frameEmbeddingIndex(imageFrameId, indexKey) VALUES (?, ?);
 
-deleteFrameEmbeddingIndexByKey:
+removeFrameEmbeddingIndexByKey:
 DELETE FROM frameEmbeddingIndex WHERE indexKey = ?;
+
+removeFrameEmeddbingIndexByFrameIds:
+DELETE FROM frameEmbeddingIndex WHERE textFrameId IN ? OR imageFrameId IN ?;

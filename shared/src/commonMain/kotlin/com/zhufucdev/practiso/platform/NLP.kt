@@ -19,7 +19,7 @@ expect class LanguageIdentifier() {
 interface FrameEmbeddingInference : AutoCloseable {
     val model: MlModel
     suspend fun getEmbeddings(frame: Frame): FloatArray
-    suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray>
+    suspend fun <T : Frame> getEmbeddings(frames: List<T>): List<FloatArray>
 }
 
 expect suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInference

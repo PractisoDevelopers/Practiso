@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fei_title">Frame Embedding Inference</string>
+    <string name="this_channel_contains_notifications_when_running_fei_para">This channel contains notifications when Practiso is running FEI.</string>
+    <string name="computing_meanings_para">Computing meanings…</string>
+    <plurals name="inferring_n_items">
+        <item quantity="one">Inferring the meaning of %d item…</item>
+        <item quantity="other">Inferring meanings of %d items…</item>
+    </plurals>
+</resources>

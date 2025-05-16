@@ -1,7 +1,8 @@
 [versions]
 agp = "8.10.0"
 androidx-activityCompose = "1.10.1"
-androidx-lifecycle = "2.8.4"
+compose-lifecycle = "2.8.4"
+androidx-lifecycle = "2.9.0"
 androidx-test-core = "1.6.1"
 androidx-test-runner = "1.6.2"
 compose = "1.8.0"
@@ -31,8 +32,9 @@ kmath = "0.4.2"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
-androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "compose-lifecycle" }
+androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "compose-lifecycle" }
+androidx-lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "androidx-lifecycle" }
 androidx-navigation = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "androidx-navigation" }
 androidx-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.0.1" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-ui" }

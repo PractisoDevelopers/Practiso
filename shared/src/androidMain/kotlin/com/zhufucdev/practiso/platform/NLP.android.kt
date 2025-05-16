@@ -130,7 +130,9 @@ class LiteRtInference(
     private suspend fun <T> withInterpreter(block: suspend (InterpreterApi) -> T): T {
         Log.d("LiteRT", "${interpreterSemaphore.availablePermits} interpreters available")
         return interpreterSemaphore.withPermit {
-            val interpreter = interpreterMutex.withLock { freeInterpreters.removeLastOrNull() ?: interpreterProducer() }
+            val interpreter = interpreterMutex.withLock {
+                freeInterpreters.removeLastOrNull() ?: interpreterProducer()
+            }
             try {
                 block(interpreter)
             } finally {
@@ -142,7 +144,7 @@ class LiteRtInference(
     override suspend fun getEmbeddings(frame: Frame): FloatArray =
         getEmbeddings(listOf(frame)).first()
 
-    override suspend fun getEmbeddings(frames: List<Frame>): List<FloatArray> =
+    override suspend fun <T : Frame> getEmbeddings(frames: List<T>): List<FloatArray> =
         coroutineScope {
             inputProducer.many(frames)
                 .chunked(modelBatchSize)
@@ -180,7 +182,7 @@ typealias InterpreterProducer = () -> InterpreterApi
 
 interface LiteRtInputProducer {
     fun one(frame: Frame): LiteRtInput
-    fun many(frame: List<Frame>): List<LiteRtInput>
+    fun <T : Frame> many(frame: List<T>): List<LiteRtInput>
 }
 
 data class LiteRtInput(val inputIds: IntArray, val attentionMask: IntArray) {
@@ -232,8 +234,18 @@ class JinaLiteRtInputProducer(val tokenizer: Tokenizer, val sequenceLength: Int)
             else -> throw UnsupportedOperationException("Embedding inference on ${frame::class.simpleName} is not supported.")
         }
 
-    override fun many(frame: List<Frame>): List<LiteRtInput> {
-        val text = frame.filterIsInstance<Frame.Text>().map { it.textFrame.content }
-        return tokenizer.encode(text).map { it.toLiteRtInput() }
+    override fun <T : Frame> many(frames: List<T>): List<LiteRtInput> {
+        if (frames.isEmpty()) {
+            return emptyList()
+        }
+
+        when (frames[0]) {
+            is Frame.Text -> {
+                val text = frames.map { (it as Frame.Text).textFrame.content }
+                return tokenizer.encode(text).map { it.toLiteRtInput() }
+            }
+
+            else -> throw UnsupportedOperationException("Embedding inference on ${frames[0]::class.simpleName} is not supported.")
+        }
     }
 }
