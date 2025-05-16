@@ -21,10 +21,12 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.service.LibraryService
 import com.zhufucdev.practiso.service.RemoveService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -37,14 +39,17 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
 
     val templates =
         libraryService.getTemplates()
+            .flowOn(Dispatchers.IO)
             .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
     val quiz =
         libraryService.getQuizzes()
+            .flowOn(Dispatchers.IO)
             .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
     val dimensions =
         libraryService.getDimensions()
+            .flowOn(Dispatchers.IO)
             .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
     private val removeService = RemoveService(db)
