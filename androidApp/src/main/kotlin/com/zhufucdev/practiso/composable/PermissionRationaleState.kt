@@ -12,10 +12,10 @@ import com.zhufucdev.practiso.R
 import kotlinx.coroutines.channels.SendChannel
 
 @Composable
-fun NotificationPermissionDialog(model: PermissionDialogState, onDismissRequest: () -> Unit) {
+fun NotificationRationaleDialog(model: PermissionRationaleState, onDismissRequest: () -> Unit) {
     when (model) {
-        PermissionDialogState.Hidden -> {}
-        is PermissionDialogState.Request -> {
+        PermissionRationaleState.Hidden -> {}
+        is PermissionRationaleState.Request -> {
             AlertDialog(
                 onDismissRequest = onDismissRequest,
                 confirmButton = {
@@ -51,9 +51,9 @@ fun NotificationPermissionDialog(model: PermissionDialogState, onDismissRequest:
     }
 }
 
-sealed class PermissionDialogState {
-    data object Hidden : PermissionDialogState()
-    data class Request(val action: SendChannel<PermissionAction>) : PermissionDialogState()
+sealed class PermissionRationaleState {
+    data object Hidden : PermissionRationaleState()
+    data class Request(val action: SendChannel<PermissionAction>) : PermissionRationaleState()
 }
 
 sealed class PermissionAction {

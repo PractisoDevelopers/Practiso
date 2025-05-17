@@ -13,9 +13,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.zhufucdev.practiso.composable.NotificationPermissionDialog
+import com.zhufucdev.practiso.composable.NotificationRationaleDialog
 import com.zhufucdev.practiso.composable.PermissionAction
-import com.zhufucdev.practiso.composable.PermissionDialogState
+import com.zhufucdev.practiso.composable.PermissionRationaleState
 import com.zhufucdev.practiso.style.PractisoTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : NavigatorComponentActivity() {
     private val notificationDialog =
-        MutableStateFlow<PermissionDialogState>(PermissionDialogState.Hidden)
+        MutableStateFlow<PermissionRationaleState>(PermissionRationaleState.Hidden)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,8 +34,8 @@ class MainActivity : NavigatorComponentActivity() {
                 PractisoApp(navController = rememberNavController())
 
                 val npdState by notificationDialog.collectAsState()
-                NotificationPermissionDialog(npdState, onDismissRequest = {
-                    notificationDialog.tryEmit(PermissionDialogState.Hidden)
+                NotificationRationaleDialog(npdState, onDismissRequest = {
+                    notificationDialog.tryEmit(PermissionRationaleState.Hidden)
                 })
             }
         }
@@ -61,7 +61,7 @@ class MainActivity : NavigatorComponentActivity() {
                     requireNotificationPermissionRationale()
                 }
             } else if (isGranted) {
-                notificationDialog.tryEmit(PermissionDialogState.Hidden)
+                notificationDialog.tryEmit(PermissionRationaleState.Hidden)
             }
         }
     }
@@ -74,7 +74,7 @@ class MainActivity : NavigatorComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private suspend fun requireNotificationPermissionRationale() {
         val requestChannel = Channel<PermissionAction>()
-        notificationDialog.emit(PermissionDialogState.Request(requestChannel))
+        notificationDialog.emit(PermissionRationaleState.Request(requestChannel))
 
         when (requestChannel.receive()) {
             PermissionAction.Dismiss -> {}
