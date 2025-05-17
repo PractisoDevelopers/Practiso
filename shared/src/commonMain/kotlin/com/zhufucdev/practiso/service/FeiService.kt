@@ -54,6 +54,8 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import okio.FileSystem
+import okio.use
 import usearch.Index
 import usearch.IndexOptions
 import usearch.ScalarKind
@@ -97,9 +99,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
     private fun Index.maybeLoad(): Boolean {
         val fs = getPlatform().filesystem
-        if (!fs.exists(INDEX_PATH.parent!!)) {
-            fs.createDirectories(INDEX_PATH.parent!!, true)
-        }
+        ensureSearchDirectory(fs)
         if (fs.exists(INDEX_PATH)) {
             try {
                 readFrom(fs.source(INDEX_PATH))
@@ -322,8 +322,10 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                     send(FeiDbState.Ready(index, db, model))
 
                     withContext(Dispatchers.IO) {
-                        getPlatform().filesystem.write(INDEX_PATH) {
-                            index.saveTo(this)
+                        val fs = getPlatform().filesystem
+                        ensureSearchDirectory(fs)
+                        fs.sink(INDEX_PATH).use {
+                            index.saveTo(it)
                         }
                         db.transaction {
                             db.settingsQueries.copyInt(DB_FEI_VERSION_KEY, INDEX_FEI_VERSION_KEY)
@@ -336,6 +338,12 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     )
 
     fun getUpgradeState(): Flow<FeiDbState> = upgradeStateFlow
+
+    private fun ensureSearchDirectory(fs: FileSystem = getPlatform().filesystem) {
+        val dir = INDEX_PATH.parent!!
+        if (!fs.exists(dir))
+            fs.createDirectories(dir, mustCreate = true)
+    }
 }
 
 sealed class MissingModelResponse {
