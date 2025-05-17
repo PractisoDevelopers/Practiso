@@ -60,8 +60,6 @@ class MainActivity : NavigatorComponentActivity() {
                     @SuppressLint("NewApi")
                     requireNotificationPermissionRationale()
                 }
-            } else if (isGranted) {
-                notificationDialog.tryEmit(PermissionRationaleState.Hidden)
             }
         }
     }
@@ -79,6 +77,7 @@ class MainActivity : NavigatorComponentActivity() {
         when (requestChannel.receive()) {
             PermissionAction.Dismiss -> {}
             PermissionAction.Grant -> {
+                notificationDialog.tryEmit(PermissionRationaleState.Hidden)
                 requireNotificationPermission()
             }
         }
