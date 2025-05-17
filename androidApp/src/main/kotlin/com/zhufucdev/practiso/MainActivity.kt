@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -44,28 +45,40 @@ class MainActivity : NavigatorComponentActivity() {
         ) {
             if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                 lifecycleScope.launch {
-                    val requestChannel = Channel<PermissionAction>()
-                    notificationDialog.emit(PermissionDialogState.Request(requestChannel))
-
-                    when (requestChannel.receive()) {
-                        PermissionAction.Dismiss -> {}
-                        PermissionAction.Grant -> {
-                            requireNotificationPermission()
-                        }
-                    }
+                    requireNotificationPermissionRationale()
                 }
-
             } else {
                 requireNotificationPermission()
             }
         }
     }
 
+    private val launcher by lazy {
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (!isGranted && shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                lifecycleScope.launch {
+                    @SuppressLint("NewApi")
+                    requireNotificationPermissionRationale()
+                }
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun requireNotificationPermission() {
-        val launcher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        }
-
         launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private suspend fun requireNotificationPermissionRationale() {
+        val requestChannel = Channel<PermissionAction>()
+        notificationDialog.emit(PermissionDialogState.Request(requestChannel))
+
+        when (requestChannel.receive()) {
+            PermissionAction.Dismiss -> {}
+            PermissionAction.Grant -> {
+                requireNotificationPermission()
+            }
+        }
     }
 }
