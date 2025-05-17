@@ -322,7 +322,9 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                     send(FeiDbState.Ready(index, db, model))
 
                     withContext(Dispatchers.IO) {
-                        index.saveTo(getPlatform().filesystem.sink(INDEX_PATH))
+                        getPlatform().filesystem.write(INDEX_PATH) {
+                            index.saveTo(this)
+                        }
                         db.transaction {
                             db.settingsQueries.copyInt(DB_FEI_VERSION_KEY, INDEX_FEI_VERSION_KEY)
                         }
