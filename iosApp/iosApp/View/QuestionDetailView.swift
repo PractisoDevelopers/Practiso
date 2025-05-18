@@ -94,7 +94,7 @@ struct QuestionDetailView : View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .task(id: option.id) {
-            alteredTitled = nil
+            alteredTitle = nil
             for await qf in libraryService.getQuizFrames(quizId: option.id) {
                 if let qf = qf {
                     data = .ok(qf)
@@ -123,14 +123,14 @@ struct QuestionDetailView : View {
         }
     }
     
-    @State private var alteredTitled: String?
+    @State private var alteredTitle: String?
     private var titleBinding: Binding<String> {
         Binding {
-            alteredTitled ?? option.quiz.name ?? String(localized: "New question")
+            alteredTitle ?? option.quiz.name ?? String(localized: "New question")
         } set: { newValue in
             errorHandler.catchAndShowImmediately {
                 try editService.saveModification(data: [Modification.renameQuiz(oldName: option.quiz.name, newName: newValue)], quizId: option.id)
-                alteredTitled = newValue
+                alteredTitle = newValue
             }
         }
     }
