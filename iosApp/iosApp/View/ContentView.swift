@@ -103,9 +103,6 @@ struct ContentView: View {
         NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
             LibraryView(destination: $model.destination)
                 .navigationTitle("Library")
-                .onAppear {
-                    preferredColumn = .sidebar
-                }
         } content: {
             Group {
                 switch model.destination {
@@ -124,9 +121,6 @@ struct ContentView: View {
                         .environment(\.takeStarterCache, takeStarterCache)
                 }
             }
-            .onAppear {
-                preferredColumn = .content
-            }
             .statusBar(feiState: feiState)
         } detail: {
             Group {
@@ -142,9 +136,6 @@ struct ContentView: View {
                 case .none:
                     Text("Select an Item to Show")
                 }
-            }
-            .onAppear {
-                preferredColumn = .detail
             }
         }
     }
