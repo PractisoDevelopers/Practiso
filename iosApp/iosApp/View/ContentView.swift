@@ -127,7 +127,7 @@ struct ContentView: View {
             .onAppear {
                 preferredColumn = .content
             }
-            .modifier(StatusBarModifier(feiState: feiState))
+            .statusBar(feiState: feiState)
         } detail: {
             Group {
                 switch model.detail {

@@ -70,9 +70,15 @@ extension View {
     }
 }
 
+extension View {
+    func statusBar(feiState: FeiDbState?) -> some View {
+        self.modifier(StatusBarModifier(feiState: feiState))
+    }
+}
+
 #Preview {
     NavigationStack {
         Text("Example text here")
     }
-    .modifier(StatusBarModifier(feiState: .InProgress(total: 3, done: 1)))
+    .statusBar(feiState: .InProgress(total: 3, done: 1))
 }
