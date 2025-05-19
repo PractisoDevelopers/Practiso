@@ -1,9 +1,9 @@
 import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.Frame
-import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.Language
 import com.zhufucdev.practiso.platform.LanguageIdentifier
+import com.zhufucdev.practiso.platform.createFrameEmbeddingInference
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -35,7 +35,7 @@ class NLPTest {
 
     @Test
     fun frame_embedding_inference() = runBlocking {
-        val model = FrameEmbeddingInference(JinaV2SmallEn)
+        val model = createFrameEmbeddingInference(JinaV2SmallEn)
         val emb = model.getEmbeddings(
             Frame.Text(
                 textFrame = TextFrame(

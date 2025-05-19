@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.datamodel
 
+import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.platform.Language
 import usearch.MetricKind
 import usearch.ScalarKind
@@ -16,16 +17,25 @@ data class LanguageInput(val supports: Set<Language>) : ModelFeature() {
 
 data object ImageInput : ModelFeature()
 
-data class EmbeddingOutput(val metric: MetricKind, val dimensions: ULong, val precision: ScalarKind, val normalizer: Normalizer) : ModelFeature()
+data class EmbeddingOutput(
+    val metric: MetricKind,
+    val dimensions: ULong,
+    val precision: ScalarKind,
+    val normalizer: Normalizer,
+) : ModelFeature()
+
+data class TokenInput(val sequenceLength: Int) : ModelFeature()
 
 data object AnyEmbeddingOutput : ModelFeature()
 
 open class MlModel(val hfId: String, val features: Set<ModelFeature>) {
-    val inputLanguages: Set<Language> by lazy {
-        features.filterIsInstance<LanguageInput>()
+    val inputLanguages: Set<Language>
+        get() = features.filterIsInstance<LanguageInput>()
             .fold(mutableSetOf()) { accu, curr ->
                 accu.addAll(curr.supports)
                 accu
             }
-    }
+
+    val sequenceLength: Int?
+        get() = features.filterFirstIsInstanceOrNull<TokenInput>()?.sequenceLength
 }

@@ -19,11 +19,13 @@ import com.zhufucdev.practiso.datamodel.ModelFeature
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.helper.readFrom
 import com.zhufucdev.practiso.helper.saveTo
-import com.zhufucdev.practiso.platform.FrameEmbeddingInference
+import com.zhufucdev.practiso.platform.InferenceModelState
 import com.zhufucdev.practiso.platform.InferenceState
 import com.zhufucdev.practiso.platform.Language
 import com.zhufucdev.practiso.platform.LanguageIdentifier
+import com.zhufucdev.practiso.platform.createFrameEmbeddingInference
 import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.platform.lastCompletion
 import com.zhufucdev.practiso.platform.platformGetEmbeddings
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +51,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.sync.Mutex
@@ -117,12 +120,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         imageFrames: Set<ImageFrame>,
     ): Set<ModelFeature> =
         buildSet {
-            val supportedLanguages = model?.features?.filterIsInstance<LanguageInput>()
-                ?.fold(mutableSetOf<Language>()) { acc, curr ->
-                    acc.addAll(curr.supports)
-                    acc
-                }
-                ?: emptySet()
+            val supportedLanguages = model?.inputLanguages ?: emptySet()
             val hasImageFeature = model?.features?.any { it is ImageInput } ?: false
             val hasEmbeddingOutput = model?.features?.any { it is EmbeddingOutput } ?: false
 
@@ -222,7 +220,14 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
 
             send(FeiDbState.Ready(index, db, model))
 
-            val fei = withContext(Dispatchers.Default) { FrameEmbeddingInference(model) }
+            val fei = createFrameEmbeddingInference(model)
+                .flowOn(Dispatchers.IO)
+                .onEach {
+                    if (it is InferenceModelState.Download) {
+                        send(FeiDbState.DownloadingInference(progress = it.overallProgress, model = model))
+                    }
+                }
+                .lastCompletion()
 
             val initialDrops = if (indexInvalid) 0 else 1
             textFrameFlow.drop(initialDrops).addPacing()
@@ -359,6 +364,8 @@ sealed class FeiDbState {
         val missingFeatures: Set<ModelFeature>,
         val proceed: SendChannel<MissingModelResponse>? = null,
     ) : FeiDbState()
+
+    data class DownloadingInference(val progress: Float, val model: MlModel) : FeiDbState()
 
     data class InProgress(val total: Int, val done: Int) : FeiDbState()
 }

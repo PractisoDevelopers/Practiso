@@ -59,6 +59,9 @@ kotlin {
             implementation(libs.xmlutil.serialization)
             implementation(libs.hgtk.core)
             implementation(libs.usearch.core)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.contentnegotiation)
+            implementation(libs.ktor.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -72,6 +75,7 @@ kotlin {
             implementation(libs.litert.gpu)
             implementation(libs.litert.support)
             implementation(libs.androidx.lifecycle.service)
+            implementation(libs.ktor.client.okhttp)
         }
         androidInstrumentedTest.dependencies {
             implementation(libs.bundles.androidx.test)
@@ -85,11 +89,13 @@ kotlin {
                 implementation(libs.nativeparameteraccess)
                 implementation(libs.onnx.runtime.jvm)
                 implementation(libs.lingua)
+                implementation(libs.ktor.client.okhttp)
             }
         }
 
         appleMain.dependencies {
             implementation(libs.sqldelight.native.driver)
+            implementation(libs.ktor.client.darwin)
         }
     }
 

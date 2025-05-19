@@ -12,6 +12,8 @@ import com.zhufucdev.practiso.service.FeiService
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -55,7 +57,7 @@ actual class LanguageIdentifier {
     }
 }
 
-actual suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInference {
+actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState> = flow {
     val compatibilityList = CompatibilityList()
     val options = Interpreter.Options().apply {
         if (compatibilityList.isDelegateSupportedOnThisDevice) {
@@ -64,20 +66,24 @@ actual suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInfere
             numThreads = getPlatform().logicalProcessorsCount
         }
     }
-    return when (model) {
-        is JinaV2SmallEn -> {
+    when (model) {
+        JinaV2SmallEn -> {
             val tokenizer =
                 SharedContext.resources.openRawResource(R.raw.jina_v2_en_small_tokenizer)
                     .use { Tokenizer.fromBytes(it.readBytes()) }
             val bf = SharedContext.resources
                 .openRawResourceFd(R.raw.jina_v2_en_small)
                 .toMappedByteBuffer()
-            LiteRtInference(
-                model = model,
-                inputProducer = JinaLiteRtInputProducer(tokenizer, 512),
-                interpreterProducer = {
-                    Interpreter(bf, options)
-                }
+            emit(
+                InferenceModelState.Complete(
+                    LiteRtInference(
+                        model = model,
+                        inputProducer = JinaLiteRtInputProducer(tokenizer, 512),
+                        interpreterProducer = {
+                            Interpreter(bf, options)
+                        }
+                    )
+                )
             )
         }
 

@@ -2,6 +2,8 @@ package com.zhufucdev.practiso.platform
 
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder
 import com.zhufucdev.practiso.datamodel.MlModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 typealias LinguaLang = com.github.pemistahl.lingua.api.Language
 
@@ -24,6 +26,6 @@ actual class LanguageIdentifier {
     }
 }
 
-actual suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInference {
-    TODO("Not yet implemented")
+actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState> = flow {
+    // TODO
 }
