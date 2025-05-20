@@ -118,7 +118,7 @@ private class ItemTypeSerializer : KSerializer<HfDirectoryWalker.ItemType> {
 
     override fun deserialize(decoder: Decoder): HfDirectoryWalker.ItemType =
         decoder.decodeString().takeIf { it.isNotBlank() }
-            ?.let { it[0].uppercaseChar() + it.slice(0 until it.length) }
+            ?.let { it[0].uppercaseChar() + it.slice(1 until it.length) }
             ?.let(HfDirectoryWalker.ItemType::valueOf)
             ?: error("Empty or blank value for HfDirectoryWalker.ItemType")
 }
