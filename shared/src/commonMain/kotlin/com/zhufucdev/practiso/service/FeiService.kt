@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
@@ -54,6 +55,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -80,7 +82,19 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         db.settingsQueries.getTextByKey(FEI_MODEL_KEY)
             .asFlow()
             .mapToOneOrDefault(JinaV2SmallEn.hfId, Dispatchers.IO)
+            .distinctUntilChanged()
             .map(KnownModels::get)
+
+    @Throws(CancellationException::class, IllegalArgumentException::class)
+    suspend fun setFeiModel(model: MlModel) = db.transaction {
+        db.settingsQueries.setText(
+            FEI_MODEL_KEY,
+            KnownModels[model.hfId]?.hfId ?: throw IllegalArgumentException("Unknown model: ${model.hfId}")
+        )
+    }
+
+    @Throws(CancellationException::class, IllegalArgumentException::class)
+    fun setFeiModelSync(model: MlModel) = runBlocking { setFeiModel(model) }
 
     suspend fun getLanguages(frames: Set<TextFrame>): Set<Language> = coroutineScope {
         val identifier = LanguageIdentifier()
@@ -218,16 +232,21 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                 }
             }()
 
-            send(FeiDbState.Ready(index, db, model))
-
             val fei = createFrameEmbeddingInference(model)
                 .flowOn(Dispatchers.IO)
                 .onEach {
                     if (it is InferenceModelState.Download) {
-                        send(FeiDbState.DownloadingInference(progress = it.overallProgress, model = model))
+                        send(
+                            FeiDbState.DownloadingInference(
+                                progress = it.overallProgress,
+                                model = model
+                            )
+                        )
                     }
                 }
                 .lastCompletion()
+
+            send(FeiDbState.Ready(index, db, model))
 
             val initialDrops = if (indexInvalid) 0 else 1
             textFrameFlow.drop(initialDrops).addPacing()
