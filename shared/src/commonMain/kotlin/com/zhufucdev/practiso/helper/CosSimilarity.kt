@@ -17,7 +17,6 @@ fun calculateCosSimilarity(v1: FloatArray, v2: FloatArray): Float {
             quantization = ScalarKind.F32
         )
     )
-    index.asF32.add(0u, v1)
     index.asF32.add(1u, v2)
-    return index.search(v1, 10).first { it.key.toInt() == 1 }.distance
+    return index.search(v1, 1).first { it.key.toInt() == 1 }.distance
 }
