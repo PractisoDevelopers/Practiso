@@ -133,7 +133,7 @@ class MovingDirectoryWalker(private val inner: DirectoryWalker, baseDir: String)
         get() = inner.identifier
 
     override val files: Flow<DownloadableFile> =
-        inner.files.map { f -> f.copy(name = this.baseDir) }
+        inner.files.map { f -> f.copy(name = f.name.removePrefix(this.baseDir + "/")) }
 }
 
 fun DirectoryWalker.moved(baseDir: String) = MovingDirectoryWalker(this, baseDir)

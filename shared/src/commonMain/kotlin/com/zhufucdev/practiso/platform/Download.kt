@@ -87,7 +87,7 @@ fun Flow<DownloadState>.mapToGroup(): Flow<GroupedDownloadState> = flow {
                 emit(GroupedDownloadState.Progress(trackers, completed, calculateOverallProgress()))
             }
 
-            is DownloadState.Preparing -> error("Received unexpected preparing state after state machine moved afterwards.")
+            is DownloadState.Preparing -> {}
         }
     }
 }

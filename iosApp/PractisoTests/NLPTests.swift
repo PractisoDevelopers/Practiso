@@ -41,4 +41,11 @@ struct NLPTests {
         }
         try buf.write(to: e1, atomically: true, encoding: .utf8)
     }
+    
+    @Test
+    func feiZhModel() async throws {
+        let inference = try await FrameEmbeddingInference(model: JinaV2EnZh.shared)
+        let embeddings = try await inference.getEmbeddings(frame: FrameText(id: 0, textFrame: .init(id: 0, content: "下列某段文字有问题，请问是哪一段？")))
+        #expect(embeddings.size > 0)
+    }
 }

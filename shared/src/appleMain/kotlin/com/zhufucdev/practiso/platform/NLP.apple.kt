@@ -2,7 +2,7 @@ package com.zhufucdev.practiso.platform
 
 import com.zhufucdev.practiso.HfDirectoryWalker
 import com.zhufucdev.practiso.JinaV2SmallEn
-import com.zhufucdev.practiso.bridge.toNSURL
+import com.zhufucdev.practiso.convert.toNSURL
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
@@ -280,6 +280,10 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
             val fs = platform.filesystem
             val coreMlFolder = platform.resourcePath.resolve("CoreML")
 
+            if (!fs.exists(coreMlFolder)) {
+                fs.createDirectories(coreMlFolder, mustCreate = true)
+            }
+
             val modelFileName = model.hfId.replace('/', '-')
             val localMlModelC = coreMlFolder.resolve("$modelFileName.mlmodelc")
             val localTokenizer = coreMlFolder.resolve("$modelFileName-tokenizer.json")
@@ -288,7 +292,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                 val cacheFolder = (NSSearchPathForDirectoriesInDomains(
                     NSCachesDirectory,
                     NSUserDomainMask,
-                    false
+                    true
                 ).first() as String).toPath()
                 val localMlPackage = cacheFolder.resolve("$modelFileName.mlpackage")
 
@@ -326,6 +330,8 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                         }
                     }
                 }
+
+                fs.deleteRecursively(localMlPackage)
             }
 
             if (!fs.exists(localTokenizer)) {
@@ -379,18 +385,22 @@ private suspend fun compileModel(modelPath: Path, storePath: Path): Unit = suspe
             return@compileModelAtURL
         }
 
+        val storeUrl = storePath.toNSURL()
+
         memScoped {
             val err = alloc<ObjCObjectVar<NSError?>>()
             NSFileManager.defaultManager.moveItemAtURL(
                 srcURL = modelUrl!!,
-                toURL = storePath.toNSURL(),
+                toURL = storeUrl,
                 error = err.ptr
             )
             err.value?.localizedDescription?.let { error(it) }
 
-            modelUrl.setResourceValue(false, NSURLIsExcludedFromBackupKey, err.ptr)
+            storeUrl.setResourceValue(false, NSURLIsExcludedFromBackupKey, err.ptr)
             err.value?.localizedDescription?.let { println("Error marking compiled model as excluded from backup: $it") }
         }
+
+        c.resume(Unit)
     }
 }
 

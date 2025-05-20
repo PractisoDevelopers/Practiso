@@ -1,7 +1,7 @@
 package com.zhufucdev.practiso
 
 import com.zhufucdev.practiso.bridge.Data
-import com.zhufucdev.practiso.bridge.toPath
+import com.zhufucdev.practiso.convert.toPath
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.ExportService
