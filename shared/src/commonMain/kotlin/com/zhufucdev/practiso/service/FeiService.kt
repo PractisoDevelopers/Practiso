@@ -66,7 +66,11 @@ import usearch.IndexOptions
 import usearch.ScalarKind
 import kotlin.time.Duration.Companion.seconds
 
-class FeiService(private val db: AppDatabase = Database.app, private val parallelTasks: Int = 8) :
+class FeiService(
+    private val db: AppDatabase = Database.app,
+    private val defaultModel: MlModel = JinaV2SmallEn,
+    private val parallelTasks: Int = 8,
+) :
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
     companion object {
         val INDEX_PATH = getPlatform().resourcePath.resolve("search").resolve("embeddings.index")
@@ -74,6 +78,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
         const val DB_FEI_VERSION_KEY = "db_fei_version"
         const val INDEX_FEI_VERSION_KEY = "index_fei_version"
         const val FEI_MODEL_KEY = "fei_model" // Frame Embedding Inference
+        const val DB_FEI_MODEL_KEY = "db_fei_model"
         const val MAX_BATCH_SIZE = 16
         val DEBOUNCE_TIMEOUT = 1.seconds
     }
@@ -81,7 +86,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     fun getFeiModel(): Flow<MlModel?> =
         db.settingsQueries.getTextByKey(FEI_MODEL_KEY)
             .asFlow()
-            .mapToOneOrDefault(JinaV2SmallEn.hfId, Dispatchers.IO)
+            .mapToOneOrDefault(defaultModel.hfId, Dispatchers.IO)
             .distinctUntilChanged()
             .map(KnownModels::get)
 
@@ -215,9 +220,12 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             }
 
             val (index, indexInvalid) = suspend {
+                val dbModelId = db.settingsQueries.getTextByKey(DB_FEI_MODEL_KEY).executeAsOneOrNull()
+                    ?: defaultModel.hfId
                 val embeddingFeature =
                     model.features.filterFirstIsInstanceOrNull<EmbeddingOutput>()!!
-                if (shouldReadIndexFile && dbFeiVersion != null && dbFeiVersion == indexFeiVersion) {
+
+                if (dbModelId == model.hfId && shouldReadIndexFile && dbFeiVersion != null && dbFeiVersion == indexFeiVersion) {
                     withContext(Dispatchers.IO) {
                         getSearchIndex(embeddingFeature).let {
                             shouldReadIndexFile = false
@@ -350,6 +358,7 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
                         }
                         db.transaction {
                             db.settingsQueries.copyInt(DB_FEI_VERSION_KEY, INDEX_FEI_VERSION_KEY)
+                            db.settingsQueries.setText(DB_FEI_MODEL_KEY, model.hfId)
                         }
                     }
                 }

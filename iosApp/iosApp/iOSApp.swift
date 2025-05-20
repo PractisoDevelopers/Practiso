@@ -13,6 +13,10 @@ struct iOSApp: App {
     
     @State private var url: URL? = nil
     
+    init() {
+        try? Database.shared.fei.setFeiModelSync(model: UserDefaults.standard.feiModel)
+    }
+    
     var body: some Scene {
         WindowGroup(id: "content") {
             if let openingUrl = url {
@@ -31,7 +35,7 @@ struct iOSApp: App {
                         }
                     }
                     .onChange(of: feiModelIndex) { oldValue, newValue in
-                        try! Database.shared.fei.setFeiModelSync(model: KnownModel(index: Int32(newValue)))
+                        try? Database.shared.fei.setFeiModelSync(model: KnownModel(index: Int32(newValue)))
                     }
             }
         }
