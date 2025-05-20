@@ -3,7 +3,6 @@ package com.zhufucdev.practiso.platform
 import com.zhufucdev.practiso.HfDirectoryWalker
 import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.bridge.toNSURL
-import com.zhufucdev.practiso.bridge.toPath
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
@@ -21,6 +20,7 @@ import kotlinx.cinterop.value
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.Path
+import okio.Path.Companion.toPath
 import platform.CoreML.MLBatchProviderProtocol
 import platform.CoreML.MLFeatureProviderProtocol
 import platform.CoreML.MLFeatureValue
@@ -289,7 +289,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                     NSCachesDirectory,
                     NSUserDomainMask,
                     false
-                ).first() as NSURL).toPath()
+                ).first() as String).toPath()
                 val localMlPackage = cacheFolder.resolve("$modelFileName.mlpackage")
 
                 if (fs.exists(localMlPackage)) {
