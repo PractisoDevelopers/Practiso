@@ -10,7 +10,7 @@ import usearch.MetricKind
 import usearch.ScalarKind
 
 data object JinaV2SmallEn : MlModel(
-    hfId = "jinaai/jina-embeddings-v2-small-en",
+    hfId = "zhufucdev/jina-embeddings-v2-small-en",
     features = setOf(
         TokenInput(sequenceLength = 512),
         LanguageInput.of(Language.English, Language.Default),
@@ -19,7 +19,7 @@ data object JinaV2SmallEn : MlModel(
 )
 
 data object JinaV2EnZh : MlModel(
-    hfId = "jinaai/jina-embeddings-v2-base-zh",
+    hfId = "zhufucdev/jina-embeddings-v2-base-zh",
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.Chinese, Language.Default),
