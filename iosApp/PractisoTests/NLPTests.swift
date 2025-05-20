@@ -23,7 +23,7 @@ struct NLPTests {
     
     func getDistance(frame1: Frame, frame2: Frame, inference: FrameEmbeddingInference) async throws -> Float {
         let embeddings = try await inference.getEmbeddings(frames: [frame1, frame2])
-        return calculateCosSimilarity(v1: embeddings[0], v2: embeddings[1])
+        return calculateCosDistance(v1: embeddings[0], v2: embeddings[1])
     }
     
     func similarityTest(similarPhrases: [(String, String)], dissimilarPhrases: [(String, String)], model: MlModel) async throws {

@@ -6,7 +6,7 @@ import usearch.MetricKind
 import usearch.ScalarKind
 
 
-fun calculateCosSimilarity(v1: FloatArray, v2: FloatArray): Float {
+fun calculateCosDistance(v1: FloatArray, v2: FloatArray): Float {
     if (v1.size != v2.size) {
         error("Expected v1.size (${v1.size}) == v2.size(${v2.size})")
     }

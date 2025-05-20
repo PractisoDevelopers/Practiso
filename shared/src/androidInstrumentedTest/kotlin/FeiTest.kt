@@ -4,7 +4,7 @@ import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
-import com.zhufucdev.practiso.helper.calculateCosSimilarity
+import com.zhufucdev.practiso.helper.calculateCosDistance
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.getPlatform
 import junit.framework.TestCase.assertEquals
@@ -64,7 +64,7 @@ class FeiTest {
                     newTextFrame(phrase.second)
                 )
             )
-            val sim = calculateCosSimilarity(ebd[0], ebd[1])
+            val sim = calculateCosDistance(ebd[0], ebd[1])
             Log.d(tag, sim.toString())
             assert(abs(sim) < 0.2)
         }
@@ -82,7 +82,7 @@ class FeiTest {
                     newTextFrame(phrase.second)
                 )
             )
-            val sim = calculateCosSimilarity(ebd[0], ebd[1])
+            val sim = calculateCosDistance(ebd[0], ebd[1])
             Log.d(tag, sim.toString())
             assert(abs(sim) > 0.2)
         }
