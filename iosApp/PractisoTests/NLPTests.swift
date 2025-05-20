@@ -17,31 +17,55 @@ struct NLPTests {
         #expect(lang == .english)
     }
     
-    @Test
-    func similarity() async throws {
-        let inference = try await FrameEmbeddingInference(model: JinaV2SmallEn.shared)
-        func makeTextFrame(content: String) -> FrameText {
-            FrameText(id: 0, textFrame: .init(id: 0, content: content))
-        }
-        
-        let embeddings = try await inference.getEmbeddings(frames: [
-            makeTextFrame(content: "I love cats the most."),
-            makeTextFrame(content: "Cats are my favorite")
-        ])
-        let e0 = URL.documentsDirectory.appending(component: "e0")
-        let e1 = URL.documentsDirectory.appending(component: "e1")
-        var buf = ""
-        for i in 0..<embeddings[0].size {
-            buf += "\(embeddings[0].get(index: i)) "
-        }
-        try buf.write(to: e0, atomically: true, encoding: .utf8)
-        buf = ""
-        for i in 0..<embeddings[1].size {
-            buf += "\(embeddings[1].get(index: i)) "
-        }
-        try buf.write(to: e1, atomically: true, encoding: .utf8)
+    func makeTextFrame(content: String) -> FrameText {
+        FrameText(id: 0, textFrame: .init(id: 0, content: content))
     }
     
+    func getDistance(frame1: Frame, frame2: Frame, inference: FrameEmbeddingInference) async throws -> Float {
+        let embeddings = try await inference.getEmbeddings(frames: [frame1, frame2])
+        return calculateCosSimilarity(v1: embeddings[0], v2: embeddings[1])
+    }
+    
+    func similarityTest(similarPhrases: [(String, String)], dissimilarPhrases: [(String, String)], model: MlModel) async throws {
+        let inference = try await FrameEmbeddingInference(model: model)
+        
+        for phrase in similarPhrases {
+            let dis = try await getDistance(frame1: makeTextFrame(content: phrase.0), frame2: makeTextFrame(content: phrase.1), inference: inference)
+            #expect(dis < 0.2, "similar phrase is dissimilar")
+        }
+        
+        for phrase in dissimilarPhrases {
+            let dis = try await getDistance(frame1: makeTextFrame(content: phrase.0), frame2: makeTextFrame(content: phrase.1), inference: inference)
+            #expect(dis > 0.2, "dissimilar phrase is similar")
+        }
+    }
+    
+    @Test
+    func similarityEn() async throws {
+        let similarPhrases = [
+            ("I love cats the most.", "Cats are my favorite animals"),
+            ("How's the weather currently?", "What's the current weather like?")
+        ]
+        let dissimilarPhrases = [
+            ("The stock market is crashing!", "I love Minecraft"),
+            ("Elon Musk wants to commercialize Mars", "Sony just released it's new flagship travel headphone.")
+        ]
+        try await similarityTest(similarPhrases: similarPhrases, dissimilarPhrases: dissimilarPhrases, model: JinaV2SmallEn.shared)
+    }
+    
+    @Test
+    func similarityZh() async throws {
+        let similarPhrases = [
+            ("我最喜欢猫。", "猫是我最喜欢的动物"),
+            ("现在的天气怎么样？", "当前的天气如何？")
+        ]
+        let dissimilarPhrases = [
+            ("股市正在崩盘！", "我喜欢玩《我的世界》"),
+            ("埃隆·马斯克想要商业化火星", "索尼刚发布了最新的旗舰旅行耳机。")
+        ]
+        try await similarityTest(similarPhrases: similarPhrases, dissimilarPhrases: dissimilarPhrases, model: JinaV2EnZh.shared)
+    }
+
     @Test
     func feiZhModel() async throws {
         let inference = try await FrameEmbeddingInference(model: JinaV2EnZh.shared)
