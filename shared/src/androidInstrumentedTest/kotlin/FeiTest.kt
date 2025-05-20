@@ -4,6 +4,7 @@ import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
+import com.zhufucdev.practiso.helper.calculateCosSimilarity
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.getPlatform
 import junit.framework.TestCase.assertEquals
@@ -11,13 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import space.kscience.kmath.PerformancePitfall
-import space.kscience.kmath.linear.Float64LinearSpace
-import space.kscience.kmath.linear.asMatrix
-import space.kscience.kmath.linear.transposed
-import space.kscience.kmath.nd.Floa64FieldOpsND.Companion.pow
-import space.kscience.kmath.nd.as2D
-import space.kscience.kmath.structures.Buffer
 import kotlin.math.abs
 
 class FeiTest {
@@ -70,7 +64,7 @@ class FeiTest {
                     newTextFrame(phrase.second)
                 )
             )
-            val sim = cosineSimilarity(ebd[0], ebd[1])
+            val sim = calculateCosSimilarity(ebd[0], ebd[1])
             Log.d(tag, sim.toString())
             assert(abs(sim) < 0.2)
         }
@@ -88,7 +82,7 @@ class FeiTest {
                     newTextFrame(phrase.second)
                 )
             )
-            val sim = cosineSimilarity(ebd[0], ebd[1])
+            val sim = calculateCosSimilarity(ebd[0], ebd[1])
             Log.d(tag, sim.toString())
             assert(abs(sim) > 0.2)
         }
@@ -103,26 +97,4 @@ class FeiTest {
         )
 
     private fun MlModel.embeddingsFeature() = features.firstNotNullOf { it as? EmbeddingOutput }
-
-    @OptIn(PerformancePitfall::class)
-    private fun cosineSimilarity(a: FloatArray, b: FloatArray): Double {
-        assertEquals(a.size, b.size)
-        with(Float64LinearSpace) {
-            val matrixA = buildVector(a.size) { a[it].toDouble() }.asMatrix()
-            val matrixB = buildVector(b.size) { b[it].toDouble() }.asMatrix()
-
-            return (matrixA.transposed() dot matrixB)[0, 0] /
-                        ((matrixA pow 2).as2D().columns.first()
-                            .sum()).let { kotlin.math.sqrt(it) } /
-                        ((matrixB pow 2).as2D().columns.first().sum()).let { kotlin.math.sqrt(it) }
-        }
-    }
-
-    private fun Buffer<Double>.sum(): Double {
-        var s = 0.0
-        for (i in 0 until size) {
-            s += get(i)
-        }
-        return s
-    }
 }

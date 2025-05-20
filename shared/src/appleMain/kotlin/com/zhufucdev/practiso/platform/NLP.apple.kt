@@ -68,7 +68,7 @@ actual class LanguageIdentifier {
     }
 }
 
-typealias MLFeatureResultProducer = (MLFeatureProviderProtocol) -> FloatArray
+typealias MLFeatureResultProducer = (modelOutput: MLFeatureProviderProtocol, input: MLFeatureProviderProtocol) -> FloatArray
 
 interface MLFeatureProviderProducer {
     fun one(frame: Frame): Map<String, MLFeatureValue>
@@ -83,11 +83,12 @@ class CoreMLInference(
 ) : FrameEmbeddingInference {
 
     override suspend fun getEmbeddings(frame: Frame): FloatArray = suspendCoroutine { c ->
-        ml.predictionFromFeatures(FeatureProviderAdapter(providerProducer, listOf(frame))) { p, e ->
+        val input = FeatureProviderAdapter(providerProducer, listOf(frame))
+        ml.predictionFromFeatures(input) { p, e ->
             if (e != null) {
                 c.resumeWithException(IllegalStateException(e.localizedDescription))
             } else {
-                c.resume(resultProducer(p!!))
+                c.resume(resultProducer(p!!, input))
             }
         }
     }
@@ -97,8 +98,9 @@ class CoreMLInference(
         suspendCoroutine { c ->
             memScoped {
                 val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
+                val input = FeatureProviderAdapter(providerProducer, frames)
                 val predictions = ml.predictionsFromBatch(
-                    FeatureProviderAdapter(providerProducer, frames),
+                    input,
                     errPtr.value
                 )
                 val error = errPtr.pointed?.value
@@ -106,7 +108,7 @@ class CoreMLInference(
                     c.resumeWithException(IllegalStateException(error.localizedDescription))
                 } else if (predictions != null) {
                     c.resume((0 until predictions.count).map {
-                        resultProducer(predictions.featuresAtIndex(it))
+                        resultProducer(predictions.featuresAtIndex(it), input)
                     })
                 }
             }
@@ -239,8 +241,8 @@ private class JinaModelProviderProducer(
 }
 
 @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
-private class SingleOutputResultProducer(val featureName: String) : MLFeatureResultProducer by {
-    val feature = it.featureValueForName(featureName)!!
+private class SingleOutputResultProducer(val featureName: String) : MLFeatureResultProducer by { output, _ ->
+    val feature = output.featureValueForName(featureName)!!
     val value = feature.multiArrayValue!!
     val shape = value.shape as List<NSNumber>
     assert(shape.size == 2 && (shape.first() as NSNumber).intValue == 1) { "shape error, (1, n) expected, got (${value.shape.joinToString()})" }
@@ -359,15 +361,19 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
             val tokenizer = Tokenizer(localTokenizer.toNSURL())
             val ml = CoreMLModel(localMlModelC.toNSURL())
 
-            emit(InferenceModelState.Complete(CoreMLInference(
-                model = model,
-                ml = ml,
-                providerProducer = JinaModelProviderProducer(
-                    sequenceLength = model.sequenceLength ?: 512,
-                    tokenizer = tokenizer
-                ),
-                resultProducer = SingleOutputResultProducer("pooler_output")
-            )))
+            emit(
+                InferenceModelState.Complete(
+                    CoreMLInference(
+                        model = model,
+                        ml = ml,
+                        providerProducer = JinaModelProviderProducer(
+                            sequenceLength = model.sequenceLength ?: 512,
+                            tokenizer = tokenizer
+                        ),
+                        resultProducer = SingleOutputResultProducer("pooler_output")
+                    )
+                )
+            )
         }
     }
 }

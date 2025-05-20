@@ -89,7 +89,8 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
     suspend fun setFeiModel(model: MlModel) = db.transaction {
         db.settingsQueries.setText(
             FEI_MODEL_KEY,
-            KnownModels[model.hfId]?.hfId ?: throw IllegalArgumentException("Unknown model: ${model.hfId}")
+            KnownModels[model.hfId]?.hfId
+                ?: throw IllegalArgumentException("Unknown model: ${model.hfId}")
         )
     }
 
@@ -216,15 +217,11 @@ class FeiService(private val db: AppDatabase = Database.app, private val paralle
             val (index, indexInvalid) = suspend {
                 val embeddingFeature =
                     model.features.filterFirstIsInstanceOrNull<EmbeddingOutput>()!!
-                if (dbFeiVersion != null && dbFeiVersion == indexFeiVersion) {
+                if (shouldReadIndexFile && dbFeiVersion != null && dbFeiVersion == indexFeiVersion) {
                     withContext(Dispatchers.IO) {
                         getSearchIndex(embeddingFeature).let {
-                            if (shouldReadIndexFile) {
-                                shouldReadIndexFile = false
-                                it to !it.maybeLoad()
-                            } else {
-                                it to false
-                            }
+                            shouldReadIndexFile = false
+                            it to !it.maybeLoad()
                         }
                     }
                 } else {
