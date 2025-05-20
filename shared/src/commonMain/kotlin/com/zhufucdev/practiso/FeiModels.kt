@@ -28,7 +28,7 @@ data object JinaV2EnZh : MlModel(
 )
 
 data object JinaV2EnEs : MlModel(
-    hfId = "jinaai/jina-embeddings-v2-base-es",
+    hfId = "zhufucdev/jina-embeddings-v2-base-es",
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.Spanish, Language.Default),
@@ -37,7 +37,7 @@ data object JinaV2EnEs : MlModel(
 )
 
 data object JinaV2EnDe : MlModel(
-    hfId = "jinaai/jina-embeddings-v2-base-de",
+    hfId = "zhufucdev/jina-embeddings-v2-base-de",
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.German, Language.Default),

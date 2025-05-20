@@ -8,36 +8,61 @@ struct StatusBarModifier : ViewModifier {
 
     func body(content: Content) -> some View {
         content.toolbar {
-                switch onEnum(of: feiState) {
-                case .collecting(_):
-                    ToolbarItem(placement: .status) {
-                        Text("Collecting Frames...")
-                            .font(.caption)
-                    }
-                case .inProgress(let progress):
-                    ToolbarItem(placement: .status) {
-                        Text("Inferring \(progress.total) items...")
-                            .font(.caption)
-                    }
-                    ToolbarItem(placement: .bottomBar) {
-                        CircularProgressView(value: Float(progress.done) / Float(progress.total))
-                    }
-                case .missingModel(let state):
-                    ToolbarItem(placement: .status) {
-                        Button("Missing Models") {
-                            missingModelState = state
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.red)
-                        .font(.caption)
-                    }
-                default:
-                    ToolbarItem(placement: .status) {
-                        EmptyView()
-                    }
-            }
+            toolbarContent
         }
         .missingModelAlert(stateBinding: $missingModelState)
+    }
+    
+    @ToolbarContentBuilder
+    var toolbarContent: some ToolbarContent {
+        switch onEnum(of: feiState) {
+        case .inProgress(let progress):
+            ToolbarItem(placement: .status) {
+                Text("Inferring \(progress.total) items...")
+                    .font(.caption)
+            }
+            ToolbarItem(placement: .bottomBar) {
+                CircularProgressView(value: Float(progress.done) / Float(progress.total))
+            }
+            
+        case .downloadingInference(let download):
+            ToolbarItem(placement: .status) {
+                Text("Downloading model...")
+                    .font(.caption)
+            }
+            ToolbarItem(placement: .bottomBar) {
+                CircularProgressView(value: download.progress)
+            }
+            
+        default:
+            toolbarContent_2
+        }
+    }
+    
+    @ToolbarContentBuilder
+    var toolbarContent_2: some ToolbarContent {
+        switch onEnum(of: feiState) {
+        case .missingModel(let mms):
+            ToolbarItem(placement: .status) {
+                Button("Missing Models") {
+                    missingModelState = mms
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.red)
+                .font(.caption)
+            }
+            
+        case .collecting(_):
+            ToolbarItem(placement: .status) {
+                Text("Collecting Frames...")
+                    .font(.caption)
+            }
+            
+        default:
+            ToolbarItem(placement: .status) {
+                EmptyView()
+            }
+        }
     }
 }
 
