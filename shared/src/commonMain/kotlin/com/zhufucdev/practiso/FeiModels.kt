@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso
 
-import com.zhufucdev.practiso.datamodel.CosineNormalizer
+import com.zhufucdev.practiso.datamodel.CosineDistanceNormalizer
+import com.zhufucdev.practiso.datamodel.CosinePowerNormalizer
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.LanguageInput
 import com.zhufucdev.practiso.datamodel.MlModel
@@ -14,7 +15,7 @@ data object JinaV2SmallEn : MlModel(
     features = setOf(
         TokenInput(sequenceLength = 512),
         LanguageInput.of(Language.English, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 512u, ScalarKind.F16, CosineNormalizer),
+        EmbeddingOutput(MetricKind.Cos, 512u, ScalarKind.F16, CosineDistanceNormalizer),
     )
 )
 
@@ -23,7 +24,7 @@ data object JinaV2EnZh : MlModel(
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.Chinese, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineNormalizer)
+        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosinePowerNormalizer())
     )
 )
 
@@ -32,7 +33,7 @@ data object JinaV2EnEs : MlModel(
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.Spanish, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineNormalizer)
+        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineDistanceNormalizer)
     )
 )
 
@@ -41,7 +42,7 @@ data object JinaV2EnDe : MlModel(
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.German, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineNormalizer)
+        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosineDistanceNormalizer)
     )
 )
 

@@ -56,8 +56,9 @@ struct NLPTests {
     @Test
     func similarityZh() async throws {
         let similarPhrases = [
-            ("我最喜欢猫。", "猫是我最喜欢的动物"),
-            ("现在的天气怎么样？", "当前的天气如何？")
+            ("此事在《史记》亦有记载", "此事在《史记》中亦有记载"),
+            ("我最喜欢的动物是猫。", "猫是我最喜欢的动物"),
+            ("现在的天气怎么样?", "当前的天气如何?")
         ]
         let dissimilarPhrases = [
             ("股市正在崩盘！", "我喜欢玩《我的世界》"),
