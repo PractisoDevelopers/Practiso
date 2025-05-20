@@ -139,14 +139,6 @@ class SingleFileURLSessionDownloadDelegate internal constructor(
         totalBytesWritten: int64_t,
         totalBytesExpectedToWrite: int64_t,
     ) {
-        super.URLSession(
-            session,
-            downloadTask,
-            didWriteData,
-            totalBytesWritten,
-            totalBytesExpectedToWrite
-        )
-
         updateChannel.trySend(Update.Progress(totalBytesWritten.toFloat() / totalBytesExpectedToWrite))
     }
 
