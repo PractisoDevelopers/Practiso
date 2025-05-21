@@ -19,6 +19,8 @@ import com.zhufucdev.practiso.datamodel.ModelFeature
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.helper.readFrom
 import com.zhufucdev.practiso.helper.saveTo
+import com.zhufucdev.practiso.platform.DownloadDiscretion
+import com.zhufucdev.practiso.platform.DownloadableFile
 import com.zhufucdev.practiso.platform.InferenceModelState
 import com.zhufucdev.practiso.platform.InferenceState
 import com.zhufucdev.practiso.platform.Language
@@ -220,8 +222,9 @@ class FeiService(
             }
 
             val (index, indexInvalid) = suspend {
-                val dbModelId = db.settingsQueries.getTextByKey(DB_FEI_MODEL_KEY).executeAsOneOrNull()
-                    ?: defaultModel.hfId
+                val dbModelId =
+                    db.settingsQueries.getTextByKey(DB_FEI_MODEL_KEY).executeAsOneOrNull()
+                        ?: defaultModel.hfId
                 val embeddingFeature =
                     model.features.filterFirstIsInstanceOrNull<EmbeddingOutput>()!!
 
@@ -237,19 +240,42 @@ class FeiService(
                 }
             }()
 
-            val fei = createFrameEmbeddingInference(model)
-                .flowOn(Dispatchers.IO)
-                .onEach {
-                    if (it is InferenceModelState.Download) {
-                        send(
-                            FeiDbState.DownloadingInference(
-                                progress = it.overallProgress,
-                                model = model
-                            )
-                        )
+            val fei =
+                createFrameEmbeddingInference(model)
+                    .flowOn(Dispatchers.IO)
+                    .onEach { download ->
+                        when (download) {
+                            is InferenceModelState.Download -> {
+                                send(
+                                    FeiDbState.DownloadingInference(
+                                        progress = download.overallProgress,
+                                        model = model
+                                    )
+                                )
+                                true
+                            }
+
+                            is InferenceModelState.PlanDownload -> {
+                                val responseChannel = Channel<PendingDownloadResponse>()
+                                send(FeiDbState.PendingDownload(download.files, responseChannel))
+                                when (responseChannel.receive()) {
+                                    PendingDownloadResponse.Discretion -> {
+                                        download.build {
+                                            discretion = DownloadDiscretion.Discretionary
+                                        }
+                                    }
+                                    PendingDownloadResponse.Immediate -> {
+                                        download.build {
+                                            discretion = DownloadDiscretion.Immediate
+                                        }
+                                    }
+                                }
+                            }
+
+                            else -> {}
+                        }
                     }
-                }
-                .lastCompletion()
+                    .lastCompletion()
 
             send(FeiDbState.Ready(index, db, model))
 
@@ -381,6 +407,11 @@ sealed class MissingModelResponse {
     data object Cancel : MissingModelResponse()
 }
 
+sealed class PendingDownloadResponse {
+    data object Immediate : PendingDownloadResponse()
+    data object Discretion : PendingDownloadResponse()
+}
+
 sealed class FeiDbState {
     data class Ready(val index: Index, val db: AppDatabase, val model: MlModel) : FeiDbState()
     object Collecting : FeiDbState()
@@ -388,6 +419,11 @@ sealed class FeiDbState {
         val current: MlModel?,
         val missingFeatures: Set<ModelFeature>,
         val proceed: SendChannel<MissingModelResponse>? = null,
+    ) : FeiDbState()
+
+    data class PendingDownload(
+        val files: List<DownloadableFile>,
+        val response: SendChannel<PendingDownloadResponse>,
     ) : FeiDbState()
 
     data class DownloadingInference(val progress: Float, val model: MlModel) : FeiDbState()

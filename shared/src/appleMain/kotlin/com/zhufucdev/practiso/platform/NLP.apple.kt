@@ -129,22 +129,22 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                             path = modelRoot
                         ).moved(modelRoot),
                         localMlPackage
-                    ).mapToGroup().collect {
-                        when (it) {
+                    ).mapToGroup().collect { download ->
+                        when (download) {
                             GroupedDownloadState.Completed -> {
                                 compileModel(localMlPackage, localMlModelC)
                             }
 
-                            GroupedDownloadState.Preparing -> {
-                                emit(InferenceModelState.PrepareDownload)
+                            is GroupedDownloadState.Planed -> {
+                                emit(InferenceModelState.PlanDownload(download.filesToDownload, download.configure))
                             }
 
                             is GroupedDownloadState.Progress -> {
                                 emit(
                                     InferenceModelState.Download(
-                                        it.ongoingDownloads,
-                                        it.completedFiles,
-                                        it.overallProgress
+                                        download.ongoingDownloads,
+                                        download.completedFiles,
+                                        download.overallProgress
                                     )
                                 )
                             }
@@ -158,18 +158,21 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
             if (!fs.exists(localTokenizer)) {
                 val file =
                     HfDirectoryWalker(repoId = model.hfId).getDownloadableFile("tokenizer.json")
-                emit(InferenceModelState.PrepareDownload)
 
-                downloadSingle(file, localTokenizer).collect {
+                downloadSingle(file, localTokenizer).mapToGroup().collect {
                     when (it) {
-                        is DownloadState.Downloading -> {
+                        is GroupedDownloadState.Progress -> {
                             emit(
                                 InferenceModelState.Download(
-                                    mapOf(it.file to it.progress),
-                                    emptyList(),
-                                    it.progress
+                                    it.ongoingDownloads,
+                                    it.completedFiles,
+                                    it.overallProgress
                                 )
                             )
+                        }
+
+                        is GroupedDownloadState.Planed -> {
+                            emit(InferenceModelState.PlanDownload(it.filesToDownload, it.configure))
                         }
 
                         else -> {}

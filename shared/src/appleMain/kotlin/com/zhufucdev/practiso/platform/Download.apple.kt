@@ -15,6 +15,7 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -42,8 +43,18 @@ actual fun downloadRecursively(
             acc
         }
         .lastOrNull() ?: emptyList()
+    val config = Configuration()
+    suspend {
+        val configChannel = Channel<Configuration.() -> Unit>()
+        send(DownloadState.Configure(configChannel))
+        val builder = configChannel.receive()
+        builder.invoke(config)
+    }()
+
     val urlSession = NSURLSession.sessionWithConfiguration(
-        configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
+        configuration = NSURLSessionConfiguration.defaultSessionConfiguration().apply {
+            setDiscretionary(config.discretion == DownloadDiscretion.Discretionary)
+        }
     )
     coroutineScope {
         files.map { file ->
@@ -74,18 +85,26 @@ actual fun downloadRecursively(
 actual fun downloadSingle(
     file: DownloadableFile,
     destination: Path,
-): Flow<DownloadState> {
-    val updateChannel = Channel<SingleFileURLSessionDownloadDelegate.Update>()
+): Flow<DownloadState> = flow {
+    val config = Configuration()
+    emit(DownloadState.Preparing(listOf(file)))
+    suspend {
+        val configChannel = Channel<Configuration.() -> Unit>()
+        emit(DownloadState.Configure(configChannel))
+        configChannel.receive().invoke(config)
+    }()
     val session = NSURLSession.sessionWithConfiguration(
-        configuration = NSURLSessionConfiguration.defaultSessionConfiguration,
+        configuration = NSURLSessionConfiguration.defaultSessionConfiguration().apply {
+            setDiscretionary(config.discretion == DownloadDiscretion.Discretionary)
+        },
     )
     val downloadTask = session.downloadTaskWithURL(file.url.toNSURL()!!)
+    val updateChannel = Channel<SingleFileURLSessionDownloadDelegate.Update>()
     downloadTask.setDelegate(
         SingleFileURLSessionDownloadDelegate(null, destination, updateChannel)
     )
     downloadTask.resume()
-    return updateChannel.receiveAsFlow()
-        .map { it.toDownloadState(file) }
+    updateChannel.receiveAsFlow().collect { emit(it.toDownloadState(file)) }
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
@@ -108,7 +127,8 @@ class SingleFileURLSessionDownloadDelegate internal constructor(
             }
 
             val err = alloc<ObjCObjectVar<NSError?>>()
-            val destinationContainerPath = destinationUrl.value!!.URLByDeletingLastPathComponent!!.path!!
+            val destinationContainerPath =
+                destinationUrl.value!!.URLByDeletingLastPathComponent!!.path!!
             if (!NSFileManager.defaultManager.fileExistsAtPath(destinationContainerPath)) {
                 NSFileManager.defaultManager.createDirectoryAtPath(
                     path = destinationContainerPath,

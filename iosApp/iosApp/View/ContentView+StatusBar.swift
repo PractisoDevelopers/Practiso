@@ -5,12 +5,14 @@ import ComposeApp
 struct StatusBarModifier : ViewModifier {
     let feiState: FeiDbState?
     @State private var missingModelState: FeiDbState.MissingModel? = nil
+    @State private var pendingDownloadState: FeiDbState.PendingDownload? = nil
 
     func body(content: Content) -> some View {
         content.toolbar {
             toolbarContent
         }
         .missingModelAlert(stateBinding: $missingModelState)
+        .downloadAlert(stateBinding: $pendingDownloadState)
     }
     
     @ToolbarContentBuilder
@@ -33,6 +35,16 @@ struct StatusBarModifier : ViewModifier {
             ToolbarItem(placement: .bottomBar) {
                 CircularProgressView(value: download.progress)
             }
+        
+        case .pendingDownload(let pending):
+            ToolbarItem(placement: .status) {
+                Button("Download required") {
+                    pendingDownloadState = pending
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.red)
+                .font(.caption)
+            }
             
         default:
             toolbarContent_2
@@ -44,7 +56,7 @@ struct StatusBarModifier : ViewModifier {
         switch onEnum(of: feiState) {
         case .missingModel(let mms):
             ToolbarItem(placement: .status) {
-                Button("Missing Models") {
+                Button("Missing models") {
                     missingModelState = mms
                 }
                 .buttonStyle(.plain)
@@ -54,7 +66,7 @@ struct StatusBarModifier : ViewModifier {
             
         case .collecting(_):
             ToolbarItem(placement: .status) {
-                Text("Collecting Frames...")
+                Text("Collecting frames...")
                     .font(.caption)
             }
             
@@ -93,9 +105,38 @@ extension View {
             Text(missing.wrappedValue!.descriptiveMessage)
         }
     }
-}
-
-extension View {
+    
+    fileprivate func downloadAlert(stateBinding: Binding<FeiDbState.PendingDownload?>) -> some View {
+        alert("Pending Download", isPresented: Binding(get: {
+            stateBinding.wrappedValue != nil
+        }, set: { shown in
+            if (!shown) {
+                stateBinding.wrappedValue = nil
+            }
+        })) {
+            if let response = stateBinding.wrappedValue?.response {
+                Button("Now") {
+                    response.trySend(element: PendingDownloadResponse.Immediate.shared)
+                }
+                Button("Only in WLAN") {
+                    response.trySend(element: PendingDownloadResponse.Discretion.shared)
+                }
+                Button("Cancel", role: .cancel) {
+                    stateBinding.wrappedValue = nil
+                }
+            }
+        } message: {
+            if let state = stateBinding.wrappedValue {
+                let totalBytes = state.files.reduce(Int64.zero, { partialResult, curr in
+                    partialResult + (curr.size?.int64Value ?? 1 >> 12)
+                })
+                let byteCount = Measurement(value: Double(totalBytes), unit: UnitInformationStorage.bytes)
+                
+                Text("About to download \(state.files.count) files, consuming about \(byteCount.formatted(.byteCount(style: .file))) of data. When would you like to start?")
+            }
+        }
+    }
+    
     func statusBar(feiState: FeiDbState?) -> some View {
         self.modifier(StatusBarModifier(feiState: feiState))
     }

@@ -34,7 +34,7 @@ sealed class InferenceModelState {
         val overallProgress: Float,
     ) : InferenceModelState()
 
-    data object PrepareDownload : InferenceModelState()
+    data class PlanDownload(val files: List<DownloadableFile>, val build: suspend (Configuration.() -> Unit) -> Unit) : InferenceModelState()
     data class Complete(val model: FrameEmbeddingInference) : InferenceModelState()
 }
 
