@@ -1778,22 +1778,6 @@
         }
       }
     },
-    "Only in WLAN" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Only in WLAN"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Only in WLAN"
-          }
-        }
-      }
-    },
     "Options" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2511,6 +2495,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Unsupported data type"
+          }
+        }
+      }
+    },
+    "Use WLAN Only" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use WLAN Only"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use WLAN Only"
           }
         }
       }
