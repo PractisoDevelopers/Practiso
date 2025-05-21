@@ -89,7 +89,9 @@ class HfDirectoryWalker(
     private fun getDownloadLink(path: String) =
         buildUrl {
             takeFrom(ENDPOINT_URL)
-            appendPathSegments(repoId, "resolve", revision, path)
+            appendPathSegments(repoId, "resolve", revision)
+            this@HfDirectoryWalker.path?.let { appendPathSegments(it) }
+            appendPathSegments(path)
         }
 
     @Serializable
@@ -137,3 +139,11 @@ class MovingDirectoryWalker(private val inner: DirectoryWalker, baseDir: String)
 }
 
 fun DirectoryWalker.moved(baseDir: String) = MovingDirectoryWalker(this, baseDir)
+
+class ListedDirectoryWalker(files: List<DownloadableFile>, override val identifier: String) : DirectoryWalker {
+    override val files: Flow<DownloadableFile> = flow { files.forEach { emit(it) } }
+}
+
+fun directoryWalkerOf(identifier: String, vararg files: DownloadableFile): DirectoryWalker {
+    return ListedDirectoryWalker(files.toList(), identifier)
+}

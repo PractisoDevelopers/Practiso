@@ -3,7 +3,9 @@ package com.zhufucdev.practiso.platform
 import android.content.res.AssetFileDescriptor
 import android.util.Log
 import com.google.mlkit.nl.languageid.LanguageIdentification
+import com.zhufucdev.practiso.HfDirectoryWalker
 import com.zhufucdev.practiso.JinaV2SmallEn
+import com.zhufucdev.practiso.ListedDirectoryWalker
 import com.zhufucdev.practiso.R
 import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.datamodel.Frame
@@ -14,11 +16,13 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import okio.BufferedSource
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -28,6 +32,8 @@ import tokenizers.Tokenizer
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -78,7 +84,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                 InferenceModelState.Complete(
                     LiteRtInference(
                         model = model,
-                        inputProducer = JinaLiteRtInputProducer(tokenizer, 512),
+                        inputProducer = JinaLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
                         interpreterProducer = {
                             Interpreter(bf, options)
                         }
@@ -87,7 +93,81 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
             )
         }
 
-        else -> TODO()
+        else -> {
+            val platform = getPlatform()
+            val fs = platform.filesystem
+            val modelContainer = platform.resourcePath.resolve("LiteRT")
+            if (!fs.exists(modelContainer)) {
+                fs.createDirectories(modelContainer, mustCreate = true)
+            }
+
+            val modelName = model.hfId.replace('/', '-')
+            val localTfLiteModel = modelContainer.resolve("$modelName.tflite")
+            val localTokenizer = modelContainer.resolve("$modelName-tokenizer.json")
+            if (!fs.exists(localTfLiteModel) || !fs.exists(localTokenizer)) {
+                val missingFiles = ListedDirectoryWalker(
+                    files = buildList {
+                        if (!fs.exists(localTfLiteModel)) {
+                            val hfRepo = HfDirectoryWalker(model.hfId, path = "LiteRT")
+                            val modelFile = hfRepo.files.toList()
+                            addAll(modelFile)
+                        }
+                        if (!fs.exists(localTokenizer)) {
+                            val tokenizerFile =
+                                HfDirectoryWalker(model.hfId).getDownloadableFile("tokenizer.json")
+                            add(tokenizerFile)
+                        }
+                    },
+                    identifier = model.hfId
+                )
+                downloadRecursively(missingFiles, modelContainer)
+                    .mapToGroup()
+                    .collect {
+                        when (it) {
+                            is GroupedDownloadState.Progress -> {
+                                emit(
+                                    InferenceModelState.Download(
+                                        it.ongoingDownloads,
+                                        it.completedFiles,
+                                        it.overallProgress
+                                    )
+                                )
+                            }
+
+                            is GroupedDownloadState.Planed -> {
+                                emit(
+                                    InferenceModelState.PlanDownload(
+                                        it.filesToDownload,
+                                        it.configure
+                                    )
+                                )
+                            }
+
+                            else -> {}
+                        }
+                    }
+            }
+
+            val tokenizer =
+                Tokenizer.fromBytes(fs.read(localTokenizer, BufferedSource::readByteArray))
+            val modelBuffer = (Files.newByteChannel(
+                localTfLiteModel.toNioPath(),
+                StandardOpenOption.READ
+            ) as FileChannel)
+                .let { it.map(FileChannel.MapMode.READ_ONLY, 0, it.size()) }
+
+            emit(
+                InferenceModelState.Complete(
+                    LiteRtInference(
+                        model = model,
+                        inputProducer = JinaLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
+                        interpreterProducer = {
+                            Interpreter(modelBuffer, options)
+                        }
+                    )
+                )
+            )
+        }
     }
 }
 
