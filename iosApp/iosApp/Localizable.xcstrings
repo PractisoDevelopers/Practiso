@@ -341,6 +341,28 @@
         }
       }
     },
+    "About to download %lld files, consuming about %@ of data. When would you like to start?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
+          }
+        }
+      }
+    },
     "Add" : {
       "localizations" : {
         "zh-Hans" : {
@@ -565,7 +587,40 @@
         }
       }
     },
+    "Choose Another Model" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose Another Model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose Another Model"
+          }
+        }
+      }
+    },
+    "Collecting frames..." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Collecting frames..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Collecting frames..."
+          }
+        }
+      }
+    },
     "Collecting Frames..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -975,6 +1030,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Done"
+          }
+        }
+      }
+    },
+    "Download required" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download required"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download required"
           }
         }
       }
@@ -1498,6 +1569,22 @@
         }
       }
     },
+    "Missing models" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing models"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing models"
+          }
+        }
+      }
+    },
     "Missing Models" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1659,6 +1746,22 @@
         }
       }
     },
+    "Now" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Now"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Now"
+          }
+        }
+      }
+    },
     "OK" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1675,6 +1778,22 @@
         }
       }
     },
+    "Only in WLAN" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Only in WLAN"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Only in WLAN"
+          }
+        }
+      }
+    },
     "Options" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1687,6 +1806,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Options"
+          }
+        }
+      }
+    },
+    "Pending Download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pending Download"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pending Download"
           }
         }
       }
