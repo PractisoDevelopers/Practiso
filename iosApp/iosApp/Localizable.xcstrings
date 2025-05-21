@@ -1688,9 +1688,6 @@
         }
       }
     },
-    "Only in WLAN" : {
-
-    },
     "Options" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2398,6 +2395,9 @@
           }
         }
       }
+    },
+    "Use WLAN Only" : {
+
     },
     "Will create as Take %lld" : {
       "localizations" : {
