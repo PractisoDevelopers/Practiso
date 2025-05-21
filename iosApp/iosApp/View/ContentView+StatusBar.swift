@@ -88,6 +88,13 @@ extension View {
             }
         }), presenting: stateBinding) { missing in
             if let proceed = missing.wrappedValue!.proceed {
+                Button("Choose Another Model") {
+                    Task {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            await UIApplication.shared.open(url)
+                        }
+                    }
+                }
                 Button("Proceed Anyway", role: .destructive) {
                     proceed.trySend(element: MissingModelResponse.ProceedAnyway.shared)
                     missing.wrappedValue = nil
