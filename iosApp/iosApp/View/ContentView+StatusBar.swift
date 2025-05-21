@@ -125,7 +125,7 @@ extension View {
                 Button("Now") {
                     response.trySend(element: PendingDownloadResponse.Immediate.shared)
                 }
-                Button("Only in WLAN") {
+                Button("Use WLAN Only") {
                     response.trySend(element: PendingDownloadResponse.Discretion.shared)
                 }
                 Button("Cancel", role: .cancel) {
