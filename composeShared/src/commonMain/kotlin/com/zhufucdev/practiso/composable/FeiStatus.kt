@@ -1,8 +1,13 @@
 package com.zhufucdev.practiso.composable
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.SnackbarDuration
@@ -18,48 +23,59 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.SnackbarExtension
-import com.zhufucdev.practiso.datamodel.AnyEmbeddingOutput
-import com.zhufucdev.practiso.datamodel.EmbeddingOutput
-import com.zhufucdev.practiso.datamodel.ImageInput
-import com.zhufucdev.practiso.datamodel.LanguageInput
-import com.zhufucdev.practiso.datamodel.ModelFeature
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
+import com.zhufucdev.practiso.platform.DownloadableFile
 import com.zhufucdev.practiso.service.FeiDbState
 import com.zhufucdev.practiso.service.MissingModelResponse
+import com.zhufucdev.practiso.service.PendingDownloadResponse
+import com.zhufucdev.practiso.style.PaddingBig
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import nl.jacobras.humanreadable.HumanReadable
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
+import resources.about_to_download_x_items_will_cost_y_of_data_when_to_para
+import resources.baseline_cloud_download
 import resources.baseline_cube_off
 import resources.cancel_para
 import resources.collecting_questions_para
 import resources.current_model_is_missing_following_features
 import resources.details_para
-import resources.embedding_output_span
-import resources.image_input_span
+import resources.download_required_para
+import resources.downloading_model_para
 import resources.inferring_n_items_para
-import resources.language_input_x_span
 import resources.missing_model_para
+import resources.now_para
 import resources.proceed_anyway_para
+import resources.using_wifi_only_para
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeiStatus(state: FeiDbState) {
     val coroutine = rememberCoroutineScope()
     val snackbar = LocalExtensiveSnackbarState.current
     var detailsDialog: MissingModelDialog by remember { mutableStateOf(MissingModelDialog.Hidden) }
-    var snackbarProgressJob: Job? by remember { mutableStateOf(null) }
+    var downloadDialog: PendingDownloadDialog by remember { mutableStateOf(PendingDownloadDialog.Hidden) }
+    var snackbarInferenceProgressJob: Job? by remember { mutableStateOf(null) }
+    var snackbarDownloadProgressJob: Job? by remember { mutableStateOf(null) }
 
     LaunchedEffect(state) {
         if (state !is FeiDbState.InProgress) {
-            snackbarProgressJob?.cancel()
+            snackbarInferenceProgressJob?.cancel()
+        }
+        if (state !is FeiDbState.DownloadingInference) {
+            snackbarDownloadProgressJob?.cancel()
         }
 
         when (state) {
@@ -69,8 +85,40 @@ fun FeiStatus(state: FeiDbState) {
                 duration = SnackbarDuration.Indefinite
             )
 
+            is FeiDbState.PendingDownload -> {
+                val response = snackbar.showSnackbar(
+                    getString(Res.string.download_required_para),
+                    actionLabel = getString(Res.string.details_para),
+                    duration = SnackbarDuration.Indefinite
+                )
+                if (response == SnackbarResult.ActionPerformed) {
+                    downloadDialog = PendingDownloadDialog.Proceed(state.files, state.response)
+                }
+            }
+
+            is FeiDbState.DownloadingInference -> {
+                if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id == FeiStatusBarDownloadId }) {
+                    val emitter =
+                        (snackbar.extensions.filterFirstIsInstanceOrNull<SnackbarExtension.ProgressBar>()
+                            ?.progress as? MutableStateFlow<Float>)
+                    if (emitter != null) {
+                        emitter.emit(state.progress)
+                        return@LaunchedEffect
+                    }
+                }
+                snackbarDownloadProgressJob =
+                    coroutine.launch {
+                        snackbar.showSnackbar(
+                            getString(Res.string.downloading_model_para),
+                            SnackbarExtension.ProgressBar(MutableStateFlow(0f)),
+                            SnackbarExtension.Identifier(FeiStatusBarDownloadId),
+                            duration = SnackbarDuration.Indefinite
+                        )
+                    }
+            }
+
             is FeiDbState.InProgress -> {
-                if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id is FeiStatusBarDefaultId }) {
+                if (snackbar.extensions.any { it is SnackbarExtension.Identifier<*> && it.id == FeiStatusBarInferenceId }) {
                     val emitter =
                         (snackbar.extensions.filterFirstIsInstanceOrNull<SnackbarExtension.ProgressBar>()
                             ?.progress as? MutableStateFlow<Float>)
@@ -79,7 +127,7 @@ fun FeiStatus(state: FeiDbState) {
                         return@LaunchedEffect
                     }
                 }
-                snackbarProgressJob =
+                snackbarInferenceProgressJob =
                     coroutine.launch {
                         snackbar.showSnackbar(
                             getPluralString(
@@ -87,7 +135,7 @@ fun FeiStatus(state: FeiDbState) {
                                 state.total,
                                 state.total
                             ),
-                            SnackbarExtension.Identifier(FeiStatusBarDefaultId),
+                            SnackbarExtension.Identifier(FeiStatusBarInferenceId),
                             SnackbarExtension.ProgressBar(MutableStateFlow(state.done.toFloat() / state.total)),
                             duration = SnackbarDuration.Indefinite
                         )
@@ -187,22 +235,103 @@ fun FeiStatus(state: FeiDbState) {
 
         else -> {}
     }
+
+    when (val dialog = downloadDialog) {
+        is PendingDownloadDialog.Proceed -> {
+            BasicAlertDialog(
+                onDismissRequest = {
+                    downloadDialog = PendingDownloadDialog.Hidden
+                }
+            ) {
+                Card {
+                    DialogContentSkeleton(
+                        icon = {
+                            Icon(
+                                painterResource(Res.drawable.baseline_cloud_download),
+                                contentDescription = null,
+                                modifier = Modifier.padding(top = PaddingBig)
+                            )
+                        },
+                        title = {
+                            Text(stringResource(Res.string.download_required_para))
+                        }
+                    ) {
+                        val totalDownload = remember(dialog.files) {
+                            HumanReadable.fileSize(dialog.files.sumOf {
+                                it.size ?: (1 shr 12).toLong()
+                            })
+                        }
+                        Text(
+                            pluralStringResource(
+                                Res.plurals.about_to_download_x_items_will_cost_y_of_data_when_to_para,
+                                dialog.files.size,
+                                dialog.files.size,
+                                totalDownload
+                            ),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = PaddingBig),
+                        )
+                        Column {
+                            TextButton(
+                                onClick = {
+                                    coroutine.launch {
+                                        dialog.response.send(PendingDownloadResponse.Discretion)
+                                        downloadDialog = PendingDownloadDialog.Hidden
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RectangleShape
+                            ) {
+                                Text(stringResource(Res.string.using_wifi_only_para))
+                            }
+                            HorizontalSeparator()
+                            TextButton(
+                                onClick = {
+                                    coroutine.launch {
+                                        dialog.response.send(PendingDownloadResponse.Immediate)
+                                        downloadDialog = PendingDownloadDialog.Hidden
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RectangleShape
+                            ) {
+                                Text(stringResource(Res.string.now_para))
+                            }
+                            HorizontalSeparator()
+                            TextButton(
+                                onClick = {
+                                    downloadDialog = PendingDownloadDialog.Hidden
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RectangleShape
+                            ) {
+                                Text(stringResource(Res.string.cancel_para))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        PendingDownloadDialog.Hidden -> {}
+    }
 }
 
-data object FeiStatusBarDefaultId
+sealed class FeiStatusBarId
+data object FeiStatusBarDefaultId : FeiStatusBarId()
+data object FeiStatusBarInferenceId : FeiStatusBarId()
+data object FeiStatusBarDownloadId : FeiStatusBarId()
 
 private sealed class MissingModelDialog {
     data object Hidden : MissingModelDialog()
     data class Shown(val data: FeiDbState.MissingModel) : MissingModelDialog()
 }
 
-@Composable
-fun modelFeatureString(feature: ModelFeature): String =
-    when (feature) {
-        is EmbeddingOutput, AnyEmbeddingOutput -> stringResource(Res.string.embedding_output_span)
-        ImageInput -> stringResource(Res.string.image_input_span)
-        is LanguageInput -> stringResource(
-            Res.string.language_input_x_span,
-            feature.supports.map { it.name }.sorted().joinToString()
-        )
-    }
+private sealed class PendingDownloadDialog {
+    data object Hidden : PendingDownloadDialog()
+    data class Proceed(
+        val files: List<DownloadableFile>,
+        val response: SendChannel<PendingDownloadResponse>,
+    ) : PendingDownloadDialog()
+}
+

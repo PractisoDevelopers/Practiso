@@ -194,4 +194,22 @@
         <item quantity="other">Would you like to remove %1$d items? This operation is irreversible.</item>
     </plurals>
     <string name="archive_para">Archive</string>
+    <string name="settings_para">Settings</string>
+    <string name="reveals_accuracy_gets_feedback_for_wrong_answers_para">Reveals accuracy and gets feedback for wrong answers</string>
+    <string name="download_required_para">Download required</string>
+    <plurals name="about_to_download_x_items_will_cost_y_of_data_when_to_para">
+        <item quantity="one">About to download %1$d item, which costs about %2$s of data. When to start?</item>
+        <item quantity="other">About to download %1$d items, which cost about %2$s of data. When to start?</item>
+    </plurals>
+    <string name="now_para">Now</string>
+    <string name="using_wifi_only_para">Using Wi-Fi only</string>
+    <string name="token_input_span">token input</string>
+    <string name="downloading_model_para">Downloading model…</string>
+    <string name="frame_embedding_model_para">Frame embedding model</string>
+    <string-array name="known_model_names_title">
+        <item>Jina V2 Small English</item>
+        <item>Jina V2 Base English-Chinese</item>
+        <item>Jina V2 Base English-Spanish</item>
+        <item>Jina V2 Base English-Germany</item>
+    </string-array>
 </resources>

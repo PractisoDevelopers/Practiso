@@ -69,7 +69,7 @@ class HfDirectoryWalker(
     }
 
     suspend fun getDownloadableFile(fileName: String): DownloadableFile {
-        val url = getDownloadLink("$path/$fileName")
+        val url = getDownloadLink(if (path != null) "$path/$fileName" else fileName)
         val response = httpClient.head {
             url(url)
             header("Accept-Encoding", "identity")

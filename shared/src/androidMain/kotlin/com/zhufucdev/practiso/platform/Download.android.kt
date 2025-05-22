@@ -1,8 +1,8 @@
 package com.zhufucdev.practiso.platform
 
 import android.app.DownloadManager
+import android.net.Uri
 import androidx.core.content.getSystemService
-import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.zhufucdev.practiso.SharedContext
 import kotlinx.coroutines.async
@@ -16,9 +16,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.runningFold
-import okio.FileSystem
 import okio.Path
-import okio.Path.Companion.toOkioPath
 import kotlin.time.Duration.Companion.milliseconds
 
 actual fun downloadRecursively(
@@ -42,7 +40,7 @@ actual fun downloadRecursively(
         val builderChannel = Channel<Configuration.() -> Unit>()
         send(DownloadState.Configure(builderChannel))
         builderChannel.receive()(config)
-    }
+    }()
 
     coroutineScope {
         files.map { file ->
@@ -51,7 +49,7 @@ actual fun downloadRecursively(
                 monitorDownload(downloadManager, taskId, file.size)
                     .collect { download ->
                         if (download is DMState.Completed) {
-                            download.moveTo(destination)
+                            download.moveTo(destination.resolve(file.name))
                         }
                         send(download.toDownloadState(file))
                     }
@@ -77,7 +75,7 @@ actual fun downloadSingle(
     val taskId = downloadManager.enqueue(file, config)
     monitorDownload(downloadManager, taskId, file.size).collect { download ->
         if (download is DMState.Completed) {
-            download.moveTo(destination)
+            download.moveTo(destination.resolve(file.name))
         }
         emit(download.toDownloadState(file))
     }
@@ -105,48 +103,42 @@ private fun monitorDownload(
 ): Flow<DMState> = flow {
     while (downloadManager.query(DownloadManager.Query().apply {
             setFilterById(taskId)
-        }).use {
-            if (!it.moveToFirst()) {
+        }).use { cursor ->
+            if (!cursor.moveToFirst()) {
                 return@use true
             }
 
             val status =
-                it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
             when (status) {
                 DownloadManager.STATUS_FAILED -> {
-                    val code = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                    val code =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
                     throw DownloadException("Task failed with ${code.dmErrorDescription}")
                 }
 
                 DownloadManager.STATUS_SUCCESSFUL -> {
+                    val destination =
+                        cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
+                            .toUri()
+                    emit(DMState.Completed(destination))
                     return@use false
                 }
             }
             val bytesTransferred =
-                it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
             val totalBytes =
-                it.getLong(it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
                     .takeIf { b -> b > 0 }
                     ?: fileSize
                     ?: (1 shr 12).toLong()
             emit(
-                DMState.Progress(totalBytes.toFloat() / bytesTransferred)
+                DMState.Progress(bytesTransferred.toFloat() / totalBytes)
             )
             true
         }) {
         delay(200.milliseconds)
     }
-    val destination =
-        downloadManager.query(DownloadManager.Query().apply { setFilterById(taskId) }).use {
-            if (it.moveToFirst()) {
-                error("Download query cursor turned out empty.")
-            }
-            it.getString(it.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
-                .toUri()
-                .toFile()
-                .toOkioPath()
-        }
-    emit(DMState.Completed(destination))
 }
 
 private val Int.dmErrorDescription
@@ -166,7 +158,7 @@ private val Int.dmErrorDescription
         }
 
 sealed class DMState {
-    data class Completed(val destination: Path) : DMState() {
+    data class Completed(val destination: Uri) : DMState() {
         override fun toDownloadState(file: DownloadableFile): DownloadState {
             return DownloadState.Completed(file)
         }
@@ -181,9 +173,8 @@ sealed class DMState {
     abstract fun toDownloadState(file: DownloadableFile): DownloadState
 }
 
-fun DMState.Completed.moveTo(destination: Path, fs: FileSystem = getPlatform().filesystem) {
-    if (fs.exists(this.destination)) {
-        fs.delete(this.destination, mustExist = true)
+fun DMState.Completed.moveTo(destination: Path) {
+    destination.toFile().outputStream().use {
+        SharedContext.contentResolver.openInputStream(this.destination)!!.copyTo(it)
     }
-    fs.atomicMove(this.destination, destination)
 }

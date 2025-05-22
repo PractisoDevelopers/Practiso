@@ -10,6 +10,7 @@ import com.zhufucdev.practiso.R
 import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
+import com.zhufucdev.practiso.moved
 import com.zhufucdev.practiso.service.FeiService
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -96,19 +97,19 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
         else -> {
             val platform = getPlatform()
             val fs = platform.filesystem
-            val modelContainer = platform.resourcePath.resolve("LiteRT")
+            val modelName = model.hfId.replace('/', '-')
+            val modelContainer = platform.resourcePath.resolve("LiteRT").resolve(modelName)
             if (!fs.exists(modelContainer)) {
                 fs.createDirectories(modelContainer, mustCreate = true)
             }
 
-            val modelName = model.hfId.replace('/', '-')
-            val localTfLiteModel = modelContainer.resolve("$modelName.tflite")
-            val localTokenizer = modelContainer.resolve("$modelName-tokenizer.json")
+            val localTfLiteModel = modelContainer.resolve("model.tflite")
+            val localTokenizer = modelContainer.resolve("tokenizer.json")
             if (!fs.exists(localTfLiteModel) || !fs.exists(localTokenizer)) {
                 val missingFiles = ListedDirectoryWalker(
                     files = buildList {
                         if (!fs.exists(localTfLiteModel)) {
-                            val hfRepo = HfDirectoryWalker(model.hfId, path = "LiteRT")
+                            val hfRepo = HfDirectoryWalker(model.hfId, path = "LiteRT").moved("LiteRT")
                             val modelFile = hfRepo.files.toList()
                             addAll(modelFile)
                         }
