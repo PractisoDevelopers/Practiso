@@ -69,7 +69,7 @@ class HfDirectoryWalker(
     }
 
     suspend fun getDownloadableFile(fileName: String): DownloadableFile {
-        val url = getDownloadLink(fileName)
+        val url = getDownloadLink("$path/$fileName")
         val response = httpClient.head {
             url(url)
             header("Accept-Encoding", "identity")
@@ -89,9 +89,7 @@ class HfDirectoryWalker(
     private fun getDownloadLink(path: String) =
         buildUrl {
             takeFrom(ENDPOINT_URL)
-            appendPathSegments(repoId, "resolve", revision)
-            this@HfDirectoryWalker.path?.let { appendPathSegments(it) }
-            appendPathSegments(path)
+            appendPathSegments(repoId, "resolve", revision, path)
         }
 
     @Serializable
