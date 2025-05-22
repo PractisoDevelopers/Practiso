@@ -140,8 +140,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%d questions"
+                  "state" : "translated",
+                  "value" : ""
                 }
               }
             }
