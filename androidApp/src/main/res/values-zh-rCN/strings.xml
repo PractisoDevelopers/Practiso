@@ -4,6 +4,7 @@
     <string name="title_activity_quiz_create">Quiz creator</string>
     <string name="title_activity_answer">Answer</string>
     <string name="generic_file_para">Generic file</string>
+    <string name="title_activity_preferences">Settings</string>
     <string name="grant_para">Grant</string>
     <string name="dismiss_para">Dismiss</string>
     <string name="notification_permission_denied_title">Notification Permission Denied</string>
