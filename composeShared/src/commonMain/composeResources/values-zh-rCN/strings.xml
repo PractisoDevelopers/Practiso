@@ -126,74 +126,74 @@
     <string name="spent_x_para">已花费%1$s</string>
     <string name="accuracy_slash_completeness_para">正确率 / 完成度</string>
     <plurals name="n_questions_correct_span">
-        <item quantity="other">%1$d questions correct</item>
+        <item quantity="other">%1$d 题正确</item>
     </plurals>
     <plurals name="n_questions_incorrect_span">
-        <item quantity="other">%1$d questions incorrect</item>
+        <item quantity="other">%1$d 题错误</item>
     </plurals>
-    <string name="x_and_more_span">%1$s and more</string>
-    <string name="recently_created_para">Recently created</string>
-    <string name="least_accessed_para">Least accessed</string>
-    <string name="recommended_for_you_para">Recommended for you</string>
-    <string name="new_session_para">New session</string>
-    <string name="x_and_n_more_para">%1$s and %2$d more</string>
+    <string name="x_and_more_span">%1$s 及更多</string>
+    <string name="recently_created_para">最近创建</string>
+    <string name="least_accessed_para">最少访问</string>
+    <string name="recommended_for_you_para">为您推荐</string>
+    <string name="new_session_para">新题集</string>
+    <string name="x_and_n_more_para">%1$s 及另外 %2$d 个</string>
     <plurals name="n_questions_in_dimension">
-        <item quantity="other">%1$d questions in %2$s</item>
+        <item quantity="other">%1$d 题在 %2$s</item>
     </plurals>
-    <string name="new_take_from_x_para">New take from %1$s</string>
-    <string name="generic_file_para">Generic file</string>
-    <string name="pin_para">Pin</string>
-    <string name="new_template_para">New template</string>
-    <string name="no_description_para">No description</string>
-    <string name="x_and_y_span">%1$s and %2$s</string>
+    <string name="new_take_from_x_para">从 %1$s 开始新练习</string>
+    <string name="generic_file_para">通用文件</string>
+    <string name="pin_para">置顶</string>
+    <string name="new_template_para">新建模板</string>
+    <string name="no_description_para">暂无描述</string>
+    <string name="x_and_y_span">%1$s 和 %2$s</string>
     <plurals name="n_items_span">
-        <item quantity="other">%1$d items</item>
+        <item quantity="other">%1$d 项</item>
     </plurals>
-    <string name="have_a_review_para">Have a review</string>
-    <string name="collecting_questions_para">Collecting questions…</string>
+    <string name="have_a_review_para">复习一下</string>
+    <string name="collecting_questions_para">正在加载题目…</string>
     <plurals name="inferring_n_items_para">
-        <item quantity="other">Inferring %1$d items…</item>
+        <item quantity="other">正在推理%1$d项…</item>
     </plurals>
-    <string name="missing_model_para">Missing model</string>
-    <string name="details_para">Details</string>
-    <string name="proceed_anyway_para">Proceed Anyway</string>
+    <string name="missing_model_para">模型缺失</string>
+    <string name="details_para">详情</string>
+    <string name="proceed_anyway_para">仍然继续</string>
     <plurals name="current_model_is_missing_following_features">
-        <item quantity="other">Current model is missing the following features:</item>
+        <item quantity="other">当前模型缺少以下功能：</item>
     </plurals>
-    <string name="language_input_x_span">language input (%1$s)</string>
-    <string name="image_input_span">image input</string>
-    <string name="embedding_output_span">embedding output</string>
-    <string name="rename_session_para">Rename session</string>
-    <string name="select_para">Select</string>
+    <string name="language_input_x_span">输入语言(%1$s)</string>
+    <string name="image_input_span">输入图片</string>
+    <string name="embedding_output_span">嵌入输出</string>
+    <string name="rename_session_para">重命名题集</string>
+    <string name="select_para">选择</string>
     <plurals name="n_items_selected_para">
-        <item quantity="other">%1$d items selected</item>
+        <item quantity="other">已选择%1$d项</item>
     </plurals>
-    <string name="select_all_para">Select all</string>
+    <string name="select_all_para">全选</string>
     <plurals name="removing_n_items_para">
-        <item quantity="other">Removing %1$d items</item>
+        <item quantity="other">正在删除 %1$d 项</item>
     </plurals>
     <plurals name="n_questions_within_x_what_to_do_with_them">
-        <item quantity="other">%1$d questions are within %2$s. What do you want to do with them?</item>
+        <item quantity="other">%1$d 道题在%2$s内。您想要做什么？</item>
     </plurals>
     <plurals name="would_you_like_to_remove_n_items_para">
-        <item quantity="other">Would you like to remove %1$d items? This operation is irreversible.</item>
+        <item quantity="other">您确定删除 %1$d 项吗？该操作是不可逆的。</item>
     </plurals>
-    <string name="archive_para">Archive</string>
-    <string name="settings_para">Settings</string>
-    <string name="reveals_accuracy_gets_feedback_for_wrong_answers_para">Reveals accuracy and gets feedback for wrong answers</string>
-    <string name="download_required_para">Download required</string>
+    <string name="archive_para">存档</string>
+    <string name="settings_para">设置</string>
+    <string name="reveals_accuracy_gets_feedback_for_wrong_answers_para">显示准确率并开启错误反馈</string>
+    <string name="download_required_para">下载请求</string>
     <plurals name="about_to_download_x_items_will_cost_y_of_data_when_to_para">
-        <item quantity="other">About to download %1$d items, which cost about %2$s of data. When to start?</item>
+        <item quantity="other">即将下载 %1$d 项，需要耗费 %2$s 数据。何时开始？</item>
     </plurals>
-    <string name="now_para">Now</string>
-    <string name="using_wifi_only_para">Using Wi-Fi only</string>
-    <string name="token_input_span">token input</string>
-    <string name="downloading_model_para">Downloading model…</string>
-    <string name="frame_embedding_model_para">Frame embedding model</string>
+    <string name="now_para">刚刚</string>
+    <string name="using_wifi_only_para">仅使用 Wi-Fi</string>
+    <string name="token_input_span">输入令牌</string>
+    <string name="downloading_model_para">正在下载模型…</string>
+    <string name="frame_embedding_model_para">框嵌入模型</string>
     <string-array name="known_model_names_title">
-        <item>Jina V2 Small English</item>
-        <item>Jina V2 Base English-Chinese</item>
-        <item>Jina V2 Base English-Spanish</item>
-        <item>Jina V2 Base English-Germany</item>
+        <item>Jina V2 Small（英语）</item>
+        <item>Jina V2 Base（英语-中文）</item>
+        <item>Jina V2 Base（英语-西班牙语）</item>
+        <item>Jina V2 Base（英语-德语）</item>
     </string-array>
 </resources>
