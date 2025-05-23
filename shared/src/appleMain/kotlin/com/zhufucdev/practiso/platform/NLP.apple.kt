@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.platform
 
 import com.zhufucdev.practiso.HfDirectoryWalker
 import com.zhufucdev.practiso.JinaV2SmallEn
+import com.zhufucdev.practiso.ListedDirectoryWalker
 import com.zhufucdev.practiso.convert.toNSURL
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
@@ -19,6 +20,8 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import okio.Path
 import okio.Path.Companion.toPath
 import platform.CoreML.MLBatchProviderProtocol
@@ -69,7 +72,7 @@ actual class LanguageIdentifier {
 }
 
 actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState> = flow {
-    val resultProducer = MeanPoolingResultProducer(hiddenStateFeature = "last_hidden_state", attentionMaskFeature = "attention_mask") // SingleOutputResultProducer(featureName = "pooler_output")
+    val resultProducer = SingleOutputResultProducer(featureName = "pooler_output")
     when (model) {
         JinaV2SmallEn -> {
             val modelUrl = NSBundle.mainBundle.URLForResource("CoreML/JinaV2EnSmall", "mlmodelc")!!
@@ -86,7 +89,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                     CoreMLInference(
                         model = model,
                         ml = ml,
-                        providerProducer = JinaModelProviderProducer(
+                        providerProducer = BertModelProviderProducer(
                             sequenceLength = model.sequenceLength ?: 512,
                             tokenizer = tokenizer
                         ),
@@ -109,7 +112,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
             val localMlModelC = coreMlFolder.resolve("$modelFileName.mlmodelc")
             val localTokenizer = coreMlFolder.resolve("$modelFileName-tokenizer.json")
 
-            if (!fs.exists(localMlModelC)) {
+            if (!fs.exists(localMlModelC) || !fs.exists(localTokenizer)) {
                 val cacheFolder = (NSSearchPathForDirectoriesInDomains(
                     NSCachesDirectory,
                     NSUserDomainMask,
@@ -117,26 +120,53 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                 ).first() as String).toPath()
                 val localMlPackage = cacheFolder.resolve("$modelFileName.mlpackage")
 
-                if (fs.exists(localMlPackage)) {
+                val filesToDownload = buildList {
+                    if (!fs.exists(localMlModelC) && !fs.exists(localMlPackage)) {
+                        val modelRoot = "CoreML/model.mlpackage"
+                        addAll(
+                            HfDirectoryWalker(
+                                model.hfId,
+                                path = modelRoot
+                            ).moved(modelRoot)
+                                .files
+                                .map { it.copy(name = localMlPackage.name + "/" + it.name) }
+                                .toList()
+                        )
+                    }
+                    if (!fs.exists(localTokenizer)) {
+                        val file =
+                            HfDirectoryWalker(repoId = model.hfId).getDownloadableFile("tokenizer.json")
+                        add(file.copy(name = localTokenizer.name))
+                    }
+                }
+
+                if (!fs.exists(localMlModelC) && fs.exists(localMlPackage)) {
                     // assume the file's integrity
                     compileModel(localMlPackage, localMlModelC)
-                } else {
+                    fs.deleteRecursively(localMlPackage)
+                }
+
+                if (filesToDownload.isNotEmpty()) {
                     // download from hugging face
-                    val modelRoot = "CoreML/model.mlpackage"
                     downloadRecursively(
-                        HfDirectoryWalker(
-                            model.hfId,
-                            path = modelRoot
-                        ).moved(modelRoot),
-                        localMlPackage
+                        ListedDirectoryWalker(filesToDownload, model.hfId),
+                        coreMlFolder
                     ).mapToGroup().collect { download ->
                         when (download) {
                             GroupedDownloadState.Completed -> {
-                                compileModel(localMlPackage, localMlModelC)
+                                if (fs.exists(localMlPackage)) {
+                                    compileModel(localMlPackage, localMlModelC)
+                                    fs.deleteRecursively(localMlPackage)
+                                }
                             }
 
                             is GroupedDownloadState.Planed -> {
-                                emit(InferenceModelState.PlanDownload(download.filesToDownload, download.configure))
+                                emit(
+                                    InferenceModelState.PlanDownload(
+                                        download.filesToDownload,
+                                        download.configure
+                                    )
+                                )
                             }
 
                             is GroupedDownloadState.Progress -> {
@@ -151,33 +181,6 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                         }
                     }
                 }
-
-                fs.deleteRecursively(localMlPackage)
-            }
-
-            if (!fs.exists(localTokenizer)) {
-                val file =
-                    HfDirectoryWalker(repoId = model.hfId).getDownloadableFile("tokenizer.json")
-
-                downloadSingle(file, localTokenizer).mapToGroup().collect {
-                    when (it) {
-                        is GroupedDownloadState.Progress -> {
-                            emit(
-                                InferenceModelState.Download(
-                                    it.ongoingDownloads,
-                                    it.completedFiles,
-                                    it.overallProgress
-                                )
-                            )
-                        }
-
-                        is GroupedDownloadState.Planed -> {
-                            emit(InferenceModelState.PlanDownload(it.filesToDownload, it.configure))
-                        }
-
-                        else -> {}
-                    }
-                }
             }
 
             val tokenizer = Tokenizer(localTokenizer.toNSURL())
@@ -188,7 +191,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                     CoreMLInference(
                         model = model,
                         ml = ml,
-                        providerProducer = JinaModelProviderProducer(
+                        providerProducer = BertModelProviderProducer(
                             sequenceLength = model.sequenceLength ?: 512,
                             tokenizer = tokenizer
                         ),
@@ -289,7 +292,7 @@ class CoreMLInference(
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private class JinaModelProviderProducer(
+private class BertModelProviderProducer(
     val sequenceLength: Int = 128,
     val tokenizer: Tokenizer,
 ) : MLFeatureProviderProducer {
@@ -410,7 +413,8 @@ private class MeanPoolingResultProducer(
     var result = FloatArray(seqLen)
     for (seqIdx in 0 until seqLen) {
         for (tokenIdx in attentionMask.indices) {
-            val v = hiddenState.objectAtIndexedSubscript(tokenIdx * seqLen.toLong() + seqIdx).floatValue
+            val v =
+                hiddenState.objectAtIndexedSubscript(tokenIdx * seqLen.toLong() + seqIdx).floatValue
             result[seqIdx] += v * attentionMask[tokenIdx]
         }
         result[seqIdx] /= attentionCount
