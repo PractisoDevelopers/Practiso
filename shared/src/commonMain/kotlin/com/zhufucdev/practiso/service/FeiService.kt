@@ -21,6 +21,7 @@ import com.zhufucdev.practiso.helper.readFrom
 import com.zhufucdev.practiso.helper.saveTo
 import com.zhufucdev.practiso.platform.DownloadDiscretion
 import com.zhufucdev.practiso.platform.DownloadableFile
+import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.InferenceModelState
 import com.zhufucdev.practiso.platform.InferenceState
 import com.zhufucdev.practiso.platform.Language
@@ -190,7 +191,7 @@ class FeiService(
         var nextEmbeddingKey =
             db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
 
-        getFeiModel().collectLatest { model ->
+        getFeiModel().combine(getPlatform().getInferenceSession(), ::Pair).collectLatest { (model, session) ->
             if (model == null) {
                 send(
                     FeiDbState.MissingModel(
@@ -240,42 +241,60 @@ class FeiService(
                 }
             }()
 
-            val fei =
-                createFrameEmbeddingInference(model)
-                    .flowOn(Dispatchers.IO)
-                    .onEach { download ->
-                        when (download) {
-                            is InferenceModelState.Download -> {
-                                send(
-                                    FeiDbState.DownloadingInference(
-                                        progress = download.overallProgress,
-                                        model = model
-                                    )
+            val feiStateFlow = createFrameEmbeddingInference(model, session)
+                .flowOn(Dispatchers.IO)
+                .onEach { download ->
+                    when (download) {
+                        is InferenceModelState.Download -> {
+                            send(
+                                FeiDbState.DownloadingInference(
+                                    progress = download.overallProgress,
+                                    model = model
                                 )
-                                true
-                            }
+                            )
+                            true
+                        }
 
-                            is InferenceModelState.PlanDownload -> {
-                                val responseChannel = Channel<PendingDownloadResponse>()
-                                send(FeiDbState.PendingDownload(download.files, responseChannel))
-                                when (responseChannel.receive()) {
-                                    PendingDownloadResponse.Discretion -> {
-                                        download.build {
-                                            discretion = DownloadDiscretion.Discretionary
-                                        }
+                        is InferenceModelState.PlanDownload -> {
+                            val responseChannel = Channel<PendingDownloadResponse>()
+                            send(
+                                FeiDbState.PendingDownload(
+                                    download.files,
+                                    responseChannel
+                                )
+                            )
+                            when (responseChannel.receive()) {
+                                PendingDownloadResponse.Discretion -> {
+                                    download.build {
+                                        discretion = DownloadDiscretion.Discretionary
                                     }
-                                    PendingDownloadResponse.Immediate -> {
-                                        download.build {
-                                            discretion = DownloadDiscretion.Immediate
-                                        }
+                                }
+
+                                PendingDownloadResponse.Immediate -> {
+                                    download.build {
+                                        discretion = DownloadDiscretion.Immediate
                                     }
                                 }
                             }
-
-                            else -> {}
                         }
+
+                        else -> {}
                     }
-                    .lastCompletion()
+                }
+
+            var fei: FrameEmbeddingInference
+            while (true) {
+                try {
+                    fei = feiStateFlow.lastCompletion()
+                    break
+                } catch (e: FeiInitializationException) {
+                    val responseChannel = Channel<InitializationErrorResponse>()
+                    send(FeiDbState.InitializationError(e, responseChannel))
+                    when (responseChannel.receive()) {
+                        InitializationErrorResponse.Retry -> continue
+                    }
+                }
+            }
 
             try {
                 send(FeiDbState.Ready(index, db, model))
@@ -419,6 +438,10 @@ sealed class PendingDownloadResponse {
     data object Discretion : PendingDownloadResponse()
 }
 
+sealed class InitializationErrorResponse {
+    data object Retry : InitializationErrorResponse()
+}
+
 sealed class FeiDbState {
     data class Ready(val index: Index, val db: AppDatabase, val model: MlModel) : FeiDbState()
     object Collecting : FeiDbState()
@@ -433,9 +456,21 @@ sealed class FeiDbState {
         val response: SendChannel<PendingDownloadResponse>,
     ) : FeiDbState()
 
+    data class InitializationError(
+        val error: FeiInitializationException,
+        val proceed: SendChannel<InitializationErrorResponse>,
+    ) : FeiDbState()
+
     data class DownloadingInference(val progress: Float, val model: MlModel) : FeiDbState()
 
     data class InProgress(val total: Int, val done: Int) : FeiDbState()
+}
+
+class FeiInitializationException : Exception {
+    constructor() : super()
+    constructor(message: String) : super(message)
+    constructor(cause: Throwable) : super(cause)
+    constructor(message: String, cause: Throwable) : super(message, cause)
 }
 
 private data class FrameUpdate<T>(

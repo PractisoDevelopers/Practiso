@@ -26,7 +26,10 @@ interface FrameEmbeddingInference : AutoCloseable {
     suspend fun <T : Frame> getEmbeddings(frames: List<T>): List<FloatArray>
 }
 
-expect suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState>
+expect fun createFrameEmbeddingInference(
+    model: MlModel,
+    session: InferenceSession = InferenceSession.default,
+): Flow<InferenceModelState>
 
 sealed class InferenceModelState {
     data class Download(
@@ -35,7 +38,11 @@ sealed class InferenceModelState {
         val overallProgress: Float,
     ) : InferenceModelState()
 
-    data class PlanDownload(val files: List<DownloadableFile>, val build: suspend (Configuration.() -> Unit) -> Unit) : InferenceModelState()
+    data class PlanDownload(
+        val files: List<DownloadableFile>,
+        val build: suspend (Configuration.() -> Unit) -> Unit,
+    ) : InferenceModelState()
+
     data class Complete(val model: FrameEmbeddingInference) : InferenceModelState()
 }
 
@@ -52,6 +59,13 @@ suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInference =
                     discretion = DownloadDiscretion.Immediate
                 }
             }
+
             else -> {}
         }
     }.lastCompletion()
+
+expect class InferenceSession {
+    companion object {
+        val default: InferenceSession
+    }
+}

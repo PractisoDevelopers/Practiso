@@ -213,4 +213,12 @@
         <item>Jina V2 Base English-Germany</item>
     </string-array>
     <string name="choose_another_model_para">Choose another model</string>
+    <string name="inference_init_error_para">Inference initialization error</string>
+    <string name="use_only_cpu_for_inference_para">Use only CPU for inference</string>
+    <string name="compatibility_mode_para">Compatibility mode</string>
+    <string name="you_may_enable_compatibility_mode_in_settings_para">You may turn on compatibility mode in settings.</string>
+    <string name="no_details_reported_para">No details reported.</string>
+    <string name="answering_para">Answering</string>
+    <string name="smart_recommendations_para">Smart recommendations</string>
+    <string name="you_may_select_another_model_in_settings_para">You may select another model in settings.</string>
 </resources>

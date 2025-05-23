@@ -11,6 +11,7 @@ import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
+import com.zhufucdev.practiso.service.FeiInitializationException
 import com.zhufucdev.practiso.service.FeiService
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -64,10 +65,13 @@ actual class LanguageIdentifier {
     }
 }
 
-actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState> = flow {
+actual fun createFrameEmbeddingInference(
+    model: MlModel,
+    session: InferenceSession,
+): Flow<InferenceModelState> = flow {
     val compatibilityList = CompatibilityList()
     val options = Interpreter.Options().apply {
-        if (compatibilityList.isDelegateSupportedOnThisDevice) {
+        if (!session.cpuOnly && compatibilityList.isDelegateSupportedOnThisDevice) {
             addDelegate(GpuDelegate(compatibilityList.bestOptionsForThisDevice))
         } else {
             numThreads = getPlatform().logicalProcessorsCount
@@ -85,7 +89,10 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                 InferenceModelState.Complete(
                     LiteRtInference(
                         model = model,
-                        inputProducer = BertLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
+                        inputProducer = BertLiteRtInputProducer(
+                            tokenizer,
+                            model.sequenceLength ?: 512
+                        ),
                         interpreterProducer = {
                             Interpreter(bf, options)
                         }
@@ -109,7 +116,8 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                 val missingFiles = ListedDirectoryWalker(
                     files = buildList {
                         if (!fs.exists(localTfLiteModel)) {
-                            val hfRepo = HfDirectoryWalker(model.hfId, path = "LiteRT").moved("LiteRT")
+                            val hfRepo =
+                                HfDirectoryWalker(model.hfId, path = "LiteRT").moved("LiteRT")
                             val modelFile = hfRepo.files.toList()
                             addAll(modelFile)
                         }
@@ -151,23 +159,32 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
 
             val tokenizer =
                 Tokenizer.fromBytes(fs.read(localTokenizer, BufferedSource::readByteArray))
-            val modelBuffer = (Files.newByteChannel(
+            val modelFileChannel = Files.newByteChannel(
                 localTfLiteModel.toNioPath(),
                 StandardOpenOption.READ
-            ) as FileChannel)
-                .let { it.map(FileChannel.MapMode.READ_ONLY, 0, it.size()) }
+            ) as FileChannel
+            val modelBuffer =
+                modelFileChannel.let { it.map(FileChannel.MapMode.READ_ONLY, 0, it.size()) }
 
-            emit(
-                InferenceModelState.Complete(
-                    LiteRtInference(
-                        model = model,
-                        inputProducer = BertLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
-                        interpreterProducer = {
-                            Interpreter(modelBuffer, options)
-                        }
+            try {
+                emit(
+                    InferenceModelState.Complete(
+                        LiteRtInference(
+                            model = model,
+                            inputProducer = BertLiteRtInputProducer(
+                                tokenizer,
+                                model.sequenceLength ?: 512
+                            ),
+                            interpreterProducer = {
+                                Interpreter(modelBuffer, options)
+                            }
+                        )
                     )
                 )
-            )
+            } catch (e: IllegalArgumentException) {
+                modelFileChannel.close()
+                throw FeiInitializationException("Failed to create interpreter.", e)
+            }
         }
     }
 }
@@ -334,5 +351,11 @@ class BertLiteRtInputProducer(val tokenizer: Tokenizer, val sequenceLength: Int)
 
             else -> throw UnsupportedOperationException("Embedding inference on ${frames[0]::class.simpleName} is not supported.")
         }
+    }
+}
+
+actual data class InferenceSession(val cpuOnly: Boolean = false) {
+    actual companion object {
+        actual val default: InferenceSession = InferenceSession()
     }
 }

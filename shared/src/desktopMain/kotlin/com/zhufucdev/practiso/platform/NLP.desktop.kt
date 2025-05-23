@@ -26,6 +26,12 @@ actual class LanguageIdentifier {
     }
 }
 
-actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState> = flow {
+actual fun createFrameEmbeddingInference(model: MlModel, session: InferenceSession): Flow<InferenceModelState> = flow {
     // TODO
+}
+
+actual class InferenceSession {
+    actual companion object {
+        actual val default: InferenceSession = InferenceSession()
+    }
 }

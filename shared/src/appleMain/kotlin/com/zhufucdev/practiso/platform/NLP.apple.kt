@@ -67,7 +67,10 @@ actual class LanguageIdentifier {
     }
 }
 
-actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState> = flow {
+actual fun createFrameEmbeddingInference(
+    model: MlModel,
+    session: InferenceSession,
+): Flow<InferenceModelState> = flow {
     val resultProducer = SingleOutputResultProducer(featureName = "pooler_output")
     when (model) {
         JinaV2SmallEn -> {
@@ -456,3 +459,8 @@ private suspend fun CoreMLModel(loadContentOf: NSURL): CoreMLModel = suspendCoro
     }
 }
 
+actual class InferenceSession {
+    actual companion object {
+        actual val default: InferenceSession = InferenceSession()
+    }
+}

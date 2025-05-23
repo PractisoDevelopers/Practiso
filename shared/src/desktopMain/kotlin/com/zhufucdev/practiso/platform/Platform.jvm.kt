@@ -9,6 +9,8 @@ import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
 import com.russhwolf.settings.PreferencesSettings
 import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import java.awt.Color
@@ -40,6 +42,8 @@ abstract class JVMPlatform : Platform() {
             }
         )
     }
+
+    override fun getInferenceSession(): Flow<InferenceSession> = flowOf(InferenceSession())
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM

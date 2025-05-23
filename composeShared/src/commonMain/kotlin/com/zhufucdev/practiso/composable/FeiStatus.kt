@@ -3,11 +3,14 @@ package com.zhufucdev.practiso.composable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -24,19 +27,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextAlign
+import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.SnackbarExtension
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.platform.AppDestination
-import com.zhufucdev.practiso.platform.DownloadableFile
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.FeiDbState
+import com.zhufucdev.practiso.service.InitializationErrorResponse
 import com.zhufucdev.practiso.service.MissingModelResponse
 import com.zhufucdev.practiso.service.PendingDownloadResponse
 import com.zhufucdev.practiso.style.PaddingBig
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import nl.jacobras.humanreadable.HumanReadable
@@ -49,26 +52,34 @@ import resources.Res
 import resources.about_to_download_x_items_will_cost_y_of_data_when_to_para
 import resources.baseline_cloud_download
 import resources.baseline_cube_off
+import resources.baseline_rhombus_outline
 import resources.cancel_para
 import resources.choose_another_model_para
 import resources.collecting_questions_para
 import resources.current_model_is_missing_following_features
 import resources.details_para
+import resources.dismiss_para
 import resources.download_required_para
 import resources.downloading_model_para
+import resources.inference_init_error_para
 import resources.inferring_n_items_para
 import resources.missing_model_para
+import resources.no_details_reported_para
 import resources.now_para
 import resources.proceed_anyway_para
+import resources.retry_para
 import resources.using_wifi_only_para
+import resources.you_may_enable_compatibility_mode_in_settings_para
+import resources.you_may_select_another_model_in_settings_para
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeiStatus(state: FeiDbState) {
     val coroutine = rememberCoroutineScope()
     val snackbar = LocalExtensiveSnackbarState.current
-    var detailsDialog: MissingModelDialog by remember { mutableStateOf(MissingModelDialog.Hidden) }
-    var downloadDialog: PendingDownloadDialog by remember { mutableStateOf(PendingDownloadDialog.Hidden) }
+    var missingModelDialog: FeiDbState.MissingModel? by remember { mutableStateOf(null) }
+    var downloadDialog: FeiDbState.PendingDownload? by remember { mutableStateOf(null) }
+    var initErrorDialog: FeiDbState.InitializationError? by remember { mutableStateOf(null) }
     var snackbarInferenceProgressJob: Job? by remember { mutableStateOf(null) }
     var snackbarDownloadProgressJob: Job? by remember { mutableStateOf(null) }
 
@@ -94,7 +105,7 @@ fun FeiStatus(state: FeiDbState) {
                     duration = SnackbarDuration.Indefinite
                 )
                 if (response == SnackbarResult.ActionPerformed) {
-                    downloadDialog = PendingDownloadDialog.Proceed(state.files, state.response)
+                    downloadDialog = state
                 }
             }
 
@@ -159,7 +170,7 @@ fun FeiStatus(state: FeiDbState) {
                     }
 
                     SnackbarResult.ActionPerformed -> {
-                        detailsDialog = MissingModelDialog.Shown(state)
+                        missingModelDialog = state
                     }
                 }
             }
@@ -169,182 +180,247 @@ fun FeiStatus(state: FeiDbState) {
                     snackbar.host.currentSnackbarData?.dismiss()
                 }
             }
-        }
-    }
 
-    when (val dialog = detailsDialog) {
-        is MissingModelDialog.Shown -> {
-            val proceed = dialog.data.proceed
-
-            BasicAlertDialog(
-                onDismissRequest = {
-                    detailsDialog = MissingModelDialog.Hidden
-                }
-            ) {
-                Card {
-                    DialogContentSkeleton(
-                        icon = {
-                            Icon(
-                                painterResource(Res.drawable.baseline_cube_off),
-                                contentDescription = null
-                            )
-                        },
-                        title = {
-                            Text(stringResource(Res.string.missing_model_para))
-                        },
-                        modifier = Modifier.padding(top = PaddingBig)
-                    ) {
-                        CompositionLocalProvider(
-                            LocalTextStyle provides LocalTextStyle.current.copy(
-                                textAlign = TextAlign.Center
-                            )
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(horizontal = PaddingBig),
-                            ) {
-                                Text(
-                                    pluralStringResource(
-                                        Res.plurals.current_model_is_missing_following_features,
-                                        dialog.data.missingFeatures.size,
-                                    ),
-                                )
-
-                                @Suppress("SimplifiableCallChain") // here it's not possible to merge map and joinToString
-                                Text(
-                                    dialog.data.missingFeatures.sortedBy { it::class.simpleName }
-                                        .map { modelFeatureString(it) }
-                                        .joinToString("\n")
-                                )
-                            }
-                        }
-                        Column {
-                            HorizontalSeparator()
-                            if (proceed != null) {
-                                TextButton(
-                                    onClick = {
-                                        proceed.trySend(MissingModelResponse.ProceedAnyway)
-                                        detailsDialog = MissingModelDialog.Hidden
-                                    },
-                                    shape = RectangleShape,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(stringResource(Res.string.proceed_anyway_para))
-                                }
-                                HorizontalSeparator()
-                            }
-                            TextButton(
-                                onClick = {
-                                    coroutine.launch {
-                                        detailsDialog = MissingModelDialog.Hidden
-                                        Navigator.navigate(Navigation.Goto(AppDestination.Preferences))
-                                    }
-                                },
-                                shape = RectangleShape,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(stringResource(Res.string.choose_another_model_para))
-                            }
-                            HorizontalSeparator()
-
-                            TextButton(
-                                onClick = {
-                                    proceed?.trySend(MissingModelResponse.Cancel)
-                                    detailsDialog = MissingModelDialog.Hidden
-                                },
-                                shape = RectangleShape,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(stringResource(Res.string.cancel_para))
-                            }
-                        }
+            is FeiDbState.InitializationError -> {
+                val response = snackbar.showSnackbar(
+                    message = getString(Res.string.inference_init_error_para),
+                    actionLabel = getString(Res.string.details_para),
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Indefinite
+                )
+                when (response) {
+                    SnackbarResult.Dismissed -> {}
+                    SnackbarResult.ActionPerformed -> {
+                        initErrorDialog = state
                     }
                 }
             }
         }
-
-        else -> {}
     }
 
-    when (val dialog = downloadDialog) {
-        is PendingDownloadDialog.Proceed -> {
-            BasicAlertDialog(
-                onDismissRequest = {
-                    downloadDialog = PendingDownloadDialog.Hidden
-                }
-            ) {
-                Card {
-                    DialogContentSkeleton(
-                        icon = {
-                            Icon(
-                                painterResource(Res.drawable.baseline_cloud_download),
-                                contentDescription = null,
-                                modifier = Modifier.padding(top = PaddingBig)
-                            )
-                        },
-                        title = {
-                            Text(stringResource(Res.string.download_required_para))
-                        }
-                    ) {
-                        val totalDownload = remember(dialog.files) {
-                            HumanReadable.fileSize(dialog.files.sumOf {
-                                it.size ?: (1 shr 12).toLong()
-                            })
-                        }
-                        Text(
-                            pluralStringResource(
-                                Res.plurals.about_to_download_x_items_will_cost_y_of_data_when_to_para,
-                                dialog.files.size,
-                                dialog.files.size,
-                                totalDownload
-                            ),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = PaddingBig),
+    missingModelDialog?.apply {
+        BasicAlertDialog(
+            onDismissRequest = {
+                missingModelDialog = null
+            }
+        ) {
+            Card {
+                DialogContentSkeleton(
+                    icon = {
+                        Icon(
+                            painterResource(Res.drawable.baseline_cube_off),
+                            contentDescription = null
                         )
-                        Column {
-                            HorizontalSeparator()
+                    },
+                    title = {
+                        Text(stringResource(Res.string.missing_model_para))
+                    },
+                    modifier = Modifier.padding(top = PaddingBig)
+                ) {
+                    CompositionLocalProvider(
+                        LocalTextStyle provides LocalTextStyle.current.copy(
+                            textAlign = TextAlign.Center
+                        )
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(horizontal = PaddingBig),
+                        ) {
+                            Text(
+                                pluralStringResource(
+                                    Res.plurals.current_model_is_missing_following_features,
+                                    missingFeatures.size,
+                                ),
+                            )
+
+                            @Suppress("SimplifiableCallChain") // here it's not possible to merge map and joinToString
+                            Text(
+                                missingFeatures.sortedBy { it::class.simpleName }
+                                    .map { modelFeatureString(it) }
+                                    .joinToString("\n")
+                            )
+                        }
+                    }
+                    Column {
+                        HorizontalSeparator()
+                        if (proceed != null) {
                             TextButton(
                                 onClick = {
-                                    coroutine.launch {
-                                        dialog.response.send(PendingDownloadResponse.Discretion)
-                                        downloadDialog = PendingDownloadDialog.Hidden
-                                    }
+                                    proceed!!.trySend(MissingModelResponse.ProceedAnyway)
+                                    missingModelDialog = null
                                 },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RectangleShape
+                                shape = RectangleShape,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(stringResource(Res.string.using_wifi_only_para))
+                                Text(stringResource(Res.string.proceed_anyway_para))
                             }
                             HorizontalSeparator()
-                            TextButton(
-                                onClick = {
-                                    coroutine.launch {
-                                        dialog.response.send(PendingDownloadResponse.Immediate)
-                                        downloadDialog = PendingDownloadDialog.Hidden
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RectangleShape
-                            ) {
-                                Text(stringResource(Res.string.now_para))
-                            }
-                            HorizontalSeparator()
-                            TextButton(
-                                onClick = {
-                                    downloadDialog = PendingDownloadDialog.Hidden
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RectangleShape
-                            ) {
-                                Text(stringResource(Res.string.cancel_para))
-                            }
+                        }
+                        TextButton(
+                            onClick = {
+                                coroutine.launch {
+                                    Navigator.navigate(Navigation.Goto(AppDestination.Preferences))
+                                }
+                            },
+                            shape = RectangleShape,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(Res.string.choose_another_model_para))
+                        }
+                        HorizontalSeparator()
+
+                        TextButton(
+                            onClick = {
+                                proceed?.trySend(MissingModelResponse.Cancel)
+                                missingModelDialog = null
+                            },
+                            shape = RectangleShape,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(Res.string.cancel_para))
                         }
                     }
                 }
             }
         }
+    }
 
-        PendingDownloadDialog.Hidden -> {}
+    downloadDialog?.apply {
+        BasicAlertDialog(
+            onDismissRequest = {
+                downloadDialog = null
+            }
+        ) {
+            Card {
+                DialogContentSkeleton(
+                    icon = {
+                        Icon(
+                            painterResource(Res.drawable.baseline_cloud_download),
+                            contentDescription = null,
+                            modifier = Modifier.padding(top = PaddingBig)
+                        )
+                    },
+                    title = {
+                        Text(stringResource(Res.string.download_required_para))
+                    }
+                ) {
+                    val totalDownload = remember(files) {
+                        HumanReadable.fileSize(files.sumOf {
+                            it.size ?: (1 shr 12).toLong()
+                        })
+                    }
+                    Text(
+                        pluralStringResource(
+                            Res.plurals.about_to_download_x_items_will_cost_y_of_data_when_to_para,
+                            files.size,
+                            files.size,
+                            totalDownload
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = PaddingBig),
+                    )
+                    Column {
+                        HorizontalSeparator()
+                        TextButton(
+                            onClick = {
+                                coroutine.launch {
+                                    response.send(PendingDownloadResponse.Discretion)
+                                    downloadDialog = null
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RectangleShape
+                        ) {
+                            Text(stringResource(Res.string.using_wifi_only_para))
+                        }
+                        HorizontalSeparator()
+                        TextButton(
+                            onClick = {
+                                coroutine.launch {
+                                    response.send(PendingDownloadResponse.Immediate)
+                                    downloadDialog = null
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RectangleShape
+                        ) {
+                            Text(stringResource(Res.string.now_para))
+                        }
+                        HorizontalSeparator()
+                        TextButton(
+                            onClick = {
+                                downloadDialog = null
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RectangleShape
+                        ) {
+                            Text(stringResource(Res.string.cancel_para))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    initErrorDialog?.apply {
+        AlertDialog(
+            onDismissRequest = {
+                initErrorDialog = null
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        proceed.trySend(InitializationErrorResponse.Retry)
+                        initErrorDialog = null
+                    }
+                ) {
+                    Text(stringResource(Res.string.retry_para))
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        initErrorDialog = null
+                    }
+                ) {
+                    Text(stringResource(Res.string.dismiss_para))
+                }
+            },
+            icon = {
+                Icon(
+                    painterResource(Res.drawable.baseline_rhombus_outline),
+                    contentDescription = null
+                )
+            },
+            title = {
+                Text(
+                    stringResource(Res.string.inference_init_error_para),
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(buildString {
+                    appendLine(
+                        when {
+                            !error.localizedMessage.isNullOrBlank() -> error.localizedMessage
+                            !error.message.isNullOrBlank() -> error.message!!
+                            !error.cause?.localizedMessage.isNullOrBlank() -> error.cause!!.localizedMessage
+                            !error.cause?.message.isNullOrBlank() -> error.cause!!.message!!
+                            else -> stringResource(Res.string.no_details_reported_para)
+                        }
+                    )
+                    if (!AppSettings.feiCompatibilityMode.value) {
+                        appendLine(
+                            stringResource(Res.string.you_may_enable_compatibility_mode_in_settings_para)
+                        )
+                    } else {
+                        appendLine(
+                            stringResource(Res.string.you_may_select_another_model_in_settings_para)
+                        )
+                    }
+                }.trim())
+            }
+        )
     }
 }
 
@@ -352,17 +428,3 @@ sealed class FeiStatusBarId
 data object FeiStatusBarDefaultId : FeiStatusBarId()
 data object FeiStatusBarInferenceId : FeiStatusBarId()
 data object FeiStatusBarDownloadId : FeiStatusBarId()
-
-private sealed class MissingModelDialog {
-    data object Hidden : MissingModelDialog()
-    data class Shown(val data: FeiDbState.MissingModel) : MissingModelDialog()
-}
-
-private sealed class PendingDownloadDialog {
-    data object Hidden : PendingDownloadDialog()
-    data class Proceed(
-        val files: List<DownloadableFile>,
-        val response: SendChannel<PendingDownloadResponse>,
-    ) : PendingDownloadDialog()
-}
-

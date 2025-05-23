@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
+import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.modelFeatureString
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.datamodel.SettingsModel
@@ -48,12 +49,16 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
+import resources.answering_para
+import resources.compatibility_mode_para
 import resources.frame_embedding_model_para
 import resources.known_model_names_title
 import resources.navigate_up_para
 import resources.reveals_accuracy_gets_feedback_for_wrong_answers_para
 import resources.settings_para
 import resources.show_accuracy_para
+import resources.smart_recommendations_para
+import resources.use_only_cpu_for_inference_para
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +86,12 @@ fun PreferencesApp(model: SettingsModel = AppSettings) {
     ) { paddingValues ->
         LazyColumn(Modifier.padding(paddingValues)) {
             item {
+                SectionCaption(
+                    stringResource(Res.string.answering_para),
+                    Modifier.padding(horizontal = PaddingBig)
+                )
+            }
+            item {
                 val value: Boolean by model.showAccuracy.collectAsState()
                 Preference(
                     label = stringResource(Res.string.show_accuracy_para),
@@ -88,14 +99,19 @@ fun PreferencesApp(model: SettingsModel = AppSettings) {
                     tailing = {
                         Switch(
                             checked = value,
-                            onCheckedChange = {
-                                model.showAccuracy.tryEmit(it)
-                            }
+                            onCheckedChange = null
                         )
                     },
                     onClick = {
                         model.showAccuracy.tryEmit(!value)
                     }
+                )
+            }
+
+            item {
+                SectionCaption(
+                    stringResource(Res.string.smart_recommendations_para),
+                    Modifier.padding(horizontal = PaddingBig).padding(top = PaddingBig)
                 )
             }
 
@@ -106,6 +122,23 @@ fun PreferencesApp(model: SettingsModel = AppSettings) {
                     preview = stringArrayResource(Res.array.known_model_names_title)[value],
                     onClick = {
                         showFeiModelDialog = true
+                    }
+                )
+            }
+
+            item {
+                val value by model.feiCompatibilityMode.collectAsState()
+                Preference(
+                    label = stringResource(Res.string.compatibility_mode_para),
+                    preview = stringResource(Res.string.use_only_cpu_for_inference_para),
+                    tailing = {
+                        Switch(
+                            checked = value,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = {
+                        model.feiCompatibilityMode.tryEmit(!value)
                     }
                 )
             }
@@ -160,7 +193,8 @@ private fun Preference(
     Box(Modifier.clickable(onClick = onClick)) {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(
-                PaddingNormal
+                horizontal = PaddingBig,
+                vertical = PaddingNormal
             )
         ) {
             PractisoOptionSkeleton(
