@@ -166,7 +166,7 @@
     </plurals>
     <string name="missing_model_para">Missing model</string>
     <string name="details_para">Details</string>
-    <string name="proceed_anyway_para">Proceed Anyway</string>
+    <string name="proceed_anyway_para">Proceed anyway</string>
     <plurals name="current_model_is_missing_following_features">
         <item quantity="one">Current model is missing the following feature:</item>
         <item quantity="other">Current model is missing the following features:</item>
@@ -212,4 +212,5 @@
         <item>Jina V2 Base English-Spanish</item>
         <item>Jina V2 Base English-Germany</item>
     </string-array>
+    <string name="choose_another_model_para">Choose another model</string>
 </resources>

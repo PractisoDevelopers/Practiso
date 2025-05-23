@@ -3,9 +3,7 @@ package com.zhufucdev.practiso.composable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,7 +27,10 @@ import androidx.compose.ui.text.style.TextAlign
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.SnackbarExtension
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
+import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DownloadableFile
+import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.FeiDbState
 import com.zhufucdev.practiso.service.MissingModelResponse
 import com.zhufucdev.practiso.service.PendingDownloadResponse
@@ -49,6 +50,7 @@ import resources.about_to_download_x_items_will_cost_y_of_data_when_to_para
 import resources.baseline_cloud_download
 import resources.baseline_cube_off
 import resources.cancel_para
+import resources.choose_another_model_para
 import resources.collecting_questions_para
 import resources.current_model_is_missing_following_features
 import resources.details_para
@@ -174,63 +176,91 @@ fun FeiStatus(state: FeiDbState) {
         is MissingModelDialog.Shown -> {
             val proceed = dialog.data.proceed
 
-            AlertDialog(
+            BasicAlertDialog(
                 onDismissRequest = {
                     detailsDialog = MissingModelDialog.Hidden
-                },
-                confirmButton = {
-                    if (proceed != null) {
-                        TextButton(
-                            onClick = {
-                                proceed.trySend(MissingModelResponse.ProceedAnyway)
-                                detailsDialog = MissingModelDialog.Hidden
-                            }
-                        ) {
-                            Text(stringResource(Res.string.proceed_anyway_para))
-                        }
-                    }
-                },
-                dismissButton = {
-                    Button(onClick = {
-                        proceed?.trySend(MissingModelResponse.Cancel)
-                        detailsDialog = MissingModelDialog.Hidden
-                    }) {
-                        Text(stringResource(Res.string.cancel_para))
-                    }
-                },
-                icon = {
-                    Icon(
-                        painterResource(Res.drawable.baseline_cube_off),
-                        contentDescription = null
-                    )
-                },
-                title = {
-                    Text(stringResource(Res.string.missing_model_para))
-                },
-                text = {
-                    CompositionLocalProvider(
-                        LocalTextStyle provides LocalTextStyle.current.copy(
-                            textAlign = TextAlign.Center
-                        )
+                }
+            ) {
+                Card {
+                    DialogContentSkeleton(
+                        icon = {
+                            Icon(
+                                painterResource(Res.drawable.baseline_cube_off),
+                                contentDescription = null
+                            )
+                        },
+                        title = {
+                            Text(stringResource(Res.string.missing_model_para))
+                        },
+                        modifier = Modifier.padding(top = PaddingBig)
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                pluralStringResource(
-                                    Res.plurals.current_model_is_missing_following_features,
-                                    dialog.data.missingFeatures.size,
-                                ),
+                        CompositionLocalProvider(
+                            LocalTextStyle provides LocalTextStyle.current.copy(
+                                textAlign = TextAlign.Center
                             )
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(horizontal = PaddingBig),
+                            ) {
+                                Text(
+                                    pluralStringResource(
+                                        Res.plurals.current_model_is_missing_following_features,
+                                        dialog.data.missingFeatures.size,
+                                    ),
+                                )
 
-                            @Suppress("SimplifiableCallChain") // here it's not possible to merge map and joinToString
-                            Text(
-                                dialog.data.missingFeatures.sortedBy { it::class.simpleName }
-                                    .map { modelFeatureString(it) }
-                                    .joinToString("\n")
-                            )
+                                @Suppress("SimplifiableCallChain") // here it's not possible to merge map and joinToString
+                                Text(
+                                    dialog.data.missingFeatures.sortedBy { it::class.simpleName }
+                                        .map { modelFeatureString(it) }
+                                        .joinToString("\n")
+                                )
+                            }
+                        }
+                        Column {
+                            HorizontalSeparator()
+                            if (proceed != null) {
+                                TextButton(
+                                    onClick = {
+                                        proceed.trySend(MissingModelResponse.ProceedAnyway)
+                                        detailsDialog = MissingModelDialog.Hidden
+                                    },
+                                    shape = RectangleShape,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(stringResource(Res.string.proceed_anyway_para))
+                                }
+                                HorizontalSeparator()
+                            }
+                            TextButton(
+                                onClick = {
+                                    coroutine.launch {
+                                        detailsDialog = MissingModelDialog.Hidden
+                                        Navigator.navigate(Navigation.Goto(AppDestination.Preferences))
+                                    }
+                                },
+                                shape = RectangleShape,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(Res.string.choose_another_model_para))
+                            }
+                            HorizontalSeparator()
+
+                            TextButton(
+                                onClick = {
+                                    proceed?.trySend(MissingModelResponse.Cancel)
+                                    detailsDialog = MissingModelDialog.Hidden
+                                },
+                                shape = RectangleShape,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(Res.string.cancel_para))
+                            }
                         }
                     }
                 }
-            )
+            }
         }
 
         else -> {}
