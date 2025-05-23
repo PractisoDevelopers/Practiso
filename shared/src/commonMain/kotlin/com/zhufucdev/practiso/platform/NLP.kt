@@ -5,6 +5,7 @@ import com.zhufucdev.practiso.datamodel.MlModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.onEach
 
 enum class Language {
     World, English, Chinese, German, Spanish,
@@ -44,4 +45,13 @@ suspend fun Flow<InferenceModelState>.lastCompletion(): FrameEmbeddingInference 
         .model
 
 suspend fun FrameEmbeddingInference(model: MlModel): FrameEmbeddingInference =
-    createFrameEmbeddingInference(model).lastCompletion()
+    createFrameEmbeddingInference(model).onEach {
+        when (it) {
+            is InferenceModelState.PlanDownload -> {
+                it.build {
+                    discretion = DownloadDiscretion.Immediate
+                }
+            }
+            else -> {}
+        }
+    }.lastCompletion()

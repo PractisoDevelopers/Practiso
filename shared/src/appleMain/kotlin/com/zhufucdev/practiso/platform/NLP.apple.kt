@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import okio.Path
-import okio.Path.Companion.toPath
 import platform.CoreML.MLBatchProviderProtocol
 import platform.CoreML.MLFeatureProviderProtocol
 import platform.CoreML.MLFeatureValue
@@ -35,15 +34,12 @@ import platform.CoreML.create
 import platform.CoreML.objectAtIndexedSubscript
 import platform.CoreML.setObject
 import platform.Foundation.NSBundle
-import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSNumber
-import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLIsExcludedFromBackupKey
-import platform.Foundation.NSUserDomainMask
 import platform.Foundation.dataWithContentsOfURL
 import platform.NaturalLanguage.NLLanguageRecognizer
 import platform.darwin.NSInteger
@@ -113,12 +109,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
             val localTokenizer = coreMlFolder.resolve("$modelFileName-tokenizer.json")
 
             if (!fs.exists(localMlModelC) || !fs.exists(localTokenizer)) {
-                val cacheFolder = (NSSearchPathForDirectoriesInDomains(
-                    NSCachesDirectory,
-                    NSUserDomainMask,
-                    true
-                ).first() as String).toPath()
-                val localMlPackage = cacheFolder.resolve("$modelFileName.mlpackage")
+                val localMlPackage = coreMlFolder.resolve("$modelFileName.mlpackage")
 
                 val filesToDownload = buildList {
                     if (!fs.exists(localMlModelC) && !fs.exists(localMlPackage)) {

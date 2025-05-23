@@ -85,7 +85,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                 InferenceModelState.Complete(
                     LiteRtInference(
                         model = model,
-                        inputProducer = JinaLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
+                        inputProducer = BertLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
                         interpreterProducer = {
                             Interpreter(bf, options)
                         }
@@ -161,7 +161,7 @@ actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<Inference
                 InferenceModelState.Complete(
                     LiteRtInference(
                         model = model,
-                        inputProducer = JinaLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
+                        inputProducer = BertLiteRtInputProducer(tokenizer, model.sequenceLength ?: 512),
                         interpreterProducer = {
                             Interpreter(modelBuffer, options)
                         }
@@ -292,7 +292,7 @@ data class LiteRtInput(val inputIds: IntArray, val attentionMask: IntArray) {
     }
 }
 
-class JinaLiteRtInputProducer(val tokenizer: Tokenizer, val sequenceLength: Int) :
+class BertLiteRtInputProducer(val tokenizer: Tokenizer, val sequenceLength: Int) :
     LiteRtInputProducer {
     fun Encoding.toLiteRtInput() = LiteRtInput(
         IntArray(sequenceLength) { idx ->

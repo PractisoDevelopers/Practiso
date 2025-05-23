@@ -272,6 +272,7 @@ fun FeiStatus(state: FeiDbState) {
                             modifier = Modifier.padding(horizontal = PaddingBig),
                         )
                         Column {
+                            HorizontalSeparator()
                             TextButton(
                                 onClick = {
                                     coroutine.launch {

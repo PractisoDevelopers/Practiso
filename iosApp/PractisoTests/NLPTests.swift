@@ -64,12 +64,12 @@ struct NLPTests {
             ("股市正在崩盘！", "我喜欢玩《我的世界》"),
             ("埃隆·马斯克想要商业化火星", "索尼刚发布了最新的旗舰旅行耳机。")
         ]
-        try await similarityTest(similarPhrases: similarPhrases, dissimilarPhrases: dissimilarPhrases, model: JinaV2EnZh.shared)
+        try await similarityTest(similarPhrases: similarPhrases, dissimilarPhrases: dissimilarPhrases, model: DmetaSmallZh.shared)
     }
 
     @Test
     func feiZhModel() async throws {
-        let inference = try await FrameEmbeddingInference(model: JinaV2EnZh.shared)
+        let inference = try await FrameEmbeddingInference(model: DmetaSmallZh.shared)
         let embeddings = try await inference.getEmbeddings(frame: FrameText(id: 0, textFrame: .init(id: 0, content: "下列某段文字有问题，请问是哪一段？")))
         #expect(embeddings.size > 0)
     }
