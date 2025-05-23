@@ -6,6 +6,7 @@ struct StatusBarModifier : ViewModifier {
     let feiState: FeiDbState?
     @State private var missingModelState: FeiDbState.MissingModel? = nil
     @State private var pendingDownloadState: FeiDbState.PendingDownload? = nil
+    @State private var errorState: FeiDbState.Error? = nil
 
     func body(content: Content) -> some View {
         content.toolbar {
@@ -68,6 +69,15 @@ struct StatusBarModifier : ViewModifier {
             ToolbarItem(placement: .status) {
                 Text("Collecting frames...")
                     .font(.caption)
+            }
+        case .error(let error):
+            ToolbarItem(placement: .status) {
+                Button("An error occurred") {
+                    errorState = error
+                }
+                .buttonStyle(.plain)
+                .font(.caption)
+                .foregroundStyle(.red)
             }
             
         default:
@@ -140,6 +150,29 @@ extension View {
                 let byteCount = Measurement(value: Double(totalBytes), unit: UnitInformationStorage.bytes)
                 
                 Text("About to download \(state.files.count) files, consuming about \(byteCount.formatted(.byteCount(style: .file))) of data. When would you like to start?")
+            }
+        }
+    }
+    
+    fileprivate func errorAlert(stateBinding: Binding<FeiDbState.Error?>) -> some View {
+        alert("An error occurred", isPresented: Binding(get: {
+            stateBinding.wrappedValue != nil
+        }, set: { newValue in
+            if (!newValue) {
+                stateBinding.wrappedValue = nil
+            }
+        })) {
+            Button("Retry") {
+                stateBinding.wrappedValue!.proceed.trySend(element: FeiErrorResponse.Retry.shared)
+            }
+            Button("Cancel") {
+                stateBinding.wrappedValue = nil
+            }
+        } message: {
+            if let msg = stateBinding.wrappedValue!.error.message {
+                Text(String(errorMessage: msg))
+            } else {
+                Text("No details were reported.")
             }
         }
     }
