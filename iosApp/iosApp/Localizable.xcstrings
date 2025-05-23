@@ -1179,6 +1179,22 @@
         }
       }
     },
+    "frame embedding inference initialization" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "frame embedding inference initialization"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "frame embedding inference initialization"
+          }
+        }
+      }
+    },
     "Have a review" : {
       "localizations" : {
         "zh-Hans" : {
