@@ -35,10 +35,12 @@ import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.FeiDbState
-import com.zhufucdev.practiso.service.InitializationErrorResponse
+import com.zhufucdev.practiso.service.FeiErrorResponse
 import com.zhufucdev.practiso.service.MissingModelResponse
 import com.zhufucdev.practiso.service.PendingDownloadResponse
 import com.zhufucdev.practiso.style.PaddingBig
+import com.zhufucdev.practiso.viewmodel.stringContent
+import com.zhufucdev.practiso.viewmodel.stringTitle
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -64,7 +66,6 @@ import resources.downloading_model_para
 import resources.inference_init_error_para
 import resources.inferring_n_items_para
 import resources.missing_model_para
-import resources.no_details_reported_para
 import resources.now_para
 import resources.proceed_anyway_para
 import resources.retry_para
@@ -79,7 +80,7 @@ fun FeiStatus(state: FeiDbState) {
     val snackbar = LocalExtensiveSnackbarState.current
     var missingModelDialog: FeiDbState.MissingModel? by remember { mutableStateOf(null) }
     var downloadDialog: FeiDbState.PendingDownload? by remember { mutableStateOf(null) }
-    var initErrorDialog: FeiDbState.InitializationError? by remember { mutableStateOf(null) }
+    var errorDialog: FeiDbState.Error? by remember { mutableStateOf(null) }
     var snackbarInferenceProgressJob: Job? by remember { mutableStateOf(null) }
     var snackbarDownloadProgressJob: Job? by remember { mutableStateOf(null) }
 
@@ -181,7 +182,7 @@ fun FeiStatus(state: FeiDbState) {
                 }
             }
 
-            is FeiDbState.InitializationError -> {
+            is FeiDbState.Error -> {
                 val response = snackbar.showSnackbar(
                     message = getString(Res.string.inference_init_error_para),
                     actionLabel = getString(Res.string.details_para),
@@ -191,7 +192,7 @@ fun FeiStatus(state: FeiDbState) {
                 when (response) {
                     SnackbarResult.Dismissed -> {}
                     SnackbarResult.ActionPerformed -> {
-                        initErrorDialog = state
+                        errorDialog = state
                     }
                 }
             }
@@ -362,16 +363,16 @@ fun FeiStatus(state: FeiDbState) {
         }
     }
 
-    initErrorDialog?.apply {
+    errorDialog?.apply {
         AlertDialog(
             onDismissRequest = {
-                initErrorDialog = null
+                errorDialog = null
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        proceed.trySend(InitializationErrorResponse.Retry)
-                        initErrorDialog = null
+                        proceed.trySend(FeiErrorResponse.Retry)
+                        errorDialog = null
                     }
                 ) {
                     Text(stringResource(Res.string.retry_para))
@@ -380,7 +381,7 @@ fun FeiStatus(state: FeiDbState) {
             dismissButton = {
                 OutlinedButton(
                     onClick = {
-                        initErrorDialog = null
+                        errorDialog = null
                     }
                 ) {
                     Text(stringResource(Res.string.dismiss_para))
@@ -394,21 +395,13 @@ fun FeiStatus(state: FeiDbState) {
             },
             title = {
                 Text(
-                    stringResource(Res.string.inference_init_error_para),
+                    error.stringTitle(),
                     textAlign = TextAlign.Center
                 )
             },
             text = {
                 Text(buildString {
-                    appendLine(
-                        when {
-                            !error.localizedMessage.isNullOrBlank() -> error.localizedMessage
-                            !error.message.isNullOrBlank() -> error.message!!
-                            !error.cause?.localizedMessage.isNullOrBlank() -> error.cause!!.localizedMessage
-                            !error.cause?.message.isNullOrBlank() -> error.cause!!.message!!
-                            else -> stringResource(Res.string.no_details_reported_para)
-                        }
-                    )
+                    appendLine(error.stringContent())
                     if (!AppSettings.feiCompatibilityMode.value) {
                         appendLine(
                             stringResource(Res.string.you_may_enable_compatibility_mode_in_settings_para)

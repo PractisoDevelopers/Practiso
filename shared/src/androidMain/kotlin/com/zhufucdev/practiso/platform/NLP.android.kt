@@ -8,6 +8,7 @@ import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.ListedDirectoryWalker
 import com.zhufucdev.practiso.R
 import com.zhufucdev.practiso.SharedContext
+import com.zhufucdev.practiso.datamodel.ErrorMessage
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
@@ -183,7 +184,7 @@ actual fun createFrameEmbeddingInference(
                 )
             } catch (e: IllegalArgumentException) {
                 modelFileChannel.close()
-                throw FeiInitializationException("Failed to create interpreter.", e)
+                throw FeiInitializationException(ErrorMessage.IncompatibleModel, e)
             }
         }
     }
