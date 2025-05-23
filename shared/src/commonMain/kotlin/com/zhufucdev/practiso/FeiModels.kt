@@ -19,8 +19,8 @@ data object JinaV2SmallEn : MlModel(
     )
 )
 
-data object JinaV2EnZh : MlModel(
-    hfId = "zhufucdev/jina-embeddings-v2-base-zh",
+data object DmetaSmallZh : MlModel(
+    hfId = "zhufucdev/Dmeta-embedding-zh-small",
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.Chinese, Language.Default),
@@ -46,6 +46,6 @@ data object JinaV2EnDe : MlModel(
     )
 )
 
-object KnownModels : List<MlModel> by listOf(JinaV2SmallEn, JinaV2EnZh, JinaV2EnEs, JinaV2EnDe) {
+object KnownModels : List<MlModel> by listOf(JinaV2SmallEn, DmetaSmallZh, JinaV2EnEs, JinaV2EnDe) {
     operator fun get(hfId: String): MlModel? = firstOrNull { it.hfId == hfId }
 }
