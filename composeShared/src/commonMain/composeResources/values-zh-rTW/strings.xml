@@ -156,7 +156,7 @@
     </plurals>
     <string name="missing_model_para">Missing model</string>
     <string name="details_para">Details</string>
-    <string name="proceed_anyway_para">Proceed anyway</string>
+    <string name="proceed_anyway_para">Proceed Anyway</string>
     <plurals name="current_model_is_missing_following_features">
         <item quantity="other">Current model is missing the following features:</item>
     </plurals>
