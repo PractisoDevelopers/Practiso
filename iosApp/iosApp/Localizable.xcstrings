@@ -1180,6 +1180,9 @@
         }
       }
     },
+    "Failed to copy resource." : {
+
+    },
     "frame embedding inference initialization" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1362,6 +1365,9 @@
         }
       }
     },
+    "Incompatible model." : {
+
+    },
     "Inferring %d items..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -1377,6 +1383,9 @@
           }
         }
       }
+    },
+    "Invalid file format." : {
+
     },
     "Keep Questions" : {
       "localizations" : {
@@ -1746,6 +1755,9 @@
           }
         }
       }
+    },
+    "No details were reported." : {
+
     },
     "No items available" : {
       "localizations" : {
