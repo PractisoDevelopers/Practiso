@@ -353,6 +353,13 @@ class FeiService(
                             send(FeiDbState.InProgress(totalFramesCount, completedFramesCount))
 
                             try {
+                                db.quizQueries.getAnyFrameEmbeddingIndexKey(
+                                    textFrameId = textFrames.removal.map(TextFrame::id),
+                                    imageFrameId = imageFrames.removal.map(ImageFrame::id)
+                                )
+                                    .executeAsList()
+                                    .forEach { index.remove(it.toULong()) }
+
                                 db.transaction {
                                     db.quizQueries.removeFrameEmeddbingIndexByFrameIds(
                                         textFrameId = textFrames.removal.map(TextFrame::id),

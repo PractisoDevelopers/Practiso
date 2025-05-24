@@ -275,6 +275,9 @@ SELECT * FROM frameEmbeddingIndex WHERE indexKey = ?;
 getFrameEmbeddingIndexKey:
 SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ? AND imageFrameId = ?;
 
+getAnyFrameEmbeddingIndexKey:
+SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId IN ? OR imageFrameId IN ?;
+
 insertFrameEmbeddingIndex:
 INSERT INTO frameEmbeddingIndex VALUES (?, ?, ?);
 
