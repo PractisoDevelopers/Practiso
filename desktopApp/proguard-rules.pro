@@ -2,6 +2,8 @@
 -dontwarn ai.onnxruntime.platform.Fp16Conversions
 -dontwarn io.objectbox.ideasonly.ModelModifier$PropertyModifier
 -dontwarn javax.annotation.*
+-dontwarn okhttp3.internal.**
+-dontwarn io.ktor.network.sockets.*
 -optimizations !method/specialization/**
 -keep class kotlinx.coroutines.internal.MainDispatcherFactory { *; }
 -keep class kotlinx.coroutines.swing.SwingDispatcherFactory { *; }
