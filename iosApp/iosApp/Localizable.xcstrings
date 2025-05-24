@@ -618,6 +618,7 @@
           }
         }
       }
+
     },
     "Collecting Frames..." : {
       "extractionState" : "stale",

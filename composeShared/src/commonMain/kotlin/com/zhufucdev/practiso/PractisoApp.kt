@@ -23,7 +23,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,7 +50,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -64,6 +71,7 @@ import com.zhufucdev.practiso.composable.ExtensiveSnackbar
 import com.zhufucdev.practiso.composable.FeiStatus
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.ImportDialog
+import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
@@ -84,6 +92,9 @@ import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.QuizSectionEditApp
 import com.zhufucdev.practiso.page.SessionApp
 import com.zhufucdev.practiso.page.SessionStarter
+import com.zhufucdev.practiso.platform.AppDestination
+import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
@@ -96,6 +107,8 @@ import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.deactivate_global_search_span
 import resources.search_app_para
+import resources.settings_para
+import resources.show_more_para
 import kotlin.reflect.typeOf
 
 @Composable
@@ -400,6 +413,41 @@ private fun TopSearchBar(
                                     Icons.AutoMirrored.Default.ArrowBack,
                                     stringResource(Res.string.deactivate_global_search_span)
                                 )
+                            }
+                        }
+                    }
+                },
+                trailingIcon = {
+                    AnimatedContent(active) { active ->
+                        if (!active) {
+                            Box {
+                                var menuOpen by remember { mutableStateOf(false) }
+                                PlainTooltipBox(stringResource(Res.string.show_more_para)) {
+                                    IconButton(onClick = {
+                                        menuOpen = true
+                                    }) {
+                                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                                    }
+                                }
+                                DropdownMenu(
+                                    expanded = menuOpen,
+                                    onDismissRequest = { menuOpen = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(stringResource(Res.string.settings_para))
+                                        },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Settings, contentDescription = null)
+                                        },
+                                        onClick = {
+                                            menuOpen = false
+                                            coroutine.launch {
+                                                Navigator.navigate(Navigation.Goto(AppDestination.Preferences))
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

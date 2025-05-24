@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.platform
 
 import io.ktor.http.Url
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.lastOrNull
@@ -13,8 +14,18 @@ expect fun downloadSingle(file: DownloadableFile, destination: Path): Flow<Downl
 
 sealed class DownloadState {
     data class Preparing(val filesFound: List<DownloadableFile>) : DownloadState()
+    data class Configure(val build: SendChannel<Configuration.() -> Unit>) : DownloadState()
     data class Downloading(val file: DownloadableFile, val progress: Float) : DownloadState()
     data class Completed(val file: DownloadableFile) : DownloadState()
+}
+
+data class Configuration(
+    var discretion: DownloadDiscretion = DownloadDiscretion.Immediate
+)
+
+enum class DownloadDiscretion {
+    Immediate,
+    Discretionary
 }
 
 /**
@@ -38,7 +49,7 @@ class DownloadException : Exception {
 }
 
 sealed class GroupedDownloadState {
-    data object Preparing : GroupedDownloadState()
+    data class Planed(val filesToDownload: List<DownloadableFile>, val configure: suspend (Configuration.() -> Unit) -> Unit) : GroupedDownloadState()
     data class Progress(
         val ongoingDownloads: Map<DownloadableFile, Float>,
         val completedFiles: List<DownloadableFile>,
@@ -49,7 +60,6 @@ sealed class GroupedDownloadState {
 }
 
 fun Flow<DownloadState>.mapToGroup(): Flow<GroupedDownloadState> = flow {
-    emit(GroupedDownloadState.Preparing)
     val files = (takeWhile { it is DownloadState.Preparing }
         .lastOrNull() as DownloadState.Preparing?)
         ?.filesFound ?: emptyList()
@@ -64,14 +74,20 @@ fun Flow<DownloadState>.mapToGroup(): Flow<GroupedDownloadState> = flow {
         }.toFloat()
     }
 
-    collect {
-        when (it) {
+    collect { download ->
+        when (download) {
+            is DownloadState.Configure -> {
+                emit(GroupedDownloadState.Planed(files) {
+                    download.build.send(it)
+                })
+            }
+
             is DownloadState.Completed -> {
-                completed.add(it.file)
+                completed.add(download.file)
                 if (completed.size == files.size) {
                     emit(GroupedDownloadState.Completed)
                 } else {
-                    trackers.remove(it.file)
+                    trackers.remove(download.file)
                     emit(
                         GroupedDownloadState.Progress(
                             trackers,
@@ -83,11 +99,11 @@ fun Flow<DownloadState>.mapToGroup(): Flow<GroupedDownloadState> = flow {
             }
 
             is DownloadState.Downloading -> {
-                trackers[it.file] = it.progress
+                trackers[download.file] = download.progress
                 emit(GroupedDownloadState.Progress(trackers, completed, calculateOverallProgress()))
             }
 
-            is DownloadState.Preparing -> error("Received unexpected preparing state after state machine moved afterwards.")
+            else -> {}
         }
     }
 }

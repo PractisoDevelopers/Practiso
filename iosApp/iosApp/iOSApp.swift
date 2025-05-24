@@ -9,7 +9,13 @@ struct iOSApp: App {
     @Environment(\.dismissWindow) private var dismissWindow
     @Environment(\.supportsMultipleWindows) private var supportsMultipleWindow
     
+    @AppStorage(.feiModel) private var feiModelIndex = 0
+    
     @State private var url: URL? = nil
+    
+    init() {
+        try? Database.shared.fei.setFeiModelSync(model: UserDefaults.standard.feiModel)
+    }
     
     var body: some Scene {
         WindowGroup(id: "content") {
@@ -27,6 +33,9 @@ struct iOSApp: App {
                                 self.url = value
                             }
                         }
+                    }
+                    .onChange(of: feiModelIndex) { oldValue, newValue in
+                        try? Database.shared.fei.setFeiModelSync(model: KnownModel(index: Int32(newValue)))
                     }
             }
         }

@@ -13,7 +13,8 @@ import kotlinx.serialization.Serializable
 enum class AppDestination {
     MainView,
     QuizCreate,
-    Answer
+    Answer,
+    Preferences
 }
 
 @Serializable

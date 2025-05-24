@@ -5,4 +5,11 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.darwin.Darwin
 
 actual fun createHttpClient(config: HttpClientConfig<*>.() -> Unit): HttpClient =
-    HttpClient(Darwin, config)
+    HttpClient(Darwin) {
+        config()
+        engine {
+            configureSession {
+                waitsForConnectivity = true
+            }
+        }
+    }

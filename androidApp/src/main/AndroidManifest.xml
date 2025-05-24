@@ -20,6 +20,9 @@
             android:name=".AnswerActivity"
             android:exported="false"
             android:label="@string/title_activity_answer" />
+        <activity android:name=".PreferencesActivity"
+            android:exported="false"
+            android:label="@string/title_activity_preferences"/>
         <activity
             android:name=".ImportActivity"
             android:exported="true"

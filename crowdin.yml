@@ -6,3 +6,5 @@ files:
     multilingual: 1
   - source: /androidApp/src/main/res/values/strings.xml
     translation: /androidApp/src/main/res/values-%android_code%/strings.xml
+  - source: /iosApp/iosApp/Settings.bundle/en.lproj/*.strings
+    translation: /iosApp/iosApp/Settings.bundle/%osx_code%/%original_file_name%

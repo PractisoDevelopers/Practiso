@@ -69,7 +69,7 @@ class HfDirectoryWalker(
     }
 
     suspend fun getDownloadableFile(fileName: String): DownloadableFile {
-        val url = getDownloadLink(fileName)
+        val url = getDownloadLink(if (path != null) "$path/$fileName" else fileName)
         val response = httpClient.head {
             url(url)
             header("Accept-Encoding", "identity")
@@ -118,7 +118,7 @@ private class ItemTypeSerializer : KSerializer<HfDirectoryWalker.ItemType> {
 
     override fun deserialize(decoder: Decoder): HfDirectoryWalker.ItemType =
         decoder.decodeString().takeIf { it.isNotBlank() }
-            ?.let { it[0].uppercaseChar() + it.slice(0 until it.length) }
+            ?.let { it[0].uppercaseChar() + it.slice(1 until it.length) }
             ?.let(HfDirectoryWalker.ItemType::valueOf)
             ?: error("Empty or blank value for HfDirectoryWalker.ItemType")
 }
@@ -133,7 +133,15 @@ class MovingDirectoryWalker(private val inner: DirectoryWalker, baseDir: String)
         get() = inner.identifier
 
     override val files: Flow<DownloadableFile> =
-        inner.files.map { f -> f.copy(name = this.baseDir) }
+        inner.files.map { f -> f.copy(name = f.name.removePrefix(this.baseDir + "/")) }
 }
 
 fun DirectoryWalker.moved(baseDir: String) = MovingDirectoryWalker(this, baseDir)
+
+class ListedDirectoryWalker(files: List<DownloadableFile>, override val identifier: String) : DirectoryWalker {
+    override val files: Flow<DownloadableFile> = flow { files.forEach { emit(it) } }
+}
+
+fun directoryWalkerOf(identifier: String, vararg files: DownloadableFile): DirectoryWalker {
+    return ListedDirectoryWalker(files.toList(), identifier)
+}

@@ -3,10 +3,17 @@
 [![Build and Release](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml/badge.svg)](https://github.com/zhufucdev/Practiso/actions/workflows/compose-app.yml)
 [![GitHub Tag](https://img.shields.io/github/v/tag/zhufucdev/Practiso)](https://github.com/zhufucdev/Practiso/tags)
 [![GitHub Release](https://img.shields.io/github/v/release/zhufucdev/Practiso)](https://github.com/zhufucdev/Practiso/releases)
+[![Google Pay](https://img.shields.io/badge/GooglePay-%233780F1.svg?style=for-the-badge&logo=Google-Pay&logoColor=white)](https://play.google.com/store/apps/details?id=com.zhufucdev.practiso)
 
 Personal, offline and intelligent study & practice utility. Learn smarter, not more.
 
 <p align="center"><img src="desktopApp/icons/icon.png" alt="Practiso logo" width="200px" /></p>
+
+> [!WARNING]
+> This app is under development. Breaking changes may be introduced, and expect losing
+> your data anytime. Use at your own risk. You can 
+> [join Play testing](https://play.google.com/apps/testing/com.zhufucdev.practiso)
+> to help make it to Play Store.
 
 ## Screenshots
 

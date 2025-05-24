@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 @Composable
 fun SectionCaption(text: String, modifier: Modifier = Modifier) {
     Text(
-        text = text,
+        text = text.uppercase(),
         style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary),
         modifier = modifier
     )

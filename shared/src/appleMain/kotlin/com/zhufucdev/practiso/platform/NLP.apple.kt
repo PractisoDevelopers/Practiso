@@ -2,8 +2,8 @@ package com.zhufucdev.practiso.platform
 
 import com.zhufucdev.practiso.HfDirectoryWalker
 import com.zhufucdev.practiso.JinaV2SmallEn
-import com.zhufucdev.practiso.bridge.toNSURL
-import com.zhufucdev.practiso.bridge.toPath
+import com.zhufucdev.practiso.ListedDirectoryWalker
+import com.zhufucdev.practiso.convert.toNSURL
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
@@ -20,6 +20,8 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import okio.Path
 import platform.CoreML.MLBatchProviderProtocol
 import platform.CoreML.MLFeatureProviderProtocol
@@ -32,15 +34,12 @@ import platform.CoreML.create
 import platform.CoreML.objectAtIndexedSubscript
 import platform.CoreML.setObject
 import platform.Foundation.NSBundle
-import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSNumber
-import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLIsExcludedFromBackupKey
-import platform.Foundation.NSUserDomainMask
 import platform.Foundation.dataWithContentsOfURL
 import platform.NaturalLanguage.NLLanguageRecognizer
 import platform.darwin.NSInteger
@@ -68,7 +67,137 @@ actual class LanguageIdentifier {
     }
 }
 
-typealias MLFeatureResultProducer = (MLFeatureProviderProtocol) -> FloatArray
+actual fun createFrameEmbeddingInference(
+    model: MlModel,
+    session: InferenceSession,
+): Flow<InferenceModelState> = flow {
+    val resultProducer = SingleOutputResultProducer(featureName = "pooler_output")
+    when (model) {
+        JinaV2SmallEn -> {
+            val modelUrl = NSBundle.mainBundle.URLForResource("CoreML/JinaV2EnSmall", "mlmodelc")!!
+            val ml = CoreMLModel(modelUrl)
+            val tokenizer = Tokenizer(
+                NSBundle.mainBundle.URLForResource(
+                    "CoreML/JinaV2EnSmallTokenizer",
+                    "json"
+                )!!
+            )
+
+            emit(
+                InferenceModelState.Complete(
+                    CoreMLInference(
+                        model = model,
+                        ml = ml,
+                        providerProducer = BertModelProviderProducer(
+                            sequenceLength = model.sequenceLength ?: 512,
+                            tokenizer = tokenizer
+                        ),
+                        resultProducer = resultProducer
+                    )
+                )
+            )
+        }
+
+        else -> {
+            val platform = getPlatform()
+            val fs = platform.filesystem
+            val coreMlFolder = platform.resourcePath.resolve("CoreML")
+
+            if (!fs.exists(coreMlFolder)) {
+                fs.createDirectories(coreMlFolder, mustCreate = true)
+            }
+
+            val modelFileName = model.hfId.replace('/', '-')
+            val localMlModelC = coreMlFolder.resolve("$modelFileName.mlmodelc")
+            val localTokenizer = coreMlFolder.resolve("$modelFileName-tokenizer.json")
+
+            if (!fs.exists(localMlModelC) || !fs.exists(localTokenizer)) {
+                val localMlPackage = coreMlFolder.resolve("$modelFileName.mlpackage")
+
+                val filesToDownload = buildList {
+                    if (!fs.exists(localMlModelC) && !fs.exists(localMlPackage)) {
+                        val modelRoot = "CoreML/model.mlpackage"
+                        addAll(
+                            HfDirectoryWalker(
+                                model.hfId,
+                                path = modelRoot
+                            ).moved(modelRoot)
+                                .files
+                                .map { it.copy(name = localMlPackage.name + "/" + it.name) }
+                                .toList()
+                        )
+                    }
+                    if (!fs.exists(localTokenizer)) {
+                        val file =
+                            HfDirectoryWalker(repoId = model.hfId).getDownloadableFile("tokenizer.json")
+                        add(file.copy(name = localTokenizer.name))
+                    }
+                }
+
+                if (!fs.exists(localMlModelC) && fs.exists(localMlPackage)) {
+                    // assume the file's integrity
+                    compileModel(localMlPackage, localMlModelC)
+                    fs.deleteRecursively(localMlPackage)
+                }
+
+                if (filesToDownload.isNotEmpty()) {
+                    // download from hugging face
+                    downloadRecursively(
+                        ListedDirectoryWalker(filesToDownload, model.hfId),
+                        coreMlFolder
+                    ).mapToGroup().collect { download ->
+                        when (download) {
+                            GroupedDownloadState.Completed -> {
+                                if (fs.exists(localMlPackage)) {
+                                    compileModel(localMlPackage, localMlModelC)
+                                    fs.deleteRecursively(localMlPackage)
+                                }
+                            }
+
+                            is GroupedDownloadState.Planed -> {
+                                emit(
+                                    InferenceModelState.PlanDownload(
+                                        download.filesToDownload,
+                                        download.configure
+                                    )
+                                )
+                            }
+
+                            is GroupedDownloadState.Progress -> {
+                                emit(
+                                    InferenceModelState.Download(
+                                        download.ongoingDownloads,
+                                        download.completedFiles,
+                                        download.overallProgress
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            val tokenizer = Tokenizer(localTokenizer.toNSURL())
+            val ml = CoreMLModel(localMlModelC.toNSURL())
+
+            emit(
+                InferenceModelState.Complete(
+                    CoreMLInference(
+                        model = model,
+                        ml = ml,
+                        providerProducer = BertModelProviderProducer(
+                            sequenceLength = model.sequenceLength ?: 512,
+                            tokenizer = tokenizer
+                        ),
+                        resultProducer = resultProducer
+                    )
+                )
+            )
+        }
+    }
+}
+
+typealias MLFeatureResultProducer = (modelOutput: MLFeatureProviderProtocol, input: MLFeatureProviderProtocol) -> FloatArray
 
 interface MLFeatureProviderProducer {
     fun one(frame: Frame): Map<String, MLFeatureValue>
@@ -83,11 +212,12 @@ class CoreMLInference(
 ) : FrameEmbeddingInference {
 
     override suspend fun getEmbeddings(frame: Frame): FloatArray = suspendCoroutine { c ->
-        ml.predictionFromFeatures(FeatureProviderAdapter(providerProducer, listOf(frame))) { p, e ->
+        val input = FeatureProviderAdapter(providerProducer, listOf(frame))
+        ml.predictionFromFeatures(input) { p, e ->
             if (e != null) {
                 c.resumeWithException(IllegalStateException(e.localizedDescription))
             } else {
-                c.resume(resultProducer(p!!))
+                c.resume(resultProducer(p!!, input))
             }
         }
     }
@@ -97,8 +227,9 @@ class CoreMLInference(
         suspendCoroutine { c ->
             memScoped {
                 val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
+                val input = FeatureProviderAdapter(providerProducer, frames)
                 val predictions = ml.predictionsFromBatch(
-                    FeatureProviderAdapter(providerProducer, frames),
+                    input,
                     errPtr.value
                 )
                 val error = errPtr.pointed?.value
@@ -106,7 +237,7 @@ class CoreMLInference(
                     c.resumeWithException(IllegalStateException(error.localizedDescription))
                 } else if (predictions != null) {
                     c.resume((0 until predictions.count).map {
-                        resultProducer(predictions.featuresAtIndex(it))
+                        resultProducer(predictions.featuresAtIndex(it), input.featuresAtIndex(it))
                     })
                 }
             }
@@ -155,7 +286,7 @@ class CoreMLInference(
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private class JinaModelProviderProducer(
+private class BertModelProviderProducer(
     val sequenceLength: Int = 128,
     val tokenizer: Tokenizer,
 ) : MLFeatureProviderProducer {
@@ -239,131 +370,51 @@ private class JinaModelProviderProducer(
 }
 
 @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
-private class SingleOutputResultProducer(val featureName: String) : MLFeatureResultProducer by {
-    val feature = it.featureValueForName(featureName)!!
-    val value = feature.multiArrayValue!!
-    val shape = value.shape as List<NSNumber>
-    assert(shape.size == 2 && (shape.first() as NSNumber).intValue == 1) { "shape error, (1, n) expected, got (${value.shape.joinToString()})" }
-    assert(value.dataType == MLMultiArrayDataTypeFloat16) { "type error" }
-    FloatArray(shape[1].intValue) { idx -> value.objectAtIndexedSubscript(idx.toLong()).floatValue }
-}
+private class SingleOutputResultProducer(val featureName: String) :
+    MLFeatureResultProducer by { output, _ ->
+        val feature = output.featureValueForName(featureName)!!
+        val value = feature.multiArrayValue!!
+        val shape = value.shape as List<NSNumber>
+        assert(shape.size == 2 && (shape.first() as NSNumber).intValue == 1) { "shape error, (1, n) expected, got (${value.shape.joinToString()})" }
+        assert(value.dataType == MLMultiArrayDataTypeFloat16) { "type error" }
+        FloatArray(shape[1].intValue) { idx -> value.objectAtIndexedSubscript(idx.toLong()).floatValue }
+    }
 
-actual suspend fun createFrameEmbeddingInference(model: MlModel): Flow<InferenceModelState> = flow {
-    when (model) {
-        JinaV2SmallEn -> {
-            val modelUrl = NSBundle.mainBundle.URLForResource("CoreML/JinaV2EnSmall", "mlmodelc")!!
-            val ml = CoreMLModel(modelUrl)
-            val tokenizer = Tokenizer(
-                NSBundle.mainBundle.URLForResource(
-                    "CoreML/JinaV2EnSmallTokenizer",
-                    "json"
-                )!!
-            )
-
-            emit(
-                InferenceModelState.Complete(
-                    CoreMLInference(
-                        model = model,
-                        ml = ml,
-                        providerProducer = JinaModelProviderProducer(
-                            sequenceLength = model.sequenceLength ?: 512,
-                            tokenizer = tokenizer
-                        ),
-                        resultProducer = SingleOutputResultProducer(featureName = "pooler_output")
-                    )
-                )
-            )
+private class MeanPoolingResultProducer(
+    val hiddenStateFeature: String,
+    val attentionMaskFeature: String,
+) : MLFeatureResultProducer by { output, input ->
+    val attentionMask = input.featureValueForName(attentionMaskFeature)!!.multiArrayValue!!.let {
+        var started = false
+        var attentionLen = 0
+        while (attentionLen < it.shape[1] as Int) {
+            val v: Int = it.objectAtIndexedSubscript(attentionLen.toLong()).intValue
+            if (started && v == 0) {
+                break
+            } else if (!started && v == 1) {
+                started = true
+            }
+            attentionLen++
         }
-
-        else -> {
-            val platform = getPlatform()
-            val fs = platform.filesystem
-            val coreMlFolder = platform.resourcePath.resolve("CoreML")
-
-            val modelFileName = model.hfId.replace('/', '-')
-            val localMlModelC = coreMlFolder.resolve("$modelFileName.mlmodelc")
-            val localTokenizer = coreMlFolder.resolve("$modelFileName-tokenizer.json")
-
-            if (!fs.exists(localMlModelC)) {
-                val cacheFolder = (NSSearchPathForDirectoriesInDomains(
-                    NSCachesDirectory,
-                    NSUserDomainMask,
-                    false
-                ).first() as NSURL).toPath()
-                val localMlPackage = cacheFolder.resolve("$modelFileName.mlpackage")
-
-                if (fs.exists(localMlPackage)) {
-                    // assume the file's integrity
-                    compileModel(localMlPackage, localMlModelC)
-                } else {
-                    // download from hugging face
-                    val modelRoot = "CoreML/model.mlpackage"
-                    downloadRecursively(
-                        HfDirectoryWalker(
-                            model.hfId,
-                            path = modelRoot
-                        ).moved(modelRoot),
-                        localMlPackage
-                    ).mapToGroup().collect {
-                        when (it) {
-                            GroupedDownloadState.Completed -> {
-                                compileModel(localMlPackage, localMlModelC)
-                            }
-
-                            GroupedDownloadState.Preparing -> {
-                                emit(InferenceModelState.PrepareDownload)
-                            }
-
-                            is GroupedDownloadState.Progress -> {
-                                emit(
-                                    InferenceModelState.Download(
-                                        it.ongoingDownloads,
-                                        it.completedFiles,
-                                        it.overallProgress
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!fs.exists(localTokenizer)) {
-                val file =
-                    HfDirectoryWalker(repoId = model.hfId).getDownloadableFile("tokenizer.json")
-                emit(InferenceModelState.PrepareDownload)
-
-                downloadSingle(file, localTokenizer).collect {
-                    when (it) {
-                        is DownloadState.Downloading -> {
-                            emit(
-                                InferenceModelState.Download(
-                                    mapOf(it.file to it.progress),
-                                    emptyList(),
-                                    it.progress
-                                )
-                            )
-                        }
-
-                        else -> {}
-                    }
-                }
-            }
-
-            val tokenizer = Tokenizer(localTokenizer.toNSURL())
-            val ml = CoreMLModel(localMlModelC.toNSURL())
-
-            emit(InferenceModelState.Complete(CoreMLInference(
-                model = model,
-                ml = ml,
-                providerProducer = JinaModelProviderProducer(
-                    sequenceLength = model.sequenceLength ?: 512,
-                    tokenizer = tokenizer
-                ),
-                resultProducer = SingleOutputResultProducer("pooler_output")
-            )))
+        IntArray(attentionLen) { idx ->
+            it.objectAtIndexedSubscript(idx.toLong()).intValue
         }
     }
+    val attentionCount = attentionMask.count { it == 1 }
+
+    val hiddenState = output.featureValueForName(hiddenStateFeature)!!.multiArrayValue!!
+    val seqLen = (hiddenState.shape[2] as Long).toInt()
+    var result = FloatArray(seqLen)
+    for (seqIdx in 0 until seqLen) {
+        for (tokenIdx in attentionMask.indices) {
+            val v =
+                hiddenState.objectAtIndexedSubscript(tokenIdx * seqLen.toLong() + seqIdx).floatValue
+            result[seqIdx] += v * attentionMask[tokenIdx]
+        }
+        result[seqIdx] /= attentionCount
+    }
+
+    result
 }
 
 private fun Tokenizer(loadContentOf: NSURL): Tokenizer =
@@ -379,18 +430,22 @@ private suspend fun compileModel(modelPath: Path, storePath: Path): Unit = suspe
             return@compileModelAtURL
         }
 
+        val storeUrl = storePath.toNSURL()
+
         memScoped {
             val err = alloc<ObjCObjectVar<NSError?>>()
             NSFileManager.defaultManager.moveItemAtURL(
                 srcURL = modelUrl!!,
-                toURL = storePath.toNSURL(),
+                toURL = storeUrl,
                 error = err.ptr
             )
             err.value?.localizedDescription?.let { error(it) }
 
-            modelUrl.setResourceValue(false, NSURLIsExcludedFromBackupKey, err.ptr)
+            storeUrl.setResourceValue(false, NSURLIsExcludedFromBackupKey, err.ptr)
             err.value?.localizedDescription?.let { println("Error marking compiled model as excluded from backup: $it") }
         }
+
+        c.resume(Unit)
     }
 }
 
@@ -404,3 +459,8 @@ private suspend fun CoreMLModel(loadContentOf: NSURL): CoreMLModel = suspendCoro
     }
 }
 
+actual class InferenceSession {
+    actual companion object {
+        actual val default: InferenceSession = InferenceSession()
+    }
+}

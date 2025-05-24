@@ -2,18 +2,24 @@ package com.zhufucdev.practiso.datamodel
 
 data class ErrorModel(
     val scope: AppScope,
-    val exception: Exception? = null,
+    val error: Throwable? = null,
     val message: ErrorMessage? = null,
 )
 
-interface ErrorMessage {
-    data class Raw(val content: String) : ErrorMessage
-    data class CopyResource(val requester: String, val archive: String) : ErrorMessage
-    data object InvalidFileFormat : ErrorMessage
+sealed class ErrorMessage {
+    data class Raw(val content: String) : ErrorMessage()
+    data class CopyResource(val requester: String, val archive: String) : ErrorMessage()
+    data object InvalidFileFormat : ErrorMessage()
+    data object IncompatibleModel : ErrorMessage()
+    data class Localized(
+        val resource: Any,
+        val args: List<Any> = emptyList(),
+    ) : ErrorMessage()
 }
 
 enum class AppScope {
     Unknown,
     LibraryIntentModel,
+    FeiInitialization
 }
 

@@ -166,7 +166,7 @@
     </plurals>
     <string name="missing_model_para">Missing model</string>
     <string name="details_para">Details</string>
-    <string name="proceed_anyway_para">Proceed Anyway</string>
+    <string name="proceed_anyway_para">Proceed anyway</string>
     <plurals name="current_model_is_missing_following_features">
         <item quantity="one">Current model is missing the following feature:</item>
         <item quantity="other">Current model is missing the following features:</item>
@@ -194,4 +194,34 @@
         <item quantity="other">Would you like to remove %1$d items? This operation is irreversible.</item>
     </plurals>
     <string name="archive_para">Archive</string>
+    <string name="settings_para">Settings</string>
+    <string name="reveals_accuracy_gets_feedback_for_wrong_answers_para">Reveals accuracy and gets feedback for wrong answers</string>
+    <string name="download_required_para">Download required</string>
+    <plurals name="about_to_download_x_items_will_cost_y_of_data_when_to_para">
+        <item quantity="one">About to download %1$d item, which costs about %2$s of data. When to start?</item>
+        <item quantity="other">About to download %1$d items, which cost about %2$s of data. When to start?</item>
+    </plurals>
+    <string name="now_para">Now</string>
+    <string name="using_wifi_only_para">Using Wi-Fi only</string>
+    <string name="token_input_span">token input</string>
+    <string name="downloading_model_para">Downloading model…</string>
+    <string name="frame_embedding_model_para">Frame embedding model</string>
+    <string-array name="known_model_names_title">
+        <item>Jina V2 Small English</item>
+        <item>Dmeta Small English-Chinese</item>
+        <item>Jina V2 Base English-Spanish</item>
+        <item>Jina V2 Base English-Germany</item>
+    </string-array>
+    <string name="choose_another_model_para">Choose another model</string>
+    <string name="inference_init_error_para">Inference initialization error</string>
+    <string name="use_only_cpu_for_inference_para">Use only CPU for inference</string>
+    <string name="compatibility_mode_para">Compatibility mode</string>
+    <string name="you_may_enable_compatibility_mode_in_settings_para">You may turn on compatibility mode in settings.</string>
+    <string name="no_details_reported_para">No details were reported.</string>
+    <string name="answering_para">Answering</string>
+    <string name="smart_recommendations_para">Smart recommendations</string>
+    <string name="you_may_select_another_model_in_settings_para">You may select another model in settings.</string>
+    <string name="unknown_span">unknown</string>
+    <string name="fei_init_span">frame embedding inference initialization</string>
+    <string name="failed_to_create_interpreter_para">Failed to create interpreter.</string>
 </resources>

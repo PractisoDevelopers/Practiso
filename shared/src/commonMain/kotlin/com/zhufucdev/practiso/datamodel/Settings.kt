@@ -9,7 +9,8 @@ import kotlinx.coroutines.launch
 private const val KeyAnswerPageStyle = "answer_page_style"
 private const val KeyShowAccuracy = "show_accuracy"
 private const val KeyQuizAutoplay = "quiz_autoplay"
-private const val KeyDbVersion = "db_version"
+private const val KeyFeiModelId = "fei_model_id"
+private const val KeyFeiCompatibility = "fei_compatibility"
 
 enum class PageStyle {
     Horizontal,
@@ -27,21 +28,36 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
     val showAccuracy =
         MutableStateFlow(settings.getBoolean(KeyShowAccuracy, false))
     val showNextQuizAutomatically = MutableStateFlow(settings.getBoolean(KeyQuizAutoplay, false))
+    val feiModelIndex = MutableStateFlow(settings.getInt(KeyFeiModelId, defaultValue = 0))
+    val feiCompatibilityMode =
+        MutableStateFlow(settings.getBoolean(KeyFeiCompatibility, defaultValue = false))
 
     init {
-        coroutineScope.launch {
-            answerPageStyle.collectLatest {
-                settings.putInt(KeyAnswerPageStyle, it.ordinal)
+        with(coroutineScope) {
+            launch {
+                answerPageStyle.collectLatest {
+                    settings.putInt(KeyAnswerPageStyle, it.ordinal)
+                }
             }
-        }
-        coroutineScope.launch {
-            showAccuracy.collectLatest {
-                settings.putBoolean(KeyShowAccuracy, it)
+            launch {
+                showAccuracy.collectLatest {
+                    settings.putBoolean(KeyShowAccuracy, it)
+                }
             }
-        }
-        coroutineScope.launch {
-            showNextQuizAutomatically.collectLatest {
-                settings.putBoolean(KeyQuizAutoplay, it)
+            launch {
+                showNextQuizAutomatically.collectLatest {
+                    settings.putBoolean(KeyQuizAutoplay, it)
+                }
+            }
+            launch {
+                feiModelIndex.collectLatest {
+                    settings.putInt(KeyFeiModelId, it)
+                }
+            }
+            launch {
+                feiCompatibilityMode.collectLatest {
+                    settings.putBoolean(KeyFeiCompatibility, it)
+                }
             }
         }
     }

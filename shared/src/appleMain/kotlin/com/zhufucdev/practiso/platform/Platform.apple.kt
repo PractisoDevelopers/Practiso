@@ -7,6 +7,8 @@ import co.touchlab.sqliter.DatabaseConfiguration
 import com.russhwolf.settings.NSUserDefaultsSettings
 import com.russhwolf.settings.Settings
 import com.zhufucdev.practiso.database.AppDatabase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
@@ -25,6 +27,8 @@ abstract class ApplePlatform : Platform() {
             }
         )
     }
+
+    override fun getInferenceSession(): Flow<InferenceSession> = flowOf(InferenceSession())
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM
