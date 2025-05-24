@@ -138,10 +138,10 @@
     <string name="new_session_para">新题集</string>
     <string name="x_and_n_more_para">%1$s 及另外 %2$d 个</string>
     <plurals name="n_questions_in_dimension">
-        <item quantity="other">%1$d 题在 %2$s</item>
+        <item quantity="other">%2$s 中 %1$d 题</item>
     </plurals>
     <string name="new_take_from_x_para">从 %1$s 开始新练习</string>
-    <string name="generic_file_para">通用文件</string>
+    <string name="generic_file_para">一般文件</string>
     <string name="pin_para">置顶</string>
     <string name="new_template_para">新建模板</string>
     <string name="no_description_para">暂无描述</string>
