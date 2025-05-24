@@ -44,7 +44,7 @@ fun getEmbeddingsUnconfined(
                 fei.getEmbeddings(frames)
                     .mapIndexed { idx, r -> InferenceRow(textFrameId = textFrames[idx].id) to r }
                     .also {
-                        trySend(InferenceState.Inferring(frames.size, total))
+                        trySend(InferenceState.Inferring(frames.size, total, it))
                     }
             }
 
@@ -56,7 +56,7 @@ fun getEmbeddingsUnconfined(
 sealed class InferenceState {
     data class Complete(val results: List<Pair<InferenceRow, FloatArray>>) : InferenceState()
 
-    data class Inferring(val done: Int, val total: Int) : InferenceState()
+    data class Inferring(val done: Int, val total: Int, val completed: List<Pair<InferenceRow, FloatArray>>) : InferenceState()
 }
 
 data class InferenceRow(val textFrameId: Long? = null, val imageFrameId: Long? = null)

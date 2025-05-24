@@ -6,6 +6,12 @@ CREATE TABLE frameEmbeddingIndex(
     CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
 );
 
+getAllIndex:
+SELECT * FROM frameEmbeddingIndex;
+
+clearAllIndex:
+DELETE FROM frameEmbeddingIndex;
+
 getIndexByKey:
 SELECT * FROM frameEmbeddingIndex WHERE indexKey = ?;
 
