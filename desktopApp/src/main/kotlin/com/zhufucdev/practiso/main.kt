@@ -116,6 +116,10 @@ fun main(args: Array<String>) {
 
                             AnswerApp(model)
                         }
+
+                        AppDestination.Preferences -> {
+                            PreferencesApp()
+                        }
                     }
                 }
             }
