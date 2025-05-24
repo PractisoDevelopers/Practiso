@@ -353,7 +353,7 @@ class FeiService(
                             send(FeiDbState.InProgress(totalFramesCount, completedFramesCount))
 
                             try {
-                                db.quizQueries.getAnyFrameEmbeddingIndexKey(
+                                db.embeddingQueries.getIndexKeyByFrameIds(
                                     textFrameId = textFrames.removal.map(TextFrame::id),
                                     imageFrameId = imageFrames.removal.map(ImageFrame::id)
                                 )
@@ -361,7 +361,7 @@ class FeiService(
                                     .forEach { index.remove(it.toULong()) }
 
                                 db.transaction {
-                                    db.quizQueries.removeFrameEmeddbingIndexByFrameIds(
+                                    db.embeddingQueries.removeIndexByFrameIds(
                                         textFrameId = textFrames.removal.map(TextFrame::id),
                                         imageFrameId = imageFrames.removal.map(ImageFrame::id)
                                     )
@@ -377,8 +377,8 @@ class FeiService(
                                         is InferenceState.Complete -> {
                                             db.transaction {
                                                 state.results.forEach { (row, ebd) ->
-                                                    val dbKey = db.quizQueries
-                                                        .getFrameEmbeddingIndexKey(
+                                                    val dbKey = db.embeddingQueries
+                                                        .getIndexKeyByFrameId(
                                                             row.textFrameId,
                                                             row.imageFrameId
                                                         )
@@ -388,7 +388,7 @@ class FeiService(
 
                                                     index.asF32.add(key.toULong(), ebd)
                                                     if (dbKey == null) {
-                                                        db.quizQueries.insertFrameEmbeddingIndex(
+                                                        db.embeddingQueries.insertIndex(
                                                             row.textFrameId,
                                                             row.imageFrameId,
                                                             key
@@ -397,7 +397,6 @@ class FeiService(
                                                 }
                                             }
                                         }
-
 
                                         is InferenceState.Inferring -> {
                                             completedFramesCount += state.done
@@ -530,8 +529,8 @@ suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
     count: Int,
 ): List<Pair<Frame, Float>> {
     val key = when (frame) {
-        is Frame.Image -> db.quizQueries.getImageFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
-        is Frame.Text -> db.quizQueries.getTextFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
+        is Frame.Image -> db.embeddingQueries.getImageIndex(frame.id).executeAsOneOrNull()
+        is Frame.Text -> db.embeddingQueries.getTextIndex(frame.id).executeAsOneOrNull()
         else -> throw FrameIndexNotSupportedException()
     }
     if (key == null) {
@@ -546,7 +545,7 @@ suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
         matches
             .map { (key, distance) ->
                 async(Dispatchers.IO) {
-                    val fei = db.quizQueries.getFrameEmbeddingIndexByKey(key.toLong())
+                    val fei = db.embeddingQueries.getIndexByKey(key.toLong())
                         .executeAsOneOrNull() ?: error("Index key has no associated frame.")
                     val frame = if (fei.textFrameId != null) {
                         db.quizQueries.getTextFrameById(fei.textFrameId).executeAsOne()

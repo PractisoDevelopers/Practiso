@@ -52,14 +52,6 @@ CREATE TABLE quiz(
     modificationTimeISO TEXT AS Instant
 );
 
-CREATE TABLE frameEmbeddingIndex(
-    textFrameId INTEGER,
-    imageFrameId INTEGER,
-    indexKey INTEGER NOT NULL,
-    PRIMARY KEY (textFrameId, imageFrameId, indexKey),
-    CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
-);
-
 getAllQuiz:
 SELECT *
 FROM quiz;
@@ -268,33 +260,3 @@ SELECT last_insert_rowid();
 updateIsKey:
 UPDATE frameByOptionsFrame SET isKey = ? WHERE id = ?;
 
-
-getFrameEmbeddingIndexByKey:
-SELECT * FROM frameEmbeddingIndex WHERE indexKey = ?;
-
-getFrameEmbeddingIndexKey:
-SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ? AND imageFrameId = ?;
-
-getAnyFrameEmbeddingIndexKey:
-SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId IN ? OR imageFrameId IN ?;
-
-insertFrameEmbeddingIndex:
-INSERT INTO frameEmbeddingIndex VALUES (?, ?, ?);
-
-getTextFrameEmbeddingIndex:
-SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ?;
-
-insertTextFrameEmbeddingIndex:
-INSERT INTO frameEmbeddingIndex(textFrameId, indexKey) VALUES (?, ?);
-
-getImageFrameEmbeddingIndex:
-SELECT indexKey FROM frameEmbeddingIndex WHERE imageFrameId = ?;
-
-insertImageFrameEmbeddingIndex:
-INSERT INTO frameEmbeddingIndex(imageFrameId, indexKey) VALUES (?, ?);
-
-removeFrameEmbeddingIndexByKey:
-DELETE FROM frameEmbeddingIndex WHERE indexKey = ?;
-
-removeFrameEmeddbingIndexByFrameIds:
-DELETE FROM frameEmbeddingIndex WHERE textFrameId IN ? OR imageFrameId IN ?;

@@ -1,0 +1,38 @@
+CREATE TABLE frameEmbeddingIndex(
+    textFrameId INTEGER,
+    imageFrameId INTEGER,
+    indexKey INTEGER NOT NULL,
+    PRIMARY KEY (textFrameId, imageFrameId, indexKey),
+    CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
+);
+
+getIndexByKey:
+SELECT * FROM frameEmbeddingIndex WHERE indexKey = ?;
+
+getIndexKeyByFrameId:
+SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ? AND imageFrameId = ?;
+
+getIndexKeyByFrameIds:
+SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId IN ? OR imageFrameId IN ?;
+
+insertIndex:
+INSERT INTO frameEmbeddingIndex VALUES (?, ?, ?);
+
+getTextIndex:
+SELECT indexKey FROM frameEmbeddingIndex WHERE textFrameId = ?;
+
+insertTextIndex:
+INSERT INTO frameEmbeddingIndex(textFrameId, indexKey) VALUES (?, ?);
+
+getImageIndex:
+SELECT indexKey FROM frameEmbeddingIndex WHERE imageFrameId = ?;
+
+insertImageIndex:
+INSERT INTO frameEmbeddingIndex(imageFrameId, indexKey) VALUES (?, ?);
+
+removeIndexByKey:
+DELETE FROM frameEmbeddingIndex WHERE indexKey = ?;
+
+removeIndexByFrameIds:
+DELETE FROM frameEmbeddingIndex WHERE textFrameId IN ? OR imageFrameId IN ?;
+
