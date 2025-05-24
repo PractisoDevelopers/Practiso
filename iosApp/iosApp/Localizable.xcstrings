@@ -1359,20 +1359,74 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Importing %1$d items, %2$d completed..."
+            "state" : "translated",
+            "value" : "Importing %#@arg1@ items, %2$d completed..."
+          },
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "d",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Importing %arg item, %2$d completed…"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Importing %arg items, %2$d completed…"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Importing %1$d items, %2$d completed..."
+            "state" : "needs_review",
+            "value" : "Importing %#@arg1@ items, %2$d completed..."
+          },
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "d",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "needs_review",
+                      "value" : "%arg"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Importing %1$d items, %2$d completed..."
+            "state" : "needs_review",
+            "value" : "Importing %#@arg1@ items, %2$d completed..."
+          },
+          "substitutions" : {
+            "arg1" : {
+              "argNum" : 1,
+              "formatSpecifier" : "d",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "needs_review",
+                      "value" : "%arg"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
