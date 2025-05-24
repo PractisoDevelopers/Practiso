@@ -140,8 +140,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%d questions"
+                  "state" : "translated",
+                  "value" : ""
                 }
               }
             }
@@ -344,6 +344,18 @@
     "About to download %lld files, consuming about %@ of data. When would you like to start?" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
+          }
+        },
+        "zh-Hant" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
@@ -576,9 +588,36 @@
       }
     },
     "Choose Another Model" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose Another Model"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose Another Model"
+          }
+        }
+      }
     },
     "Collecting frames..." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Collecting frames..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Collecting frames..."
+          }
+        }
+      }
 
     },
     "Collecting Frames..." : {
@@ -997,10 +1036,36 @@
       }
     },
     "Download required" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download required"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download required"
+          }
+        }
+      }
     },
     "Downloading model..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading model..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading model..."
+          }
+        }
+      }
     },
     "Edit" : {
       "localizations" : {
@@ -1116,7 +1181,20 @@
       }
     },
     "frame embedding inference initialization" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "frame embedding inference initialization"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "frame embedding inference initialization"
+          }
+        }
+      }
     },
     "Have a review" : {
       "localizations" : {
@@ -1509,7 +1587,20 @@
       }
     },
     "Missing models" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing models"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing models"
+          }
+        }
+      }
     },
     "Missing Models" : {
       "localizations" : {
@@ -1673,7 +1764,20 @@
       }
     },
     "Now" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Now"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Now"
+          }
+        }
+      }
     },
     "OK" : {
       "localizations" : {
@@ -1708,7 +1812,20 @@
       }
     },
     "Pending Download" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pending Download"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pending Download"
+          }
+        }
+      }
     },
     "Photo from Library" : {
       "localizations" : {
@@ -2400,7 +2517,20 @@
       }
     },
     "Use WLAN Only" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use WLAN Only"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use WLAN Only"
+          }
+        }
+      }
     },
     "Will create as Take %lld" : {
       "localizations" : {
