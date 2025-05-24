@@ -141,7 +141,7 @@
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : ""
+                  "value" : "%d个问题"
                 }
               }
             }
@@ -618,7 +618,6 @@
           }
         }
       }
-
     },
     "Collecting Frames..." : {
       "extractionState" : "stale",
@@ -1181,7 +1180,20 @@
       }
     },
     "Failed to copy resource." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to copy resource."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to copy resource."
+          }
+        }
+      }
     },
     "frame embedding inference initialization" : {
       "localizations" : {
@@ -1366,7 +1378,20 @@
       }
     },
     "Incompatible model." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Incompatible model."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Incompatible model."
+          }
+        }
+      }
     },
     "Inferring %d items..." : {
       "localizations" : {
@@ -1385,7 +1410,20 @@
       }
     },
     "Invalid file format." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid file format."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid file format."
+          }
+        }
+      }
     },
     "Keep Questions" : {
       "localizations" : {
@@ -1757,7 +1795,20 @@
       }
     },
     "No details were reported." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No details were reported."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No details were reported."
+          }
+        }
+      }
     },
     "No items available" : {
       "localizations" : {

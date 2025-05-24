@@ -156,7 +156,7 @@
     </plurals>
     <string name="missing_model_para">缺少模型</string>
     <string name="details_para">详情</string>
-    <string name="proceed_anyway_para">Proceed Anyway</string>
+    <string name="proceed_anyway_para">仍然继续</string>
     <plurals name="current_model_is_missing_following_features">
         <item quantity="other">当前模型缺少以下功能：</item>
     </plurals>
@@ -192,7 +192,7 @@
     <string name="frame_embedding_model_para">框嵌入模型</string>
     <string-array name="known_model_names_title">
         <item>Jina V2 Small（英语）</item>
-        <item>Dmeta Small English-Chinese</item>
+        <item>Dmeta Small（英语-中文）</item>
         <item>Jina V2 Base（英语-西班牙语）</item>
         <item>Jina V2 Base（英语-德语）</item>
     </string-array>
