@@ -36,7 +36,7 @@ fun getEmbeddingsUnconfined(
         }
 
     val total = textFrames.size
-    val batchSize = minOf(textFrames.size / parallelTasks + 1, MAX_BATCH_SIZE)
+    val batchSize = minOf(parallelTasks, MAX_BATCH_SIZE)
     coroutineScope {
         val jobs = textFrames.chunked(batchSize)
             .map { textFrames ->

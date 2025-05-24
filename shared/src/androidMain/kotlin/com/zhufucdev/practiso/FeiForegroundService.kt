@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
@@ -12,6 +13,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.flowWithLifecycle
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.TextFrame
+import com.zhufucdev.practiso.platform.AndroidPlatform
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.InferenceState
 import com.zhufucdev.practiso.platform.getEmbeddingsUnconfined
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 
 class FeiForegroundService : LifecycleService() {
     private val _state = MutableSharedFlow<InferenceState>()
@@ -81,6 +84,15 @@ class FeiForegroundService : LifecycleService() {
         )
 
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        AndroidPlatform.maxParallelInferences.update {
+            val newCap = maxOf(it * 2 / 3, 1)
+            Log.w("FeiForegroundService", "Low memory. Updating parallelism cap to $newCap")
+            newCap
+        }
     }
 
     override fun onDestroy() {

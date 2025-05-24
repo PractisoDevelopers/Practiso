@@ -10,7 +10,9 @@ import com.russhwolf.settings.SharedPreferencesSettings
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.service.FeiService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import okio.FileSystem
 import okio.Path
@@ -34,8 +36,10 @@ object AndroidPlatform : Platform() {
 
     override fun getInferenceSession(): Flow<InferenceSession> =
         AppSettings.feiCompatibilityMode.map {
-            InferenceSession(cpuOnly = it)
+            InferenceSession(cpuOnly = it, maxParallelInferences = maxParallelInferences)
         }
+
+    val maxParallelInferences = MutableStateFlow(FeiService.MAX_BATCH_SIZE)
 
     override val filesystem: FileSystem
         get() = FileSystem.SYSTEM
