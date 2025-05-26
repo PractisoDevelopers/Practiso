@@ -14,12 +14,22 @@ import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
 import com.zhufucdev.practiso.service.FeiInitializationException
 import com.zhufucdev.practiso.service.FeiService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -39,6 +49,9 @@ import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.measureTimedValue
 
 fun Language(bcp47Code: String): Language =
     when (bcp47Code) {
@@ -96,7 +109,9 @@ actual fun createFrameEmbeddingInference(
                         ),
                         interpreterProducer = {
                             Interpreter(bf, options)
-                        }
+                        },
+                        maxParallelInferences = session.maxParallelInferences,
+                        maxParallelInfLimit = FeiService.MAX_BATCH_SIZE
                     )
                 )
             )
@@ -178,7 +193,9 @@ actual fun createFrameEmbeddingInference(
                             ),
                             interpreterProducer = {
                                 Interpreter(modelBuffer, options)
-                            }
+                            },
+                            maxParallelInferences = session.maxParallelInferences,
+                            maxParallelInfLimit = FeiService.MAX_BATCH_SIZE
                         )
                     )
                 )
@@ -203,11 +220,20 @@ private fun AssetFileDescriptor.toMappedByteBuffer(): MappedByteBuffer {
     }
 }
 
+/**
+ * An LiteRT wrapper for dynamic scaling.
+ *
+ * @param model The loading [MlModel]
+ * @param interpreterProducer To produce [InterpreterApi]. This function should guarantee producing the same result everytime
+ * @param maxParallelInferences A [Flow] for scaling limit, meaning no more inferences than it will happen at the same time
+ * @param maxParallelInfLimit No more [InterpreterApi] will be created than it, and panics if [maxParallelInferences] floats above this value.
+ */
 class LiteRtInference(
     override val model: MlModel,
     val interpreterProducer: InterpreterProducer,
     val inputProducer: LiteRtInputProducer,
-    maxParallelInferences: Int = FeiService.MAX_BATCH_SIZE,
+    val maxParallelInferences: StateFlow<Int>,
+    val maxParallelInfLimit: Int,
 ) : FrameEmbeddingInference {
     private val primaryInterpreter = interpreterProducer()
     private val outputTensors =
@@ -224,7 +250,8 @@ class LiteRtInference(
         outputTensors.entries.firstOrNull { (idx, t) -> t.shape()[0] == modelBatchSize && t.shape().size == 2 }
             ?: error("No output slot.")
 
-    private val interpreterSemaphore = Semaphore(maxParallelInferences)
+    private val interpreterSemaphore = Semaphore(maxParallelInfLimit)
+    private val latestOccupationTime = MutableStateFlow(Duration.INFINITE)
 
     private val modelBatchSize get() = inputIdsTensor.shape()[0]
     private val modelSeqLen get() = inputIdsTensor.shape()[1]
@@ -232,6 +259,42 @@ class LiteRtInference(
 
     private val interpreterMutex = Mutex()
     private val freeInterpreters = mutableListOf(primaryInterpreter)
+
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    private val lifecycleScope = CoroutineScope(newSingleThreadContext("LiteRtInference"))
+
+    init {
+        with(lifecycleScope){
+            launch {
+                // keep acquirable interpreters under control of maxParallelInferences
+                maxParallelInferences.collectLatest {
+                    val deprivation = maxParallelInfLimit - it
+                    if (deprivation < 0) {
+                        error("maxParallelInferences($it) overflowing maxParallelInfLimit($maxParallelInfLimit)")
+                    }
+                    repeat(deprivation) {
+                        interpreterSemaphore.acquire()
+                    }
+                }
+            }
+
+            launch {
+                // for evey 120% of latestOccupationTime, close each freeInterpreters
+                latestOccupationTime.collectLatest {
+                    Log.d("LiteRT", "Latest inference took ${it.toDouble(DurationUnit.SECONDS)} seconds")
+                    while (true) {
+                        delay(it * 1.2)
+                        interpreterMutex.withLock {
+                            freeInterpreters.forEach(InterpreterApi::close)
+                            freeInterpreters.clear()
+                            Log.d("LiteRT", "Free interpreters all cleared")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private suspend fun <T> withInterpreter(block: suspend (InterpreterApi) -> T): T {
         Log.d("LiteRT", "${interpreterSemaphore.availablePermits} interpreters available")
         return interpreterSemaphore.withPermit {
@@ -239,7 +302,11 @@ class LiteRtInference(
                 freeInterpreters.removeLastOrNull() ?: interpreterProducer()
             }
             try {
-                block(interpreter)
+                val (result, occupation) = measureTimedValue {
+                    block(interpreter)
+                }
+                latestOccupationTime.emit(occupation)
+                result
             } finally {
                 freeInterpreters.add(interpreter)
             }
@@ -280,6 +347,7 @@ class LiteRtInference(
 
     override fun close() {
         freeInterpreters.onEach(InterpreterApi::close)
+        lifecycleScope.cancel()
     }
 }
 
@@ -355,7 +423,10 @@ class BertLiteRtInputProducer(val tokenizer: Tokenizer, val sequenceLength: Int)
     }
 }
 
-actual data class InferenceSession(val cpuOnly: Boolean = false) {
+actual data class InferenceSession(
+    val cpuOnly: Boolean = false,
+    val maxParallelInferences: StateFlow<Int> = MutableStateFlow(FeiService.MAX_BATCH_SIZE),
+) {
     actual companion object {
         actual val default: InferenceSession = InferenceSession()
     }

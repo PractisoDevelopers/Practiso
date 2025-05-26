@@ -7,6 +7,7 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.KnownModels
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.FrameEmbeddingIndex
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.AnyEmbeddingOutput
@@ -61,6 +62,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -163,7 +165,6 @@ class FeiService(
 
     @OptIn(FlowPreview::class)
     private val upgradeStateFlow: SharedFlow<FeiDbState> = channelFlow {
-        var shouldReadIndexFile = true
         val textFrameFlow =
             db.quizQueries.getAllTextFrames()
                 .asFlow()
@@ -195,7 +196,9 @@ class FeiService(
             db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
 
         getFeiModel().combine(getPlatform().getInferenceSession(), ::Pair)
-            .collectLatest { (model, session) ->
+            .withIndex()
+            .collectLatest { (modelVersion, modelSessionBundled) ->
+                val (model, session) = modelSessionBundled
                 if (model == null) {
                     send(
                         FeiDbState.MissingModel(
@@ -212,20 +215,6 @@ class FeiService(
                     return@collectLatest
                 }
 
-                val dbFeiVersion =
-                    db.settingsQueries.getIntByKey(DB_FEI_VERSION_KEY).executeAsOneOrNull()
-                val indexFeiVersion =
-                    db.settingsQueries.getIntByKey(INDEX_FEI_VERSION_KEY).executeAsOneOrNull()
-
-                db.transaction {
-                    if (dbFeiVersion == null) {
-                        db.settingsQueries.setInt(DB_FEI_VERSION_KEY, 0)
-                    }
-                    if (indexFeiVersion == null) {
-                        db.settingsQueries.setInt(INDEX_FEI_VERSION_KEY, 0)
-                    }
-                }
-
                 val (index, indexInvalid) = suspend {
                     val dbModelId =
                         db.settingsQueries.getTextByKey(DB_FEI_MODEL_KEY).executeAsOneOrNull()
@@ -233,10 +222,9 @@ class FeiService(
                     val embeddingFeature =
                         model.features.filterFirstIsInstanceOrNull<EmbeddingOutput>()!!
 
-                    if (dbModelId == model.hfId && shouldReadIndexFile && dbFeiVersion != null && dbFeiVersion == indexFeiVersion) {
+                    if (dbModelId == model.hfId && modelVersion == 0) {
                         withContext(Dispatchers.IO) {
                             getSearchIndex(embeddingFeature).let {
-                                shouldReadIndexFile = false
                                 it to !it.maybeLoad()
                             }
                         }
@@ -244,6 +232,13 @@ class FeiService(
                         getSearchIndex(embeddingFeature) to true
                     }
                 }()
+
+                if (indexInvalid) {
+                    db.transaction {
+                        db.embeddingQueries.clearAllIndex()
+                        db.settingsQueries.setText(DB_FEI_MODEL_KEY, model.hfId)
+                    }
+                }
 
                 val feiStateFlow = createFrameEmbeddingInference(model, session)
                     .flowOn(Dispatchers.IO)
@@ -311,13 +306,52 @@ class FeiService(
                 try {
                     send(FeiDbState.Ready(index, db, model))
 
-                    val initialDrops = if (indexInvalid) 0 else 1
-                    textFrameFlow.drop(initialDrops).addPacing()
-                        .combine(imageFrameFlow.drop(initialDrops).addPacing(), ::Pair)
+                    textFrameFlow.addPacing()
+                        .combine(imageFrameFlow.addPacing(), ::Pair)
                         .filterNot { (a, b) -> a.isEmpty() && b.isEmpty() }
                         .buffer()
                         .collect { (textFrames, imageFrames) ->
                             send(FeiDbState.Collecting)
+
+                            db.embeddingQueries.getIndexKeyByFrameIds(
+                                textFrameId = textFrames.removal.map(TextFrame::id),
+                                imageFrameId = imageFrames.removal.map(ImageFrame::id)
+                            )
+                                .executeAsList()
+                                .forEach { index.remove(it.toULong()) }
+
+                            db.transaction {
+                                db.embeddingQueries.removeIndexByFrameIds(
+                                    textFrameId = textFrames.removal.map(TextFrame::id),
+                                    imageFrameId = imageFrames.removal.map(ImageFrame::id)
+                                )
+                            }
+
+                            val (textFrameAddition, imageFrameAddition) = {
+                                if (modelVersion == 0 &&
+                                    db.settingsQueries.getTextByKey(DB_FEI_MODEL_KEY)
+                                        .executeAsOneOrNull() == model.hfId
+                                ) {
+                                    val existingIndexes =
+                                        db.embeddingQueries.getAllIndex().executeAsList()
+                                    val indexedTextFrameIds =
+                                        existingIndexes
+                                            .mapNotNull(FrameEmbeddingIndex::textFrameId)
+                                            .toSet()
+                                    val indexedImageFrameIds =
+                                        existingIndexes
+                                            .mapNotNull(FrameEmbeddingIndex::imageFrameId)
+                                            .toSet()
+                                    val textAdd = textFrames.addition.toMutableSet()
+                                        .apply { removeAll { it.id in indexedTextFrameIds } }
+                                    val imageAdd = imageFrames.addition.toMutableSet()
+                                        .apply { removeAll { it.id in indexedImageFrameIds } }
+
+                                    textAdd to imageAdd
+                                } else {
+                                    textFrames.addition to imageFrames.addition
+                                }
+                            }()
 
                             withContext(Dispatchers.IO) {
                                 db.transaction {
@@ -329,8 +363,8 @@ class FeiService(
                                 withContext(Dispatchers.IO) {
                                     getMissingFeatures(
                                         model,
-                                        textFrames.addition,
-                                        imageFrames.addition
+                                        textFrameAddition,
+                                        imageFrameAddition
                                     )
                                 }
                             if (missingFeatures.isNotEmpty()) {
@@ -347,85 +381,76 @@ class FeiService(
                             }
 
                             val totalFramesCount =
-                                textFrames.addition.size + textFrames.removal.size
+                                textFrameAddition.size + textFrames.removal.size
                             var completedFramesCount = 0
 
                             send(FeiDbState.InProgress(totalFramesCount, completedFramesCount))
 
-                            try {
-                                db.transaction {
-                                    db.quizQueries.removeFrameEmeddbingIndexByFrameIds(
-                                        textFrameId = textFrames.removal.map(TextFrame::id),
-                                        imageFrameId = imageFrames.removal.map(ImageFrame::id)
-                                    )
-                                }
+                            platformGetEmbeddings(
+                                textFrameAddition,
+                                imageFrameAddition,
+                                fei,
+                                parallelTasks
+                            ).flowOn(Dispatchers.IO).collect { state ->
+                                when (state) {
+                                    is InferenceState.Complete -> {}
 
-                                platformGetEmbeddings(
-                                    textFrames.addition,
-                                    imageFrames.addition,
-                                    fei,
-                                    parallelTasks
-                                ).flowOn(Dispatchers.IO).collect { state ->
-                                    when (state) {
-                                        is InferenceState.Complete -> {
-                                            db.transaction {
-                                                state.results.forEach { (row, ebd) ->
-                                                    val dbKey = db.quizQueries
-                                                        .getFrameEmbeddingIndexKey(
-                                                            row.textFrameId,
-                                                            row.imageFrameId
-                                                        )
-                                                        .executeAsOneOrNull()
-                                                    val key = dbKey
-                                                        ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
+                                    is InferenceState.Inferring -> {
+                                        completedFramesCount += state.done
+                                        send(
+                                            FeiDbState.InProgress(
+                                                total = totalFramesCount,
+                                                done = completedFramesCount
+                                            )
+                                        )
 
-                                                    index.asF32.add(key.toULong(), ebd)
-                                                    if (dbKey == null) {
-                                                        db.quizQueries.insertFrameEmbeddingIndex(
-                                                            row.textFrameId,
-                                                            row.imageFrameId,
-                                                            key
-                                                        )
-                                                    }
+                                        db.transaction {
+                                            state.completed.forEach { (row, ebd) ->
+                                                val dbKey = db.embeddingQueries
+                                                    .getIndexKeyByFrameId(
+                                                        row.textFrameId,
+                                                        row.imageFrameId
+                                                    )
+                                                    .executeAsOneOrNull()
+                                                val key = dbKey
+                                                    ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
+
+                                                index.asF32.add(key.toULong(), ebd)
+                                                if (dbKey == null) {
+                                                    db.embeddingQueries.insertIndex(
+                                                        row.textFrameId,
+                                                        row.imageFrameId,
+                                                        key
+                                                    )
                                                 }
                                             }
                                         }
 
-
-                                        is InferenceState.Inferring -> {
-                                            completedFramesCount += state.done
-                                            send(
-                                                FeiDbState.InProgress(
-                                                    total = totalFramesCount,
-                                                    done = completedFramesCount
-                                                )
+                                        db.transaction {
+                                            db.settingsQueries.setInt(
+                                                EMBEDDING_TOP_KEY,
+                                                nextEmbeddingKeyMutex.withLock { nextEmbeddingKey }
                                             )
+                                        }
+
+                                        val fs = getPlatform().filesystem
+                                        ensureSearchDirectory(fs)
+                                        fs.sink(INDEX_PATH).use {
+                                            index.saveTo(it)
                                         }
                                     }
                                 }
-                            } finally {
-                                // to avoid poisoning the database
-                                db.settingsQueries.setInt(
-                                    EMBEDDING_TOP_KEY,
-                                    nextEmbeddingKey
-                                )
                             }
 
                             send(FeiDbState.Ready(index, db, model))
 
                             withContext(Dispatchers.IO) {
-                                val fs = getPlatform().filesystem
-                                ensureSearchDirectory(fs)
-                                fs.sink(INDEX_PATH).use {
-                                    index.saveTo(it)
-                                }
-                                db.transaction {
-                                    db.settingsQueries.copyInt(
-                                        DB_FEI_VERSION_KEY,
-                                        INDEX_FEI_VERSION_KEY
-                                    )
-                                    db.settingsQueries.setText(DB_FEI_MODEL_KEY, model.hfId)
-                                }
+                            }
+                            db.transaction {
+                                db.settingsQueries.copyInt(
+                                    DB_FEI_VERSION_KEY,
+                                    INDEX_FEI_VERSION_KEY
+                                )
                             }
                         }
                 } finally {
@@ -523,8 +548,8 @@ suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
     count: Int,
 ): List<Pair<Frame, Float>> {
     val key = when (frame) {
-        is Frame.Image -> db.quizQueries.getImageFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
-        is Frame.Text -> db.quizQueries.getTextFrameEmbeddingIndex(frame.id).executeAsOneOrNull()
+        is Frame.Image -> db.embeddingQueries.getImageIndex(frame.id).executeAsOneOrNull()
+        is Frame.Text -> db.embeddingQueries.getTextIndex(frame.id).executeAsOneOrNull()
         else -> throw FrameIndexNotSupportedException()
     }
     if (key == null) {
@@ -539,7 +564,7 @@ suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
         matches
             .map { (key, distance) ->
                 async(Dispatchers.IO) {
-                    val fei = db.quizQueries.getFrameEmbeddingIndexByKey(key.toLong())
+                    val fei = db.embeddingQueries.getIndexByKey(key.toLong())
                         .executeAsOneOrNull() ?: error("Index key has no associated frame.")
                     val frame = if (fei.textFrameId != null) {
                         db.quizQueries.getTextFrameById(fei.textFrameId).executeAsOne()
