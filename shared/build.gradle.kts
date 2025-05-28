@@ -125,3 +125,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+
+skie {
+    features {
+        enableSwiftUIObservingPreview = true
+    }
+}

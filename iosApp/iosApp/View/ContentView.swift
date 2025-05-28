@@ -12,8 +12,6 @@ struct ContentView: View {
     @State private var feiState: FeiDbState? = nil
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State private var preferredColumn: NavigationSplitViewColumn = .content
-    @State private var takeStatData: SessionView.DataState<TakeStat> = .pending
-    @State private var sessionData: SessionView.DataState<OptionImpl<SessionOption>> = .pending
     @State private var appScale = 1.0
     @State private var isBackGestureActivated = false
 
@@ -116,7 +114,7 @@ struct ContentView: View {
                     QuestionView()
                         .navigationTitle("Question")
                 default:
-                    SessionView(namespace: namespace, sessions: $sessionData, takes: $takeStatData)
+                    SessionView(namespace: namespace)
                         .navigationTitle("Session")
                         .environment(\.takeStarterCache, takeStarterCache)
                 }

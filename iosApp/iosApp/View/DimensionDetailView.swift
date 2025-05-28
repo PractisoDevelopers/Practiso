@@ -3,29 +3,27 @@ import SwiftUI
 @preconcurrency import ComposeApp
 
 struct DimensionDetailView : View {
-    private enum ViewState {
-        case pending
-        case ok([QuizIntensity])
-        case unavailable
-    }
-    
     private let libraryService = LibraryService(db: Database.shared.app)
     private let categorizeService = CategorizeServiceSync(db: Database.shared.app)
     
     let option: DimensionOption
     
-    @State private var state: ViewState = .pending
     @State private var currentPopoverItem: QuizIntensity? = nil
+    @State private var quizzesFlow: SkieSwiftFlow<[QuizIntensity]>
+    
+    init(option: DimensionOption) {
+        self.option = option
+        self.quizzesFlow = libraryService.getQuizIntensities(dimId: option.id)
+    }
     
     var body: some View {
-        Group {
-            switch state {
-            case .pending:
-                VStack {
-                    ProgressView()
-                    Text("Loading dimension...")
-                }
-            case .ok(let data):
+        Observing(quizzesFlow) {
+            VStack {
+                ProgressView()
+                Text("Loading dimension...")
+            }
+        } content: { data in
+            if !data.isEmpty {
                 ScrollView {
                     FileGrid {
                         ForEach(data) { item in
@@ -39,22 +37,23 @@ struct DimensionDetailView : View {
                     .padding()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .dropDestination(for: QuizOption.self) { items, _ in
-                    handleQuizDrop(items: items)
-                }
-            case .unavailable:
+            } else {
                 VStack {
                     Placeholder(
-                        image: Image(systemName: "questionmark.circle"),
-                        text: Text("Dimension not available")
+                        image: Image(systemName: "folder"),
+                        text: Text("Dimension is Empty")
                     )
                 }
             }
         }
-        .task(id: option.id) {
-            for await data in libraryService.getQuizIntensities(dimId: option.id) {
-                state = .ok(data)
-            }
+        .dropDestination(for: QuizOption.self) { items, _ in
+            handleQuizDrop(items: items)
+        }
+        .onAppear {
+            quizzesFlow = libraryService.getQuizIntensities(dimId: option.id)
+        }
+        .onChange(of: option) { _, newValue in
+            quizzesFlow = libraryService.getQuizIntensities(dimId: newValue.id)
         }
         .navigationTitle(option.dimension.name)
     }

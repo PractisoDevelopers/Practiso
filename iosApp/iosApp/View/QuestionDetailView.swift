@@ -3,37 +3,32 @@ import SwiftUI
 @preconcurrency import ComposeApp
 
 struct QuestionDetailView : View {
-    enum DataState : Equatable {
-        case pending
-        case ok(QuizFrames)
-        case unavailable
-    }
-    
     let option: QuizOption
     let libraryService = LibraryService(db: Database.shared.app)
     let editService = EditService(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
+    @State private var quizFramesFlow: SkieSwiftOptionalFlow<QuizFrames>
+    
     @State private var editMode: EditMode = .inactive
-    @State private var data: DataState = .pending
     @State private var staging: [Frame]? = nil
     @State private var editHistory = History()
     @Namespace private var question
     
     init(option: QuizOption) {
         self.option = option
+        self.quizFramesFlow = libraryService.getQuizFrames(quizId: option.id)
     }
     
     var body: some View {
-        Group {
-            switch data {
-            case .pending:
-                VStack {
-                    ProgressView()
-                    Text("Loading Question...")
-                }
-                
-            case .ok(let quizFrames):
+        Observing(quizFramesFlow) {
+            VStack {
+                ProgressView()
+                Text("Loading Question...")
+            }
+            .navigationTitle(titleBinding)
+        } content: { qf in
+            if let quizFrames = qf {
                 if editMode.isEditing == true {
                     QuestionEditor(
                         data: Binding {
@@ -87,21 +82,17 @@ struct QuestionDetailView : View {
                         }
                     }
                 }
-                
-            case .unavailable:
+            } else {
                 Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("Question Unavailable"))
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: option.id) {
+        .onAppear {
             alteredTitle = nil
-            for await qf in libraryService.getQuizFrames(quizId: option.id) {
-                if let qf = qf {
-                    data = .ok(qf)
-                } else {
-                    data = .unavailable
-                }
-            }
+            quizFramesFlow = libraryService.getQuizFrames(quizId: option.id)
+        }
+        .onChange(of: option) { _, newValue in
+            quizFramesFlow = libraryService.getQuizFrames(quizId: newValue.id)
         }
         .onChange(of: editMode) { oldValue, newValue in
             onEditModeChange(oldValue: oldValue, newValue: newValue)
@@ -111,15 +102,6 @@ struct QuestionDetailView : View {
     func onEditModeChange(oldValue: EditMode, newValue: EditMode) {
         if newValue != .inactive {
             return
-        }
-        Task {
-            if let newData = await libraryService.getQuizFrames(quizId: option.id)
-                .makeAsyncIterator()
-                .next() {
-                if let present = newData {
-                    data = .ok(present)
-                }
-            }
         }
     }
     
