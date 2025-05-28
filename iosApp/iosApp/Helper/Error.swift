@@ -8,6 +8,8 @@ extension String {
             self.init(localized: "library intent model")
         case .feiInitialization:
             self.init(localized: "frame embedding inference initialization")
+        case .feiResource:
+            self.init(localized: "frame embedding inference resource")
         case .unknown:
             self.init(localized: "unknown scope")
         }
@@ -21,6 +23,8 @@ extension String {
             self.init(localized: "Incompatible model.")
         case .invalidFileFormat(_):
             self.init(localized: "Invalid file format.")
+        case .resourceNotFound(let res):
+            self.init(localized: "Resource \(res.name) at \(res.location) was not found.")
         case .raw(let raw):
             self.init(raw.content)
         case .localized(let localized):

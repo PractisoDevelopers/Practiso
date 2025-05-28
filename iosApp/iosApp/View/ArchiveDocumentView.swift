@@ -176,7 +176,7 @@ fileprivate extension View {
                     }
                 } message: {
                     Text("An error has occurred in \(String(appScope: model.scope)).")
-                    if let err = model.error {
+                    if let err = model.cause {
                         Text(err.description())
                     }
                 }

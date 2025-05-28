@@ -13,6 +13,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.url
 import io.ktor.http.appendPathSegments
 import io.ktor.http.buildUrl
+import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
@@ -26,14 +27,14 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
-class HfDirectoryWalker(
+abstract class AbstractHfWalker(
     val repoId: String,
     val revision: String = "main",
-    val path: String? = null,
+    open val path: String? = null,
 ) : DirectoryWalker {
     override val identifier: String
         get() = "$repoId@$revision"
-    private val httpClient = createHttpClient {
+    protected val httpClient = createHttpClient {
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
@@ -42,8 +43,24 @@ class HfDirectoryWalker(
         install(PractisoHeaderPlugin)
     }
 
+    protected fun getDownloadLink(path: String) =
+        buildUrl {
+            takeFrom(ENDPOINT_URL)
+            appendPathSegments(repoId, "resolve", revision, path)
+        }
+
+    companion object {
+        protected const val ENDPOINT_URL = "https://huggingface.co"
+    }
+}
+
+class HfDirectoryWalker(
+    repoId: String,
+    revision: String = "main",
+    path: String? = null,
+) : AbstractHfWalker(repoId, revision, path) {
     override val files: Flow<DownloadableFile> = flow {
-        val items: List<Item> = httpClient.get {
+        val response = httpClient.get {
             url {
                 takeFrom(ENDPOINT_URL)
                 appendPathSegments("api", "models", repoId, "tree", revision)
@@ -52,7 +69,11 @@ class HfDirectoryWalker(
                 }
             }
             parameter("recursive", "True")
-        }.body()
+        }
+        if (!response.status.isSuccess()) {
+            throw IllegalArgumentException("HTTP ${response.status.value}")
+        }
+        val items: List<Item> = response.body()
 
         for (item in items) {
             if (item.type == ItemType.File) {
@@ -68,30 +89,6 @@ class HfDirectoryWalker(
         }
     }
 
-    suspend fun getDownloadableFile(fileName: String): DownloadableFile {
-        val url = getDownloadLink(if (path != null) "$path/$fileName" else fileName)
-        val response = httpClient.head {
-            url(url)
-            header("Accept-Encoding", "identity")
-        }.headers
-        return DownloadableFile(
-            name = fileName,
-            url = url,
-            size = response["Content-Length"]?.toLongOrNull(),
-            sha256sum = response["ETag"]
-        )
-    }
-
-    companion object {
-        private const val ENDPOINT_URL = "https://huggingface.co"
-    }
-
-    private fun getDownloadLink(path: String) =
-        buildUrl {
-            takeFrom(ENDPOINT_URL)
-            appendPathSegments(repoId, "resolve", revision, path)
-        }
-
     @Serializable
     data class Item(
         @Serializable(ItemTypeSerializer::class) val type: ItemType,
@@ -103,6 +100,34 @@ class HfDirectoryWalker(
     enum class ItemType {
         Directory,
         File
+    }
+}
+
+class HfSingleFileWalker(
+    repoId: String,
+    revision: String = "main",
+    override val path: String
+) : AbstractHfWalker(repoId, revision, path) {
+    override val identifier: String
+        get() = "$repoId@$revision/$path"
+
+    override val files: Flow<DownloadableFile>
+        get() = flow {
+            emit(getDownloadableFile())
+        }
+
+    suspend fun getDownloadableFile(): DownloadableFile {
+        val url = getDownloadLink(path)
+        val response = httpClient.head {
+            url(url)
+            header("Accept-Encoding", "identity")
+        }.headers
+        return DownloadableFile(
+            name = path,
+            url = url,
+            size = response["Content-Length"]?.toLongOrNull(),
+            sha256sum = response["ETag"]
+        )
     }
 }
 

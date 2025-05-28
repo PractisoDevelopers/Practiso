@@ -4,15 +4,18 @@ import android.content.res.AssetFileDescriptor
 import android.util.Log
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.zhufucdev.practiso.HfDirectoryWalker
+import com.zhufucdev.practiso.HfSingleFileWalker
 import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.ListedDirectoryWalker
 import com.zhufucdev.practiso.R
 import com.zhufucdev.practiso.SharedContext
+import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.ErrorMessage
+import com.zhufucdev.practiso.datamodel.ErrorModel
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
-import com.zhufucdev.practiso.service.FeiInitializationException
+import com.zhufucdev.practiso.service.FeiException
 import com.zhufucdev.practiso.service.FeiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -26,6 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -117,7 +121,13 @@ actual fun createFrameEmbeddingInference(
                     )
                 )
             } catch (e: IllegalArgumentException) {
-                throw FeiInitializationException(ErrorMessage.IncompatibleModel, e)
+                throw FeiException(
+                    ErrorModel(
+                        scope = AppScope.FeiInitialization,
+                        cause = e,
+                        message = ErrorMessage.IncompatibleModel
+                    )
+                )
             }
         }
 
@@ -137,13 +147,18 @@ actual fun createFrameEmbeddingInference(
                     files = buildList {
                         if (!fs.exists(localTfLiteModel)) {
                             val hfRepo =
-                                HfDirectoryWalker(model.hfId, path = "LiteRT").moved("LiteRT")
+                                HfDirectoryWalker(model.hfId, path = "LiteRT")
+                                    .throwsFeiError()
+                                    .moved("LiteRT")
                             val modelFile = hfRepo.files.toList()
                             addAll(modelFile)
                         }
                         if (!fs.exists(localTokenizer)) {
                             val tokenizerFile =
-                                HfDirectoryWalker(model.hfId).getDownloadableFile("tokenizer.json")
+                                HfSingleFileWalker(
+                                    model.hfId,
+                                    path = "tokenizer.json"
+                                ).throwsFeiError().files.first()
                             add(tokenizerFile)
                         }
                     },
@@ -205,7 +220,13 @@ actual fun createFrameEmbeddingInference(
                 )
             } catch (e: IllegalArgumentException) {
                 modelFileChannel.close()
-                throw FeiInitializationException(ErrorMessage.IncompatibleModel, e)
+                throw FeiException(
+                    ErrorModel(
+                        AppScope.FeiInitialization,
+                        cause = e,
+                        message = ErrorMessage.IncompatibleModel
+                    )
+                )
             }
         }
     }

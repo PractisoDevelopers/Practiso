@@ -1,8 +1,13 @@
 package com.zhufucdev.practiso.platform
 
+import com.zhufucdev.practiso.datamodel.AppScope
+import com.zhufucdev.practiso.datamodel.ErrorMessage
+import com.zhufucdev.practiso.datamodel.ErrorModel
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
+import com.zhufucdev.practiso.service.FeiException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.onEach
@@ -68,4 +73,23 @@ expect class InferenceSession {
     companion object {
         val default: InferenceSession
     }
+}
+
+fun DirectoryWalker.throwsFeiError(): DirectoryWalker = object : DirectoryWalker {
+    override val identifier: String
+        get() = this@throwsFeiError.identifier
+    override val files: Flow<DownloadableFile>
+        get() = this@throwsFeiError.files
+            .catch {
+                throw FeiException(
+                    error = ErrorModel(
+                        scope = AppScope.FeiResource,
+                        message = ErrorMessage.ResourceNotFound(
+                            this@throwsFeiError::class.simpleName ?: "Directory Walker",
+                            identifier
+                        ),
+                        cause = it
+                    )
+                )
+            }
 }

@@ -1211,6 +1211,9 @@
         }
       }
     },
+    "frame embedding inference resource" : {
+
+    },
     "Have a review" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2100,6 +2103,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Reset"
+          }
+        }
+      }
+    },
+    "Resource %@ at %@ was not found." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ at %2$@ was not found."
           }
         }
       }

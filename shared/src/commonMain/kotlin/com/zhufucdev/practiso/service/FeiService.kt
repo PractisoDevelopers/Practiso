@@ -11,9 +11,7 @@ import com.zhufucdev.practiso.database.FrameEmbeddingIndex
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.AnyEmbeddingOutput
-import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
-import com.zhufucdev.practiso.datamodel.ErrorMessage
 import com.zhufucdev.practiso.datamodel.ErrorModel
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.ImageInput
@@ -286,14 +284,14 @@ class FeiService(
                     try {
                         fei = feiStateFlow.lastCompletion()
                         break
-                    } catch (e: FeiInitializationException) {
+                    } catch (e: FeiException) {
                         val responseChannel = Channel<FeiErrorResponse>()
                         send(
                             FeiDbState.Error(
                                 ErrorModel(
-                                    scope = AppScope.FeiInitialization,
-                                    error = e.cause,
-                                    message = e.errorMsg
+                                    scope = e.error.scope,
+                                    cause = e.cause,
+                                    message = e.error.message
                                 ), responseChannel
                             )
                         )
@@ -508,8 +506,7 @@ sealed class FeiDbState {
     data class InProgress(val total: Int, val done: Int) : FeiDbState()
 }
 
-class FeiInitializationException(val errorMsg: ErrorMessage, override val cause: Throwable) :
-    Exception(cause)
+class FeiException(val error: ErrorModel) : Exception(error.cause)
 
 private data class FrameUpdate<T>(
     val addition: Set<T>,

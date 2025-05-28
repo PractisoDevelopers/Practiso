@@ -14,6 +14,7 @@ struct StatusBarModifier : ViewModifier {
         }
         .missingModelAlert(stateBinding: $missingModelState)
         .downloadAlert(stateBinding: $pendingDownloadState)
+        .errorAlert(stateBinding: $errorState)
     }
     
     @ToolbarContentBuilder
@@ -169,7 +170,7 @@ extension View {
                 stateBinding.wrappedValue = nil
             }
         } message: {
-            if let msg = stateBinding.wrappedValue!.error.message {
+            if let msg = stateBinding.wrappedValue?.error.message {
                 Text(String(errorMessage: msg))
             } else {
                 Text("No details were reported.")

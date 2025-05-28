@@ -156,7 +156,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
                                 ImportState.Error(
                                     model = ErrorModel(
                                         scope = AppScope.LibraryIntentModel,
-                                        error = e,
+                                        cause = e,
                                         message = ErrorMessage.CopyResource(
                                             requester.name ?: name,
                                             quizArchive.name
@@ -210,7 +210,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
                     ImportState.Error(
                         model = ErrorModel(
                             scope = AppScope.LibraryIntentModel,
-                            error = e,
+                            cause = e,
                             message = ErrorMessage.InvalidFileFormat
                         ),
                         cancel = cancelChannel

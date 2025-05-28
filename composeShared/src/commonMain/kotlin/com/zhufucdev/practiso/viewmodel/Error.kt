@@ -13,10 +13,12 @@ import resources.error_at_n_para
 import resources.failed_to_copy_resource_x_for_quiz_y_para
 import resources.failed_to_create_interpreter_para
 import resources.fei_init_span
+import resources.fei_resource_span
 import resources.internal_message_n_para
 import resources.invalid_file_format_para
 import resources.library_intent_model_span
 import resources.no_details_reported_para
+import resources.resource_x_was_not_found_at_y_para
 import resources.unknown_span
 import resources.untracked_error_para
 
@@ -26,6 +28,7 @@ fun AppScope.localizedName(): String =
         AppScope.Unknown -> stringResource(Res.string.unknown_span)
         AppScope.LibraryIntentModel -> stringResource(Res.string.library_intent_model_span)
         AppScope.FeiInitialization -> stringResource(Res.string.fei_init_span)
+        AppScope.FeiResource -> stringResource(Res.string.fei_resource_span)
     }
 
 @Composable
@@ -33,7 +36,7 @@ fun ErrorModel.stringTitle(): String =
     when (scope) {
         AppScope.Unknown ->
             when {
-                error != null -> error!!::class.let { it.simpleName ?: it.qualifiedName }
+                cause != null -> cause!!::class.let { it.simpleName ?: it.qualifiedName }
                     ?: stringResource(Res.string.untracked_error_para)
 
                 else -> stringResource(Res.string.untracked_error_para)
@@ -77,6 +80,11 @@ fun ErrorMessage.localizedString(): String =
         ErrorMessage.IncompatibleModel -> stringResource(
             Res.string.failed_to_create_interpreter_para
         )
+
+        is ErrorMessage.ResourceNotFound -> stringResource(
+            Res.string.resource_x_was_not_found_at_y_para,
+            name, location
+        )
     }
 
 @Composable
@@ -85,8 +93,8 @@ fun ErrorModel.stringContent(): String = buildString {
         appendLine(it.localizedString())
     }
 
-    error?.message?.let { message ->
-        error?.let { e ->
+    cause?.message?.let { message ->
+        cause?.let { e ->
             append(
                 stringResource(
                     Res.string.internal_message_n_para,

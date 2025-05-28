@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.SnackbarExtension
+import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
@@ -402,14 +403,16 @@ fun FeiStatus(state: FeiDbState) {
             text = {
                 Text(buildString {
                     appendLine(error.stringContent())
-                    if (!AppSettings.feiCompatibilityMode.value) {
-                        appendLine(
-                            stringResource(Res.string.you_may_enable_compatibility_mode_in_settings_para)
-                        )
-                    } else {
-                        appendLine(
-                            stringResource(Res.string.you_may_select_another_model_in_settings_para)
-                        )
+                    if (error.scope == AppScope.FeiInitialization) {
+                        if (!AppSettings.feiCompatibilityMode.value) {
+                            appendLine(
+                                stringResource(Res.string.you_may_enable_compatibility_mode_in_settings_para)
+                            )
+                        } else {
+                            appendLine(
+                                stringResource(Res.string.you_may_select_another_model_in_settings_para)
+                            )
+                        }
                     }
                 }.trim())
             }

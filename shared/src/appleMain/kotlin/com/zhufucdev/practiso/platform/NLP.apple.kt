@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.platform
 
 import com.zhufucdev.practiso.HfDirectoryWalker
+import com.zhufucdev.practiso.HfSingleFileWalker
 import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.ListedDirectoryWalker
 import com.zhufucdev.practiso.convert.toNSURL
@@ -19,6 +20,7 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -122,6 +124,7 @@ actual fun createFrameEmbeddingInference(
                                 model.hfId,
                                 path = modelRoot
                             ).moved(modelRoot)
+                                .throwsFeiError()
                                 .files
                                 .map { it.copy(name = localMlPackage.name + "/" + it.name) }
                                 .toList()
@@ -129,7 +132,10 @@ actual fun createFrameEmbeddingInference(
                     }
                     if (!fs.exists(localTokenizer)) {
                         val file =
-                            HfDirectoryWalker(repoId = model.hfId).getDownloadableFile("tokenizer.json")
+                            HfSingleFileWalker(
+                                repoId = model.hfId,
+                                path = "tokenizer.json"
+                            ).throwsFeiError().files.first()
                         add(file.copy(name = localTokenizer.name))
                     }
                 }
