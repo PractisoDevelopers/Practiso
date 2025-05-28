@@ -986,7 +986,24 @@
         }
       }
     },
+    "Dimension is Empty" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dimension is Empty"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dimension is Empty"
+          }
+        }
+      }
+    },
     "Dimension not available" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
