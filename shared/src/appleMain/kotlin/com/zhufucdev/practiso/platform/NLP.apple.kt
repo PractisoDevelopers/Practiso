@@ -14,6 +14,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocPointerTo
+import kotlinx.cinterop.autoreleasepool
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
@@ -210,6 +211,7 @@ interface MLFeatureProviderProducer {
     fun <T : Frame> many(frames: List<T>): Map<String, List<MLFeatureValue>>
 }
 
+@OptIn(BetaInteropApi::class)
 class CoreMLInference(
     override val model: MlModel,
     val ml: CoreMLModel,
@@ -219,11 +221,13 @@ class CoreMLInference(
 
     override suspend fun getEmbeddings(frame: Frame): FloatArray = suspendCoroutine { c ->
         val input = FeatureProviderAdapter(providerProducer, listOf(frame))
-        ml.predictionFromFeatures(input) { p, e ->
-            if (e != null) {
-                c.resumeWithException(IllegalStateException(e.localizedDescription))
-            } else {
-                c.resume(resultProducer(p!!, input))
+        autoreleasepool {
+            ml.predictionFromFeatures(input) { p, e ->
+                if (e != null) {
+                    c.resumeWithException(IllegalStateException(e.localizedDescription))
+                } else {
+                    c.resume(resultProducer(p!!, input))
+                }
             }
         }
     }
@@ -234,17 +238,22 @@ class CoreMLInference(
             memScoped {
                 val errPtr = allocPointerTo<ObjCObjectVar<NSError?>>()
                 val input = FeatureProviderAdapter(providerProducer, frames)
-                val predictions = ml.predictionsFromBatch(
-                    input,
-                    errPtr.value
-                )
-                val error = errPtr.pointed?.value
-                if (error != null) {
-                    c.resumeWithException(IllegalStateException(error.localizedDescription))
-                } else if (predictions != null) {
-                    c.resume((0 until predictions.count).map {
-                        resultProducer(predictions.featuresAtIndex(it), input.featuresAtIndex(it))
-                    })
+                autoreleasepool {
+                    val predictions = ml.predictionsFromBatch(
+                        input,
+                        errPtr.value
+                    )
+                    val error = errPtr.pointed?.value
+                    if (error != null) {
+                        c.resumeWithException(IllegalStateException(error.localizedDescription))
+                    } else if (predictions != null) {
+                        c.resume((0 until predictions.count).map {
+                            resultProducer(
+                                predictions.featuresAtIndex(it),
+                                input.featuresAtIndex(it)
+                            )
+                        })
+                    }
                 }
             }
         }
