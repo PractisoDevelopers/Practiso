@@ -1390,7 +1390,7 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "new",
             "value" : "Importing %#@arg1@ items, %2$d completed..."
           },
           "substitutions" : {
@@ -1401,7 +1401,7 @@
                 "plural" : {
                   "other" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
+                      "state" : "translated",
                       "value" : "%arg"
                     }
                   }
@@ -1412,7 +1412,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "new",
             "value" : "Importing %#@arg1@ items, %2$d completed..."
           },
           "substitutions" : {
@@ -1423,7 +1423,7 @@
                 "plural" : {
                   "other" : {
                     "stringUnit" : {
-                      "state" : "needs_review",
+                      "state" : "translated",
                       "value" : "%arg"
                     }
                   }
