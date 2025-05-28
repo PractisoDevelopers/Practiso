@@ -1212,7 +1212,20 @@
       }
     },
     "frame embedding inference resource" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "frame embedding inference resource"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "frame embedding inference resource"
+          }
+        }
+      }
     },
     "Have a review" : {
       "localizations" : {
@@ -2110,6 +2123,18 @@
     "Resource %@ at %@ was not found." : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ at %2$@ was not found."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ at %2$@ was not found."
+          }
+        },
+        "zh-Hant" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Resource %1$@ at %2$@ was not found."
