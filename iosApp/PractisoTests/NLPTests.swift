@@ -31,7 +31,7 @@ struct NLPTests {
         
         for phrase in similarPhrases {
             let dis = try await getDistance(frame1: makeTextFrame(content: phrase.0), frame2: makeTextFrame(content: phrase.1), inference: inference)
-            #expect(dis < 0.2, "similar phrase is dissimilar")
+            #expect(dis < 0.2, "similar phrase: \"\(phrase.0)\" and \"\(phrase.1)\"")
         }
         
         for phrase in dissimilarPhrases {

@@ -99,22 +99,26 @@ actual fun createFrameEmbeddingInference(
             val bf = SharedContext.resources
                 .openRawResourceFd(R.raw.jina_v2_en_small)
                 .toMappedByteBuffer()
-            emit(
-                InferenceModelState.Complete(
-                    LiteRtInference(
-                        model = model,
-                        inputProducer = BertLiteRtInputProducer(
-                            tokenizer,
-                            model.sequenceLength ?: 512
-                        ),
-                        interpreterProducer = {
-                            Interpreter(bf, options)
-                        },
-                        maxParallelInferences = session.maxParallelInferences,
-                        maxParallelInfLimit = FeiService.MAX_BATCH_SIZE
+            try {
+                emit(
+                    InferenceModelState.Complete(
+                        LiteRtInference(
+                            model = model,
+                            inputProducer = BertLiteRtInputProducer(
+                                tokenizer,
+                                model.sequenceLength ?: 512
+                            ),
+                            interpreterProducer = {
+                                Interpreter(bf, options)
+                            },
+                            maxParallelInferences = session.maxParallelInferences,
+                            maxParallelInfLimit = FeiService.MAX_BATCH_SIZE
+                        )
                     )
                 )
-            )
+            } catch (e: IllegalArgumentException) {
+                throw FeiInitializationException(ErrorMessage.IncompatibleModel, e)
+            }
         }
 
         else -> {
@@ -264,7 +268,7 @@ class LiteRtInference(
     private val lifecycleScope = CoroutineScope(newSingleThreadContext("LiteRtInference"))
 
     init {
-        with(lifecycleScope){
+        with(lifecycleScope) {
             launch {
                 // keep acquirable interpreters under control of maxParallelInferences
                 maxParallelInferences.collectLatest {
@@ -281,7 +285,10 @@ class LiteRtInference(
             launch {
                 // for evey 120% of latestOccupationTime, close each freeInterpreters
                 latestOccupationTime.collectLatest {
-                    Log.d("LiteRT", "Latest inference took ${it.toDouble(DurationUnit.SECONDS)} seconds")
+                    Log.d(
+                        "LiteRT",
+                        "Latest inference took ${it.toDouble(DurationUnit.SECONDS)} seconds"
+                    )
                     while (true) {
                         delay(it * 1.2)
                         interpreterMutex.withLock {

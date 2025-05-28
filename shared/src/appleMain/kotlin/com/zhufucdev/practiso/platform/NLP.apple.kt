@@ -376,7 +376,6 @@ private class SingleOutputResultProducer(val featureName: String) :
         val value = feature.multiArrayValue!!
         val shape = value.shape as List<NSNumber>
         assert(shape.size == 2 && (shape.first() as NSNumber).intValue == 1) { "shape error, (1, n) expected, got (${value.shape.joinToString()})" }
-        assert(value.dataType == MLMultiArrayDataTypeFloat16) { "type error" }
         FloatArray(shape[1].intValue) { idx -> value.objectAtIndexedSubscript(idx.toLong()).floatValue }
     }
 

@@ -193,6 +193,7 @@
     <string-array name="known_model_names_title">
         <item>Jina V2 Small（英语）</item>
         <item>Dmeta Small（英语-中文）</item>
+        <item>FlagEmbedding BGE V1.5 Small（英语-中文）</item>
         <item>Jina V2 Base（英语-西班牙语）</item>
         <item>Jina V2 Base（英语-德语）</item>
     </string-array>

@@ -1,7 +1,6 @@
 package com.zhufucdev.practiso
 
 import com.zhufucdev.practiso.datamodel.CosineDistanceNormalizer
-import com.zhufucdev.practiso.datamodel.CosinePowerNormalizer
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.LanguageInput
 import com.zhufucdev.practiso.datamodel.MlModel
@@ -24,7 +23,16 @@ data object DmetaSmallZh : MlModel(
     features = setOf(
         TokenInput(sequenceLength = 768),
         LanguageInput.of(Language.English, Language.Chinese, Language.Default),
-        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F16, CosinePowerNormalizer())
+        EmbeddingOutput(MetricKind.Cos, 768u, ScalarKind.F32, CosineDistanceNormalizer)
+    )
+)
+
+data object FlagEmbeddingSmallZh : MlModel(
+    hfId = "zhufucdev/BAAI-bge-small-zh-v1.5",
+    features = setOf(
+        TokenInput(sequenceLength = 512),
+        LanguageInput.of(Language.English, Language.Chinese, Language.Default),
+        EmbeddingOutput(MetricKind.Cos, 512u, ScalarKind.F32, CosineDistanceNormalizer)
     )
 )
 
@@ -46,6 +54,9 @@ data object JinaV2EnDe : MlModel(
     )
 )
 
-object KnownModels : List<MlModel> by listOf(JinaV2SmallEn, DmetaSmallZh, JinaV2EnEs, JinaV2EnDe) {
+object KnownModels : List<MlModel> by listOf(
+    JinaV2SmallEn, DmetaSmallZh,
+    FlagEmbeddingSmallZh, JinaV2EnEs, JinaV2EnDe
+) {
     operator fun get(hfId: String): MlModel? = firstOrNull { it.hfId == hfId }
 }

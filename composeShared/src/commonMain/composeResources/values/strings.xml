@@ -209,6 +209,7 @@
     <string-array name="known_model_names_title">
         <item>Jina V2 Small English</item>
         <item>Dmeta Small English-Chinese</item>
+        <item>FlagEmbedding BGE V1.5 Small English-Chinese</item>
         <item>Jina V2 Base English-Spanish</item>
         <item>Jina V2 Base English-Germany</item>
     </string-array>
