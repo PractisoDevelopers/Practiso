@@ -27,8 +27,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ and %2$d more"
+            "state" : "translated",
+            "value" : "%1$@ 及 另外%2$d 项"
           }
         },
         "zh-Hant" : {
@@ -49,8 +49,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ and %2$lld more"
+            "state" : "translated",
+            "value" : "%1$@ 及另外 %2$lld 项"
           }
         },
         "zh-Hant" : {
@@ -65,8 +65,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ Unavailable"
+            "state" : "translated",
+            "value" : "%@不可用"
           }
         },
         "zh-Hant" : {
@@ -81,8 +81,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%d items"
+            "state" : "translated",
+            "value" : "%d 项"
           }
         },
         "zh-Hant" : {
@@ -103,8 +103,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$d items in %2$@"
+            "state" : "translated",
+            "value" : "%1$d 项在 %2$@中"
           }
         },
         "zh-Hant" : {
@@ -171,8 +171,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$d questions in %2$@"
+            "state" : "translated",
+            "value" : "%1$d道题在%2$@中"
           }
         },
         "zh-Hant" : {
@@ -187,8 +187,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld hr"
+            "state" : "translated",
+            "value" : "%lld 小时"
           }
         },
         "zh-Hant" : {
@@ -224,8 +224,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld items selected"
+                  "state" : "translated",
+                  "value" : "已选择%lld项"
                 }
               }
             }
@@ -249,8 +249,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld min"
+            "state" : "translated",
+            "value" : "%lld 分钟"
           }
         },
         "zh-Hant" : {
@@ -265,8 +265,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld sec"
+            "state" : "translated",
+            "value" : "%lld 秒"
           }
         },
         "zh-Hant" : {
@@ -281,7 +281,7 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld%%"
           }
         },
@@ -297,8 +297,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld%% done"
+            "state" : "translated",
+            "value" : "已完成 %lld%%"
           }
         },
         "zh-Hant" : {
@@ -313,7 +313,7 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "0%"
           }
         },
@@ -329,7 +329,7 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "100%"
           }
         },
@@ -351,8 +351,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
+            "state" : "translated",
+            "value" : "即将下载 %1$lld 文件，消耗大约 %2$@ 数据。您想何时开始？"
           }
         },
         "zh-Hant" : {
@@ -367,8 +367,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "添加"
           }
         },
         "zh-Hant" : {
@@ -383,8 +383,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add Option"
+            "state" : "translated",
+            "value" : "添加选项"
           }
         },
         "zh-Hant" : {
@@ -399,8 +399,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add Timer"
+            "state" : "translated",
+            "value" : "添加计时器"
           }
         },
         "zh-Hant" : {
@@ -415,8 +415,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All Timers"
+            "state" : "translated",
+            "value" : "所有计时器"
           }
         },
         "zh-Hant" : {
@@ -431,8 +431,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Almost There"
+            "state" : "translated",
+            "value" : "即将完成"
           }
         },
         "zh-Hant" : {
