@@ -1002,6 +1002,9 @@
         }
       }
     },
+    "Dimension is Empty" : {
+
+    },
     "Dimension not available" : {
       "extractionState" : "stale",
       "localizations" : {
