@@ -15,7 +15,8 @@
             "value" : ""
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%@ and %d more" : {
       "localizations" : {
@@ -33,8 +34,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ and %2$d more"
+            "state" : "translated",
+            "value" : "%1$@及另外%2$d項"
           }
         }
       }
@@ -55,8 +56,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ and %2$lld more"
+            "state" : "translated",
+            "value" : "%1$@及另外%2$lld項"
           }
         }
       }
@@ -71,8 +72,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ Unavailable"
+            "state" : "translated",
+            "value" : "%@不可用"
           }
         }
       }
@@ -87,8 +88,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%d items"
+            "state" : "translated",
+            "value" : "%d項"
           }
         }
       }
@@ -109,8 +110,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$d items in %2$@"
+            "state" : "translated",
+            "value" : "%2$@中的%1$d項"
           }
         }
       }
@@ -152,8 +153,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%d questions"
+                  "state" : "translated",
+                  "value" : "%d個問題"
                 }
               }
             }
@@ -177,8 +178,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$d questions in %2$@"
+            "state" : "translated",
+            "value" : "%2$@中的%1$d道題"
           }
         }
       }
@@ -193,8 +194,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld hr"
+            "state" : "translated",
+            "value" : "%lld小時"
           }
         }
       }
@@ -236,8 +237,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld items selected"
+                  "state" : "translated",
+                  "value" : "已選擇%lld項"
                 }
               }
             }
@@ -255,8 +256,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld min"
+            "state" : "translated",
+            "value" : "%lld分鐘"
           }
         }
       }
@@ -271,8 +272,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld sec"
+            "state" : "translated",
+            "value" : "%lld秒"
           }
         }
       }
@@ -287,7 +288,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld%%"
           }
         }
@@ -303,8 +304,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld%% done"
+            "state" : "translated",
+            "value" : "已完成%lld%%"
           }
         }
       }
@@ -319,7 +320,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "0%"
           }
         }
@@ -335,7 +336,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "100%"
           }
         }
@@ -357,8 +358,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "About to download %1$lld files, consuming about %2$@ of data. When would you like to start?"
+            "state" : "translated",
+            "value" : "即將下載%1$lld檔案，消耗大約%2$@數據。何時開始？"
           }
         }
       }
@@ -373,8 +374,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add"
+            "state" : "translated",
+            "value" : "新增"
           }
         }
       }
@@ -389,8 +390,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add Option"
+            "state" : "translated",
+            "value" : "新增選項"
           }
         }
       }
@@ -405,8 +406,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Add Timer"
+            "state" : "translated",
+            "value" : "新增計時器"
           }
         }
       }
@@ -421,8 +422,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "All Timers"
+            "state" : "translated",
+            "value" : "所有計時器"
           }
         }
       }
@@ -437,8 +438,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Almost There"
+            "state" : "translated",
+            "value" : "即將完成"
           }
         }
       }
@@ -453,8 +454,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Alternative Text"
+            "state" : "translated",
+            "value" : "替代文字"
           }
         }
       }
@@ -469,8 +470,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error has occurred in %@."
+            "state" : "translated",
+            "value" : "在%@中發生錯誤。"
           }
         }
       }
@@ -485,8 +486,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred"
+            "state" : "translated",
+            "value" : "發生錯誤"
           }
         }
       }
@@ -501,8 +502,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred and the document is failed to load"
+            "state" : "translated",
+            "value" : "發生錯誤，文件載入失敗"
           }
         }
       }
@@ -517,8 +518,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Begin a new take as well"
+            "state" : "translated",
+            "value" : "同時開始新練習"
           }
         }
       }
@@ -533,8 +534,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Briefly describe this image..."
+            "state" : "translated",
+            "value" : "簡述此圖像..."
           }
         }
       }
@@ -549,8 +550,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browse"
+            "state" : "translated",
+            "value" : "瀏覽"
           }
         }
       }
@@ -565,8 +566,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cancel"
+            "state" : "translated",
+            "value" : "取消"
           }
         }
       }
@@ -581,8 +582,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Change Intensity"
+            "state" : "translated",
+            "value" : "改變強度"
           }
         }
       }
@@ -597,8 +598,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Choose Another Model"
+            "state" : "translated",
+            "value" : "切換模型"
           }
         }
       }
@@ -613,8 +614,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Collecting frames..."
+            "state" : "translated",
+            "value" : "正在收集框..."
           }
         }
       }
@@ -629,8 +630,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Confirmation"
+            "state" : "translated",
+            "value" : "確認"
           }
         }
       }
@@ -645,8 +646,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue without starting"
+            "state" : "translated",
+            "value" : "繼續而不開始"
           }
         }
       }
@@ -661,8 +662,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create"
+            "state" : "translated",
+            "value" : "建立"
           }
         }
       }
@@ -677,8 +678,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create Dimension"
+            "state" : "translated",
+            "value" : "建立新聚類"
           }
         }
       }
@@ -693,8 +694,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created %@"
+            "state" : "translated",
+            "value" : "%@已建立"
           }
         }
       }
@@ -709,8 +710,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Creation"
+            "state" : "translated",
+            "value" : "建立時間"
           }
         }
       }
@@ -725,8 +726,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Current model doesn't support features:"
+            "state" : "translated",
+            "value" : "目前模型不支援功能："
           }
         }
       }
@@ -741,8 +742,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Currently no ML model is available. A model with following features is required:"
+            "state" : "translated",
+            "value" : "目前沒有可用的機器學習模型。需要一個具有以下功能的模型："
           }
         }
       }
@@ -757,8 +758,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data is invalid because it is compound."
+            "state" : "translated",
+            "value" : "資料無效，因為它是複合的。"
           }
         }
       }
@@ -773,8 +774,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data represents an empty archive."
+            "state" : "translated",
+            "value" : "資料表示一個空封存檔。"
           }
         }
       }
@@ -789,8 +790,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "刪除"
           }
         }
       }
@@ -805,8 +806,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete %@"
+            "state" : "translated",
+            "value" : "刪除%@"
           }
         }
       }
@@ -821,8 +822,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete All"
+            "state" : "translated",
+            "value" : "全部刪除"
           }
         }
       }
@@ -837,8 +838,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete Options"
+            "state" : "translated",
+            "value" : "刪除選項"
           }
         }
       }
@@ -880,8 +881,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "Deleting %lld questions"
+                  "state" : "translated",
+                  "value" : "正在刪除%lld題目"
                 }
               }
             }
@@ -899,8 +900,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Deleting Dimension"
+            "state" : "translated",
+            "value" : "刪除聚類"
           }
         }
       }
@@ -911,6 +912,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "派生"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "衍生"
           }
         }
       }
@@ -925,8 +932,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Deselect"
+            "state" : "translated",
+            "value" : "取消選擇"
           }
         }
       }
@@ -941,8 +948,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Deselect All"
+            "state" : "translated",
+            "value" : "取消全選"
           }
         }
       }
@@ -957,8 +964,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details Here"
+            "state" : "translated",
+            "value" : "了解詳情"
           }
         }
       }
@@ -973,8 +980,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dimension"
+            "state" : "translated",
+            "value" : "聚類"
           }
         }
       }
@@ -989,8 +996,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dimension is Empty"
+            "state" : "translated",
+            "value" : "聚類為空"
           }
         }
       }
@@ -1005,8 +1012,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Don't create takes for now"
+            "state" : "translated",
+            "value" : "目前不建立練習"
           }
         }
       }
@@ -1021,8 +1028,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Done"
+            "state" : "translated",
+            "value" : "完成"
           }
         }
       }
@@ -1037,8 +1044,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Download required"
+            "state" : "translated",
+            "value" : "需要下載"
           }
         }
       }
@@ -1053,8 +1060,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading model..."
+            "state" : "translated",
+            "value" : "正在下載模型..."
           }
         }
       }
@@ -1069,8 +1076,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit"
+            "state" : "translated",
+            "value" : "編輯"
           }
         }
       }
@@ -1085,8 +1092,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit Content"
+            "state" : "translated",
+            "value" : "編輯內容"
           }
         }
       }
@@ -1102,8 +1109,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Empty"
+            "state" : "translated",
+            "value" : "空"
           }
         }
       }
@@ -1118,8 +1125,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Empty question"
+            "state" : "translated",
+            "value" : "空問題"
           }
         }
       }
@@ -1134,8 +1141,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error"
+            "state" : "translated",
+            "value" : "錯誤"
           }
         }
       }
@@ -1150,8 +1157,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude"
+            "state" : "translated",
+            "value" : "排除"
           }
         }
       }
@@ -1166,8 +1173,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Explore"
+            "state" : "translated",
+            "value" : "瀏覽"
           }
         }
       }
@@ -1182,8 +1189,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed to copy resource."
+            "state" : "translated",
+            "value" : "複製資源失敗。"
           }
         }
       }
@@ -1198,8 +1205,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "frame embedding inference initialization"
+            "state" : "translated",
+            "value" : "框嵌入推論初始化"
           }
         }
       }
@@ -1214,8 +1221,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "frame embedding inference resource"
+            "state" : "translated",
+            "value" : "框嵌入推論資源"
           }
         }
       }
@@ -1230,8 +1237,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Have a review"
+            "state" : "translated",
+            "value" : "複習一下"
           }
         }
       }
@@ -1246,8 +1253,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Hidden"
+            "state" : "translated",
+            "value" : "隱藏"
           }
         }
       }
@@ -1262,8 +1269,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Hide"
+            "state" : "translated",
+            "value" : "隱藏"
           }
         }
       }
@@ -1278,8 +1285,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Home"
+            "state" : "translated",
+            "value" : "首頁"
           }
         }
       }
@@ -1294,8 +1301,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Ignore"
+            "state" : "translated",
+            "value" : "忽略"
           }
         }
       }
@@ -1310,8 +1317,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Image"
+            "state" : "translated",
+            "value" : "圖片"
           }
         }
       }
@@ -1326,8 +1333,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Image File"
+            "state" : "translated",
+            "value" : "圖片檔案"
           }
         }
       }
@@ -1342,8 +1349,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import Archive"
+            "state" : "translated",
+            "value" : "匯入封存檔"
           }
         }
       }
@@ -1358,8 +1365,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import Completed"
+            "state" : "translated",
+            "value" : "匯入完成"
           }
         }
       }
@@ -1418,8 +1425,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Importing %#@arg1@ items, %2$d completed..."
+            "state" : "translated",
+            "value" : "正在匯入%#@arg1@項，已完成%2$d項..."
           },
           "substitutions" : {
             "arg1" : {
@@ -1430,7 +1437,7 @@
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg"
+                      "value" : "正在匯入%arg項, 已完成%2$d項…"
                     }
                   }
                 }
@@ -1450,8 +1457,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Incompatible model."
+            "state" : "translated",
+            "value" : "模型不相容。"
           }
         }
       }
@@ -1466,8 +1473,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Inferring %d items..."
+            "state" : "translated",
+            "value" : "正在推論%d項..."
           }
         }
       }
@@ -1478,6 +1485,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "与状态栏交互以继续"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "與狀態列互動以繼續"
           }
         }
       }
@@ -1492,8 +1505,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid file format."
+            "state" : "translated",
+            "value" : "無效檔案格式。"
           }
         }
       }
@@ -1508,8 +1521,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep Questions"
+            "state" : "translated",
+            "value" : "保留題目"
           }
         }
       }
@@ -1524,8 +1537,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less"
+            "state" : "translated",
+            "value" : "收合"
           }
         }
       }
@@ -1540,8 +1553,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Library"
+            "state" : "translated",
+            "value" : "題庫"
           }
         }
       }
@@ -1556,8 +1569,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "library intent model"
+            "state" : "translated",
+            "value" : "題庫意圖模型"
           }
         }
       }
@@ -1572,8 +1585,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loaded data represents an invalid image."
+            "state" : "translated",
+            "value" : "載入的資料代表無效圖像。"
           }
         }
       }
@@ -1588,8 +1601,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading dimension..."
+            "state" : "translated",
+            "value" : "正在載入聚類..."
           }
         }
       }
@@ -1604,8 +1617,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Image..."
+            "state" : "translated",
+            "value" : "正在載入圖片..."
           }
         }
       }
@@ -1620,8 +1633,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Information..."
+            "state" : "translated",
+            "value" : "正在載入資訊..."
           }
         }
       }
@@ -1636,8 +1649,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Question..."
+            "state" : "translated",
+            "value" : "正在載入題目…"
           }
         }
       }
@@ -1652,8 +1665,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading questions..."
+            "state" : "translated",
+            "value" : "正在載入題目…"
           }
         }
       }
@@ -1668,25 +1681,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading session..."
-          }
-        }
-      }
-    },
-    "Loading suggestions" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载建议..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading suggestions"
+            "value" : "正在載入題集…"
           }
         }
       }
@@ -1697,6 +1693,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在加载建议..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在載入建議..."
           }
         }
       }
@@ -1711,8 +1713,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Take..."
+            "state" : "translated",
+            "value" : "正在載入練習..."
           }
         }
       }
@@ -1727,8 +1729,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Missing models"
+            "state" : "translated",
+            "value" : "缺少模型"
           }
         }
       }
@@ -1743,8 +1745,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Missing Models"
+            "state" : "translated",
+            "value" : "缺少模型"
           }
         }
       }
@@ -1759,8 +1761,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Modification"
+            "state" : "translated",
+            "value" : "修改"
           }
         }
       }
@@ -1775,8 +1777,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "更多"
           }
         }
       }
@@ -1791,8 +1793,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name"
+            "state" : "translated",
+            "value" : "名稱"
           }
         }
       }
@@ -1807,8 +1809,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name of options frame"
+            "state" : "translated",
+            "value" : "選項框名稱"
           }
         }
       }
@@ -1823,8 +1825,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name of the dimension"
+            "state" : "translated",
+            "value" : "聚類名稱"
           }
         }
       }
@@ -1839,8 +1841,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name of the session"
+            "state" : "translated",
+            "value" : "題集名稱"
           }
         }
       }
@@ -1856,8 +1858,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "New question"
+            "state" : "translated",
+            "value" : "新題目"
           }
         }
       }
@@ -1872,8 +1874,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "下一頁"
           }
         }
       }
@@ -1888,8 +1890,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No details were reported."
+            "state" : "translated",
+            "value" : "沒有報告詳情。"
           }
         }
       }
@@ -1904,8 +1906,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No items available"
+            "state" : "translated",
+            "value" : "無可用項"
           }
         }
       }
@@ -1920,8 +1922,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Now"
+            "state" : "translated",
+            "value" : "剛才"
           }
         }
       }
@@ -1936,8 +1938,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "OK"
+            "state" : "translated",
+            "value" : "確定"
           }
         }
       }
@@ -1952,8 +1954,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Options"
+            "state" : "translated",
+            "value" : "選項"
           }
         }
       }
@@ -1968,8 +1970,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Pending Download"
+            "state" : "translated",
+            "value" : "準備下載"
           }
         }
       }
@@ -1984,8 +1986,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Photo from Library"
+            "state" : "translated",
+            "value" : "圖庫照片"
           }
         }
       }
@@ -2000,8 +2002,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Proceed"
+            "state" : "translated",
+            "value" : "繼續"
           }
         }
       }
@@ -2016,8 +2018,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Proceed Anyway"
+            "state" : "translated",
+            "value" : "仍然繼續"
           }
         }
       }
@@ -2032,8 +2034,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Question"
+            "state" : "translated",
+            "value" : "題目"
           }
         }
       }
@@ -2048,8 +2050,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Question Unavailable"
+            "state" : "translated",
+            "value" : "題目不可用"
           }
         }
       }
@@ -2064,8 +2066,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Recently created"
+            "state" : "translated",
+            "value" : "最近建立"
           }
         }
       }
@@ -2080,8 +2082,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Redo"
+            "state" : "translated",
+            "value" : "重做"
           }
         }
       }
@@ -2096,8 +2098,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove"
+            "state" : "translated",
+            "value" : "移除"
           }
         }
       }
@@ -2112,8 +2114,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Replace With"
+            "state" : "translated",
+            "value" : "取代為"
           }
         }
       }
@@ -2128,8 +2130,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Reset"
+            "state" : "translated",
+            "value" : "重設"
           }
         }
       }
@@ -2150,8 +2152,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource %1$@ at %2$@ was not found."
+            "state" : "translated",
+            "value" : "在%2$@上找不到資源%1$@。"
           }
         }
       }
@@ -2166,8 +2168,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource is Corrupted"
+            "state" : "translated",
+            "value" : "資源已損壞"
           }
         }
       }
@@ -2182,8 +2184,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource Unavailable"
+            "state" : "translated",
+            "value" : "資源不可用"
           }
         }
       }
@@ -2198,8 +2200,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "重試"
           }
         }
       }
@@ -2214,8 +2216,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "選擇"
           }
         }
       }
@@ -2230,8 +2232,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select All"
+            "state" : "translated",
+            "value" : "全選"
           }
         }
       }
@@ -2246,8 +2248,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select an Item to Show"
+            "state" : "translated",
+            "value" : "選擇一項顯示"
           }
         }
       }
@@ -2262,8 +2264,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Session"
+            "state" : "translated",
+            "value" : "題集"
           }
         }
       }
@@ -2278,8 +2280,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Session is empty"
+            "state" : "translated",
+            "value" : "題集為空"
           }
         }
       }
@@ -2294,8 +2296,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Session name"
+            "state" : "translated",
+            "value" : "題集名稱"
           }
         }
       }
@@ -2311,8 +2313,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sessions"
+            "state" : "translated",
+            "value" : "題集"
           }
         }
       }
@@ -2327,8 +2329,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show Accuracy"
+            "state" : "translated",
+            "value" : "顯示正確率"
           }
         }
       }
@@ -2343,8 +2345,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "跳過"
           }
         }
       }
@@ -2355,6 +2357,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "来源"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "來源"
           }
         }
       }
@@ -2369,8 +2377,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Source \"%@\" is unavailable."
+            "state" : "translated",
+            "value" : "資源「%@」不可用。"
           }
         }
       }
@@ -2385,8 +2393,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Specification"
+            "state" : "translated",
+            "value" : "細則"
           }
         }
       }
@@ -2401,8 +2409,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Start now"
+            "state" : "translated",
+            "value" : "立即開始"
           }
         }
       }
@@ -2417,8 +2425,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Suggestions"
+            "state" : "translated",
+            "value" : "建議"
           }
         }
       }
@@ -2433,8 +2441,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Take"
+            "state" : "translated",
+            "value" : "練習"
           }
         }
       }
@@ -2449,8 +2457,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Take %lld"
+            "state" : "translated",
+            "value" : "練習%lld"
           }
         }
       }
@@ -2465,8 +2473,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Take is removed"
+            "state" : "translated",
+            "value" : "練習已刪除"
           }
         }
       }
@@ -2481,8 +2489,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Takes"
+            "state" : "translated",
+            "value" : "練習"
           }
         }
       }
@@ -2497,8 +2505,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Template"
+            "state" : "translated",
+            "value" : "範本"
           }
         }
       }
@@ -2513,8 +2521,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Text"
+            "state" : "translated",
+            "value" : "文字"
           }
         }
       }
@@ -2529,8 +2537,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This archive is empty"
+            "state" : "translated",
+            "value" : "該封存檔為空"
           }
         }
       }
@@ -2545,8 +2553,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Time is Up"
+            "state" : "translated",
+            "value" : "時間到"
           }
         }
       }
@@ -2561,8 +2569,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Timer"
+            "state" : "translated",
+            "value" : "計時器"
           }
         }
       }
@@ -2577,8 +2585,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Timers"
+            "state" : "translated",
+            "value" : "計時器"
           }
         }
       }
@@ -2593,8 +2601,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Type text here..."
+            "state" : "translated",
+            "value" : "在此輸入文字..."
           }
         }
       }
@@ -2609,8 +2617,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Undo"
+            "state" : "translated",
+            "value" : "復原"
           }
         }
       }
@@ -2625,8 +2633,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unhide"
+            "state" : "translated",
+            "value" : "取消隱藏"
           }
         }
       }
@@ -2641,8 +2649,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown frame type %@"
+            "state" : "translated",
+            "value" : "未知的框類型%@"
           }
         }
       }
@@ -2657,8 +2665,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "unknown scope"
+            "state" : "translated",
+            "value" : "未知範圍"
           }
         }
       }
@@ -2673,8 +2681,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unnamed question"
+            "state" : "translated",
+            "value" : "未命名題目"
           }
         }
       }
@@ -2689,8 +2697,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unsupported data type"
+            "state" : "translated",
+            "value" : "不支援的資料類型"
           }
         }
       }
@@ -2700,13 +2708,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "仅使用 WLAN"
+            "value" : "仅使用WLAN"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use WLAN Only"
+            "state" : "translated",
+            "value" : "僅使用WLAN"
           }
         }
       }
@@ -2717,6 +2725,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "等待推理…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待推論…"
           }
         }
       }
@@ -2731,8 +2745,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Will create as Take %lld"
+            "state" : "translated",
+            "value" : "將建立為練習%lld"
           }
         }
       }
@@ -2747,8 +2761,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to delete questions contained as well?"
+            "state" : "translated",
+            "value" : "您想要同時刪除其中的題目嗎？"
           }
         }
       }
@@ -2763,8 +2777,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to delete these questions? This operation is inreversible."
+            "state" : "translated",
+            "value" : "您確定刪除這些題目嗎？該操作是不可逆的。"
           }
         }
       }
@@ -2806,8 +2820,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "Would you like to import %d questions?"
+                  "state" : "translated",
+                  "value" : "您想要匯入%d道題嗎？"
                 }
               }
             }
@@ -2825,8 +2839,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to remove \"%@\"? This operation is inreversible."
+            "state" : "translated",
+            "value" : "您確定移除「%@」嗎？此操作不可復原。"
           }
         }
       }
@@ -2841,8 +2855,8 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to start the newly created session immediately?"
+            "state" : "translated",
+            "value" : "您想要立即開始新建立的題集嗎？"
           }
         }
       }
