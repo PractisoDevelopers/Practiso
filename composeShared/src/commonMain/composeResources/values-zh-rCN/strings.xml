@@ -197,18 +197,18 @@
         <item>Jina V2 Base（英语-西班牙语）</item>
         <item>Jina V2 Base（英语-德语）</item>
     </string-array>
-    <string name="choose_another_model_para">选择另一个模型</string>
+    <string name="choose_another_model_para">更换模型</string>
     <string name="inference_init_error_para">推理初始化错误</string>
     <string name="use_only_cpu_for_inference_para">仅使用 CPU 推理</string>
     <string name="compatibility_mode_para">兼容模式</string>
     <string name="you_may_enable_compatibility_mode_in_settings_para">您可以在设置中打开兼容模式。</string>
     <string name="no_details_reported_para">没有报告详情。</string>
-    <string name="answering_para">正在应答</string>
+    <string name="answering_para">作答</string>
     <string name="smart_recommendations_para">智能推荐</string>
     <string name="you_may_select_another_model_in_settings_para">您可以在设置中选择另一个模型。</string>
     <string name="unknown_span">未知信息</string>
     <string name="fei_init_span">框嵌入推理初始化</string>
     <string name="failed_to_create_interpreter_para">创建解释器失败。</string>
-    <string name="resource_x_was_not_found_at_y_para">找不到 %2$s 上的 资源%1$s 。</string>
+    <string name="resource_x_was_not_found_at_y_para">在%2$s上找不到资源%1$s。</string>
     <string name="fei_resource_span">框嵌入推理资源</string>
 </resources>
