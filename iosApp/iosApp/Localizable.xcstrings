@@ -1002,16 +1002,13 @@
         }
       }
     },
-    "Dimension is Empty" : {
-
-    },
     "Dimension not available" : {
       "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不可用聚类"
+            "value" : "聚类不可用"
           }
         },
         "zh-Hant" : {
@@ -1027,7 +1024,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不要创建刚刚的练习"
+            "value" : "目前不创建练习"
           }
         },
         "zh-Hant" : {
@@ -1059,7 +1056,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "下载请求"
+            "value" : "需要下载"
           }
         },
         "zh-Hant" : {
@@ -1424,7 +1421,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在导入%#@arg1@项,%2$d项已完成..."
+            "value" : "正在导入%#@arg1@项，已完成%2$d项..."
           },
           "substitutions" : {
             "arg1" : {
@@ -1435,7 +1432,7 @@
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "正在导入%a项, 已完成%2$d项…"
+                      "value" : "正在导入%arg项, 已完成%2$d项…"
                     }
                   }
                 }
@@ -1472,7 +1469,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不兼容模型。"
+            "value" : "模型不兼容。"
           }
         },
         "zh-Hant" : {
@@ -1520,7 +1517,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存题目"
+            "value" : "保留题目"
           }
         },
         "zh-Hant" : {
@@ -1568,7 +1565,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "题库意向模型"
+            "value" : "题库意图模型"
           }
         },
         "zh-Hant" : {
@@ -1969,7 +1966,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "下载暂停"
+            "value" : "准备下载"
           }
         },
         "zh-Hant" : {
@@ -1985,7 +1982,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "图库中的照片"
+            "value" : "图库照片"
           }
         },
         "zh-Hant" : {
@@ -2049,7 +2046,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不可用题目"
+            "value" : "题目不可用"
           }
         },
         "zh-Hant" : {
@@ -2151,7 +2148,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在%2$@上找不到%1$@资源。"
+            "value" : "在%2$@上找不到资源%1$@。"
           }
         },
         "zh-Hant" : {
@@ -2376,7 +2373,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "标准"
+            "value" : "细则"
           }
         },
         "zh-Hant" : {
@@ -2728,7 +2725,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您确定同时删除其中的题目吗？"
+            "value" : "您想要同时删除其中的题目吗？"
           }
         },
         "zh-Hant" : {
