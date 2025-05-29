@@ -104,7 +104,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$d项在%2$@中"
+            "value" : "%2$@中的%1$d项"
           }
         },
         "zh-Hant" : {
@@ -172,7 +172,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$d道题在%2$@中"
+            "value" : "%2$@中的%1$d道题"
           }
         },
         "zh-Hant" : {
@@ -352,7 +352,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即将下载%1$lld文件，消耗大约%2$@数据。您想何时开始？"
+            "value" : "即将下载%1$lld文件，消耗大约%2$@数据。何时开始？"
           }
         },
         "zh-Hant" : {
@@ -448,7 +448,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "备用文本"
+            "value" : "替换文本"
           }
         },
         "zh-Hant" : {
@@ -576,7 +576,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "改变亮度"
+            "value" : "改变强度"
           }
         },
         "zh-Hant" : {
@@ -592,7 +592,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择另一个模型"
+            "value" : "切换模型"
           }
         },
         "zh-Hant" : {
@@ -657,7 +657,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "继续而不启动"
+            "value" : "继续而不开始"
           }
         },
         "zh-Hant" : {
@@ -705,7 +705,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已创建%@"
+            "value" : "%@已创建"
           }
         },
         "zh-Hant" : {
@@ -753,7 +753,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "目前没有可用的 ML 模型。需要一个具有以下功能的模型："
+            "value" : "目前没有可用的机器学习模型。需要一个具有以下功能的模型："
           }
         },
         "zh-Hant" : {
