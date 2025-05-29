@@ -209,4 +209,6 @@
     <string name="unknown_span">unknown</string>
     <string name="fei_init_span">frame embedding inference initialization</string>
     <string name="failed_to_create_interpreter_para">Failed to create interpreter.</string>
+    <string name="resource_x_was_not_found_at_y_para">Resource %1$s at %2$s was not found.</string>
+    <string name="fei_resource_span">frame embedding inference resource</string>
 </resources>
