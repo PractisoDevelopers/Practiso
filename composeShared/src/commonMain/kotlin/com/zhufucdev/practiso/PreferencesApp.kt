@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,17 +26,17 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SectionCaption
+import com.zhufucdev.practiso.composable.SharedElementTransitionKey
+import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composable.modelFeatureString
+import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.platform.Navigation
@@ -64,133 +63,160 @@ import resources.use_only_cpu_for_inference_para
 @Composable
 fun PreferencesApp(model: SettingsModel = AppSettings) {
     val coroutine = rememberCoroutineScope()
-    var showFeiModelDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.settings_para)) },
-                navigationIcon = {
-                    PlainTooltipBox(stringResource(Res.string.navigate_up_para)) {
-                        IconButton(onClick = {
-                            coroutine.launch {
-                                Navigator.navigate(Navigation.Backward)
+    BottomUpComposableScope { buc ->
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(Res.string.settings_para)) },
+                    navigationIcon = {
+                        PlainTooltipBox(stringResource(Res.string.navigate_up_para)) {
+                            IconButton(onClick = {
+                                coroutine.launch {
+                                    Navigator.navigate(Navigation.Backward)
+                                }
+                            }) {
+                                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
                             }
-                        }) {
-                            Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
                         }
                     }
-                }
-            )
-        }
-    ) { paddingValues ->
-        LazyColumn(Modifier.padding(paddingValues)) {
-            item {
-                SectionCaption(
-                    stringResource(Res.string.answering_para),
-                    Modifier.padding(horizontal = PaddingBig)
                 )
             }
-            item {
-                val value: Boolean by model.showAccuracy.collectAsState()
-                Preference(
-                    label = stringResource(Res.string.show_accuracy_para),
-                    preview = stringResource(Res.string.reveals_accuracy_gets_feedback_for_wrong_answers_para),
-                    tailing = {
-                        Switch(
-                            checked = value,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = {
-                        model.showAccuracy.tryEmit(!value)
-                    }
-                )
-            }
-
-            item {
-                SectionCaption(
-                    stringResource(Res.string.smart_recommendations_para),
-                    Modifier.padding(horizontal = PaddingBig).padding(top = PaddingBig)
-                )
-            }
-
-            item {
-                val value by model.feiModelIndex.collectAsState()
-                Preference(
-                    label = stringResource(Res.string.frame_embedding_model_para),
-                    preview = stringArrayResource(Res.array.known_model_names_title)[value],
-                    onClick = {
-                        showFeiModelDialog = true
-                    }
-                )
-            }
-
-            item {
-                val value by model.feiCompatibilityMode.collectAsState()
-                Preference(
-                    label = stringResource(Res.string.compatibility_mode_para),
-                    preview = stringResource(Res.string.use_only_cpu_for_inference_para),
-                    tailing = {
-                        Switch(
-                            checked = value,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = {
-                        model.feiCompatibilityMode.tryEmit(!value)
-                    }
-                )
-            }
-        }
-    }
-
-    if (showFeiModelDialog) {
-        val currentModelIndex by model.feiModelIndex.collectAsState()
-        BasicAlertDialog(
-            onDismissRequest = {
-                showFeiModelDialog = false
-            }
-        ) {
-            Card {
-                Column(Modifier.padding(vertical = PaddingBig)) {
-                    Text(
-                        stringResource(Res.string.frame_embedding_model_para),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = PaddingNormal)
-                            .padding(horizontal = PaddingBig)
+        ) { paddingValues ->
+            LazyColumn(Modifier.padding(paddingValues)) {
+                item {
+                    SectionCaption(
+                        stringResource(Res.string.answering_para),
+                        Modifier.padding(horizontal = PaddingBig)
                     )
-                    KnownModels.forEachIndexed { index, mlModel ->
-                        MlModelSelection(
-                            modifier = Modifier.padding(
-                                vertical = PaddingNormal,
-                                horizontal = PaddingBig
-                            ),
-                            featureContainerModifier = Modifier.padding(
-                                horizontal = PaddingBig
-                            ),
-                            model = mlModel,
-                            index = index,
-                            selected = currentModelIndex == index,
-                            onSelectedChange = {
-                                model.feiModelIndex.tryEmit(index)
+                }
+                item {
+                    val value: Boolean by model.showAccuracy.collectAsState()
+                    Preference(
+                        label = stringResource(Res.string.show_accuracy_para),
+                        preview = stringResource(Res.string.reveals_accuracy_gets_feedback_for_wrong_answers_para),
+                        tailing = {
+                            Switch(
+                                checked = value,
+                                onCheckedChange = null
+                            )
+                        },
+                        onClick = {
+                            model.showAccuracy.tryEmit(!value)
+                        }
+                    )
+                }
+
+                item {
+                    SectionCaption(
+                        stringResource(Res.string.smart_recommendations_para),
+                        Modifier.padding(horizontal = PaddingBig).padding(top = PaddingBig)
+                    )
+                }
+
+                item {
+                    val value by model.feiModelIndex.collectAsState()
+                    SharedElementTransitionPopup(
+                        key = "fei_model_preference",
+                        popup = {
+                            val currentModelIndex by model.feiModelIndex.collectAsState()
+                            Card {
+                                Column(Modifier.padding(vertical = PaddingBig)) {
+                                    Text(
+                                        stringResource(Res.string.frame_embedding_model_para),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        modifier = Modifier.padding(bottom = PaddingNormal)
+                                            .padding(horizontal = PaddingBig)
+                                    )
+                                    KnownModels.forEachIndexed { index, mlModel ->
+                                        MlModelSelection(
+                                            modifier = Modifier.padding(
+                                                vertical = PaddingNormal,
+                                                horizontal = PaddingBig
+                                            ),
+                                            featureContainerModifier = Modifier.padding(
+                                                horizontal = PaddingBig
+                                            ),
+                                            model = mlModel,
+                                            index = index,
+                                            selected = currentModelIndex == index,
+                                            onSelectedChange = {
+                                                model.feiModelIndex.tryEmit(index)
+                                            }
+                                        )
+                                    }
+                                }
                             }
-                        )
-                    }
+                        },
+                        sharedElement = {
+                            PreferenceSkeleton(
+                                label = stringResource(Res.string.frame_embedding_model_para),
+                                preview = stringArrayResource(Res.array.known_model_names_title)[value],
+                                modifier = it
+                            )
+                        },
+                        content = {
+                            Preference(
+                                label = stringResource(Res.string.frame_embedding_model_para),
+                                preview = stringArrayResource(Res.array.known_model_names_title)[value],
+                                onClick = {
+                                    coroutine.launch {
+                                        expand()
+                                    }
+                                },
+                                modifier = Modifier.sharedElement()
+                            )
+                        }
+                    )
+                }
+
+                item {
+                    val value by model.feiCompatibilityMode.collectAsState()
+                    Preference(
+                        label = stringResource(Res.string.compatibility_mode_para),
+                        preview = stringResource(Res.string.use_only_cpu_for_inference_para),
+                        tailing = {
+                            Switch(
+                                checked = value,
+                                onCheckedChange = null
+                            )
+                        },
+                        onClick = {
+                            model.feiCompatibilityMode.tryEmit(!value)
+                        }
+                    )
                 }
             }
         }
+
+        buc.compose(SharedElementTransitionKey)
     }
 }
 
 @Composable
 private fun Preference(
+    modifier: Modifier = Modifier,
     label: String,
     preview: String? = null,
     tailing: @Composable () -> Unit = {},
     onClick: () -> Unit,
 ) {
-    Box(Modifier.clickable(onClick = onClick)) {
+    PreferenceSkeleton(
+        modifier = Modifier.clickable(onClick = onClick) then modifier,
+        label = label,
+        preview = preview,
+        tailing = tailing
+    )
+}
+
+@Composable
+fun PreferenceSkeleton(
+    modifier: Modifier = Modifier,
+    label: String,
+    preview: String? = null,
+    tailing: @Composable () -> Unit = {},
+) {
+    Box(modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(
                 horizontal = PaddingBig,
