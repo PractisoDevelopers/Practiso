@@ -619,23 +619,6 @@
         }
       }
     },
-    "Collecting Frames..." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在收集框..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Collecting Frames..."
-          }
-        }
-      }
-    },
     "Confirmation" : {
       "localizations" : {
         "zh-Hans" : {
@@ -922,6 +905,16 @@
         }
       }
     },
+    "Derived" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "派生"
+          }
+        }
+      }
+    },
     "Deselect" : {
       "localizations" : {
         "zh-Hans" : {
@@ -998,23 +991,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Dimension is Empty"
-          }
-        }
-      }
-    },
-    "Dimension not available" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "聚类不可用"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Dimension not available"
           }
         }
       }
@@ -2348,6 +2324,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Skip"
+          }
+        }
+      }
+    },
+    "Source" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来源"
           }
         }
       }

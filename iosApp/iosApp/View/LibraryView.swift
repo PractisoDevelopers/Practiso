@@ -18,13 +18,13 @@ struct LibraryView: View {
     
     @State private var sections: [LibrarySection] = [
         LibrarySection(options: [
-            .init(name: "Session", systemImage: "star", id: .session)
-        ], id: "Derived"),
+            .init(name: .init(localized: "Session"), systemImage: "star", id: .session)
+        ], id: .init(localized: "Derived")),
         LibrarySection(options: [
-            .init(name: "Template", systemImage: "gearshape", id: .template),
-            .init(name: "Dimension", systemImage: "tag", id: .dimension),
-            .init(name: "Question", systemImage: "document", id: .question)
-        ], id: "Source")
+            .init(name: .init(localized: "Template"), systemImage: "gearshape", id: .template),
+            .init(name: .init(localized: "Dimension"), systemImage: "tag", id: .dimension),
+            .init(name: .init(localized: "Question"), systemImage: "document", id: .question)
+        ], id: .init(localized: "Source"))
     ]
     
     var body: some View {
