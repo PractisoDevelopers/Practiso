@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Practiso</string>
-    <string name="title_activity_quiz_create">Quiz creator</string>
-    <string name="title_activity_answer">Answer</string>
-    <string name="generic_file_para">Generic file</string>
-    <string name="title_activity_preferences">Settings</string>
-    <string name="grant_para">Grant</string>
-    <string name="dismiss_para">Dismiss</string>
-    <string name="notification_permission_denied_title">Notification Permission Denied</string>
-    <string name="explain_why_denying_notification_is_a_bad_idea">Practiso never posts garbage notifications. Instead, if granted such permission, the recommendation system can run some time-consuming machine learning algorithm in the background, saving you from waiting. Do you want to grant notifications permission?</string>
+    <string name="title_activity_quiz_create">測驗建立器</string>
+    <string name="title_activity_answer">回答</string>
+    <string name="generic_file_para">通用檔案</string>
+    <string name="title_activity_preferences">設定</string>
+    <string name="grant_para">授權</string>
+    <string name="dismiss_para">取消</string>
+    <string name="notification_permission_denied_title">拒絕通知權限</string>
+    <string name="explain_why_denying_notification_is_a_bad_idea">Practiso絕不會傳送垃圾通知。相反，如果授予該權限，建議系統可以在背景執行耗費時間的機器學習演算法，從而使您不必等待。您想授予通知權限嗎？</string>
 </resources>
