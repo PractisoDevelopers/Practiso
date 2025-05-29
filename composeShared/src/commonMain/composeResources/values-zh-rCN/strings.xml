@@ -211,4 +211,6 @@
     <string name="failed_to_create_interpreter_para">创建解释器失败。</string>
     <string name="resource_x_was_not_found_at_y_para">在%2$s上找不到资源%1$s。</string>
     <string name="fei_resource_span">框嵌入推理资源</string>
+    <string name="waiting_for_inference_para">等待推理…</string>
+    <string name="interact_with_status_bar_to_continue_span">与状态栏交互以继续</string>
 </resources>

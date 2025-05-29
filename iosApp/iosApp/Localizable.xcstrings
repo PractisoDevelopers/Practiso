@@ -1473,7 +1473,14 @@
       }
     },
     "interact with status bar to continue" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与状态栏交互以继续"
+          }
+        }
+      }
     },
     "Invalid file format." : {
       "localizations" : {
@@ -1685,7 +1692,14 @@
       }
     },
     "Loading suggestions..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载建议..."
+          }
+        }
+      }
     },
     "Loading Take..." : {
       "localizations" : {
@@ -2698,7 +2712,14 @@
       }
     },
     "Waiting for inference..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待推理…"
+          }
+        }
+      }
     },
     "Will create as Take %lld" : {
       "localizations" : {
