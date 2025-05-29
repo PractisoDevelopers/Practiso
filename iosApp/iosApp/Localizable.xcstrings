@@ -28,7 +28,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 及 另外%2$d 项"
+            "value" : "%1$@及另外%2$d项"
           }
         },
         "zh-Hant" : {
@@ -50,7 +50,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 及另外 %2$lld 项"
+            "value" : "%1$@及另外%2$lld项"
           }
         },
         "zh-Hant" : {
@@ -82,7 +82,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d 项"
+            "value" : "%d项"
           }
         },
         "zh-Hant" : {
@@ -104,7 +104,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$d 项在 %2$@中"
+            "value" : "%1$d项在%2$@中"
           }
         },
         "zh-Hant" : {
@@ -188,7 +188,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld 小时"
+            "value" : "%lld小时"
           }
         },
         "zh-Hant" : {
@@ -250,7 +250,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld 分钟"
+            "value" : "%lld分钟"
           }
         },
         "zh-Hant" : {
@@ -266,7 +266,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld 秒"
+            "value" : "%lld秒"
           }
         },
         "zh-Hant" : {
@@ -298,7 +298,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已完成 %lld%%"
+            "value" : "已完成%lld%%"
           }
         },
         "zh-Hant" : {
@@ -352,7 +352,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "即将下载 %1$lld 文件，消耗大约 %2$@ 数据。您想何时开始？"
+            "value" : "即将下载%1$lld文件，消耗大约%2$@数据。您想何时开始？"
           }
         },
         "zh-Hant" : {
@@ -447,8 +447,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Alternative Text"
+            "state" : "translated",
+            "value" : "备用文本"
           }
         },
         "zh-Hant" : {
@@ -463,8 +463,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error has occurred in %@."
+            "state" : "translated",
+            "value" : "在%@中发生错误。"
           }
         },
         "zh-Hant" : {
@@ -479,8 +479,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred"
+            "state" : "translated",
+            "value" : "发生错误"
           }
         },
         "zh-Hant" : {
@@ -495,8 +495,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "An error occurred and the document is failed to load"
+            "state" : "translated",
+            "value" : "发生错误，文档加载失败"
           }
         },
         "zh-Hant" : {
@@ -511,8 +511,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Begin a new take as well"
+            "state" : "translated",
+            "value" : "同时开始新练习"
           }
         },
         "zh-Hant" : {
@@ -527,8 +527,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Briefly describe this image..."
+            "state" : "translated",
+            "value" : "简述此图像..."
           }
         },
         "zh-Hant" : {
@@ -543,8 +543,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browse"
+            "state" : "translated",
+            "value" : "浏览"
           }
         },
         "zh-Hant" : {
@@ -559,8 +559,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cancel"
+            "state" : "translated",
+            "value" : "取消"
           }
         },
         "zh-Hant" : {
@@ -575,8 +575,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Change Intensity"
+            "state" : "translated",
+            "value" : "改变亮度"
           }
         },
         "zh-Hant" : {
@@ -591,8 +591,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Choose Another Model"
+            "state" : "translated",
+            "value" : "选择另一个模型"
           }
         },
         "zh-Hant" : {
@@ -607,8 +607,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Collecting frames..."
+            "state" : "translated",
+            "value" : "正在收集框..."
           }
         },
         "zh-Hant" : {
@@ -624,8 +624,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Collecting Frames..."
+            "state" : "translated",
+            "value" : "正在收集框..."
           }
         },
         "zh-Hant" : {
@@ -640,8 +640,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Confirmation"
+            "state" : "translated",
+            "value" : "确认"
           }
         },
         "zh-Hant" : {
@@ -656,8 +656,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue without starting"
+            "state" : "translated",
+            "value" : "继续而不启动"
           }
         },
         "zh-Hant" : {
@@ -672,8 +672,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create"
+            "state" : "translated",
+            "value" : "创建"
           }
         },
         "zh-Hant" : {
@@ -688,8 +688,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create Dimension"
+            "state" : "translated",
+            "value" : "创建新聚类"
           }
         },
         "zh-Hant" : {
@@ -704,8 +704,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created %@"
+            "state" : "translated",
+            "value" : "已创建%@"
           }
         },
         "zh-Hant" : {
@@ -720,8 +720,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Creation"
+            "state" : "translated",
+            "value" : "创建时间"
           }
         },
         "zh-Hant" : {
@@ -736,8 +736,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Current model doesn't support features:"
+            "state" : "translated",
+            "value" : "当前模型不支持功能："
           }
         },
         "zh-Hant" : {
@@ -752,8 +752,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Currently no ML model is available. A model with following features is required:"
+            "state" : "translated",
+            "value" : "目前没有可用的 ML 模型。需要一个具有以下功能的模型："
           }
         },
         "zh-Hant" : {
@@ -768,8 +768,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data is invalid because it is compound."
+            "state" : "translated",
+            "value" : "数据无效，因为它是复合的。"
           }
         },
         "zh-Hant" : {
@@ -784,8 +784,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data represents an empty archive."
+            "state" : "translated",
+            "value" : "数据表示一个空存档。"
           }
         },
         "zh-Hant" : {
@@ -800,8 +800,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete"
+            "state" : "translated",
+            "value" : "删除"
           }
         },
         "zh-Hant" : {
@@ -816,8 +816,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete %@"
+            "state" : "translated",
+            "value" : "删除%@"
           }
         },
         "zh-Hant" : {
@@ -832,8 +832,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete All"
+            "state" : "translated",
+            "value" : "全部刪除"
           }
         },
         "zh-Hant" : {
@@ -848,8 +848,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete Options"
+            "state" : "translated",
+            "value" : "删除选项"
           }
         },
         "zh-Hant" : {
@@ -885,8 +885,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "Deleting %lld questions"
+                  "state" : "translated",
+                  "value" : "正在删除%lld题目"
                 }
               }
             }
@@ -910,8 +910,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Deleting Dimension"
+            "state" : "translated",
+            "value" : "删除聚类"
           }
         },
         "zh-Hant" : {
@@ -926,8 +926,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Deselect"
+            "state" : "translated",
+            "value" : "取消选择"
           }
         },
         "zh-Hant" : {
@@ -942,8 +942,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Deselect All"
+            "state" : "translated",
+            "value" : "取消全选"
           }
         },
         "zh-Hant" : {
@@ -958,8 +958,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Details Here"
+            "state" : "translated",
+            "value" : "了解详情"
           }
         },
         "zh-Hant" : {
@@ -974,8 +974,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dimension"
+            "state" : "translated",
+            "value" : "聚类"
           }
         },
         "zh-Hant" : {
@@ -990,8 +990,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dimension is Empty"
+            "state" : "translated",
+            "value" : "聚类为空"
           }
         },
         "zh-Hant" : {
@@ -1007,8 +1007,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dimension not available"
+            "state" : "translated",
+            "value" : "不可用聚类"
           }
         },
         "zh-Hant" : {
@@ -1023,8 +1023,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Don't create takes for now"
+            "state" : "translated",
+            "value" : "不要创建刚刚的练习"
           }
         },
         "zh-Hant" : {
@@ -1039,8 +1039,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Done"
+            "state" : "translated",
+            "value" : "完成"
           }
         },
         "zh-Hant" : {
@@ -1055,8 +1055,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Download required"
+            "state" : "translated",
+            "value" : "下载请求"
           }
         },
         "zh-Hant" : {
@@ -1071,8 +1071,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading model..."
+            "state" : "translated",
+            "value" : "正在下载模型..."
           }
         },
         "zh-Hant" : {
@@ -1087,8 +1087,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit"
+            "state" : "translated",
+            "value" : "编辑"
           }
         },
         "zh-Hant" : {
@@ -1103,8 +1103,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit Content"
+            "state" : "translated",
+            "value" : "编辑内容"
           }
         },
         "zh-Hant" : {
@@ -1120,8 +1120,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Empty"
+            "state" : "translated",
+            "value" : "空"
           }
         },
         "zh-Hant" : {
@@ -1136,8 +1136,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Empty question"
+            "state" : "translated",
+            "value" : "空问题"
           }
         },
         "zh-Hant" : {
@@ -1152,8 +1152,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Error"
+            "state" : "translated",
+            "value" : "错误"
           }
         },
         "zh-Hant" : {
@@ -1168,8 +1168,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Exclude"
+            "state" : "translated",
+            "value" : "排除"
           }
         },
         "zh-Hant" : {
@@ -1184,8 +1184,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Explore"
+            "state" : "translated",
+            "value" : "浏览"
           }
         },
         "zh-Hant" : {
@@ -1200,8 +1200,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed to copy resource."
+            "state" : "translated",
+            "value" : "复制资源失败。"
           }
         },
         "zh-Hant" : {
@@ -1216,8 +1216,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "frame embedding inference initialization"
+            "state" : "translated",
+            "value" : "框嵌入推理初始化"
           }
         },
         "zh-Hant" : {
@@ -1232,8 +1232,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "frame embedding inference resource"
+            "state" : "translated",
+            "value" : "框嵌入推理资源"
           }
         },
         "zh-Hant" : {
@@ -1248,8 +1248,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Have a review"
+            "state" : "translated",
+            "value" : "复习一下"
           }
         },
         "zh-Hant" : {
@@ -1264,8 +1264,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Hidden"
+            "state" : "translated",
+            "value" : "隐藏"
           }
         },
         "zh-Hant" : {
@@ -1280,8 +1280,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Hide"
+            "state" : "translated",
+            "value" : "隐藏"
           }
         },
         "zh-Hant" : {
@@ -1296,8 +1296,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Home"
+            "state" : "translated",
+            "value" : "首页"
           }
         },
         "zh-Hant" : {
@@ -1312,8 +1312,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Ignore"
+            "state" : "translated",
+            "value" : "忽略"
           }
         },
         "zh-Hant" : {
@@ -1328,8 +1328,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Image"
+            "state" : "translated",
+            "value" : "图片"
           }
         },
         "zh-Hant" : {
@@ -1344,8 +1344,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Image File"
+            "state" : "translated",
+            "value" : "图片文件"
           }
         },
         "zh-Hant" : {
@@ -1360,8 +1360,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import Archive"
+            "state" : "translated",
+            "value" : "导入存档"
           }
         },
         "zh-Hant" : {
@@ -1376,8 +1376,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Import Completed"
+            "state" : "translated",
+            "value" : "导入完成"
           }
         },
         "zh-Hant" : {
@@ -1420,8 +1420,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Importing %#@arg1@ items, %2$d completed..."
+            "state" : "translated",
+            "value" : "正在导入%#@arg1@项,%2$d项已完成..."
           },
           "substitutions" : {
             "arg1" : {
@@ -1432,7 +1432,7 @@
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%arg"
+                      "value" : "正在导入%a项, 已完成%2$d项…"
                     }
                   }
                 }
@@ -1468,8 +1468,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Incompatible model."
+            "state" : "translated",
+            "value" : "不兼容模型。"
           }
         },
         "zh-Hant" : {
@@ -1484,8 +1484,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Inferring %d items..."
+            "state" : "translated",
+            "value" : "正在推理%d项..."
           }
         },
         "zh-Hant" : {
@@ -1500,8 +1500,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Invalid file format."
+            "state" : "translated",
+            "value" : "无效文件格式。"
           }
         },
         "zh-Hant" : {
@@ -1516,8 +1516,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep Questions"
+            "state" : "translated",
+            "value" : "保存题目"
           }
         },
         "zh-Hant" : {
@@ -1532,8 +1532,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Less"
+            "state" : "translated",
+            "value" : "收起"
           }
         },
         "zh-Hant" : {
@@ -1548,8 +1548,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Library"
+            "state" : "translated",
+            "value" : "题库"
           }
         },
         "zh-Hant" : {
@@ -1564,8 +1564,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "library intent model"
+            "state" : "translated",
+            "value" : "题库意向模型"
           }
         },
         "zh-Hant" : {
@@ -1580,8 +1580,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loaded data represents an invalid image."
+            "state" : "translated",
+            "value" : "加载的数据代表无效图像。"
           }
         },
         "zh-Hant" : {
@@ -1596,8 +1596,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading dimension..."
+            "state" : "translated",
+            "value" : "正在加载聚类"
           }
         },
         "zh-Hant" : {
@@ -1612,8 +1612,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Image..."
+            "state" : "translated",
+            "value" : "正在加载图片..."
           }
         },
         "zh-Hant" : {
@@ -1628,8 +1628,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Information..."
+            "state" : "translated",
+            "value" : "正在加载信息..."
           }
         },
         "zh-Hant" : {
@@ -1644,8 +1644,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Question..."
+            "state" : "translated",
+            "value" : "正在加载题目…..."
           }
         },
         "zh-Hant" : {
@@ -1660,8 +1660,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading questions..."
+            "state" : "translated",
+            "value" : "正在加载题目…..."
           }
         },
         "zh-Hant" : {
@@ -1676,8 +1676,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading session..."
+            "state" : "translated",
+            "value" : "正在加载题集…..."
           }
         },
         "zh-Hant" : {
@@ -1692,8 +1692,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading suggestions"
+            "state" : "translated",
+            "value" : "正在加载建议"
           }
         },
         "zh-Hant" : {
@@ -1708,8 +1708,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading Take..."
+            "state" : "translated",
+            "value" : "正在加载练习......"
           }
         },
         "zh-Hant" : {
@@ -1724,8 +1724,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Missing models"
+            "state" : "translated",
+            "value" : "缺少模型"
           }
         },
         "zh-Hant" : {
@@ -1740,8 +1740,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Missing Models"
+            "state" : "translated",
+            "value" : "缺少模型"
           }
         },
         "zh-Hant" : {
@@ -1756,8 +1756,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Modification"
+            "state" : "translated",
+            "value" : "修改"
           }
         },
         "zh-Hant" : {
@@ -1772,8 +1772,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "More"
+            "state" : "translated",
+            "value" : "展开"
           }
         },
         "zh-Hant" : {
@@ -1788,8 +1788,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name"
+            "state" : "translated",
+            "value" : "名称"
           }
         },
         "zh-Hant" : {
@@ -1804,8 +1804,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name of options frame"
+            "state" : "translated",
+            "value" : "选项框名称"
           }
         },
         "zh-Hant" : {
@@ -1820,8 +1820,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name of the dimension"
+            "state" : "translated",
+            "value" : "聚类名称"
           }
         },
         "zh-Hant" : {
@@ -1836,8 +1836,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Name of the session"
+            "state" : "translated",
+            "value" : "题集名称"
           }
         },
         "zh-Hant" : {
@@ -1853,8 +1853,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "New question"
+            "state" : "translated",
+            "value" : "新题目"
           }
         },
         "zh-Hant" : {
@@ -1869,8 +1869,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "下一页"
           }
         },
         "zh-Hant" : {
@@ -1885,8 +1885,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No details were reported."
+            "state" : "translated",
+            "value" : "没有报告详情。"
           }
         },
         "zh-Hant" : {
@@ -1901,8 +1901,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No items available"
+            "state" : "translated",
+            "value" : "无可用项"
           }
         },
         "zh-Hant" : {
@@ -1917,8 +1917,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Now"
+            "state" : "translated",
+            "value" : "刚刚"
           }
         },
         "zh-Hant" : {
@@ -1933,8 +1933,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "OK"
+            "state" : "translated",
+            "value" : "确定"
           }
         },
         "zh-Hant" : {
@@ -1949,8 +1949,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Options"
+            "state" : "translated",
+            "value" : "选项"
           }
         },
         "zh-Hant" : {
@@ -1965,8 +1965,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Pending Download"
+            "state" : "translated",
+            "value" : "下载暂停"
           }
         },
         "zh-Hant" : {
@@ -1981,8 +1981,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Photo from Library"
+            "state" : "translated",
+            "value" : "图库中的照片"
           }
         },
         "zh-Hant" : {
@@ -1997,8 +1997,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Proceed"
+            "state" : "translated",
+            "value" : "继续"
           }
         },
         "zh-Hant" : {
@@ -2013,8 +2013,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Proceed Anyway"
+            "state" : "translated",
+            "value" : "仍然继续"
           }
         },
         "zh-Hant" : {
@@ -2029,8 +2029,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Question"
+            "state" : "translated",
+            "value" : "题目"
           }
         },
         "zh-Hant" : {
@@ -2045,8 +2045,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Question Unavailable"
+            "state" : "translated",
+            "value" : "不可用题目"
           }
         },
         "zh-Hant" : {
@@ -2061,8 +2061,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Recently created"
+            "state" : "translated",
+            "value" : "最近创建"
           }
         },
         "zh-Hant" : {
@@ -2077,8 +2077,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Redo"
+            "state" : "translated",
+            "value" : "重做"
           }
         },
         "zh-Hant" : {
@@ -2093,8 +2093,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove"
+            "state" : "translated",
+            "value" : "删除"
           }
         },
         "zh-Hant" : {
@@ -2109,8 +2109,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Replace With"
+            "state" : "translated",
+            "value" : "替换为"
           }
         },
         "zh-Hant" : {
@@ -2125,8 +2125,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Reset"
+            "state" : "translated",
+            "value" : "重置"
           }
         },
         "zh-Hant" : {
@@ -2147,8 +2147,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource %1$@ at %2$@ was not found."
+            "state" : "translated",
+            "value" : "在%2$@上找不到%1$@资源。"
           }
         },
         "zh-Hant" : {
@@ -2163,8 +2163,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource is Corrupted"
+            "state" : "translated",
+            "value" : "资源已损坏"
           }
         },
         "zh-Hant" : {
@@ -2179,8 +2179,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Resource Unavailable"
+            "state" : "translated",
+            "value" : "资源不可用"
           }
         },
         "zh-Hant" : {
@@ -2195,8 +2195,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "重试"
           }
         },
         "zh-Hant" : {
@@ -2211,8 +2211,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select"
+            "state" : "translated",
+            "value" : "选择"
           }
         },
         "zh-Hant" : {
@@ -2227,8 +2227,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select All"
+            "state" : "translated",
+            "value" : "全选"
           }
         },
         "zh-Hant" : {
@@ -2243,8 +2243,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Select an Item to Show"
+            "state" : "translated",
+            "value" : "选择一项显示"
           }
         },
         "zh-Hant" : {
@@ -2259,8 +2259,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Session"
+            "state" : "translated",
+            "value" : "题集"
           }
         },
         "zh-Hant" : {
@@ -2275,8 +2275,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Session is empty"
+            "state" : "translated",
+            "value" : "题集为空"
           }
         },
         "zh-Hant" : {
@@ -2291,8 +2291,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Session name"
+            "state" : "translated",
+            "value" : "题集名称"
           }
         },
         "zh-Hant" : {
@@ -2308,8 +2308,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sessions"
+            "state" : "translated",
+            "value" : "题集"
           }
         },
         "zh-Hant" : {
@@ -2324,8 +2324,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Show Accuracy"
+            "state" : "translated",
+            "value" : "显示正确率"
           }
         },
         "zh-Hant" : {
@@ -2340,8 +2340,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "跳过"
           }
         },
         "zh-Hant" : {
@@ -2356,8 +2356,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Source \"%@\" is unavailable."
+            "state" : "translated",
+            "value" : "资源\"%@\"不可用。"
           }
         },
         "zh-Hant" : {
@@ -2372,8 +2372,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Specification"
+            "state" : "translated",
+            "value" : "标准"
           }
         },
         "zh-Hant" : {
@@ -2388,8 +2388,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Start now"
+            "state" : "translated",
+            "value" : "立即开始"
           }
         },
         "zh-Hant" : {
@@ -2404,8 +2404,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Suggestions"
+            "state" : "translated",
+            "value" : "建议"
           }
         },
         "zh-Hant" : {
@@ -2420,8 +2420,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Take"
+            "state" : "translated",
+            "value" : "练习"
           }
         },
         "zh-Hant" : {
@@ -2436,8 +2436,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Take %lld"
+            "state" : "translated",
+            "value" : "练习%lld"
           }
         },
         "zh-Hant" : {
@@ -2452,8 +2452,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Take is removed"
+            "state" : "translated",
+            "value" : "练习已删除"
           }
         },
         "zh-Hant" : {
@@ -2468,8 +2468,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Takes"
+            "state" : "translated",
+            "value" : "练习"
           }
         },
         "zh-Hant" : {
@@ -2484,8 +2484,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Template"
+            "state" : "translated",
+            "value" : "模板"
           }
         },
         "zh-Hant" : {
@@ -2500,8 +2500,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Text"
+            "state" : "translated",
+            "value" : "文本"
           }
         },
         "zh-Hant" : {
@@ -2516,8 +2516,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "This archive is empty"
+            "state" : "translated",
+            "value" : "该存档为空"
           }
         },
         "zh-Hant" : {
@@ -2532,8 +2532,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Time is Up"
+            "state" : "translated",
+            "value" : "时间到"
           }
         },
         "zh-Hant" : {
@@ -2548,8 +2548,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Timer"
+            "state" : "translated",
+            "value" : "计时器"
           }
         },
         "zh-Hant" : {
@@ -2564,8 +2564,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Timers"
+            "state" : "translated",
+            "value" : "计时器"
           }
         },
         "zh-Hant" : {
@@ -2580,8 +2580,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Type text here..."
+            "state" : "translated",
+            "value" : "在此输入文本..."
           }
         },
         "zh-Hant" : {
@@ -2596,8 +2596,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Undo"
+            "state" : "translated",
+            "value" : "撤销"
           }
         },
         "zh-Hant" : {
@@ -2612,8 +2612,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unhide"
+            "state" : "translated",
+            "value" : "取消隐藏"
           }
         },
         "zh-Hant" : {
@@ -2628,8 +2628,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unknown frame type %@"
+            "state" : "translated",
+            "value" : "未知的框类型%@"
           }
         },
         "zh-Hant" : {
@@ -2644,8 +2644,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "unknown scope"
+            "state" : "translated",
+            "value" : "未知范围"
           }
         },
         "zh-Hant" : {
@@ -2660,8 +2660,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unnamed question"
+            "state" : "translated",
+            "value" : "未命名题目"
           }
         },
         "zh-Hant" : {
@@ -2676,8 +2676,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unsupported data type"
+            "state" : "translated",
+            "value" : "不支持的数据类型"
           }
         },
         "zh-Hant" : {
@@ -2692,8 +2692,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use WLAN Only"
+            "state" : "translated",
+            "value" : "仅使用 WLAN"
           }
         },
         "zh-Hant" : {
@@ -2708,8 +2708,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Will create as Take %lld"
+            "state" : "translated",
+            "value" : "将创建为练习%lld"
           }
         },
         "zh-Hant" : {
@@ -2724,8 +2724,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to delete questions contained as well?"
+            "state" : "translated",
+            "value" : "您确定同时删除其中的题目吗？"
           }
         },
         "zh-Hant" : {
@@ -2740,8 +2740,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to delete these questions? This operation is inreversible."
+            "state" : "translated",
+            "value" : "您确定删除这些题目吗？该操作是不可逆的。"
           }
         },
         "zh-Hant" : {
@@ -2777,8 +2777,8 @@
             "plural" : {
               "other" : {
                 "stringUnit" : {
-                  "state" : "new",
-                  "value" : "Would you like to import %d questions?"
+                  "state" : "translated",
+                  "value" : "您想要导入%d道题吗？"
                 }
               }
             }
@@ -2802,8 +2802,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to remove \"%@\"? This operation is inreversible."
+            "state" : "translated",
+            "value" : "您确定删除%@项吗？该操作是不可逆的。"
           }
         },
         "zh-Hant" : {
@@ -2818,8 +2818,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Would you like to start the newly created session immediately?"
+            "state" : "translated",
+            "value" : "您想要立即开始新创建的题集吗？"
           }
         },
         "zh-Hant" : {
