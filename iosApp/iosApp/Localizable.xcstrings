@@ -1472,6 +1472,9 @@
         }
       }
     },
+    "interact with status bar to continue" : {
+
+    },
     "Invalid file format." : {
       "localizations" : {
         "zh-Hans" : {
@@ -1573,7 +1576,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载聚类"
+            "value" : "正在加载聚类..."
           }
         },
         "zh-Hant" : {
@@ -1621,7 +1624,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载题目…..."
+            "value" : "正在加载题目…"
           }
         },
         "zh-Hant" : {
@@ -1637,7 +1640,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载题目…..."
+            "value" : "正在加载题目…"
           }
         },
         "zh-Hant" : {
@@ -1653,7 +1656,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载题集…..."
+            "value" : "正在加载题集…"
           }
         },
         "zh-Hant" : {
@@ -1665,11 +1668,12 @@
       }
     },
     "Loading suggestions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载建议"
+            "value" : "正在加载建议..."
           }
         },
         "zh-Hant" : {
@@ -1680,12 +1684,15 @@
         }
       }
     },
+    "Loading suggestions..." : {
+
+    },
     "Loading Take..." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载练习......"
+            "value" : "正在加载练习..."
           }
         },
         "zh-Hant" : {
@@ -2689,6 +2696,9 @@
           }
         }
       }
+    },
+    "Waiting for inference..." : {
+
     },
     "Will create as Take %lld" : {
       "localizations" : {

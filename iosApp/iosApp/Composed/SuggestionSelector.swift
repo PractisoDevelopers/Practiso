@@ -21,11 +21,7 @@ struct SuggestionSelector : View {
     
     var body: some View {
         Observing(AppRecommendationService.shared.getCombined()) {
-            VStack {
-                ProgressView()
-                Text("Loading suggestions...")
-            }
-            .foregroundStyle(.secondary)
+            initializationView
         } content: { array in
             LazyVStack(spacing: 0) {
                 ForEach({
@@ -56,6 +52,32 @@ struct SuggestionSelector : View {
                     .buttonStyle(.listItem)
                 }
             }
+        }
+    }
+    
+    var initializationView: some View {
+        Observing(Database.shared.fei.getUpgradeState()) {
+            loadingView
+        } content: { feiState in
+            switch onEnum(of: feiState) {
+            case .ready(_):
+                loadingView
+            default:
+                VStack {
+                    ProgressView()
+                    Text("Waiting for inference...")
+                    Text("interact with status bar to continue")
+                }
+            }
+        }
+        .foregroundStyle(.secondary)
+        .padding()
+    }
+    
+    var loadingView: some View {
+        VStack {
+            ProgressView()
+            Text("Loading suggestions...")
         }
     }
     
