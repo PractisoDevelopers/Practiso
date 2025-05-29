@@ -88,6 +88,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.FabCreate
@@ -118,6 +119,7 @@ import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createOptionView
 import com.zhufucdev.practiso.platform.createSessionCreatorView
+import com.zhufucdev.practiso.service.FeiDbState
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -149,6 +151,7 @@ import resources.created_x_para
 import resources.done_questions_completed_in_total
 import resources.edit_para
 import resources.get_started_by_para
+import resources.interact_with_status_bar_to_continue_span
 import resources.loading_recommendations_span
 import resources.loading_takes_para
 import resources.minutes_span
@@ -175,6 +178,7 @@ import resources.start_para
 import resources.take_completeness
 import resources.take_n_para
 import resources.use_smart_recommendations_para
+import resources.waiting_for_inference_para
 import resources.welcome_to_app_para
 import resources.will_be_identified_as_x_para
 import kotlin.math.min
@@ -711,14 +715,12 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
     popupScope: SharedElementTransitionPopupScope,
 ) {
     val useRecommendations by model.useRecommendations.collectAsState()
-    val items by (
-            if (useRecommendations) model.smartRecommendations
-            else model.recentRecommendations
-            ).collectAsState(null, Dispatchers.IO)
-
-    val loadingRecommendations by remember {
+    val smartRec by model.smartRecommendations.collectAsState(null)
+    val recentRec by model.recentRecommendations.collectAsState(null)
+    val items by remember(useRecommendations) {
         derivedStateOf {
-            items == null
+            if (useRecommendations) smartRec
+            else recentRec
         }
     }
 
@@ -736,7 +738,7 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
         modifier = with(columnScope) { Modifier.align(Alignment.CenterHorizontally) }
     )
 
-    if (loadingRecommendations) {
+    if (items == null) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxWidth().height(PaddingNormal)
@@ -806,17 +808,43 @@ private fun ColumnScope.SimplifiedSessionCreationModalContent(
                 }
             }
         } else {
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                when {
-                    it?.isEmpty() == true -> Text(
-                        stringResource(Res.string.no_recommendations_span),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+            CompositionLocalProvider(
+                LocalTextStyle provides MaterialTheme.typography.labelLarge
+            ) {
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    when {
+                        it?.isEmpty() == true -> Text(
+                            stringResource(Res.string.no_recommendations_span),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
 
-                    it == null -> Text(
-                        stringResource(Res.string.loading_recommendations_span),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                        it == null -> {
+                            val feiState by Database.fei.getUpgradeState().collectAsState(null)
+                            when (feiState) {
+                                is FeiDbState.Ready ->
+                                    Text(
+                                        stringResource(Res.string.loading_recommendations_span),
+                                        modifier = Modifier.align(Alignment.Center),
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                else -> Column(
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Text(
+                                        stringResource(Res.string.waiting_for_inference_para),
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Text(
+                                        stringResource(Res.string.interact_with_status_bar_to_continue_span),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -48,10 +48,8 @@ struct ContentView: View {
                 Text(message)
             }
         }
-        .task {
-            for await state in Database.shared.fei.getUpgradeState() {
-                feiState = state
-            }
+        .collect(flow: Database.shared.fei.getUpgradeState()) { latest in
+            feiState = latest
         }
     }
     
@@ -132,9 +130,23 @@ struct ContentView: View {
                 case .session(let sessionOption):
                     SessionDetailView(option: sessionOption, namespace: namespace)
                 case .none:
-                    Text("Select an Item to Show")
+                    selectItemScreen
                 }
             }
+        }
+    }
+    
+    var selectItemScreen: some View {
+        VStack {
+            Color.secondary
+                .frame(width: 120, height: 120)
+                .mask {
+                    Image("AppIconMask")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                }
+            Text("Select an Item to Show")
+                .foregroundStyle(.secondary)
         }
     }
 }

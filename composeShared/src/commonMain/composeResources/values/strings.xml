@@ -227,4 +227,6 @@
     <string name="failed_to_create_interpreter_para">Failed to create interpreter.</string>
     <string name="resource_x_was_not_found_at_y_para">Resource %1$s at %2$s was not found.</string>
     <string name="fei_resource_span">frame embedding inference resource</string>
+    <string name="waiting_for_inference_para">Waiting for inference…</string>
+    <string name="interact_with_status_bar_to_continue_span">interact with status bar to continue</string>
 </resources>

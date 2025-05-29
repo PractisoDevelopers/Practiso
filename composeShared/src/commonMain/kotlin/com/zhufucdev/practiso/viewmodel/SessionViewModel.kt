@@ -24,6 +24,8 @@ import com.zhufucdev.practiso.service.RecommendationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -138,13 +140,13 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
         }
     }
 
-    val smartRecommendations by lazy {
+    val smartRecommendations =
         recommendationService.getSmartRecommendations()
-    }
+            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
-    val recentRecommendations by lazy {
+    val recentRecommendations =
         recommendationService.getRecentRecommendations()
-    }
+            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
 
     companion object {
         val Factory = viewModelFactory {
