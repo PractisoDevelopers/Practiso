@@ -23,7 +23,7 @@ abstract class PractisoApp : Application() {
         manager.createNotificationChannel(
             NotificationChannel(
                 FeiForegroundService.CHANNEL_ID, name,
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_NONE
             ).apply { description = descriptionText }
         )
     }
