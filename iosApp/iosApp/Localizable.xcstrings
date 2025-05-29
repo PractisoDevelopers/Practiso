@@ -912,6 +912,12 @@
             "state" : "translated",
             "value" : "派生"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Derived"
+          }
         }
       }
     },
@@ -2334,6 +2340,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "来源"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Source"
           }
         }
       }
