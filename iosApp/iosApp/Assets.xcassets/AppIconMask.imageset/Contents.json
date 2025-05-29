@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "App_store_1024_1x_tint_foreground.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

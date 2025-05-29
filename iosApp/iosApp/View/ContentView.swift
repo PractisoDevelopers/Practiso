@@ -130,9 +130,23 @@ struct ContentView: View {
                 case .session(let sessionOption):
                     SessionDetailView(option: sessionOption, namespace: namespace)
                 case .none:
-                    Text("Select an Item to Show")
+                    selectItemScreen
                 }
             }
+        }
+    }
+    
+    var selectItemScreen: some View {
+        VStack {
+            Color.secondary
+                .frame(width: 120, height: 120)
+                .mask {
+                    Image("AppIconMask")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                }
+            Text("Select an Item to Show")
+                .foregroundStyle(.secondary)
         }
     }
 }
