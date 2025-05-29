@@ -48,10 +48,8 @@ struct ContentView: View {
                 Text(message)
             }
         }
-        .task {
-            for await state in Database.shared.fei.getUpgradeState() {
-                feiState = state
-            }
+        .collect(flow: Database.shared.fei.getUpgradeState()) { latest in
+            feiState = latest
         }
     }
     

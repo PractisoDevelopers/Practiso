@@ -20,47 +20,40 @@ struct SuggestionSelector : View {
     }
     
     var body: some View {
-        LazyVStack {
-            switch data {
-            case .pending:
-                VStack {
-                    ProgressView()
-                    Text("Loading suggestions")
-                }
-                .foregroundStyle(.secondary)
-            case .ok(let array):
-                LazyVStack(spacing: 0) {
-                    ForEach({ if searchText.isEmpty { array } else { array.filter(isIncluded) }}(), id: \.id) { option in
-                        Divider()
-                            .padding(.leading)
-                        Button {
-                            selection = if selection?.id == option.id {
-                                nil
-                            } else {
-                                option
-                            }
-                        } label: {
-                            HStack {
-                                OptionListItem(data: option)
-                                    .frame(maxWidth: .infinity)
-                                if selection?.id == option.id {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(.tint)
-                                        .padding(.trailing)
-                                }
-                            }
-                            .padding(.vertical, 8)
-                            .padding(.leading)
-                        }
-                        .buttonStyle(.listItem)
-                    }
-                }
+        Observing(AppRecommendationService.shared.getCombined()) {
+            VStack {
+                ProgressView()
+                Text("Loading suggestions...")
             }
-        }
-        .task {
-            await errorHandler.catchAndShowImmediately {
-                for try await options in AppRecommendationService.shared.getCombined() {
-                    data = .ok(options.map(SessionCreatorOption.from))
+            .foregroundStyle(.secondary)
+        } content: { array in
+            LazyVStack(spacing: 0) {
+                ForEach({
+                    let array = array.map(SessionCreatorOption.from)
+                    return if searchText.isEmpty { array } else { array.filter(isIncluded) }
+                }(), id: \.id) { option in
+                    Divider()
+                        .padding(.leading)
+                    Button {
+                        selection = if selection?.id == option.id {
+                            nil
+                        } else {
+                            option
+                        }
+                    } label: {
+                        HStack {
+                            OptionListItem(data: option)
+                                .frame(maxWidth: .infinity)
+                            if selection?.id == option.id {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.tint)
+                                    .padding(.trailing)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.leading)
+                    }
+                    .buttonStyle(.listItem)
                 }
             }
         }
