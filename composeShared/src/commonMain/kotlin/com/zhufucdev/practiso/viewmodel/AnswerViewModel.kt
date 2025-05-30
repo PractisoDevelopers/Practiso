@@ -23,6 +23,7 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.service.TakeService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -31,13 +32,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -68,20 +73,33 @@ class AnswerViewModel(
         }
     }
 
-    val session = takeService.map { it?.getSession() }.flatMapMerge { it ?: flowOf(null) }
+    val session = takeService.map { it?.getSession() }.flatMapLatest { it ?: flowOf(null) }
     val takeNumber: Flow<Int?> =
-        takeService.map { it?.getTakeNumber() }.flatMapMerge { it ?: flowOf(null) }
-    val answers = takeService.map { it?.getAnswers() }.flatMapMerge { it ?: flowOf(null) }
-    val take = takeService.map { it?.getTake() }.flatMapMerge { it ?: flowOf(null) }
+        takeService.map { it?.getTakeNumber() }.flatMapLatest { it ?: flowOf(null) }
+
+    private val upstreamAnswers =
+        takeService.map { it?.getAnswers() }.flatMapLatest { it ?: flowOf(null) }
+            .flowOn(Dispatchers.IO)
+    private val cachedAnswers = MutableStateFlow<List<PractisoAnswer>?>(null).apply {
+        viewModelScope.launch {
+            upstreamAnswers.collectLatest {
+                delay(1.seconds)
+                emit(it)
+            }
+        }
+    }
+    val answers get() = cachedAnswers
+
+    val take = takeService.map { it?.getTake() }.flatMapLatest { it ?: flowOf(null) }
     val quizzes =
         takeService.map { it?.getQuizzes() }
-            .flatMapMerge { it ?: flowOf(null) }
+            .flatMapLatest { it ?: flowOf(null) }
             .distinctUntilChanged()
             .flowOn(Dispatchers.IO)
     val timers: Flow<List<Double>> =
         takeService.map { it?.getTimersInSecond() }
             .distinctUntilChanged()
-            .flatMapMerge { it ?: flowOf(emptyList()) }
+            .flatMapLatest { it ?: flowOf(emptyList()) }
     val elapsed by lazy {
         MutableStateFlow<Duration?>(null).apply {
             viewModelScope.launch {
@@ -218,16 +236,35 @@ class AnswerViewModel(
         takeService.value?.updateDuration(elapsed.inWholeSeconds)
     }
 
+
     init {
+        val answerDbLock = Mutex()
+
         viewModelScope.launch {
             while (viewModelScope.isActive) {
                 select<Unit> {
                     event.answer.onReceive {
-                        takeService.value?.commitAnswer(it, getCurrentQuizIndex())
+                        cachedAnswers.update { cache ->
+                            if (cache == null) listOf(it)
+                            else cache + it
+                        }
+                        async {
+                            answerDbLock.withLock {
+                                takeService.value?.commitAnswer(it, getCurrentQuizIndex())
+                            }
+                        }
                     }
 
                     event.unanswer.onReceive {
-                        takeService.value?.rollbackAnswer(it)
+                        cachedAnswers.update { cache ->
+                            if (cache == null) error("Unexpected null cache")
+                            else cache - it
+                        }
+                        async {
+                            answerDbLock.withLock {
+                                takeService.value?.rollbackAnswer(it)
+                            }
+                        }
                     }
 
                     event.updateDuration.onReceive {

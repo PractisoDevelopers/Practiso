@@ -88,8 +88,10 @@ import com.zhufucdev.practiso.platform.wobbleHapticFeedback
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
@@ -352,7 +354,8 @@ private fun AppTopBar(
 
 @Composable
 private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerViewModel) {
-    val answers by model.answers.collectAsState(null)
+    val answers by model.answers.map { it?.filter { ans -> ans.quizId == quiz.quiz.id } }
+        .collectAsState(null, Dispatchers.Default)
     val showAccuracy by model.settings.showAccuracy.collectAsState()
     Column(modifier) {
         quiz.frames.forEach { pFrame ->
@@ -373,7 +376,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                         content = {
                             val answerOptionIds by remember(answers) {
                                 derivedStateOf {
-                                    answers?.mapNotNull { (it.takeIf { it is PractisoAnswer.Option && it.quizId == quiz.quiz.id } as PractisoAnswer.Option?)?.optionId }
+                                    answers?.mapNotNull { (it.takeIf { it is PractisoAnswer.Option } as PractisoAnswer.Option?)?.optionId }
                                         ?: emptyList()
                                 }
                             }
@@ -384,7 +387,11 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                             }
 
                             fun answerModel(option: KeyedPrioritizedFrame) =
-                                PractisoAnswer.Option(option.frame.id, pFrame.frame.id, quiz.quiz.id)
+                                PractisoAnswer.Option(
+                                    option.frame.id,
+                                    pFrame.frame.id,
+                                    quiz.quiz.id
+                                )
 
 
                             frame.frames.forEachIndexed { index, option ->
@@ -401,7 +408,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                     )
                                 }
 
-                                suspend fun selectOnly() {
+                                suspend fun selectSingle() {
                                     if (checked) {
                                         model.event.unanswer.send(
                                             answerModel(option)
@@ -412,8 +419,10 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                                 model.event.answer.send(
                                                     answerModel(option)
                                                 )
-                                                frame.frames.forEachIndexed { i, f ->
-                                                    if (i != index) {
+                                            }
+                                            frame.frames.forEachIndexed { i, f ->
+                                                if (i != index) {
+                                                    launch {
                                                         model.event.unanswer.send(
                                                             answerModel(f)
                                                         )
@@ -460,7 +469,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                                 enabled = correctChoices > 0,
                                                 onClick = {
                                                     coroutine.launch {
-                                                        selectOnly()
+                                                        selectSingle()
                                                     }
                                                 }
                                             )
@@ -486,7 +495,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                             if (correctChoices > 1) {
                                                 selectMulti()
                                             } else {
-                                                selectOnly()
+                                                selectSingle()
                                             }
                                         }
                                     } then Modifier.offset(wiggleOffset.dp)

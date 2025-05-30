@@ -43,12 +43,10 @@ class TakeService(private val takeId: Long, private val db: AppDatabase = Databa
         }
     }
 
-    suspend fun getCurrentQuizId(): Long? =
-        db.transactionWithResult {
-            db.sessionQueries.getCurrentQuizIdByTakeId(takeId)
-                .executeAsOne()
-                .currentQuizId
-        }
+    fun getCurrentQuizId(): Long? =
+        db.sessionQueries.getCurrentQuizIdByTakeId(takeId)
+            .executeAsOne()
+            .currentQuizId
 
     fun getTakeNumber(): Flow<Int> =
         calculateTakeNumber(db, takeId)
@@ -66,8 +64,7 @@ class TakeService(private val takeId: Long, private val db: AppDatabase = Databa
             .map { t -> t.map(TimerByTake::durationSeconds) }
 
     fun getAnswers(): Flow<List<PractisoAnswer>> =
-        db.sessionQueries
-            .getAnswersDataModel(takeId)
+        db.sessionQueries.getAnswersDataModel(takeId)
 
     suspend fun updateAccessTime() {
         db.transaction {
