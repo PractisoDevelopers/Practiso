@@ -5,14 +5,9 @@ import SwiftUI
 struct SuggestionSelector : View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     
-    enum DataState {
-        case pending
-        case ok([any Option])
-    }
-    
     @Binding var selection: (any Option)?
     var searchText: String
-    @State private var data: DataState = .pending
+    @State private var data: [any ComposeApp.SessionCreator]? = nil
     
     init(selection: Binding<(any Option)?> = Binding.constant(nil), searchText: String = "") {
         self._selection = selection
@@ -20,38 +15,43 @@ struct SuggestionSelector : View {
     }
     
     var body: some View {
-        Observing(AppRecommendationService.shared.getCombined()) {
-            initializationView
-        } content: { array in
-            LazyVStack(spacing: 0) {
-                ForEach({
-                    let array = array.map(SessionCreatorOption.from)
-                    return if searchText.isEmpty { array } else { array.filter(isIncluded) }
-                }(), id: \.id) { option in
-                    Divider()
-                        .padding(.leading)
-                    Button {
-                        selection = if selection?.id == option.id {
-                            nil
-                        } else {
-                            option
-                        }
-                    } label: {
-                        HStack {
-                            OptionListItem(data: option)
-                                .frame(maxWidth: .infinity)
-                            if selection?.id == option.id {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(.tint)
-                                    .padding(.trailing)
+        Group {
+            if let array = data {
+                LazyVStack(spacing: 0) {
+                    ForEach({
+                        let array = array.map(SessionCreatorOption.from)
+                        return if searchText.isEmpty { array } else { array.filter(isIncluded) }
+                    }(), id: \.id) { option in
+                        Divider()
+                            .padding(.leading)
+                        Button {
+                            selection = if selection?.id == option.id {
+                                nil
+                            } else {
+                                option
                             }
+                        } label: {
+                            HStack {
+                                OptionListItem(data: option)
+                                    .frame(maxWidth: .infinity)
+                                if selection?.id == option.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(.tint)
+                                        .padding(.trailing)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.leading)
                         }
-                        .padding(.vertical, 8)
-                        .padding(.leading)
+                        .buttonStyle(.listItem)
                     }
-                    .buttonStyle(.listItem)
                 }
+            } else {
+                initializationView
             }
+        }
+        .collect(flow: AppRecommendationService.shared.getCombined()) { latestValue in
+            data = latestValue
         }
     }
     
