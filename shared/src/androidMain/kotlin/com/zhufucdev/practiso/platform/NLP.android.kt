@@ -305,13 +305,13 @@ class LiteRtInference(
 
             launch {
                 // for evey 120% of latestOccupationTime, close each freeInterpreters
-                latestOccupationTime.collectLatest {
+                latestOccupationTime.collectLatest { occupation ->
                     Log.d(
                         "LiteRT",
-                        "Latest inference took ${it.toDouble(DurationUnit.SECONDS)} seconds"
+                        "Latest inference took ${occupation.toDouble(DurationUnit.SECONDS)} seconds"
                     )
-                    while (true) {
-                        delay(it * 1.2)
+                    while (freeInterpreters.isNotEmpty()) {
+                        delay(occupation * 1.2)
                         interpreterMutex.withLock {
                             freeInterpreters.forEach(InterpreterApi::close)
                             freeInterpreters.clear()
