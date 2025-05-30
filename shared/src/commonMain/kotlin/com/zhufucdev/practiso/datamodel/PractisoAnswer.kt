@@ -67,7 +67,6 @@ fun SessionQueries.getAnswersDataModel(takeId: Long): Flow<List<PractisoAnswer>>
         .mapToList(Dispatchers.IO)
         .map { answers ->
             answers
-                .sortedBy { it.priority }
                 .map { it.toDataModel() }
         }
 
