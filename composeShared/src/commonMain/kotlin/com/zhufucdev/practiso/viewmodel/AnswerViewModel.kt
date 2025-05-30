@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -82,8 +83,8 @@ class AnswerViewModel(
             .flowOn(Dispatchers.IO)
     private val cachedAnswers = MutableStateFlow<List<PractisoAnswer>?>(null).apply {
         viewModelScope.launch {
-            upstreamAnswers.collectLatest {
-                delay(1.seconds)
+            emit(upstreamAnswers.first())
+            upstreamAnswers.debounce(5.seconds).collectLatest {
                 emit(it)
             }
         }
