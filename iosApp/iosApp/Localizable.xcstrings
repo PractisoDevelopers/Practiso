@@ -288,7 +288,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%lld%%"
           }
         }
@@ -320,7 +320,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "0%"
           }
         }
@@ -336,7 +336,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "100%"
           }
         }
@@ -1596,7 +1596,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载聚类..."
+            "value" : "正在加载聚类"
           }
         },
         "zh-Hant" : {
@@ -1644,7 +1644,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载题目…"
+            "value" : "正在加载题目…..."
           }
         },
         "zh-Hant" : {
@@ -1660,7 +1660,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载题目…"
+            "value" : "正在加载题目…..."
           }
         },
         "zh-Hant" : {
@@ -1676,7 +1676,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载题集…"
+            "value" : "正在加载题集…..."
           }
         },
         "zh-Hant" : {
@@ -1708,7 +1708,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载练习..."
+            "value" : "正在加载练习......"
           }
         },
         "zh-Hant" : {
@@ -2708,7 +2708,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "仅使用WLAN"
+            "value" : "仅使用 WLAN"
           }
         },
         "zh-Hant" : {
