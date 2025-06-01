@@ -83,7 +83,11 @@ struct QuestionDetailView : View {
                     }
                 }
             } else {
-                Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("Question Unavailable"))
+                Placeholder {
+                    Image(systemName: "questionmark.circle")
+                } content: {
+                    Text("Question Unavailable")
+                }
             }
         }
         .navigationBarTitleDisplayMode(.inline)

@@ -508,6 +508,9 @@
         }
       }
     },
+    "Automatic Clustering" : {
+
+    },
     "Begin a new take as well" : {
       "localizations" : {
         "zh-Hans" : {
@@ -604,6 +607,9 @@
         }
       }
     },
+    "Click the %@ button to fill automatically" : {
+
+    },
     "Collecting frames..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -620,6 +626,9 @@
         }
       }
     },
+    "Completed" : {
+
+    },
     "Confirmation" : {
       "localizations" : {
         "zh-Hans" : {
@@ -635,6 +644,9 @@
           }
         }
       }
+    },
+    "Continue" : {
+
     },
     "Continue without starting" : {
       "localizations" : {
@@ -1195,6 +1207,16 @@
         }
       }
     },
+    "found %d items related to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "found %1$d items related to %2$@"
+          }
+        }
+      }
+    },
     "frame embedding inference initialization" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1226,6 +1248,9 @@
           }
         }
       }
+    },
+    "Getting started..." : {
+
     },
     "Have a review" : {
       "localizations" : {
@@ -1912,6 +1937,9 @@
         }
       }
     },
+    "nothing was found related to %@" : {
+
+    },
     "Now" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1991,6 +2019,9 @@
           }
         }
       }
+    },
+    "Preparing for clustering..." : {
+
     },
     "Proceed" : {
       "localizations" : {
@@ -2205,6 +2236,9 @@
           }
         }
       }
+    },
+    "Searching for related questions..." : {
+
     },
     "Select" : {
       "localizations" : {
@@ -2526,6 +2560,9 @@
           }
         }
       }
+    },
+    "Thinking about %@..." : {
+
     },
     "This archive is empty" : {
       "localizations" : {

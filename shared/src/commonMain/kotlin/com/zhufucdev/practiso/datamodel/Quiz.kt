@@ -3,6 +3,7 @@ package com.zhufucdev.practiso.datamodel
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.zhufucdev.practiso.database.FrameEmbeddingIndex
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.Quiz
@@ -202,6 +203,13 @@ fun QuizQueries.getQuizByFrame(frame: Frame) =
         is Frame.Options -> getQuizByOptionsFrameId(frame.optionsFrame.id)
         is Frame.Image -> getQuizByImageFrameId(frame.imageFrame.id)
         is Frame.Text -> getQuizByTextFrameId(frame.textFrame.id)
+    }
+
+fun QuizQueries.getQuizByIndex(index: FrameEmbeddingIndex) =
+    when {
+        index.imageFrameId != null -> getQuizByImageFrameId(index.imageFrameId)
+        index.textFrameId != null -> getQuizByTextFrameId(index.textFrameId)
+        else -> throw IllegalArgumentException("No non-null frame id is present in this index.")
     }
 
 data class ResourceRequester(val name: String, val frame: Frame)

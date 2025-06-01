@@ -38,4 +38,7 @@ open class MlModel(val hfId: String, val features: Set<ModelFeature>) {
 
     val sequenceLength: Int?
         get() = features.filterFirstIsInstanceOrNull<TokenInput>()?.sequenceLength
+
+    val embeddingOutput: EmbeddingOutput?
+        get() = features.filterFirstIsInstanceOrNull<EmbeddingOutput>()
 }

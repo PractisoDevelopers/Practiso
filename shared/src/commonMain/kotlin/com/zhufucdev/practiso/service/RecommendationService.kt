@@ -8,13 +8,11 @@ import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.GetDimensionQuizIds
 import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.datamodel.AnsweredQuiz
-import com.zhufucdev.practiso.datamodel.EmbeddingOutput
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.getAllAnsweredQuizzes
 import com.zhufucdev.practiso.datamodel.getQuizByFrame
 import com.zhufucdev.practiso.datamodel.toDimensionOptionFlow
-import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.helper.ratioOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -89,8 +87,8 @@ class RecommendationService(
         db.getAllAnsweredQuizzes()
             .combine(fei.getUpgradeState().filterIsInstance<FeiDbState.Ready>(), ::Pair)
             .map { (answeredQuizzes, fei) ->
-                val embedding = fei.model.features.filterFirstIsInstanceOrNull<EmbeddingOutput>()
-                    ?: error("Model missing due features.")
+                val embedding =
+                    fei.inference.model.embeddingOutput ?: error("Model missing due features.")
 
                 val quizFailedMuch = coroutineScope {
                     answeredQuizzes.ratioOf(AnsweredQuiz::isCorrect)

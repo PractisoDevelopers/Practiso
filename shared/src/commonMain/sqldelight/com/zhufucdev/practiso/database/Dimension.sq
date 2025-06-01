@@ -72,7 +72,7 @@ updateDimensionAssoicationIntensity:
 UPDATE quizByDimension SET intensity = ? WHERE quizId = ? AND dimensionId = ?;
 
 associateQuizWithDimension:
-INSERT INTO quizByDimension(quizId, dimensionId, intensity)
+INSERT OR REPLACE INTO quizByDimension(quizId, dimensionId, intensity)
 VALUES (?, ?, ?);
 
 dissoicateQuizFromDimension:

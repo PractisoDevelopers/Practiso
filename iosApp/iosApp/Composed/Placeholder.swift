@@ -1,16 +1,16 @@
 import Foundation
 import SwiftUI
 
-struct Placeholder : View {
-    var image: Image
-    var text: Text
+struct Placeholder<Text : View> : View {
+    @ViewBuilder let image: () -> Image
+    @ViewBuilder let content: () -> Text
     var body: some View {
         VStack(spacing: 10) {
-            image
+            image()
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 48)
-            text
+            content()
         }
         .foregroundStyle(.secondary)
         .edgesIgnoringSafeArea(.all)

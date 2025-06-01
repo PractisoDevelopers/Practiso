@@ -302,7 +302,7 @@ class FeiService(
                 }
 
                 try {
-                    send(FeiDbState.Ready(index, db, model))
+                    send(FeiDbState.Ready(index, db, fei))
 
                     textFrameFlow.addPacing()
                         .combine(imageFrameFlow.addPacing(), ::Pair)
@@ -370,7 +370,7 @@ class FeiService(
                                 send(FeiDbState.MissingModel(model, missingFeatures, proceedAnyway))
                                 when (proceedAnyway.receive()) {
                                     MissingModelResponse.Cancel -> {
-                                        send(FeiDbState.Ready(index, db, model))
+                                        send(FeiDbState.Ready(index, db, fei))
                                         return@collect
                                     }
 
@@ -440,7 +440,7 @@ class FeiService(
                                 }
                             }
 
-                            send(FeiDbState.Ready(index, db, model))
+                            send(FeiDbState.Ready(index, db, fei))
 
                             withContext(Dispatchers.IO) {
                             }
@@ -483,7 +483,7 @@ sealed class FeiErrorResponse {
 }
 
 sealed class FeiDbState {
-    data class Ready(val index: Index, val db: AppDatabase, val model: MlModel) : FeiDbState()
+    data class Ready(val index: Index, val db: AppDatabase, val inference: FrameEmbeddingInference) : FeiDbState()
     object Collecting : FeiDbState()
     data class MissingModel(
         val current: MlModel?,

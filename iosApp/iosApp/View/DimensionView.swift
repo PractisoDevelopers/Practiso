@@ -14,7 +14,7 @@ struct DimensionView: View {
     @State private var namingBuffer = ""
     
     private let removeService = RemoveServiceSync(db: Database.shared.app)
-    private let categorizeService = CategorizeServiceSync(db: Database.shared.app)
+    private let categorizeService = CategorizeServiceSync(db: Database.shared.app, fei: Database.shared.fei)
 
     var body: some View {
         OptionList(
@@ -134,7 +134,7 @@ fileprivate struct Item : View {
                 for provider in providers {
                     _ = provider.loadTransferable(type: QuizOption.self) { result in
                         if let quizOption = try? result.get() {
-                            let service = CategorizeServiceSync(db: Database.shared.app)
+                            let service = CategorizeServiceSync(db: Database.shared.app, fei: Database.shared.fei)
                             try? service.associate(quizId: quizOption.quiz.id, dimensionId: dimensionId)
                         }
                     }

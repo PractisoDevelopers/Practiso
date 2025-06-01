@@ -32,7 +32,11 @@ struct QuestionPreview : View {
                 )
 
             case .unavailable:
-                Placeholder(image: Image(systemName: "questionmark.circle"), text: Text("\(data.name ?? "Qeustion") Unavailable"))
+                Placeholder {
+                    Image(systemName: "questionmark.circle")
+                } content: {
+                    Text("\(data.name ?? "Qeustion") Unavailable")
+                }
             }
         }
         .frame(idealHeight: 400)

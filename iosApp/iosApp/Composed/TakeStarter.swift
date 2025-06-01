@@ -41,7 +41,11 @@ struct TakeStarter : View {
                 case .pending:
                     Spacer()
                 case .empty:
-                    Placeholder(image: Image(systemName: "folder"), text: Text("Session is empty"))
+                    Placeholder {
+                        Image(systemName: "folder")
+                    } content: {
+                        Text("Session is empty")
+                    }
                 case .ok(let qf):
                     Question(frames: qf.frames, namespace: namespace)
                         .opacity(isReady ? 0.6 : 0)

@@ -111,6 +111,10 @@ FROM quizByDimension
 WHERE dimensionId = ?
 GROUP BY dimensionId;
 
+getQuizCount:
+SELECT coalesce(count(id), 0)
+FROM quiz;
+
 insertQuiz:
 INSERT INTO quiz(name, creationTimeISO, modificationTimeISO)
 VALUES (?, ?, ?);

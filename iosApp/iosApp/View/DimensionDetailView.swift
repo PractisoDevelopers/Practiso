@@ -4,12 +4,13 @@ import SwiftUI
 
 struct DimensionDetailView : View {
     private let libraryService = LibraryService(db: Database.shared.app)
-    private let categorizeService = CategorizeServiceSync(db: Database.shared.app)
+    private let categorizeService = CategorizeServiceSync(db: Database.shared.app, fei: Database.shared.fei)
     
     let option: DimensionOption
     
     @State private var currentPopoverItem: QuizIntensity? = nil
     @State private var quizzesFlow: SkieSwiftFlow<[QuizIntensity]>
+    @State private var clusterFlow: SkieSwiftFlow<ClusterState>? = nil
     
     init(option: DimensionOption) {
         self.option = option
@@ -17,6 +18,22 @@ struct DimensionDetailView : View {
     }
     
     var body: some View {
+        Group {
+            if let clusterState = clusterFlow {
+                clusteringBody(clusterState) {
+                    clusterFlow = nil
+                }
+            } else {
+                contentBody
+            }
+        }
+        .navigationTitle(option.dimension.name)
+        .onChange(of: option) { _, _ in
+            clusterFlow = nil
+        }
+    }
+    
+    private var contentBody: some View {
         Observing(quizzesFlow) {
             VStack {
                 ProgressView()
@@ -38,11 +55,12 @@ struct DimensionDetailView : View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                VStack {
-                    Placeholder(
-                        image: Image(systemName: "folder"),
-                        text: Text("Dimension is Empty")
-                    )
+                Placeholder {
+                    Image(systemName: "folder")
+                } content: {
+                    Text("Dimension is Empty")
+                    Text("Click the \(Image(systemName: "lasso.badge.sparkles")) button to fill automatically")
+                        .font(.caption)
                 }
             }
         }
@@ -55,7 +73,49 @@ struct DimensionDetailView : View {
         .onChange(of: option) { _, newValue in
             quizzesFlow = libraryService.getQuizIntensities(dimId: newValue.id)
         }
-        .navigationTitle(option.dimension.name)
+        .toolbar {
+            ToolbarItem {
+                Button("Automatic Clustering", systemImage: "lasso.badge.sparkles") {
+                    clusterFlow = categorizeService.cluster(dimensionId: option.dimension.id, minSimilarity: 0.6)
+                }
+            }
+        }
+    }
+    
+    private func clusteringBody(_ stateFlow: SkieSwiftFlow<ClusterState>, onComplete: @escaping () -> Void) -> some View {
+        Observing(stateFlow) {
+            Placeholder {
+                Image(systemName: "lasso.badge.sparkles")
+            } content: {
+                Text("Getting started...")
+            }
+        } content: { state in
+            Placeholder {
+                Image(systemName: "lasso.badge.sparkles")
+            } content: {
+                switch onEnum(of: state) {
+                case .preparing(_):
+                    Text("Preparing for clustering...")
+                case .inference(let inference):
+                    Text("Thinking about \(inference.text)...")
+                case .search(_):
+                    Text("Searching for related questions...")
+                case .complete(let completion):
+                    Text("Completed")
+                    if completion.found > 0 {
+                        Text("found \(completion.found) items related to \(option.dimension.name)")
+                            .font(.caption)
+                    } else {
+                        Text("nothing was found related to \(option.dimension.name)")
+                            .font(.caption)
+                    }
+                    Button("Continue", action: onComplete)
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.tint)
+                }
+            }
+            .animation(.default, value: state)
+        }
     }
     
     private func handleQuizDrop(items: [QuizOption]) -> Bool {
