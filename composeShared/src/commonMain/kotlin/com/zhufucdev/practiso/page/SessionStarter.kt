@@ -42,9 +42,9 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.DimensionSkeleton
+import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.QuizSkeleton
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composition.LocalNavController
@@ -122,7 +122,7 @@ fun SessionStarter(
 
     AnimatedContent(items?.isEmpty() == true) { empty ->
         if (empty) {
-            AlertHelper(
+            PlaceHolder(
                 header = {
                     Text("🤔")
                 },

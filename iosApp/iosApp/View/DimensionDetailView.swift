@@ -4,7 +4,8 @@ import SwiftUI
 
 struct DimensionDetailView : View {
     private let libraryService = LibraryService(db: Database.shared.app)
-    private let categorizeService = CategorizeServiceSync(db: Database.shared.app, fei: Database.shared.fei)
+    private let categorizeService = CategorizeServiceSync(db: Database.shared.app)
+    private let clusterService = ClusterService(db: Database.shared.app, fei: Database.shared.fei)
     
     let option: DimensionOption
     
@@ -92,7 +93,7 @@ struct DimensionDetailView : View {
         .toolbar {
             ToolbarItem {
                 Button("Automatic Clustering", systemImage: "lasso.badge.sparkles") {
-                    clusterFlow = categorizeService.cluster(dimensionId: option.dimension.id, minSimilarity: 0.6)
+                    clusterFlow = clusterService.cluster(dimensionId: option.dimension.id, minSimilarity: 0.6)
                 }
             }
         }

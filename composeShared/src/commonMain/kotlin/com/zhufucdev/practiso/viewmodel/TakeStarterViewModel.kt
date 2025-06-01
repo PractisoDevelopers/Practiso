@@ -24,7 +24,6 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.platform.randomUUID
 import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.service.LibraryService
-import com.zhufucdev.practiso.service.TakeService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -114,7 +113,7 @@ class TakeStarterViewModel(
                     event.start.onReceive {
                         Navigator.navigate(
                             Navigation.Goto(AppDestination.Answer),
-                            options = listOf(NavigationOption.OpenTake(it))
+                            NavigationOption.OpenTake(it)
                         )
                     }
 
@@ -156,7 +155,7 @@ class TakeStarterViewModel(
                             flipCardState.flip(0)
                             Navigator.navigate(
                                 Navigation.Goto(AppDestination.Answer),
-                                options = listOf(NavigationOption.OpenTake(id))
+                                NavigationOption.OpenTake(id)
                             )
                         } ?: error("No ui coroutine scope specified")
                     }

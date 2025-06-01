@@ -4,6 +4,7 @@ import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,12 +22,15 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,8 +48,8 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.Backdrop
 import com.zhufucdev.practiso.composable.BackdropKey
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
@@ -54,6 +58,7 @@ import com.zhufucdev.practiso.composable.HorizontalControl
 import com.zhufucdev.practiso.composable.HorizontalDraggable
 import com.zhufucdev.practiso.composable.HorizontalDraggingControlTargetWidth
 import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
@@ -74,6 +79,7 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
+import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
@@ -85,14 +91,19 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.add_item_to_get_started_para
+import resources.baseline_axis_arrow
 import resources.baseline_chevron_down
 import resources.baseline_import
 import resources.baseline_timelapse
 import resources.cancel_para
+import resources.create_dimension_para
+import resources.create_dimension_title
 import resources.create_para
+import resources.create_quiz_title
+import resources.dimension_name
 import resources.dimensions_para
+import resources.import_archive_title
 import resources.import_from_practiso_archive_para
-import resources.import_para
 import resources.keep_para
 import resources.library_is_empty_para
 import resources.n_questions_are_within_this_dimension_what_to_do_with_it_para
@@ -108,11 +119,10 @@ import resources.templates_para
 @Composable
 fun LibraryApp(
     model: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
-    importer: ImportViewModel = currentSharedImportViewModel()
+    importer: ImportViewModel = currentSharedImportViewModel(),
 ) {
-    var showActions by remember {
-        mutableStateOf(false)
-    }
+    var showActions by remember { mutableStateOf(false) }
+    var showDimCreationDialog by remember { mutableStateOf(false) }
     val coroutine = rememberCoroutineScope()
 
     composeFromBottomUp("fab") {
@@ -142,7 +152,7 @@ fun LibraryApp(
             autoCollapse = true
         ) {
             item(
-                label = { Text(stringResource(Res.string.import_para)) },
+                label = { Text(stringResource(Res.string.import_archive_title)) },
                 icon = {
                     Icon(
                         painterResource(Res.drawable.baseline_import),
@@ -154,7 +164,17 @@ fun LibraryApp(
                 }
             )
             item(
-                label = { Text(stringResource(Res.string.create_para)) },
+                label = { Text(stringResource(Res.string.create_dimension_title)) },
+                icon = {
+                    Icon(
+                        painterResource(Res.drawable.baseline_axis_arrow),
+                        contentDescription = null
+                    )
+                },
+                onClick = { showDimCreationDialog = true }
+            )
+            item(
+                label = { Text(stringResource(Res.string.create_quiz_title)) },
                 icon = { Icon(Icons.Default.Edit, contentDescription = null) },
                 onClick = {
                     coroutine.launch {
@@ -183,7 +203,7 @@ fun LibraryApp(
 
     AnimatedContent(templates?.isEmpty() == true && dimensions?.isEmpty() == true && quizzes?.isEmpty() == true) { empty ->
         if (empty) {
-            AlertHelper(
+            PlaceHolder(
                 header = { Text("📝") },
                 label = { Text(stringResource(Res.string.library_is_empty_para)) },
                 helper = { Text(stringResource(Res.string.add_item_to_get_started_para)) }
@@ -272,6 +292,13 @@ fun LibraryApp(
                                 },
                                 modifier =
                                     Modifier.combineClickable(
+                                        onClick = {
+                                            navController.navigate(
+                                                DimensionViewModel.Initialization(
+                                                    it.id
+                                                )
+                                            )
+                                        },
                                         onSecondaryClick = {
                                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                                             menuExpanded = true
@@ -368,9 +395,7 @@ fun LibraryApp(
                                     coroutine.launch {
                                         Navigator.navigate(
                                             Navigation.Goto(AppDestination.QuizCreate),
-                                            options = listOf(
-                                                NavigationOption.OpenQuiz(it.quiz.id)
-                                            )
+                                            NavigationOption.OpenQuiz(it.quiz.id)
                                         )
                                     }
                                 }, onSecondaryClick = {
@@ -408,6 +433,18 @@ fun LibraryApp(
                 }
             }
         }
+    }
+
+    if (showDimCreationDialog) {
+        DimensionCreationDialog(
+            onDismiss = { showDimCreationDialog = false },
+            onCreate = {
+                showDimCreationDialog = false
+                coroutine.launch {
+                    model.event.newDimension.send(it)
+                }
+            }
+        )
     }
 }
 
@@ -562,6 +599,59 @@ private fun DimensionRemovalDialog(
                     }
                     TextButton(onDeleteSelfOnly) {
                         Text(stringResource(Res.string.keep_para))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DimensionCreationDialog(
+    onDismiss: () -> Unit,
+    onCreate: (String) -> Unit,
+) {
+    var nameBuffer by remember { mutableStateOf("") }
+    BasicAlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card {
+            DialogContentSkeleton(
+                icon = {
+                    Icon(
+                        painterResource(Res.drawable.baseline_axis_arrow),
+                        contentDescription = null
+                    )
+                },
+                title = {
+                    Text(
+                        stringResource(Res.string.create_dimension_para),
+                        textAlign = TextAlign.Center
+                    )
+                },
+                modifier = Modifier.padding(PaddingBig)
+            ) {
+                OutlinedTextField(
+                    value = nameBuffer,
+                    onValueChange = { nameBuffer = it },
+                    label = { Text(stringResource(Res.string.dimension_name)) }
+                )
+                Row(Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = onDismiss
+                    ) {
+                        Text(stringResource(Res.string.cancel_para))
+                    }
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
+                        Button(
+                            onClick = {
+                                onCreate(nameBuffer)
+                            },
+                            enabled = nameBuffer.isNotBlank(),
+                        ) {
+                            Text(stringResource(Res.string.create_para))
+                        }
                     }
                 }
             }

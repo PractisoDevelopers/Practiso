@@ -72,9 +72,8 @@ class DimensionSectionEditVM(
                         )
                         val takeId = createService.createTake(sessionId, emptyList())
                         Navigator.navigate(
-                            Navigation.Goto(AppDestination.Answer), listOf(
-                                NavigationOption.OpenTake(takeId)
-                            )
+                            Navigation.Goto(AppDestination.Answer),
+                            NavigationOption.OpenTake(takeId)
                         )
                     }
                 }
@@ -140,10 +139,12 @@ class DimensionSectionEditVM(
             key: String,
             value: Startpoint,
         ) {
-            bundle.putBundle(key, bundleOf(
-                DimensionIdKey to value.dimensionId,
-                TopItemIndexKey to value.topItemIndex
-            ))
+            bundle.putBundle(
+                key, bundleOf(
+                    DimensionIdKey to value.dimensionId,
+                    TopItemIndexKey to value.topItemIndex
+                )
+            )
         }
     }
 }

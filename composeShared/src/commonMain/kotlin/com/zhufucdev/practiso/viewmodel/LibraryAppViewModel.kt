@@ -18,6 +18,7 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.service.CategorizeService
 import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.service.LibraryService
 import com.zhufucdev.practiso.service.RemoveService
@@ -36,6 +37,7 @@ import kotlinx.serialization.Serializable
 class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) : ViewModel() {
     private val libraryService = LibraryService(db)
     private val createService = CreateService(db)
+    private val categoryService = CategorizeService(db)
 
     val templates =
         libraryService.getTemplates()
@@ -124,6 +126,7 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
         val removeReveal: Channel<Unit> = Channel(),
         val newTakeFromDimension: Channel<Long> = Channel(),
         val updateCaps: Channel<Caps> = Channel(),
+        val newDimension: Channel<String> = Channel()
     )
 
     val event = Events()
@@ -164,9 +167,8 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
                         )
                         val takeId = createService.createTake(sessionId, emptyList())
                         Navigator.navigate(
-                            Navigation.Goto(AppDestination.Answer), options = listOf(
-                                NavigationOption.OpenTake(takeId)
-                            )
+                            Navigation.Goto(AppDestination.Answer),
+                            NavigationOption.OpenTake(takeId)
                         )
                     }
 
@@ -178,6 +180,10 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
                                 dimension = maxOf(_caps.value.dimension, it.dimension)
                             )
                         )
+                    }
+
+                    event.newDimension.onReceive {
+                        categoryService.createDimension(it)
                     }
                 }
             }

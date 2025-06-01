@@ -13,6 +13,7 @@
     <string name="welcome_to_app_para">Welcome to Practiso!</string>
     <string name="get_started_by_para">Get started by creating a session</string>
     <string name="create_para">Create</string>
+    <string name="create_quiz_title">Create Question</string>
     <string name="use_smart_recommendations_para">Use smart recommendations</string>
     <string name="quickly_start_new_session_para">Quickly start a new session</string>
     <string name="new_question_span">new question</string>
@@ -31,6 +32,7 @@
     <string name="no_options_available_para">No options available</string>
     <string name="head_to_library_to_create">Head to library to create</string>
     <string name="import_para">Import</string>
+    <string name="import_archive_title">Import Archive</string>
     <string name="templates_para">Templates</string>
     <string name="questions_para">Questions</string>
     <string name="dimensions_para">Dimensions</string>
@@ -229,4 +231,22 @@
     <string name="fei_resource_span">frame embedding inference resource</string>
     <string name="waiting_for_inference_para">Waiting for inference…</string>
     <string name="interact_with_status_bar_to_continue_span">interact with status bar to continue</string>
+    <string name="dimension_not_found_para">Dimension not found</string>
+    <string name="and_it_is_sad_para">And it is sad.</string>
+    <string name="dimension_is_empty_para">Dimension is empty</string>
+    <string name="you_may_fill_it_automatically_using_fab">You may fill it automatically by using the floating button.</string>
+    <string name="generate_para">Generate</string>
+    <string name="completed_para">Completed</string>
+    <string name="thinking_para">Thinking…</string>
+    <string name="searching_para">Searching…</string>
+    <string name="preparing_para">Preparing…</string>
+    <plurals name="found_n_items_related_to_x_para">
+        <item quantity="one">Found %1$d item related to %2$s</item>
+        <item quantity="other">Found %1$d items related to %2$s</item>
+    </plurals>
+    <string name="reveal_para">Reveal</string>
+    <string name="create_dimension_title">Create Dimension</string>
+    <string name="create_dimension_para">Create dimension</string>
+    <string name="dimension_name">Dimension name</string>
+    <string name="exclude_para">Exclude</string>
 </resources>

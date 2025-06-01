@@ -105,7 +105,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
                         )
                         Navigator.navigate(
                             Navigation.Goto(AppDestination.Answer),
-                            options = listOf(NavigationOption.OpenTake(takeId))
+                            NavigationOption.OpenTake(takeId)
                         )
                     }
 
@@ -125,7 +125,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
                     event.startTake.onReceive {
                         Navigator.navigate(
                             Navigation.Goto(AppDestination.Answer),
-                            options = listOf(NavigationOption.OpenTake(it))
+                            NavigationOption.OpenTake(it)
                         )
                     }
 

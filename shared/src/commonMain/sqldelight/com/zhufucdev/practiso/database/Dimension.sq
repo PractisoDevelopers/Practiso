@@ -78,6 +78,9 @@ VALUES (?, ?, ?);
 dissoicateQuizFromDimension:
 DELETE FROM quizByDimension WHERE quizId = ? AND dimensionId = ?;
 
+dissoicateQuizzesFromDimension:
+DELETE FROM quizByDimension WHERE quizId IN ? AND dimensionId = ?;
+
 removeDimension:
 DELETE FROM dimension WHERE id = ?;
 

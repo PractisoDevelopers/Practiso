@@ -115,6 +115,7 @@ fun <T : PractisoOption, M : SectionEditViewModel<T>> SectionEditScaffold(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : PractisoOption> RowScope.CommonActions(
     model: SectionEditViewModel<T>,

@@ -89,7 +89,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.Database
-import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.FabCreate
 import com.zhufucdev.practiso.composable.FlipCard
@@ -97,6 +96,7 @@ import com.zhufucdev.practiso.composable.HorizontalControl
 import com.zhufucdev.practiso.composable.HorizontalDraggable
 import com.zhufucdev.practiso.composable.HorizontalDraggingControlTargetWidth
 import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SectionCaption
@@ -229,12 +229,12 @@ fun SessionApp(model: SessionViewModel = viewModel(factory = SessionViewModel.Fa
 
     AnimatedContent(takeStats?.isEmpty() == true && sessions?.isEmpty() == true) { empty ->
         if (empty) {
-            AlertHelper(
-                label = {
-                    Text(stringResource(Res.string.welcome_to_app_para))
-                },
+            PlaceHolder(
                 header = {
                     Text("👋")
+                },
+                label = {
+                    Text(stringResource(Res.string.welcome_to_app_para))
                 },
                 helper = {
                     Text(stringResource(Res.string.get_started_by_para))
@@ -315,10 +315,8 @@ fun SessionApp(model: SessionViewModel = viewModel(factory = SessionViewModel.Fa
                                                     coroutine.launch {
                                                         Navigator.navigate(
                                                             Navigation.Goto(AppDestination.Answer),
-                                                            options = listOf(
-                                                                NavigationOption.OpenTake(
-                                                                    takeStat.id
-                                                                )
+                                                            NavigationOption.OpenTake(
+                                                                takeStat.id
                                                             )
                                                         )
                                                     }

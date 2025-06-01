@@ -15,16 +15,16 @@ import androidx.compose.ui.text.style.TextAlign
 import com.zhufucdev.practiso.style.PaddingNormal
 
 @Composable
-fun AlertHelper(
+fun PlaceHolder(
+    modifier: Modifier = Modifier,
     header: @Composable () -> Unit,
     label: @Composable () -> Unit,
     helper: @Composable () -> Unit,
-    modifier: Modifier? = null,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = modifier ?: Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize() then modifier
     ) {
         CompositionLocalProvider(
             LocalTextStyle provides MaterialTheme.typography.displayLarge

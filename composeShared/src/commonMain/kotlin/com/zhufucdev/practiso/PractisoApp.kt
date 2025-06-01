@@ -87,6 +87,7 @@ import com.zhufucdev.practiso.composition.rememberExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
+import com.zhufucdev.practiso.page.DimensionApp
 import com.zhufucdev.practiso.page.DimensionSectionEditApp
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.QuizSectionEditApp
@@ -98,6 +99,7 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
+import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
@@ -192,6 +194,17 @@ fun PractisoApp(navController: NavHostController) {
                             startpoint = stackEntry.toRoute(),
                             libraryVM = libraryVM
                         )
+                    }
+                }
+                composable<DimensionViewModel.Initialization>(
+                    typeMap = mapOf(
+                        typeOf<DimensionViewModel.Initialization>() to DimensionViewModel.InitializationNavType
+                    )
+                ) { stackEntry ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            DimensionApp(stackEntry.toRoute())
+                        }
                     }
                 }
             }

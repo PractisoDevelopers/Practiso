@@ -63,7 +63,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.window.core.layout.WindowWidthSizeClass
-import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.EditableImageFrame
 import com.zhufucdev.practiso.composable.EditableOptionsFrame
 import com.zhufucdev.practiso.composable.EditableTextFrame
@@ -72,6 +71,7 @@ import com.zhufucdev.practiso.composable.ImageFrameSkeleton
 import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.OptionSkeleton
 import com.zhufucdev.practiso.composable.OptionsFrameSkeleton
+import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.TextFrameSkeleton
 import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.OptionsFrame
@@ -340,7 +340,8 @@ private fun Editor(model: QuizCreateViewModel) {
     ) { p ->
         AnimatedContent(model.frames.isEmpty()) { showHelper ->
             if (showHelper) {
-                AlertHelper(
+                PlaceHolder(
+                    modifier = Modifier.fillMaxSize().padding(p),
                     header = {
                         Icon(
                             painterResource(Res.drawable.baseline_elevator_down),
@@ -363,8 +364,7 @@ private fun Editor(model: QuizCreateViewModel) {
                                 Text(stringResource(Res.string.expand_para))
                             }
                         }
-                    },
-                    modifier = Modifier.fillMaxSize().padding(p)
+                    }
                 )
             } else {
                 LazyColumn(

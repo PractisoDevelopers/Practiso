@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -59,9 +61,7 @@ fun SharedElementTransitionPopup(
     val scopeImpl = object : SharedElementTransitionPopupScope {
         override fun Modifier.sharedElement(): Modifier =
             this then Modifier.onGloballyPositioned {
-                coroutine.launch {
-                    model.transitionStart = it.boundsInRoot()
-                }
+                model.transitionStart = it.boundsInRoot()
             }
                 .alpha(if (model.visible) 0f else 1f)
 
@@ -153,6 +153,7 @@ fun SharedElementTransitionPopup(
                                 model.transitionStart.top.toInt()
                             )
                         }
+                            .size(with(LocalDensity.current) { model.transitionStart.size.toDpSize() })
                     ) {
                         sharedElement(
                             Modifier.sharedBounds(
