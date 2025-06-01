@@ -1066,6 +1066,22 @@
         }
       }
     },
+    "Dimension not found" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dimension not found"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dimension not found"
+          }
+        }
+      }
+    },
     "Don't create takes for now" : {
       "localizations" : {
         "zh-Hans" : {
