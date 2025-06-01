@@ -620,18 +620,18 @@
         }
       }
     },
-    "Click the %@ button to fill automatically" : {
+    "click the %@ button to fill automatically" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Click the %@ button to fill automatically"
+            "value" : "click the %@ button to fill automatically"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Click the %@ button to fill automatically"
+            "value" : "click the %@ button to fill automatically"
           }
         }
       }
