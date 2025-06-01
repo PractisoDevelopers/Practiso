@@ -3,8 +3,10 @@ package com.zhufucdev.practiso.service
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.SessionOptionView
 import com.zhufucdev.practiso.datamodel.DimensionQuizzes
 import com.zhufucdev.practiso.datamodel.SessionOption
@@ -73,6 +75,11 @@ class LibraryService(private val db: AppDatabase = Database.app) {
                     )
                 }
             }
+
+    fun getDimension(dimId: Long): Flow<Dimension?> =
+        db.dimensionQueries.getDimensionById(dimId)
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
 
     fun getSession(id: Long): Flow<SessionOption> =
         db.sessionQueries.getSessionOptionById(id)
