@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Practiso</string>
-    <string name="title_activity_quiz_create">测验创建者</string>
+    <string name="title_activity_quiz_create">测验创建器</string>
     <string name="title_activity_answer">回答</string>
     <string name="generic_file_para">通用文件</string>
     <string name="title_activity_preferences">设置</string>
