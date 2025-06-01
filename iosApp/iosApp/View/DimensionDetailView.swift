@@ -75,7 +75,7 @@ struct DimensionDetailView : View {
                     Image(systemName: "folder")
                 } content: {
                     Text("Dimension is Empty")
-                    Text("Click the \(Image(systemName: "lasso.badge.sparkles")) button to fill automatically")
+                    Text("click the \(Image(systemName: "lasso.badge.sparkles")) button to fill automatically")
                         .font(.caption)
                 }
             }
