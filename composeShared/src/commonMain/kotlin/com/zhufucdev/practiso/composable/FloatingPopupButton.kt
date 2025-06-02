@@ -33,6 +33,7 @@ import com.zhufucdev.practiso.style.PaddingNormal
 
 @Composable
 fun FloatingPopupButton(
+    modifier: Modifier = Modifier,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     autoCollapse: Boolean = false,
@@ -88,7 +89,7 @@ fun FloatingPopupButton(
             content(scope)
         }
     }
-    Column(horizontalAlignment = Alignment.End) {
+    Column(horizontalAlignment = Alignment.End, modifier = modifier) {
         if (showActions) {
             items.forEachIndexed { index, it ->
                 it(

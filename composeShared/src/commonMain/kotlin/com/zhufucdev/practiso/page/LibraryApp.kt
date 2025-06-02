@@ -3,6 +3,8 @@ package com.zhufucdev.practiso.page
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,11 +46,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.Backdrop
 import com.zhufucdev.practiso.composable.BackdropKey
@@ -114,6 +122,7 @@ import resources.removing_x_para
 import resources.select_para
 import resources.show_more_para
 import resources.templates_para
+import kotlin.math.max
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -184,9 +193,30 @@ fun LibraryApp(
             )
         }
     }
+
     composeFromBottomUp(BackdropKey) {
-        if (showActions) {
-            Backdrop { showActions = false }
+        var bounds by remember { mutableStateOf(Rect.Zero) }
+        val radius by animateFloatAsState(if (showActions) max(bounds.maxDimension, 1000f) else 1f)
+        if (showActions || radius > 1f) {
+            Backdrop(
+                Modifier.onGloballyPositioned {
+                    bounds = it.boundsInParent()
+                }.background(
+                    brush = Brush.radialGradient(
+                        0.9f to MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
+                        0.95f to MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                        1f to Color.Transparent,
+                        center = if (LocalLayoutDirection.current == LayoutDirection.Ltr) Offset(
+                            Float.POSITIVE_INFINITY,
+                            Float.POSITIVE_INFINITY
+                        )
+                        else Offset(0f, Float.POSITIVE_INFINITY),
+                        radius = radius
+                    )
+                )
+            ) {
+                showActions = false
+            }
         }
     }
 
