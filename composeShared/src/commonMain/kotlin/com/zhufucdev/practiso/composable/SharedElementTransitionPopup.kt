@@ -92,7 +92,7 @@ fun SharedElementTransitionPopup(
                     popupScale = 1 - it.progress
                     popupOffset =
                         Offset(
-                            x = (model.transitionStart.left - screenBounds.width / 2) * it.progress,
+                            x = (model.transitionStart.center.x - screenBounds.width / 2) * it.progress,
                             y = (model.transitionStart.top - screenBounds.height / 2) * it.progress
                         )
                 }
