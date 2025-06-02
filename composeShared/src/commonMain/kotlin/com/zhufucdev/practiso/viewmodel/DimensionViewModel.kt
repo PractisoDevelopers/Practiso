@@ -19,6 +19,7 @@ import com.zhufucdev.practiso.service.ClusterService
 import com.zhufucdev.practiso.service.ClusterState
 import com.zhufucdev.practiso.service.FeiService
 import com.zhufucdev.practiso.service.LibraryService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -94,6 +96,7 @@ class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHand
                     event.generate.onReceive {
                         _clusterState.emitAll(
                             clusterService.cluster(getDimensionId())
+                                .flowOn(Dispatchers.Default)
                         )
                         _clusterState.emit(null)
                     }
