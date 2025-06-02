@@ -90,7 +90,6 @@ import resources.reveal_para
 import resources.searching_para
 import resources.thinking_para
 import resources.you_may_fill_it_automatically_using_fab
-import java.util.Optional
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 
@@ -104,17 +103,17 @@ fun DimensionApp(
     }
 
     val quizzes by model.quizzes.collectAsState(null, Dispatchers.IO)
-    val dimension: Optional<Dimension> by model.dimension.map { dim ->
-        if (dim != null) Optional.of(dim)
-        else Optional.empty()
-    }.collectAsState(Optional.empty(), Dispatchers.IO)
+    val dimension: DimensionState by model.dimension.map { dim ->
+        if (dim != null) DimensionState.Ok(dim)
+        else DimensionState.Missing
+    }.collectAsState(DimensionState.Pending, Dispatchers.IO)
     val clustering by model.clusterState.collectAsState(null)
 
     val coroutine = rememberCoroutineScope()
     AnimatedContent(quizzes to dimension, transitionSpec = {
         fadeIn() togetherWith fadeOut()
     }) { (quizzes, dimension) ->
-        if (dimension.isEmpty || dimension.isPresent) {
+        if (dimension !is DimensionState.Missing) {
             if (quizzes?.isEmpty() != true) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
@@ -140,7 +139,7 @@ fun DimensionApp(
                                         QuizPopupContent(
                                             modifier = Modifier.padding(PaddingBig),
                                             model = cachedQuiz,
-                                            dimension = dimension.get(),
+                                            dimension = (dimension as DimensionState.Ok).value,
                                             onIntensityChanged = {
                                                 cachedQuiz = cachedQuiz.copy(intensity = it)
                                             },
@@ -211,7 +210,7 @@ fun DimensionApp(
         }
     }
 
-    if (dimension.isPresent) {
+    if (dimension is DimensionState.Ok) {
         composeFromBottomUp("fab") {
             ExtendedFloatingActionButton(
                 text = {
@@ -258,7 +257,7 @@ fun DimensionApp(
                             Res.plurals.found_n_items_related_to_x_para,
                             state.found,
                             state.found,
-                            dimension.get().name
+                            (dimension as DimensionState.Ok).value.name
                         ),
                         withDismissAction = true
                     )
@@ -409,4 +408,10 @@ fun SharedElementTransitionPopupScope.QuizPopupContent(
             }
         }
     }
+}
+
+private sealed class DimensionState {
+    data object Missing : DimensionState()
+    data class Ok(val value: Dimension) : DimensionState()
+    data object Pending : DimensionState()
 }
