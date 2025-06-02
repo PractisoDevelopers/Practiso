@@ -65,6 +65,7 @@ import com.zhufucdev.practiso.service.ClusterState
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
+import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import kotlinx.coroutines.Dispatchers
@@ -119,7 +120,12 @@ fun DimensionApp(
                     columns = GridCells.Fixed(2),
                     verticalArrangement = Arrangement.spacedBy(PaddingSmall),
                     horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
-                    contentPadding = PaddingValues(PaddingNormal),
+                    contentPadding = PaddingValues(
+                        top = PaddingNormal,
+                        start = PaddingNormal,
+                        end = PaddingNormal,
+                        bottom = PaddingSpace
+                    ),
                     userScrollEnabled = quizzes != null
                 ) {
                     if (quizzes != null && clustering == null) {
