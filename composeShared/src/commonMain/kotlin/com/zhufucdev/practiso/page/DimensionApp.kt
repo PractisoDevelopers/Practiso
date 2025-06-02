@@ -54,20 +54,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
+import com.zhufucdev.practiso.composable.SharedElementTransitionPopupScope
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.datamodel.QuizIntensity
-import com.zhufucdev.practiso.platform.AppDestination
-import com.zhufucdev.practiso.platform.Navigation
-import com.zhufucdev.practiso.platform.NavigationOption
-import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.ClusterState
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
+import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
@@ -137,6 +136,7 @@ fun DimensionApp(
                                             interactionSource = remember { MutableInteractionSource() },
                                         )
                                     ) {
+                                        val navController = currentNavController()
                                         QuizPopupContent(
                                             modifier = Modifier.padding(PaddingBig),
                                             model = cachedQuiz,
@@ -148,6 +148,17 @@ fun DimensionApp(
                                                 coroutine.launch {
                                                     collapse()
                                                     model.event.remove.send(listOf(quiz.quiz.id))
+                                                }
+                                            },
+                                            onReveal = {
+                                                coroutine.launch {
+                                                    collapse()
+                                                    navController.navigate(
+                                                        LibraryAppViewModel.Revealable(
+                                                            id = quiz.quiz.id,
+                                                            type = LibraryAppViewModel.RevealableType.Quiz
+                                                        )
+                                                    )
                                                 }
                                             }
                                         )
@@ -329,12 +340,13 @@ fun QuizIntensityView(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuizPopupContent(
+fun SharedElementTransitionPopupScope.QuizPopupContent(
     modifier: Modifier = Modifier,
     dimension: Dimension,
     model: QuizIntensity,
     onIntensityChanged: (Double) -> Unit,
     onRemove: () -> Unit,
+    onReveal: () -> Unit,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(PaddingNormal)) {
         Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
@@ -391,15 +403,7 @@ fun QuizPopupContent(
             }
 
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End) {
-                val coroutine = rememberCoroutineScope()
-                Button(onClick = {
-                    coroutine.launch {
-                        Navigator.navigate(
-                            Navigation.Goto(AppDestination.QuizCreate),
-                            NavigationOption.OpenQuiz(model.quiz.id)
-                        )
-                    }
-                }) {
+                Button(onClick = onReveal) {
                     Text(stringResource(Res.string.reveal_para))
                 }
             }
