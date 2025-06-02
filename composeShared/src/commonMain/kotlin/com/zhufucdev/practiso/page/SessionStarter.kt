@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -258,7 +259,7 @@ fun SessionStarter(
             val navController = LocalNavController.current
             Card(
                 shape = FloatingActionButtonDefaults.extendedFabShape,
-                modifier = Modifier.pseudoClickable()
+                modifier = Modifier.pseudoClickable().imePadding()
             ) {
                 DialogContentSkeleton(
                     modifier = Modifier.padding(PaddingBig).fillMaxWidth(),
