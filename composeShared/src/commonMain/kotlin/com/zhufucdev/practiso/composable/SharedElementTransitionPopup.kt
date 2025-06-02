@@ -81,24 +81,27 @@ fun SharedElementTransitionPopup(
         }
     }
 
+
     if (model.visible) {
         var popupScale by remember { mutableFloatStateOf(1f) }
         var popupOffset by remember { mutableStateOf(Offset.Zero) }
         var screenBounds by remember { mutableStateOf(Rect.Zero) }
 
-        BackHandlerOrIgnored { event ->
-            try {
-                event.collect {
-                    popupScale = 1 - it.progress
-                    popupOffset =
-                        Offset(
-                            x = (model.transitionStart.center.x - screenBounds.width / 2) * it.progress,
-                            y = (model.transitionStart.top - screenBounds.height / 2) * it.progress
-                        )
+        if (model.expanded) {
+            BackHandlerOrIgnored { event ->
+                try {
+                    event.collect {
+                        popupScale = 1 - it.progress
+                        popupOffset =
+                            Offset(
+                                x = (model.transitionStart.center.x - screenBounds.width / 2) * it.progress,
+                                y = (model.transitionStart.top - screenBounds.height / 2) * it.progress
+                            )
+                    }
+                    model.event.collapse.send(Unit)
+                } catch (e: CancellationException) {
+                    model.event.expand.send(Unit)
                 }
-                model.collapse()
-            } catch (e: CancellationException) {
-                model.expand()
             }
         }
 
