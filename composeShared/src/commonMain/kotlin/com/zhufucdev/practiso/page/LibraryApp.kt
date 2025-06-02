@@ -550,8 +550,8 @@ fun <T> LazyListScope.flatContent(
                 Box(Modifier.drawWithContent {
                     drawContent()
                     drawRect(
-                        foreground, Offset.Zero, size,
-                        alpha = 0.5f, blendMode = BlendMode.Lighten
+                        foreground, Offset.Zero, size, alpha = 0.5f,
+                        blendMode = BlendMode.ColorBurn
                     )
                 }) {
                     content(v)
