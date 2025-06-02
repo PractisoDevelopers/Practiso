@@ -15,31 +15,42 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.composable.BitmapRepository
+import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.Dimension
+import com.zhufucdev.practiso.datamodel.DimensionIntensity
 import com.zhufucdev.practiso.datamodel.Edit
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.PrioritizedFrame
 import com.zhufucdev.practiso.datamodel.applyTo
-import com.zhufucdev.practiso.datamodel.getQuizFrames
 import com.zhufucdev.practiso.datamodel.insertInto
 import com.zhufucdev.practiso.datamodel.optimized
 import com.zhufucdev.practiso.helper.protoBufStateListSaver
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.service.CategorizeService
+import com.zhufucdev.practiso.service.LibraryService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
 
 @OptIn(SavedStateHandleSaveableApi::class)
-class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
+class QuizCreateViewModel(private val db: AppDatabase, state: SavedStateHandle) : ViewModel() {
+    private val libraryService = LibraryService(db)
+    private val categorizeService = CategorizeService(db)
+
     var showNameEditDialog by state.saveable { mutableStateOf(false) }
     var nameEditValue by state.saveable { mutableStateOf("") }
     val imageCache = BitmapRepository()
     var state by state.saveable { mutableStateOf(State.Pending) }
     var lastFrameId by state.saveable { mutableStateOf(0L) }
     private val _frames: MutableList<Frame> by state.saveable(saver = protoBufStateListSaver()) { mutableStateListOf() }
+    private val _dimensions: MutableList<DimensionIntensity> by state.saveable(saver = protoBufStateListSaver()) { mutableStateListOf() }
     val frames: List<Frame> get() = _frames
+    val dimensions: List<DimensionIntensity> get() = _dimensions
     var name by state.saveable { mutableStateOf("") }
         private set
 
@@ -59,6 +70,9 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
         val undo: Channel<Unit> = Channel(),
         val redo: Channel<Unit> = Channel(),
         val save: Channel<Unit> = Channel(),
+        val addDim: Channel<String> = Channel(),
+        val updateDim: Channel<DimensionIntensity> = Channel(),
+        val removeDim: Channel<DimensionIntensity> = Channel(),
     )
 
     val event = EventChannels()
@@ -126,10 +140,42 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
 
                     event.save.onReceive {
                         if (targetId < 0) {
-                            frames.map(Frame::toArchive).insertInto(Database.app, name)
+                            val quizId = frames.map(Frame::toArchive).insertInto(Database.app, name)
+                            withContext(Dispatchers.IO) {
+                                dimensions.forEach {
+                                    val dimId = categorizeService.createDimension(it.dimension.name)
+                                    categorizeService.associate(quizId, dimId, it.intensity)
+                                }
+                            }
                         } else {
-                            history.optimized().applyTo(Database.app, targetId)
+                            withContext(Dispatchers.IO) {
+                                history.optimized().applyTo(db, targetId)
+                                dimensions.applyTo(targetId, db)
+                            }
                         }
+                    }
+
+                    event.addDim.onReceive { name ->
+                        if (name.isNotBlank() && !dimensions.any { it.dimension.name == name }) {
+                            _dimensions.add(
+                                DimensionIntensity(
+                                    dimension = Dimension(id = -1, name = name),
+                                    intensity = 1.0
+                                )
+                            )
+                        }
+                    }
+
+                    event.updateDim.onReceive { update ->
+                        val index =
+                            dimensions.indexOfFirst { it.dimension.name == update.dimension.name }
+                        _dimensions[index] = update
+                    }
+
+                    event.removeDim.onReceive { update ->
+                        val index =
+                            dimensions.indexOfFirst { it.dimension.name == update.dimension.name }
+                        _dimensions.removeAt(index)
                     }
                 }
             }
@@ -141,20 +187,21 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
         state = State.Pending
         history.clear()
         _frames.clear()
+        _dimensions.clear()
         head = -1
 
         val openQuiz = navigationOptions.filterIsInstance<NavigationOption.OpenQuiz>()
         if (openQuiz.isNotEmpty()) {
             targetId = openQuiz.last().quizId
-            val quiz = Database.app.quizQueries
-                .getQuizFrames(Database.app.quizQueries.getQuizById(targetId))
-                .first()
-                .firstOrNull()
+            val quiz = libraryService.getQuizFrames(targetId).first()
             if (quiz == null) {
                 state = State.NotFound
             } else {
                 name = quiz.quiz.name ?: ""
                 _frames.addAll(quiz.frames.map(PrioritizedFrame::frame))
+
+                val dimensions = libraryService.getDimensionsByQuiz(targetId)
+                _dimensions.addAll(dimensions.first())
 
                 nameEditValue = name
                 state = State.Ready
@@ -211,7 +258,7 @@ class QuizCreateViewModel(state: SavedStateHandle) : ViewModel() {
         val Factory
             get() = viewModelFactory {
                 initializer {
-                    QuizCreateViewModel(createPlatformSavedStateHandle())
+                    QuizCreateViewModel(Database.app, createPlatformSavedStateHandle())
                 }
             }
     }

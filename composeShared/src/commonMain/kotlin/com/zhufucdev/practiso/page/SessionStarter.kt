@@ -6,7 +6,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +50,7 @@ import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.platform.createOptionView
 import com.zhufucdev.practiso.style.PaddingBig
@@ -258,12 +258,7 @@ fun SessionStarter(
             val navController = LocalNavController.current
             Card(
                 shape = FloatingActionButtonDefaults.extendedFabShape,
-                modifier = Modifier
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                        onClick = {}
-                    )
+                modifier = Modifier.pseudoClickable()
             ) {
                 DialogContentSkeleton(
                     modifier = Modifier.padding(PaddingBig).fillMaxWidth(),

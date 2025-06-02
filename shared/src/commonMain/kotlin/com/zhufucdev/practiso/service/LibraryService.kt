@@ -8,6 +8,7 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.SessionOptionView
+import com.zhufucdev.practiso.datamodel.DimensionIntensity
 import com.zhufucdev.practiso.datamodel.DimensionQuizzes
 import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.datamodel.getQuizFrames
@@ -89,6 +90,16 @@ class LibraryService(private val db: AppDatabase = Database.app) {
 
     fun getTakesBySession(id: Long) =
         db.sessionQueries.getTakeStatsBySessionId(id)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+
+    fun getDimensionsByQuiz(id: Long) =
+        db.dimensionQueries.getDimensionByQuizId(id) { dimId, dimName, intensity ->
+            DimensionIntensity(
+                Dimension(dimId, dimName),
+                intensity
+            )
+        }
             .asFlow()
             .mapToList(Dispatchers.IO)
 }

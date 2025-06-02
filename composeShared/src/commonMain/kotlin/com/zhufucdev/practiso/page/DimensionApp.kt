@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +58,7 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
+import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.datamodel.QuizIntensity
 import com.zhufucdev.practiso.service.ClusterState
@@ -135,12 +135,7 @@ fun DimensionApp(
                             SharedElementTransitionPopup(
                                 key = quiz.quiz.id.toString(),
                                 popup = {
-                                    Card(
-                                        Modifier.clickable(
-                                            indication = null, onClick = {},
-                                            interactionSource = remember { MutableInteractionSource() },
-                                        )
-                                    ) {
+                                    Card(Modifier.pseudoClickable()) {
                                         val navController = currentNavController()
                                         QuizPopupContent(
                                             modifier = Modifier.padding(PaddingBig),

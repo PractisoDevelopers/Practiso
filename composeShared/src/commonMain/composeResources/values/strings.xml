@@ -249,4 +249,5 @@
     <string name="create_dimension_para">Create dimension</string>
     <string name="dimension_name">Dimension name</string>
     <string name="exclude_para">Exclude</string>
+    <string name="categorize_para">Categorize</string>
 </resources>

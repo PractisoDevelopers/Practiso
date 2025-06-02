@@ -41,10 +41,14 @@ class CategorizeService(private val db: AppDatabase) {
     }
 
     suspend fun createDimension(name: String): Long {
-        return db.transactionWithResult {
-            db.dimensionQueries.insertDimension(name)
-            db.quizQueries.lastInsertRowId().executeAsOne()
+        val existing = db.dimensionQueries.getDimensionByName(name).executeAsOneOrNull()
+        if (existing == null) {
+            return db.transactionWithResult {
+                db.dimensionQueries.insertDimension(name)
+                db.quizQueries.lastInsertRowId().executeAsOne()
+            }
         }
+        return existing.id
     }
 }
 

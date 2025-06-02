@@ -108,6 +108,7 @@ import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
+import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.composition.withExclusionLock
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.TakeStat
@@ -200,11 +201,7 @@ fun SessionApp(model: SessionViewModel = viewModel(factory = SessionViewModel.Fa
             Card(
                 shape = FloatingActionButtonDefaults.extendedFabShape,
                 modifier = Modifier
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                        onClick = {}
-                    )
+                    .pseudoClickable()
             ) {
                 Column(Modifier.padding(PaddingBig).fillMaxWidth().height(450.dp)) {
                     SimplifiedSessionCreationModalContent(
