@@ -34,6 +34,10 @@ class SharedElementTransitionPopupViewModel(state: SavedStateHandle) : ViewModel
         visible = false
     }
 
+    fun hide() {
+        expanded = false
+    }
+
     companion object {
         val Factory
             get() = viewModelFactory {

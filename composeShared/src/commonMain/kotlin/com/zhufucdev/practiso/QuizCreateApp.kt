@@ -82,6 +82,7 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
+import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.NotFound
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.Pending
@@ -236,6 +237,7 @@ private fun Editor(model: QuizCreateViewModel) {
                 scrollBehavior = topBarScrollBehavior
             )
         },
+        sheetPeekHeight = PaddingSpace,
         sheetContent = {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(bottom = PaddingBig)

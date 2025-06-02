@@ -31,6 +31,7 @@ import kotlinx.coroutines.sync.Mutex
 @OptIn(SavedStateHandleSaveableApi::class)
 class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : ViewModel() {
     val active by state.saveable(saver = protobufMutableStateFlowSaver()) { MutableStateFlow(false) }
+    val expanded by state.saveable(saver = protobufMutableStateFlowSaver()) { MutableStateFlow(false) }
     val query by state.saveable(saver = protobufMutableStateFlowSaver()) { MutableStateFlow("") }
     val searching = MutableStateFlow(false)
     val result = MutableStateFlow(emptyList<PractisoOption>()).apply {
@@ -85,6 +86,7 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
     data class Events(
         val open: Channel<Unit> = Channel(),
         val close: Channel<Unit> = Channel(),
+        val hide: Channel<Unit> = Channel(),
         val updateQuery: Channel<String> = Channel(),
     )
 
@@ -95,11 +97,17 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
             while (viewModelScope.isActive) {
                 select {
                     event.open.onReceive {
+                        expanded.emit(true)
                         active.emit(true)
                     }
 
                     event.close.onReceive {
                         active.emit(false)
+                        expanded.emit(false)
+                    }
+
+                    event.hide.onReceive {
+                        expanded.emit(false)
                     }
 
                     event.updateQuery.onReceive {

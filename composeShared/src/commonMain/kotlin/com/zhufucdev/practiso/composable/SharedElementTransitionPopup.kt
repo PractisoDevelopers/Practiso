@@ -17,11 +17,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -34,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -75,13 +82,35 @@ fun SharedElementTransitionPopup(
     }
 
     if (model.visible) {
+        var popupScale by remember { mutableFloatStateOf(1f) }
+        var popupOffset by remember { mutableStateOf(Offset.Zero) }
+        var screenBounds by remember { mutableStateOf(Rect.Zero) }
+
+        BackHandlerOrIgnored { event ->
+            try {
+                event.collect {
+                    popupScale = 1 - it.progress
+                    popupOffset =
+                        Offset(
+                            x = (model.transitionStart.left - screenBounds.width / 2) * it.progress,
+                            y = (model.transitionStart.top - screenBounds.height / 2) * it.progress
+                        )
+                }
+                model.collapse()
+            } catch (e: CancellationException) {
+                model.expand()
+            }
+        }
+
         composeFromBottomUp(SharedElementTransitionKey) {
             SharedTransitionScope { mod ->
                 val maskAlpha by animateFloatAsState(
                     if (model.expanded) 0.5f else 0f
                 )
                 Box(
-                    mod.fillMaxSize().background(Color.Black.copy(alpha = maskAlpha))
+                    mod.fillMaxSize()
+                        .background(Color.Black.copy(alpha = maskAlpha))
+                        .onGloballyPositioned { screenBounds = it.boundsInRoot() }
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
@@ -112,7 +141,9 @@ fun SharedElementTransitionPopup(
                                     sharedContentState = rememberSharedContentState(key),
                                     animatedVisibilityScope = this@AnimatedVisibility
                                 )
+                                .scale(popupScale)
                                 .offset(y = releaseAnimator.value.dp)
+                                .offset(popupOffset.x.dp, popupOffset.y.dp)
                                 .pointerInput(true) {
                                     val velocityTracker = VelocityTracker()
                                     detectVerticalDragGestures(
