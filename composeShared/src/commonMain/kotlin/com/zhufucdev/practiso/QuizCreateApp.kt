@@ -157,6 +157,7 @@ import resources.frame_type_span
 import resources.get_started_by_checking_sheet_para
 import resources.image_frame_span
 import resources.new_question_para
+import resources.ok_para
 import resources.options_frame_span
 import resources.question_is_empty_para
 import resources.question_name_para
@@ -277,6 +278,9 @@ private fun Editor(model: QuizCreateViewModel) {
                         popup = {
                             CategorizeDialog(
                                 items = model.dimensions,
+                                onDismissRequest = {
+                                    coroutine.launch { collapse() }
+                                },
                                 onUpdate = {
                                     coroutine.launch {
                                         model.event.updateDim.send(it)
@@ -294,7 +298,7 @@ private fun Editor(model: QuizCreateViewModel) {
                                 },
                                 onReveal = {
 
-                                }
+                                },
                             )
                         },
                         sharedElement = {
@@ -714,6 +718,7 @@ private fun IconButtonWithPlainTooltip(
 @Composable
 private fun CategorizeDialog(
     modifier: Modifier = Modifier,
+    onDismissRequest: () -> Unit,
     items: List<DimensionIntensity>,
     onAddition: (String) -> Unit,
     onUpdate: (DimensionIntensity) -> Unit,
@@ -822,6 +827,16 @@ private fun CategorizeDialog(
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            item {
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = onDismissRequest
+                    ) {
+                        Text(stringResource(Res.string.ok_para))
                     }
                 }
             }
