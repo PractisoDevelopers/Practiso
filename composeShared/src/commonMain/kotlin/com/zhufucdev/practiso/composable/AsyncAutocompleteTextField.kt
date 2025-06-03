@@ -60,7 +60,7 @@ fun AsyncAutocompleteTextField(
     val options by candidates.collectAsState(emptyList())
     val filtered by remember(options, state) {
         derivedStateOf {
-            val t = state.text
+            val t = state.unselectedText()
             if (t.isNotBlank()) {
                 options.filter { it.startsWith(t) }
             } else {
