@@ -904,9 +904,15 @@ private fun IntensityControl(
                     },
                     onDragEnd = {
                         onUpdate(model.copy(intensity = intensityBuffer))
+                        if (intensityBuffer > 0f) {
+                            removalOffset = 0f
+                        }
                     },
                     onDragCancel = {
                         intensityBuffer = model.intensity
+                        if (intensityBuffer > 0f) {
+                            removalOffset = 0f
+                        }
                     }
                 )
             }
