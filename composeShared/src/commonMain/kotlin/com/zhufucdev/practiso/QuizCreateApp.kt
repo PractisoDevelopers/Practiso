@@ -32,7 +32,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -110,6 +109,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.zhufucdev.practiso.composable.AsyncAutocompleteTextField
 import com.zhufucdev.practiso.composable.EditableImageFrame
 import com.zhufucdev.practiso.composable.EditableOptionsFrame
 import com.zhufucdev.practiso.composable.EditableTextFrame
@@ -143,6 +143,8 @@ import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.NotFound
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.Pending
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel.State.Ready
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
@@ -287,6 +289,8 @@ private fun Editor(model: QuizCreateViewModel) {
                         popup = {
                             CategorizeDialog(
                                 items = model.dimensions,
+                                candidates = model.libraryService.getDimensions()
+                                    .map { it.map { d -> d.dimension.name } },
                                 onDismissRequest = {
                                     coroutine.launch { collapse() }
                                 },
@@ -728,6 +732,7 @@ private fun IconButtonWithPlainTooltip(
 private fun CategorizeDialog(
     modifier: Modifier = Modifier,
     state: CategorizeDialogState = viewModel(factory = CategorizeDialogState.Factory),
+    candidates: Flow<List<String>>,
     onDismissRequest: () -> Unit,
     items: List<DimensionIntensity>,
     onAddition: (String) -> Unit,
@@ -802,18 +807,20 @@ private fun CategorizeDialog(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = modifier.fillMaxSize().padding(start = PaddingBig, end = PaddingNormal)
+                                modifier = modifier.fillMaxSize()
+                                    .padding(start = PaddingBig, end = PaddingNormal)
                             ) {
                                 val focusRequester = remember { FocusRequester() }
                                 LaunchedEffect(focusRequester) {
                                     focusRequester.requestFocus()
                                 }
 
-                                BasicTextField(
+                                AsyncAutocompleteTextField(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f)
                                         .focusRequester(focusRequester),
+                                    candidates = candidates,
                                     state = state.creatorTextState,
                                     lineLimits = TextFieldLineLimits.SingleLine,
                                     textStyle = MaterialTheme.typography.bodyLarge,
@@ -831,7 +838,10 @@ private fun CategorizeDialog(
                                     IconButton(
                                         onClick = { state.isCreating = false },
                                     ) {
-                                        Icon(painterResource(Res.drawable.baseline_arrow_u_left_top), contentDescription = null)
+                                        Icon(
+                                            painterResource(Res.drawable.baseline_arrow_u_left_top),
+                                            contentDescription = null
+                                        )
                                     }
                                 }
                             }
@@ -989,10 +999,11 @@ class CategorizeDialogState(state: SavedStateHandle) : ViewModel() {
     val creatorTextState by state.saveable(saver = TextFieldState.Saver) { TextFieldState() }
 
     companion object {
-        val Factory get() = viewModelFactory {
-            initializer {
-                CategorizeDialogState(createPlatformSavedStateHandle())
+        val Factory
+            get() = viewModelFactory {
+                initializer {
+                    CategorizeDialogState(createPlatformSavedStateHandle())
+                }
             }
-        }
     }
 }

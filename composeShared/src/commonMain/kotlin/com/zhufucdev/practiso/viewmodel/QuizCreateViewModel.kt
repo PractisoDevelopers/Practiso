@@ -39,8 +39,8 @@ import kotlinx.coroutines.withContext
 
 @OptIn(SavedStateHandleSaveableApi::class)
 class QuizCreateViewModel(private val db: AppDatabase, state: SavedStateHandle) : ViewModel() {
-    private val libraryService = LibraryService(db)
-    private val categorizeService = CategorizeService(db)
+    val libraryService = LibraryService(db)
+    val categorizeService = CategorizeService(db)
 
     var showNameEditDialog by state.saveable { mutableStateOf(false) }
     var nameEditValue by state.saveable { mutableStateOf("") }
