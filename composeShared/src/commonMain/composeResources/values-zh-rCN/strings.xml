@@ -233,5 +233,5 @@
     <string name="dimension_name">Dimension name</string>
     <string name="exclude_para">Exclude</string>
     <string name="categorize_para">Categorize</string>
-    <string name="ok_para">OK</string>
+    <string name="close_para">Close</string>
 </resources>
