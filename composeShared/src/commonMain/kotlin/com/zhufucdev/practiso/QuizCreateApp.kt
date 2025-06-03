@@ -35,7 +35,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -101,7 +101,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
+import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.EditableImageFrame
 import com.zhufucdev.practiso.composable.EditableOptionsFrame
@@ -124,8 +130,10 @@ import com.zhufucdev.practiso.database.OptionsFrame
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.DimensionIntensity
 import com.zhufucdev.practiso.datamodel.Frame
+import com.zhufucdev.practiso.helper.inverted
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
+import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -149,6 +157,7 @@ import resources.baseline_undo
 import resources.cancel_para
 import resources.cat_walker
 import resources.categorize_para
+import resources.close_para
 import resources.confirm_para
 import resources.create_dimension_para
 import resources.dimensions_para
@@ -157,7 +166,6 @@ import resources.frame_type_span
 import resources.get_started_by_checking_sheet_para
 import resources.image_frame_span
 import resources.new_question_para
-import resources.ok_para
 import resources.options_frame_span
 import resources.question_is_empty_para
 import resources.question_name_para
@@ -718,6 +726,7 @@ private fun IconButtonWithPlainTooltip(
 @Composable
 private fun CategorizeDialog(
     modifier: Modifier = Modifier,
+    state: CategorizeDialogState = viewModel(factory = CategorizeDialogState.Factory),
     onDismissRequest: () -> Unit,
     items: List<DimensionIntensity>,
     onAddition: (String) -> Unit,
@@ -760,17 +769,16 @@ private fun CategorizeDialog(
             }
 
             item {
-                var isCreating by remember { mutableStateOf(false) }
                 val coroutine = rememberCoroutineScope()
 
-                AnimatedContent(isCreating, modifier = Modifier.animateItem()) { creating ->
+                AnimatedContent(state.isCreating, modifier = Modifier.animateItem()) { creating ->
                     if (!creating) {
                         Surface(
                             shape = RoundedCornerShape(100),
                             onClick = {
                                 coroutine.launch {
                                     scrollState.animateScrollToItem(scrollState.layoutInfo.totalItemsCount - 1)
-                                    isCreating = true
+                                    state.isCreating = true
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().height(IntensityControlHeight),
@@ -800,13 +808,12 @@ private fun CategorizeDialog(
                                     focusRequester.requestFocus()
                                 }
 
-                                val state = rememberTextFieldState()
                                 BasicTextField(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f)
                                         .focusRequester(focusRequester),
-                                    state = state,
+                                    state = state.creatorTextState,
                                     lineLimits = TextFieldLineLimits.SingleLine,
                                     textStyle = MaterialTheme.typography.bodyLarge,
                                     keyboardOptions = KeyboardOptions(
@@ -814,13 +821,13 @@ private fun CategorizeDialog(
                                         imeAction = ImeAction.Done
                                     ),
                                     onKeyboardAction = {
-                                        onAddition(state.text.toString())
+                                        onAddition(state.creatorTextState.text.toString())
                                     }
                                 )
 
                                 PlainTooltipBox(stringResource(Res.string.cancel_para)) {
                                     IconButton(
-                                        onClick = { isCreating = false },
+                                        onClick = { state.isCreating = false },
                                     ) {
                                         Icon(painterResource(Res.drawable.baseline_arrow_u_left_top), contentDescription = null)
                                     }
@@ -836,7 +843,7 @@ private fun CategorizeDialog(
                     Button(
                         onClick = onDismissRequest
                     ) {
-                        Text(stringResource(Res.string.ok_para))
+                        Text(stringResource(Res.string.close_para))
                     }
                 }
             }
@@ -933,8 +940,8 @@ private fun IntensityControl(
     ) {
         var nameTextWidth by remember { mutableFloatStateOf(0f) }
         val nameTextColor by animateColorAsState(
-            if (nameTextWidth < intensityBarWidth * 2) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onPrimaryContainer
+            if (nameTextWidth < intensityBarWidth * 2) contentColor.inverted()
+            else contentColor
         )
         Row(Modifier.padding(start = PaddingBig).weight(1f)) {
             Text(
@@ -970,6 +977,20 @@ private fun IntensityControl(
     LaunchedEffect(removing) {
         if (removing) {
             haptics.performHapticFeedback(HapticFeedbackType.GestureEnd)
+        }
+    }
+}
+
+@OptIn(SavedStateHandleSaveableApi::class)
+class CategorizeDialogState(state: SavedStateHandle) : ViewModel() {
+    var isCreating by state.saveable { mutableStateOf(false) }
+    val creatorTextState by state.saveable(saver = TextFieldState.Saver) { TextFieldState() }
+
+    companion object {
+        val Factory get() = viewModelFactory {
+            initializer {
+                CategorizeDialogState(createPlatformSavedStateHandle())
+            }
         }
     }
 }
