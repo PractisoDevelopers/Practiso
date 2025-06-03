@@ -36,6 +36,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -822,6 +823,7 @@ private fun CategorizeDialog(
                                     ),
                                     onKeyboardAction = {
                                         onAddition(state.creatorTextState.text.toString())
+                                        state.creatorTextState.clearText()
                                     }
                                 )
 
