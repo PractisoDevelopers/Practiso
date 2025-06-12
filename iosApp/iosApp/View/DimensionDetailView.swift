@@ -4,32 +4,49 @@ import SwiftUI
 
 struct DimensionDetailView : View {
     private let libraryService = LibraryService(db: Database.shared.app)
-    private let categorizeService = CategorizeServiceSync(db: Database.shared.app, fei: Database.shared.fei)
+    private let categorizeService = CategorizeServiceSync(db: Database.shared.app)
+    private let clusterService = ClusterService(db: Database.shared.app, fei: Database.shared.fei)
     
     let option: DimensionOption
     
     @State private var currentPopoverItem: QuizIntensity? = nil
+    
+    @State private var dimensionFlow: SkieSwiftOptionalFlow<ComposeApp.Dimension>
     @State private var quizzesFlow: SkieSwiftFlow<[QuizIntensity]>
     @State private var clusterFlow: SkieSwiftFlow<ClusterState>? = nil
     
     init(option: DimensionOption) {
         self.option = option
         self.quizzesFlow = libraryService.getQuizIntensities(dimId: option.id)
+        self.dimensionFlow = libraryService.getDimension(dimId: option.id)
     }
     
     var body: some View {
-        Group {
-            if let clusterState = clusterFlow {
-                clusteringBody(clusterState) {
+        Observing(dimensionFlow.withInitialValue(option.dimension)) { dimension in
+            if let dim = dimension {
+                Group {
+                    if let clusterState = clusterFlow {
+                        clusteringBody(clusterState) {
+                            clusterFlow = nil
+                        }
+                    } else {
+                        contentBody
+                    }
+                }
+                .navigationTitle(dim.name)
+                .onChange(of: option) { _, _ in
                     clusterFlow = nil
                 }
             } else {
-                contentBody
+                Placeholder {
+                    Image(systemName: "folder.badge.questionmark")
+                } content: {
+                    Text("Dimension not found")
+                }
             }
         }
-        .navigationTitle(option.dimension.name)
-        .onChange(of: option) { _, _ in
-            clusterFlow = nil
+        .onChange(of: option.dimension.id) { _, newValue in
+            self.dimensionFlow = libraryService.getDimension(dimId: newValue)
         }
     }
     
@@ -59,7 +76,7 @@ struct DimensionDetailView : View {
                     Image(systemName: "folder")
                 } content: {
                     Text("Dimension is Empty")
-                    Text("Click the \(Image(systemName: "lasso.badge.sparkles")) button to fill automatically")
+                    Text("click the \(Image(systemName: "lasso.badge.sparkles")) button to fill automatically")
                         .font(.caption)
                 }
             }
@@ -76,7 +93,7 @@ struct DimensionDetailView : View {
         .toolbar {
             ToolbarItem {
                 Button("Automatic Clustering", systemImage: "lasso.badge.sparkles") {
-                    clusterFlow = categorizeService.cluster(dimensionId: option.dimension.id, minSimilarity: 0.6)
+                    clusterFlow = clusterService.cluster(dimensionId: option.dimension.id, minSimilarity: 0.6)
                 }
             }
         }

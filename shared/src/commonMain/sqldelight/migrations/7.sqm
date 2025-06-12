@@ -1,0 +1,24 @@
+ALTER TABLE dimension RENAME TO dimension_old;
+ALTER TABLE quizByDimension RENAME TO quizByDimension_old;
+
+CREATE TABLE dimension(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE quizByDimension(
+    quizId INTEGER NOT NULL,
+    dimensionId INTEGER NOT NULL,
+    intensity REAL NOT NULL DEFAULT 1 CHECK (0 < intensity <= 1),
+    PRIMARY KEY (quizId, dimensionId),
+    FOREIGN KEY (quizId) REFERENCES quiz(id) ON DELETE CASCADE,
+    FOREIGN KEY (dimensionId) REFERENCES dimension(id) ON DELETE CASCADE
+);
+
+INSERT OR IGNORE INTO dimension
+SELECT id, name FROM dimension_old;
+INSERT OR IGNORE INTO quizByDimension
+SELECT quizId, dimensionId, intensity FROM quizByDimension_old;
+
+DROP TABLE dimension_old;
+DROP TABLE quizByDimension_old;

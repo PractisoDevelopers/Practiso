@@ -5,16 +5,17 @@ import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlainTooltipBox(text: String, content: @Composable () -> Unit) {
+fun PlainTooltipBox(text: String, state: TooltipState = rememberTooltipState(), content: @Composable () -> Unit) {
     TooltipBox(
         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
         tooltip = { PlainTooltip { Text(text) } },
-        state = rememberTooltipState(),
+        state = state,
         content = content
     )
 }

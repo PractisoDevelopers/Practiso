@@ -6,7 +6,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,15 +42,16 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.composable.AlertHelper
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.DimensionSkeleton
+import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.QuizSkeleton
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
+import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.platform.createOptionView
 import com.zhufucdev.practiso.style.PaddingBig
@@ -122,7 +123,7 @@ fun SessionStarter(
 
     AnimatedContent(items?.isEmpty() == true) { empty ->
         if (empty) {
-            AlertHelper(
+            PlaceHolder(
                 header = {
                     Text("🤔")
                 },
@@ -258,12 +259,7 @@ fun SessionStarter(
             val navController = LocalNavController.current
             Card(
                 shape = FloatingActionButtonDefaults.extendedFabShape,
-                modifier = Modifier
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                        onClick = {}
-                    )
+                modifier = Modifier.pseudoClickable().imePadding()
             ) {
                 DialogContentSkeleton(
                     modifier = Modifier.padding(PaddingBig).fillMaxWidth(),

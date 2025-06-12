@@ -87,6 +87,7 @@ import com.zhufucdev.practiso.composition.rememberExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
+import com.zhufucdev.practiso.page.DimensionApp
 import com.zhufucdev.practiso.page.DimensionSectionEditApp
 import com.zhufucdev.practiso.page.LibraryApp
 import com.zhufucdev.practiso.page.QuizSectionEditApp
@@ -98,10 +99,12 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
+import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
@@ -192,6 +195,17 @@ fun PractisoApp(navController: NavHostController) {
                             startpoint = stackEntry.toRoute(),
                             libraryVM = libraryVM
                         )
+                    }
+                }
+                composable<DimensionViewModel.Initialization>(
+                    typeMap = mapOf(
+                        typeOf<DimensionViewModel.Initialization>() to DimensionViewModel.InitializationNavType
+                    )
+                ) { stackEntry ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            DimensionApp(stackEntry.toRoute())
+                        }
                     }
                 }
             }
@@ -373,9 +387,28 @@ private fun TopSearchBar(
 ) {
     val query by model.query.collectAsState()
     val active by model.active.collectAsState()
+    val expanded by model.expanded.collectAsState()
 
-    val padding = animateFloatAsState(if (active) 0f else PaddingNormal.value)
+    val padding = animateFloatAsState(if (expanded) 0f else PaddingNormal.value)
     val coroutine = rememberCoroutineScope()
+
+    if (active) {
+        BackHandlerOrIgnored { event ->
+            model.event.hide.send(Unit)
+            try {
+                event.collect {
+                    if (it.progress > 0.1) {
+                        model.event.hide.send(Unit)
+                    } else if (it.progress <= 0) {
+                        model.event.open.send(Unit)
+                    }
+                }
+                model.event.close.send(Unit)
+            } catch (e: CancellationException) {
+                model.event.open.send(Unit)
+            }
+        }
+    }
 
     SearchBar(
         inputField = {
@@ -387,7 +420,7 @@ private fun TopSearchBar(
                         model.event.updateQuery.send(it)
                     }
                 },
-                expanded = active,
+                expanded = expanded,
                 onExpandedChange = { expand ->
                     coroutine.launch {
                         if (expand) {
@@ -398,8 +431,8 @@ private fun TopSearchBar(
                     }
                 },
                 leadingIcon = {
-                    AnimatedContent(active) { active ->
-                        if (!active) {
+                    AnimatedContent(expanded) { expanded ->
+                        if (!expanded) {
                             Icon(Icons.Default.Search, "")
                         } else {
                             IconButton(
@@ -418,8 +451,8 @@ private fun TopSearchBar(
                     }
                 },
                 trailingIcon = {
-                    AnimatedContent(active) { active ->
-                        if (!active) {
+                    AnimatedContent(expanded) { expanded ->
+                        if (!expanded) {
                             Box {
                                 var menuOpen by remember { mutableStateOf(false) }
                                 PlainTooltipBox(stringResource(Res.string.show_more_para)) {
@@ -457,7 +490,7 @@ private fun TopSearchBar(
                 },
             )
         },
-        expanded = active,
+        expanded = expanded,
         onExpandedChange = { expand ->
             coroutine.launch {
                 if (expand) {
@@ -473,12 +506,6 @@ private fun TopSearchBar(
                 .padding(horizontal = padding.value.dp)
                     then modifier
     ) {
-        BackHandlerOrIgnored {
-            coroutine.launch {
-                model.event.close.send(Unit)
-            }
-        }
-
         val options by model.result.collectAsState()
         val searching by model.searching.collectAsState()
         AnimatedVisibility(visible = searching, enter = fadeIn(), exit = fadeOut()) {

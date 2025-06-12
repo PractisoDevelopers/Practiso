@@ -3,13 +3,10 @@ package com.zhufucdev.practiso
 import co.touchlab.sqliter.interop.SQLiteException
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.service.CategorizeService
-import com.zhufucdev.practiso.service.ClusterState
-import com.zhufucdev.practiso.service.FeiService
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 
-class CategorizeServiceSync(db: AppDatabase, fei: FeiService) {
-    private val service = CategorizeService(db, fei)
+class CategorizeServiceSync(db: AppDatabase) {
+    private val service = CategorizeService(db)
 
     @Throws(SQLiteException::class)
     fun associate(quizId: Long, dimensionId: Long) = runBlocking {
@@ -27,8 +24,4 @@ class CategorizeServiceSync(db: AppDatabase, fei: FeiService) {
     fun createDimension(name: String) = runBlocking {
         service.createDimension(name)
     }
-
-
-    fun cluster(dimensionId: Long, minSimilarity: Float = 0.6f): Flow<ClusterState> =
-        service.cluster(dimensionId, minSimilarity)
 }

@@ -115,14 +115,18 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
             }
         }
 
-        override suspend fun navigate(navigation: Navigation, options: List<NavigationOption>) {
+        override suspend fun navigate(navigation: Navigation, vararg options: NavigationOption) {
             when (navigation) {
                 is Navigation.Forward -> {
                     if (pointer >= backstack.lastIndex) {
                         error("Backstack cannot move forwards")
                     }
                     val dest = backstack[++pointer]
-                    startActivity(dest.first.destination, dest.first.options + options)
+                    startActivity(
+                        dest.first.destination,
+                        *dest.first.options.toTypedArray(),
+                        *options
+                    )
                     stateChannel.send(
                         NavigationStateSnapshot(
                             navigation,
@@ -140,7 +144,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
                 }
 
                 is Navigation.WithDestination -> {
-                    startActivity(navigation.destination, options)
+                    startActivity(navigation.destination, *options)
                 }
             }
         }
@@ -148,7 +152,7 @@ abstract class NavigatorComponentActivity : ComponentActivity() {
         @OptIn(ExperimentalSerializationApi::class)
         private fun startActivity(
             destination: AppDestination,
-            options: List<NavigationOption> = emptyList(),
+            vararg options: NavigationOption,
         ) {
             shared?.apply {
                 startActivity(

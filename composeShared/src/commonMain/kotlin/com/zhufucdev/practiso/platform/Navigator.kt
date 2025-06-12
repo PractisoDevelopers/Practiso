@@ -50,7 +50,7 @@ data class NavigationStateSnapshot(
 
 interface AppNavigator {
     val current: StateFlow<NavigationStateSnapshot>
-    suspend fun navigate(navigation: Navigation, options: List<NavigationOption> = emptyList())
+    suspend fun navigate(navigation: Navigation, vararg options: NavigationOption)
 }
 
 data class NavigatorStackItem(
@@ -83,7 +83,7 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
         }
     }
 
-    override suspend fun navigate(navigation: Navigation, options: List<NavigationOption>) {
+    override suspend fun navigate(navigation: Navigation, vararg options: NavigationOption) {
         when (navigation) {
             is Navigation.Backward -> {
                 if (pointer <= 0) {
@@ -119,9 +119,15 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                         backstack.removeAt(pointer)
                     }
                 }
-                backstack.add(NavigatorStackItem(navigation.destination, options))
+                backstack.add(NavigatorStackItem(navigation.destination, options.toList()))
                 pointer++
-                stateChannel.send(NavigationStateSnapshot(navigation, navigation.destination, options))
+                stateChannel.send(
+                    NavigationStateSnapshot(
+                        navigation,
+                        navigation.destination,
+                        options.toList()
+                    )
+                )
             }
         }
     }

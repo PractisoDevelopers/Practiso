@@ -367,7 +367,7 @@ sealed interface FrameArchive {
     }
 }
 
-suspend fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?) {
+suspend fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?): Long {
     val quizId = db.transactionWithResult {
         db.quizQueries.insertQuiz(name, Clock.System.now(), null)
         db.quizQueries.lastInsertRowId().executeAsOne()
@@ -376,6 +376,8 @@ suspend fun List<FrameArchive>.insertInto(db: AppDatabase, name: String?) {
     forEachIndexed { index, frame ->
         frame.insertInto(db, quizId, index.toLong())
     }
+
+    return quizId
 }
 
 /**

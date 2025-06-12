@@ -139,7 +139,7 @@ struct ContentView: View {
     var selectItemScreen: some View {
         VStack {
             Color.secondary
-                .frame(width: 120, height: 120)
+                .frame(width: 80, height: 80)
                 .mask {
                     Image("AppIconMask")
                         .resizable()
