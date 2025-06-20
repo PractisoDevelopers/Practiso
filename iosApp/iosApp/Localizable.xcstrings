@@ -512,8 +512,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Automatic Clustering"
+            "state" : "translated",
+            "value" : "自动聚类"
           }
         },
         "zh-Hant" : {
@@ -624,8 +624,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "click the %@ button to fill automatically"
+            "state" : "translated",
+            "value" : "单击 %@ 按钮自动填充"
           }
         },
         "zh-Hant" : {
@@ -656,8 +656,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Completed"
+            "state" : "translated",
+            "value" : "已完成"
           }
         },
         "zh-Hant" : {
@@ -688,8 +688,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue"
+            "state" : "translated",
+            "value" : "继续"
           }
         },
         "zh-Hant" : {
@@ -1070,8 +1070,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dimension not found"
+            "state" : "translated",
+            "value" : "聚类未找到"
           }
         },
         "zh-Hant" : {
@@ -1285,8 +1285,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "found %1$d items related to %2$@"
+            "state" : "translated",
+            "value" : "找到%1$d条与%2$@相关的项目"
           }
         },
         "zh-Hant" : {
@@ -1333,8 +1333,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Getting started..."
+            "state" : "translated",
+            "value" : "正在启动..."
           }
         },
         "zh-Hant" : {
@@ -2034,8 +2034,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "nothing was found related to %@"
+            "state" : "translated",
+            "value" : "没有找到与%@相关联的内容"
           }
         },
         "zh-Hant" : {
@@ -2130,8 +2130,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Preparing for clustering..."
+            "state" : "translated",
+            "value" : "正在准备集群..."
           }
         },
         "zh-Hant" : {
@@ -2360,8 +2360,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Searching for related questions..."
+            "state" : "translated",
+            "value" : "正在搜索相关问题..."
           }
         },
         "zh-Hant" : {
@@ -2697,8 +2697,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thinking about %@..."
+            "state" : "translated",
+            "value" : "正在思考%@..."
           }
         },
         "zh-Hant" : {
