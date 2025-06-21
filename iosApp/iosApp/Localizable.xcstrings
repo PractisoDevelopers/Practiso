@@ -509,7 +509,20 @@
       }
     },
     "Automatic Clustering" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动聚类"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Automatic Clustering"
+          }
+        }
+      }
     },
     "Begin a new take as well" : {
       "localizations" : {
@@ -608,7 +621,20 @@
       }
     },
     "click the %@ button to fill automatically" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单击 %@ 按钮自动填充"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "click the %@ button to fill automatically"
+          }
+        }
+      }
     },
     "Collecting frames..." : {
       "localizations" : {
@@ -627,7 +653,20 @@
       }
     },
     "Completed" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Completed"
+          }
+        }
+      }
     },
     "Confirmation" : {
       "localizations" : {
@@ -646,7 +685,20 @@
       }
     },
     "Continue" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Continue"
+          }
+        }
+      }
     },
     "Continue without starting" : {
       "localizations" : {
@@ -1015,7 +1067,20 @@
       }
     },
     "Dimension not found" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聚类未找到"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dimension not found"
+          }
+        }
+      }
     },
     "Don't create takes for now" : {
       "localizations" : {
@@ -1217,6 +1282,18 @@
             "state" : "new",
             "value" : "found %1$d items related to %2$@"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找到%1$d条与%2$@相关的项目"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "found %1$d items related to %2$@"
+          }
         }
       }
     },
@@ -1253,7 +1330,20 @@
       }
     },
     "Getting started..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在启动..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Getting started..."
+          }
+        }
+      }
     },
     "Have a review" : {
       "localizations" : {
@@ -1941,7 +2031,20 @@
       }
     },
     "nothing was found related to %@" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有找到与%@相关联的内容"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "nothing was found related to %@"
+          }
+        }
+      }
     },
     "Now" : {
       "localizations" : {
@@ -2024,7 +2127,20 @@
       }
     },
     "Preparing for clustering..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在准备集群..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Preparing for clustering..."
+          }
+        }
+      }
     },
     "Proceed" : {
       "localizations" : {
@@ -2241,7 +2357,20 @@
       }
     },
     "Searching for related questions..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在搜索相关问题..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Searching for related questions..."
+          }
+        }
+      }
     },
     "Select" : {
       "localizations" : {
@@ -2565,7 +2694,20 @@
       }
     },
     "Thinking about %@..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在思考%@..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Thinking about %@..."
+          }
+        }
+      }
     },
     "This archive is empty" : {
       "localizations" : {

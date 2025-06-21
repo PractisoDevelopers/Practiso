@@ -13,6 +13,7 @@
     <string name="welcome_to_app_para">欢迎使用Practiso！</string>
     <string name="get_started_by_para">创建会话以开始</string>
     <string name="create_para">创建</string>
+    <string name="create_quiz_title">创建问题</string>
     <string name="use_smart_recommendations_para">使用智能推荐</string>
     <string name="quickly_start_new_session_para">快速开始新题集</string>
     <string name="new_question_span">新题目</string>
@@ -30,6 +31,7 @@
     <string name="no_options_available_para">无可用选项</string>
     <string name="head_to_library_to_create">前往题库以创建</string>
     <string name="import_para">导入</string>
+    <string name="import_archive_title">导入存档</string>
     <string name="templates_para">模板</string>
     <string name="questions_para">题目</string>
     <string name="dimensions_para">聚类</string>
@@ -213,4 +215,23 @@
     <string name="fei_resource_span">框嵌入推理资源</string>
     <string name="waiting_for_inference_para">等待推理…</string>
     <string name="interact_with_status_bar_to_continue_span">与状态栏交互以继续</string>
+    <string name="dimension_not_found_para">聚类未找到</string>
+    <string name="and_it_is_sad_para">它很难过。</string>
+    <string name="dimension_is_empty_para">聚类为空</string>
+    <string name="you_may_fill_it_automatically_using_fab">点击悬浮按钮可以自动填充。</string>
+    <string name="generate_para">生成</string>
+    <string name="completed_para">已完成</string>
+    <string name="thinking_para">正在思考…</string>
+    <string name="searching_para">正在搜索...</string>
+    <string name="preparing_para">正在准备…</string>
+    <plurals name="found_n_items_related_to_x_para">
+        <item quantity="other">找到%1$d条与%2$s相关的项目</item>
+    </plurals>
+    <string name="reveal_para">定位</string>
+    <string name="create_dimension_title">创建新聚类</string>
+    <string name="create_dimension_para">创建新聚类</string>
+    <string name="dimension_name">聚类名称</string>
+    <string name="exclude_para">排除</string>
+    <string name="categorize_para">归类</string>
+    <string name="close_para">关闭</string>
 </resources>
