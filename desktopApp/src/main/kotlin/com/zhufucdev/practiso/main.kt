@@ -25,11 +25,11 @@ import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.selects.select
-import okio.source
 import java.awt.Desktop
 import java.io.File
 
@@ -72,14 +72,8 @@ fun main(args: Array<String>) {
                 select {
                     openFileChannel.onReceive { file ->
                         file.forEach { file ->
-                            file.inputStream().use { ips ->
-                                val target = NamedSource(
-                                    name = file.name,
-                                    source = ips.source()
-                                )
-
-                                importer.event.import.send(target)
-                            }
+                            val target = NamedSource.fromFile(PlatformFile(file))
+                            importer.event.import.send(target)
                         }
                     }
                 }

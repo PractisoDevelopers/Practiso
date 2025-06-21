@@ -50,7 +50,6 @@ class ImportViewModel(db: AppDatabase) : ViewModel() {
                         mutex.lock()
                         service.import(it).collect(_state)
                         mutex.unlock()
-
                     }
                 }
             }
