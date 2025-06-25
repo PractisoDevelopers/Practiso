@@ -332,6 +332,11 @@ class FeiService(
                                 ) {
                                     val existingIndexes =
                                         db.embeddingQueries.getAllIndex().executeAsList()
+                                            .filter {
+                                                it.textFrameId?.let { i -> i.toULong() in index }
+                                                    ?: it.imageFrameId?.let { i -> i.toULong() in index }
+                                                    ?: false
+                                            }
                                     val indexedTextFrameIds =
                                         existingIndexes
                                             .mapNotNull(FrameEmbeddingIndex::textFrameId)
@@ -483,7 +488,12 @@ sealed class FeiErrorResponse {
 }
 
 sealed class FeiDbState {
-    data class Ready(val index: Index, val db: AppDatabase, val inference: FrameEmbeddingInference) : FeiDbState()
+    data class Ready(
+        val index: Index,
+        val db: AppDatabase,
+        val inference: FrameEmbeddingInference,
+    ) : FeiDbState()
+
     object Collecting : FeiDbState()
     data class MissingModel(
         val current: MlModel?,
@@ -534,6 +544,9 @@ private fun <T> Flow<FrameUpdate<T>>.addPacing() =
 class FrameNotIndexedException(frame: Frame) :
     IllegalStateException("${frame::class.simpleName}[id=${frame.id}]")
 
+class StrandedKeyException(val keys: Set<ULong>) :
+    IllegalStateException("Index key(s) ${keys.joinToString()} have no associated frame.")
+
 class FrameIndexNotSupportedException : UnsupportedOperationException()
 
 @Throws(
@@ -558,23 +571,36 @@ suspend fun FeiDbState.Ready.getApproximateNearestNeighbors(
         index.search(embeddings, count)
 
     return coroutineScope {
-        matches
+        val results = matches
             .map { (key, distance) ->
                 async(Dispatchers.IO) {
-                    val fei = db.embeddingQueries.getIndexByKey(key.toLong())
-                        .executeAsOneOrNull() ?: error("Index key has no associated frame.")
-                    val frame = if (fei.textFrameId != null) {
-                        db.quizQueries.getTextFrameById(fei.textFrameId).executeAsOne()
-                            .let { Frame.Text(id = it.id, textFrame = it) }
-                    } else if (fei.imageFrameId != null) {
-                        db.quizQueries.getImageFrameById(fei.imageFrameId).executeAsOne()
-                            .let { Frame.Image(id = it.id, imageFrame = it) }
-                    } else {
-                        error("This database is so broken.")
+                    runCatching {
+                        val fei = db.embeddingQueries.getIndexByKey(key.toLong())
+                            .executeAsOneOrNull() ?: throw StrandedKeyException(setOf(key))
+                        val frame = if (fei.textFrameId != null) {
+                            db.quizQueries.getTextFrameById(fei.textFrameId).executeAsOne()
+                                .let { Frame.Text(id = it.id, textFrame = it) }
+                        } else if (fei.imageFrameId != null) {
+                            db.quizQueries.getImageFrameById(fei.imageFrameId).executeAsOne()
+                                .let { Frame.Image(id = it.id, imageFrame = it) }
+                        } else {
+                            error("This database is so broken.")
+                        }
+                        frame to distance
                     }
-                    frame to distance
                 }
             }
             .awaitAll()
+
+        val exceptions = results.mapNotNull(Result<*>::exceptionOrNull).toMutableSet()
+        val strandedKeyExceptions = exceptions.filterIsInstance<StrandedKeyException>()
+        exceptions.removeAll(strandedKeyExceptions)
+        if (strandedKeyExceptions.isNotEmpty()) {
+            throw StrandedKeyException(strandedKeyExceptions.fold(setOf()) { accumulator, e -> e.keys + accumulator })
+        }
+        if (exceptions.isNotEmpty()) {
+            throw exceptions.first()
+        }
+        results.map { it.getOrThrow() }
     }
 }

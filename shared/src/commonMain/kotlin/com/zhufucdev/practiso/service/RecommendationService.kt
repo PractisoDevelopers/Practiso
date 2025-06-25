@@ -99,25 +99,42 @@ class RecommendationService(
                             occurrence.quiz.frames
                                 .map { option ->
                                     async {
-                                        try {
-                                            fei.getApproximateNearestNeighbors(
-                                                option.frame,
-                                                config.searchK
-                                            )
-                                                .mapNotNull { (key, distance) ->
-                                                    key.takeIf {
-                                                        embedding.normalizer(
-                                                            distance
-                                                        ) >= config.idealSimilarity
+                                        while (true) {
+                                            val result = runCatching {
+                                                fei.getApproximateNearestNeighbors(
+                                                    option.frame,
+                                                    config.searchK
+                                                )
+                                                    .mapNotNull { (key, distance) ->
+                                                        key.takeIf {
+                                                            embedding.normalizer(
+                                                                distance
+                                                            ) >= config.idealSimilarity
+                                                        }
+                                                    }
+                                            }
+                                            when (val e = result.exceptionOrNull()) {
+                                                null -> return@async result.getOrThrow()
+                                                is FrameIndexNotSupportedException -> {
+                                                    // ignore unsupported frames
+                                                    return@async emptyList()
+                                                }
+
+                                                is FrameNotIndexedException -> {
+                                                    e.printStackTrace()
+                                                    // TODO: replace this line, ignore for now
+                                                    return@async emptyList()
+                                                }
+
+                                                is StrandedKeyException -> {
+                                                    e.printStackTrace()
+                                                    e.keys.forEach { key ->
+                                                        fei.index.remove(key)
                                                     }
                                                 }
-                                        } catch (_: FrameIndexNotSupportedException) {
-                                            // ignore unsupported frames
-                                            emptyList()
-                                        } catch (_: FrameNotIndexedException) {
-                                            // TODO: remove this line, ignore for now
-                                            emptyList()
+                                            }
                                         }
+                                        emptyList() // this is unreachable, it's here because Kotlin type system is ass
                                     }
                                 }
                                 .awaitAll()
