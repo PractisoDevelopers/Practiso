@@ -8,6 +8,8 @@ import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.GetDimensionQuizIds
 import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.datamodel.AnsweredQuiz
+import com.zhufucdev.practiso.datamodel.Frame
+import com.zhufucdev.practiso.datamodel.Normalizer
 import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.datamodel.SessionCreator
 import com.zhufucdev.practiso.datamodel.getAllAnsweredQuizzes
@@ -81,6 +83,51 @@ class RecommendationService(
                 }
             }
 
+    private suspend fun getKnn(
+        frame: Frame,
+        normalizer: Normalizer,
+        fei: FeiDbState.Ready,
+    ): List<Frame> {
+        while (true) {
+            val result = runCatching {
+                fei.getApproximateNearestNeighbors(
+                    frame,
+                    config.searchK
+                )
+                    .mapNotNull { (key, distance) ->
+                        key.takeIf {
+                            normalizer(
+                                distance
+                            ) >= config.idealSimilarity
+                        }
+                    }
+            }
+            when (val e = result.exceptionOrNull()) {
+                null -> return result.getOrThrow()
+
+                is FrameIndexNotSupportedException -> {
+                    // ignore unsupported frames
+                    return emptyList()
+                }
+
+                is FrameNotIndexedException -> {
+                    e.printStackTrace()
+                    // TODO: replace this line, ignore for now
+                    return emptyList()
+                }
+
+                is StrandedKeyException -> {
+                    e.printStackTrace()
+                    e.keys.forEach { key ->
+                        fei.index.remove(key)
+                    }
+                }
+
+                else -> throw e
+            }
+        }
+    }
+
     // TODO: recommend based on error rates, quiz legitimacy, etc
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getSmartRecommendations(): Flow<List<SessionCreator>> =
@@ -99,42 +146,7 @@ class RecommendationService(
                             occurrence.quiz.frames
                                 .map { option ->
                                     async {
-                                        while (true) {
-                                            val result = runCatching {
-                                                fei.getApproximateNearestNeighbors(
-                                                    option.frame,
-                                                    config.searchK
-                                                )
-                                                    .mapNotNull { (key, distance) ->
-                                                        key.takeIf {
-                                                            embedding.normalizer(
-                                                                distance
-                                                            ) >= config.idealSimilarity
-                                                        }
-                                                    }
-                                            }
-                                            when (val e = result.exceptionOrNull()) {
-                                                null -> return@async result.getOrThrow()
-                                                is FrameIndexNotSupportedException -> {
-                                                    // ignore unsupported frames
-                                                    return@async emptyList()
-                                                }
-
-                                                is FrameNotIndexedException -> {
-                                                    e.printStackTrace()
-                                                    // TODO: replace this line, ignore for now
-                                                    return@async emptyList()
-                                                }
-
-                                                is StrandedKeyException -> {
-                                                    e.printStackTrace()
-                                                    e.keys.forEach { key ->
-                                                        fei.index.remove(key)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        emptyList() // this is unreachable, it's here because Kotlin type system is ass
+                                        getKnn(option.frame, embedding.normalizer, fei)
                                     }
                                 }
                                 .awaitAll()
