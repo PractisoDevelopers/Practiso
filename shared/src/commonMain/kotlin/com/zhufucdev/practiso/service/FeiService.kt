@@ -32,6 +32,7 @@ import com.zhufucdev.practiso.platform.createFrameEmbeddingInference
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.lastCompletion
 import com.zhufucdev.practiso.platform.platformGetEmbeddings
+import com.zhufucdev.practiso.service.FeiService.Companion.INDEX_PATH
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -65,7 +66,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import okio.FileSystem
+import okio.Path
 import okio.use
 import usearch.Index
 import usearch.IndexOptions
@@ -128,7 +129,6 @@ class FeiService(
 
     private fun Index.maybeLoad(): Boolean {
         val fs = getPlatform().filesystem
-        ensureSearchDirectory(fs)
         if (fs.exists(INDEX_PATH)) {
             try {
                 readFrom(fs.source(INDEX_PATH))
@@ -415,15 +415,20 @@ class FeiService(
                                                         row.imageFrameId
                                                     )
                                                     .executeAsOneOrNull()
-                                                val key = dbKey
-                                                    ?: nextEmbeddingKeyMutex.withLock { nextEmbeddingKey++ }
 
-                                                index.asF32.add(key.toULong(), ebd)
+                                                var key = (dbKey ?: nextEmbeddingKeyMutex.withLock {
+                                                    nextEmbeddingKey++
+                                                }).toULong()
+                                                while (index.contains(key)) {
+                                                    key++
+                                                }
+
+                                                index.asF32.add(key, ebd)
                                                 if (dbKey == null) {
                                                     db.embeddingQueries.insertIndex(
                                                         row.textFrameId,
                                                         row.imageFrameId,
-                                                        key
+                                                        key.toLong()
                                                     )
                                                 }
                                             }
@@ -436,11 +441,7 @@ class FeiService(
                                             )
                                         }
 
-                                        val fs = getPlatform().filesystem
-                                        ensureSearchDirectory(fs)
-                                        fs.sink(INDEX_PATH).use {
-                                            index.saveTo(it)
-                                        }
+                                        index.save()
                                     }
                                 }
                             }
@@ -448,12 +449,12 @@ class FeiService(
                             send(FeiDbState.Ready(index, db, fei))
 
                             withContext(Dispatchers.IO) {
-                            }
-                            db.transaction {
-                                db.settingsQueries.copyInt(
-                                    DB_FEI_VERSION_KEY,
-                                    INDEX_FEI_VERSION_KEY
-                                )
+                                db.transaction {
+                                    db.settingsQueries.copyInt(
+                                        DB_FEI_VERSION_KEY,
+                                        INDEX_FEI_VERSION_KEY
+                                    )
+                                }
                             }
                         }
                 } finally {
@@ -465,12 +466,6 @@ class FeiService(
     )
 
     fun getUpgradeState(): Flow<FeiDbState> = upgradeStateFlow
-
-    private fun ensureSearchDirectory(fs: FileSystem = getPlatform().filesystem) {
-        val dir = INDEX_PATH.parent!!
-        if (!fs.exists(dir))
-            fs.createDirectories(dir, mustCreate = true)
-    }
 }
 
 sealed class MissingModelResponse {
@@ -514,6 +509,16 @@ sealed class FeiDbState {
     data class DownloadingInference(val progress: Float, val model: MlModel) : FeiDbState()
 
     data class InProgress(val total: Int, val done: Int) : FeiDbState()
+}
+
+fun Index.save(path: Path = INDEX_PATH) {
+    val dir = path.parent!!
+    val fs = getPlatform().filesystem
+    fs.sink(INDEX_PATH).use {
+        saveTo(it)
+    }
+    if (!fs.exists(dir))
+        fs.createDirectories(dir, mustCreate = true)
 }
 
 class FeiException(val error: ErrorModel) : Exception(error.cause)
