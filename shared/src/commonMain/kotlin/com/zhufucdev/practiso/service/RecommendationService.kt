@@ -121,6 +121,7 @@ class RecommendationService(
                     e.keys.forEach { key ->
                         fei.index.remove(key)
                     }
+                    fei.index.save()
                 }
 
                 else -> throw e
