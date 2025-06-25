@@ -588,6 +588,9 @@
         }
       }
     },
+    "Categorize" : {
+
+    },
     "Change Intensity" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1724,6 +1727,9 @@
           }
         }
       }
+    },
+    "Loading dimensions..." : {
+
     },
     "Loading Image..." : {
       "localizations" : {
