@@ -20,7 +20,7 @@ sealed interface PractisoOption {
     val id: Long
 }
 
-data class QuizOption(val quiz: DbQuiz, val preview: String?) : PractisoOption {
+data class QuizOption constructor(val quiz: DbQuiz, val preview: String?) : PractisoOption {
     override val id: Long
         get() = quiz.id
 }
@@ -46,8 +46,10 @@ data class TemplateOption(val template: Template) : PractisoOption {
 suspend fun QuizFrames.toOption() = coroutineScope {
     QuizOption(
         quiz = quiz,
-        preview = frames.map { async { it.frame.getPreviewText() } }.awaitAll()
-            .joinToString("  ")
+        preview = frames.takeIf(List<*>::isNotEmpty)
+            ?.map { async { it.frame.getPreviewText() } }
+            ?.awaitAll()
+            ?.joinToString("  ")
     )
 }
 
