@@ -46,7 +46,7 @@ class QuizCreateViewModel(private val db: AppDatabase, state: SavedStateHandle) 
     var nameEditValue by state.saveable { mutableStateOf("") }
     val imageCache = BitmapRepository()
     var state by state.saveable { mutableStateOf(State.Pending) }
-    var lastFrameId by state.saveable { mutableStateOf(0L) }
+    var lastFrameId by state.saveable { mutableLongStateOf(0L) }
     private val _frames: MutableList<Frame> by state.saveable(saver = protoBufStateListSaver()) { mutableStateListOf() }
     private val _dimensions: MutableList<DimensionIntensity> by state.saveable(saver = protoBufStateListSaver()) { mutableStateListOf() }
     val frames: List<Frame> get() = _frames
@@ -113,7 +113,7 @@ class QuizCreateViewModel(private val db: AppDatabase, state: SavedStateHandle) 
                     }
 
                     event.rename.onReceive {
-                        addEdit(Edit.Rename(name, it))
+                        addEdit(Edit.Rename(name.takeIf(String::isNotEmpty), it.takeIf(String::isNotEmpty)))
                         name = it
                         Unit
                     }

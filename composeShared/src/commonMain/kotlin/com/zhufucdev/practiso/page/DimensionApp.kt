@@ -332,7 +332,12 @@ fun QuizIntensityView(
 ) {
     QuizIntensitySkeleton(
         modifier = modifier,
-        title = { Text(model.quiz.name ?: stringResource(Res.string.new_question_para)) },
+        title = {
+            Text(
+                model.quiz.name?.takeIf(String::isNotEmpty)
+                    ?: stringResource(Res.string.new_question_para)
+            )
+        },
         description = { Text("${(model.intensity * 100).roundToInt()}%") },
         onClick = onClick
     )
@@ -351,7 +356,8 @@ fun SharedElementTransitionPopupScope.QuizPopupContent(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(PaddingNormal)) {
         Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
             Text(
-                model.quiz.name ?: stringResource(Res.string.new_question_para),
+                model.quiz.name?.takeIf(String::isNotEmpty)
+                    ?: stringResource(Res.string.new_question_para),
                 style = MaterialTheme.typography.titleLarge
             )
             Text(dimension.name, style = MaterialTheme.typography.labelLarge)
