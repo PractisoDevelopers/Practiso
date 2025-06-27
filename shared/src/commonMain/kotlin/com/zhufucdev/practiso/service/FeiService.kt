@@ -514,6 +514,9 @@ sealed class FeiDbState {
 fun Index.save(path: Path = INDEX_PATH) {
     val dir = path.parent!!
     val fs = getPlatform().filesystem
+    if (INDEX_PATH.parent?.let { fs.exists(it) } == false) {
+        fs.createDirectories(INDEX_PATH.parent!!)
+    }
     fs.sink(INDEX_PATH).use {
         saveTo(it)
     }
