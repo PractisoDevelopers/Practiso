@@ -23,7 +23,7 @@
     <string name="loading_recommendations_span">正在加载推荐内容</string>
     <string name="see_all_options_para">查看全部选项</string>
     <string name="start_para">开始</string>
-    <string name="empty_span">无</string>
+    <string name="empty_span">空白</string>
     <plurals name="n_questions_span">
         <item quantity="other">%1$d题</item>
     </plurals>
