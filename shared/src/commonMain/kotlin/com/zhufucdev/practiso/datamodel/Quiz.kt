@@ -222,7 +222,9 @@ fun List<Frame>.resources(): List<ResourceRequester> = buildList {
             }
 
             is Frame.Image -> {
-                add(ResourceRequester(it.imageFrame.filename, it))
+                if (it.imageFrame.filename.isNotEmpty()) {
+                    add(ResourceRequester(it.imageFrame.filename, it))
+                }
             }
 
             is Frame.Text -> {}
