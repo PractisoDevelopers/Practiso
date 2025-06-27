@@ -1,0 +1,16 @@
+ALTER TABLE frameEmbeddingIndex RENAME TO feiOld;
+CREATE TABLE frameEmbeddingIndex(
+    textFrameId INTEGER,
+    imageFrameId INTEGER,
+    indexKey INTEGER NOT NULL,
+    PRIMARY KEY (textFrameId, imageFrameId, indexKey),
+    FOREIGN KEY (textFrameId) REFERENCES textFrame(id),
+    FOREIGN KEY (imageFrameId) REFERENCES imageFrame(id),
+    CONSTRAINT integerity_chk CHECK (textFrameId IS NOT NULL OR imageFrameId IS NOT NULL)
+);
+
+INSERT OR IGNORE INTO frameEmbeddingIndex
+SELECT textFrameId, imageFrameId, indexKey
+ FROM feiOld
+ WHERE textFrameId IN (SELECT id FROM textFrame) OR imageFrameId IN (SELECT id FROM imageFrame);
+DROP TABLE feiOld;
