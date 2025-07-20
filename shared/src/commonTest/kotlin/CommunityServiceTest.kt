@@ -11,7 +11,7 @@ class CommunityServiceTest {
     fun shouldQueryArchiveList() {
         runBlocking {
             assertNotNull(
-                service.getArchives().items.firstOrNull()
+                service.getArchivePagination().items.firstOrNull()
             )
         }
     }

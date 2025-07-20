@@ -11,7 +11,7 @@ import opacity.client.SortOptions
 class CommunityService(endpoint: String = "https://opacity.zhufucdev.com") {
     private val client = OpacityClient(endpoint, PlatformHttpClientFactory)
 
-    fun getArchives(sortOptions: SortOptions = SortOptions()) =
+    fun getArchivePagination(sortOptions: SortOptions = SortOptions()) =
         object : Paginated<ArchiveMetadata> {
             private val pageRequestChannel = Channel<Unit>()
             private val pageCompleteChannel = Channel<Unit>()

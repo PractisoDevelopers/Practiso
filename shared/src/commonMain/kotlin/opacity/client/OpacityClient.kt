@@ -25,7 +25,7 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
         return response.body()
     }
 
-    suspend fun getDimensionList(): GetDimensionListResponse {
+    suspend fun getDimensionList(takeFirst: Int = 20): GetDimensionListResponse {
         val response = http.get {
             url {
                 takeFrom(endpoint)

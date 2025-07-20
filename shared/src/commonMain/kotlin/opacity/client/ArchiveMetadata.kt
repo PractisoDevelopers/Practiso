@@ -10,5 +10,5 @@ data class ArchiveMetadata(
     val ownerName: String?,
     val uploadTime: Instant,
     val updateTime: Instant,
-    val dimensions: List<DimensionQuizCount>,
+    val dimensions: List<DimensionMetadata>,
 )
