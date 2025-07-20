@@ -11,6 +11,7 @@ struct QuestionDetailView : View {
     @State private var quizFramesFlow: SkieSwiftOptionalFlow<QuizFrames>
     
     @State private var editMode: EditMode = .inactive
+    @State private var isCategorizeSheetShown = false
     @State private var staging: [Frame]? = nil
     @State private var editHistory = History()
     @Namespace private var question
@@ -73,6 +74,11 @@ struct QuestionDetailView : View {
                     .navigationDocument(option, preview: SharePreview(option.view.header))
                     .toolbar {
                         ToolbarItem {
+                            Button("Categorize", systemImage: "tag") {
+                                isCategorizeSheetShown = true
+                            }
+                        }
+                        ToolbarItem {
                             Button("Edit") {
                                 editHistory = History() // editor always starts with empty history
                                 withAnimation {
@@ -81,6 +87,7 @@ struct QuestionDetailView : View {
                             }
                         }
                     }
+                    .categorizeSheet(isPresent: $isCategorizeSheetShown, quizId: option.quiz.id)
                 }
             } else {
                 Placeholder {

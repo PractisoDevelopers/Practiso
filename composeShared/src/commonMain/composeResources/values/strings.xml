@@ -251,4 +251,6 @@
     <string name="exclude_para">Exclude</string>
     <string name="categorize_para">Categorize</string>
     <string name="close_para">Close</string>
+    <string name="community_para">Community</string>
+    <string name="show_all_span">show all</string>
 </resources>

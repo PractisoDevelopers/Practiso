@@ -87,6 +87,7 @@ import com.zhufucdev.practiso.composition.rememberExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
+import com.zhufucdev.practiso.page.CommunityApp
 import com.zhufucdev.practiso.page.DimensionApp
 import com.zhufucdev.practiso.page.DimensionSectionEditApp
 import com.zhufucdev.practiso.page.LibraryApp
@@ -98,6 +99,7 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
+import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
@@ -121,6 +123,7 @@ fun PractisoApp(navController: NavHostController) {
     val searchVM: SearchViewModel =
         viewModel(factory = SearchViewModel.Factory)
     val importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
+    val communityVM: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory)
 
     BottomUpComposableScope {
         CompositionLocalProvider(
@@ -146,6 +149,13 @@ fun PractisoApp(navController: NavHostController) {
                     AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
                         ScaffoldedApp(it, searchVM) {
                             LibraryApp(model = libraryVM)
+                        }
+                    }
+                }
+                composable(TopLevelDestination.Community.route) {
+                    AdaptiveApp(navController, TopLevelDestination.Community, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            CommunityApp(model = communityVM)
                         }
                     }
                 }
