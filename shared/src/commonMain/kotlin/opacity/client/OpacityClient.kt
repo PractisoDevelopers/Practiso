@@ -3,6 +3,7 @@ package opacity.client
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.http.appendPathSegments
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
@@ -30,6 +31,7 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
             url {
                 takeFrom(endpoint)
                 appendPathSegments("dimensions")
+                parameter("first", takeFirst)
             }
         }
         return response.body()

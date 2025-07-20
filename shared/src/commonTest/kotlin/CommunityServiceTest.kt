@@ -15,4 +15,11 @@ class CommunityServiceTest {
             )
         }
     }
+
+    @Test
+    fun shouldGetDimensionList() {
+        runBlocking {
+            service.getDimensions()
+        }
+    }
 }

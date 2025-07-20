@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import opacity.client.ArchiveMetadata
+import opacity.client.DimensionMetadata
 import opacity.client.OpacityClient
 import opacity.client.SortOptions
 
@@ -33,6 +34,9 @@ class CommunityService(endpoint: String = "https://opacity.zhufucdev.com") {
                 pageCompleteChannel.receive()
             }
         }
+
+    suspend fun getDimensions(takeFirst: Int = 20): List<DimensionMetadata> =
+        client.getDimensionList(takeFirst)
 }
 
 /**
