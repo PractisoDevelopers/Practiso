@@ -1,22 +1,19 @@
-package com.zhufucdev.practiso.datamodel
+package com.zhufucdev.practiso
 
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 
 private const val KeyAnswerPageStyle = "answer_page_style"
 private const val KeyShowAccuracy = "show_accuracy"
 private const val KeyQuizAutoplay = "quiz_autoplay"
 private const val KeyFeiModelId = "fei_model_id"
 private const val KeyFeiCompatibility = "fei_compatibility"
-
-enum class PageStyle {
-    Horizontal,
-    Vertical,
-    Column
-}
 
 class SettingsModel(private val settings: Settings, val coroutineScope: CoroutineScope) {
     val answerPageStyle = MutableStateFlow(
@@ -61,4 +58,15 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
             }
         }
     }
+}
+
+@OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+val AppSettings = with(CoroutineScope(newSingleThreadContext("AppSettings"))) {
+    val model = SettingsModel(getDefaultSettingsFactory().create(), this)
+    launch {
+        model.feiModelIndex.collectLatest { modelIdx ->
+            Database.fei.setFeiModel(KnownModels[modelIdx])
+        }
+    }
+    model
 }

@@ -38,7 +38,6 @@ import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
 import com.zhufucdev.practiso.composable.modelFeatureString
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.datamodel.MlModel
-import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.style.PaddingBig

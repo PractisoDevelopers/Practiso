@@ -25,6 +25,7 @@ import com.zhufucdev.practiso.platform.DownloadDiscretion
 import com.zhufucdev.practiso.platform.DownloadableFile
 import com.zhufucdev.practiso.platform.FrameEmbeddingInference
 import com.zhufucdev.practiso.platform.InferenceModelState
+import com.zhufucdev.practiso.platform.InferenceSession
 import com.zhufucdev.practiso.platform.InferenceState
 import com.zhufucdev.practiso.platform.Language
 import com.zhufucdev.practiso.platform.LanguageIdentifier
@@ -77,6 +78,7 @@ class FeiService(
     private val db: AppDatabase = Database.app,
     private val defaultModel: MlModel = JinaV2SmallEn,
     private val parallelTasks: Int = 8,
+    private val inferenceSession: Flow<InferenceSession>
 ) :
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
     companion object {
@@ -193,7 +195,7 @@ class FeiService(
         var nextEmbeddingKey =
             db.settingsQueries.getIntByKey(EMBEDDING_TOP_KEY).executeAsOneOrNull() ?: 0
 
-        getFeiModel().combine(getPlatform().getInferenceSession(), ::Pair)
+        getFeiModel().combine(inferenceSession, ::Pair)
             .withIndex()
             .collectLatest { (modelVersion, modelSessionBundled) ->
                 val (model, session) = modelSessionBundled

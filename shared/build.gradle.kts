@@ -40,7 +40,12 @@ kotlin {
         }
     }
 
-    applyDefaultHierarchyTemplate()
+    applyDefaultHierarchyTemplate {
+        group("composeCommon") {
+            withAndroidTarget()
+            withJvm()
+        }
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -53,8 +58,6 @@ kotlin {
             api(libs.filekit.core)
             api(libs.okio)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.settings.core)
-            implementation(libs.settings.coroutine)
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
             implementation(libs.hgtk.core)
@@ -95,6 +98,18 @@ kotlin {
         appleMain.dependencies {
             implementation(libs.sqldelight.native.driver)
             implementation(libs.ktor.client.darwin)
+        }
+
+        val composeCommonMain by getting {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.settings.core)
+                implementation(libs.settings.coroutine)
+            }
+        }
+
+        val composeCommonTest by getting {
+            dependsOn(commonTest.get())
         }
     }
 

@@ -12,11 +12,11 @@ import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.AppSettings
+import com.zhufucdev.practiso.PageStyle
+import com.zhufucdev.practiso.SettingsModel
 import com.zhufucdev.practiso.composable.BitmapRepository
-import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.PractisoAnswer
 import com.zhufucdev.practiso.datamodel.QuizFrames
-import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle

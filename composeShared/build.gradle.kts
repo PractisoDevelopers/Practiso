@@ -41,6 +41,8 @@ kotlin {
             implementation(libs.material3.windowsize)
             implementation(libs.filekit.dialogs.compose)
             implementation(libs.humanreadable)
+            implementation(libs.settings.core)
+            implementation(libs.settings.coroutine)
         }
 
         androidMain.dependencies {

@@ -78,11 +78,9 @@ import com.zhufucdev.practiso.composition.rememberClosestTimerAhead
 import com.zhufucdev.practiso.composition.toTimerPresentation
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
-import com.zhufucdev.practiso.datamodel.PageStyle
 import com.zhufucdev.practiso.datamodel.PractisoAnswer
 import com.zhufucdev.practiso.datamodel.PrioritizedFrame
 import com.zhufucdev.practiso.datamodel.QuizFrames
-import com.zhufucdev.practiso.datamodel.SettingsModel
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.platform.wobbleHapticFeedback
 import com.zhufucdev.practiso.style.PaddingNormal
