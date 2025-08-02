@@ -9,7 +9,7 @@ import opacity.client.DimensionMetadata
 import opacity.client.OpacityClient
 import opacity.client.SortOptions
 
-class CommunityService(endpoint: String = "https://opacity.zhufucdev.com") {
+class CommunityService(endpoint: String = DEFAULT_COMMUNITY_SERVER_URL) {
     private val client = OpacityClient(endpoint, PlatformHttpClientFactory)
 
     fun getArchivePagination(sortOptions: SortOptions = SortOptions()) =
@@ -55,3 +55,5 @@ interface Paginated<T> {
      */
     suspend fun mountNext()
 }
+
+const val DEFAULT_COMMUNITY_SERVER_URL = "https://opacity.zhufucdev.com"

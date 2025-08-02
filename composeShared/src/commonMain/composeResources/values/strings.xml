@@ -262,4 +262,8 @@
     </plurals>
     <string name="likes_para">Likes</string>
     <string name="downloads_para">Downloads</string>
+    <string name="use_custom_server_para">Use custom server</string>
+    <string name="custom_server_for_third_party_access_para">Practiso can access custom community server for third-party resources. Different privacy and authentication policies may apply depending on the specific server.</string>
+    <string name="custom_server_url_para">Custom server URL</string>
+    <string name="not_specified_para">Not specified</string>
 </resources>

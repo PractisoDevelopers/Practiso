@@ -41,13 +41,13 @@ fun PractisoOptionSkeleton(
         modifier = modifier
     ) {
         CompositionLocalProvider(
-            LocalTextStyle provides MaterialTheme.typography.titleMedium
+            LocalTextStyle provides MaterialTheme.typography.titleMedium.copy(color = LocalTextStyle.current.color)
         ) {
             label()
         }
 
         CompositionLocalProvider(
-            LocalTextStyle provides MaterialTheme.typography.bodyMedium
+            LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(color = LocalTextStyle.current.color)
         ) {
             preview?.invoke()
         }
