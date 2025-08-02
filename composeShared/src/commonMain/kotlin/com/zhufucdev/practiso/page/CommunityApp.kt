@@ -222,7 +222,7 @@ private fun ArchiveOption(modifier: Modifier = Modifier, model: ArchiveMetadata)
     PractisoOptionSkeleton(
         modifier = modifier,
         label = {
-            Text(model.name)
+            Text(model.name.removeSuffix(".psarchive"))
         },
         preview = {
             FlowRow(
