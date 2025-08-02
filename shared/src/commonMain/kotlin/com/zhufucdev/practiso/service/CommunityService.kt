@@ -3,6 +3,8 @@ package com.zhufucdev.practiso.service
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import opacity.client.ArchiveMetadata
 import opacity.client.DimensionMetadata
@@ -27,6 +29,7 @@ class CommunityService(endpoint: String = DEFAULT_COMMUNITY_SERVER_URL) {
                     emit(response.page)
                     pageCompleteChannel.send(Unit)
                 }
+                hasNext.tryEmit(false)
                 pageRequestChannel.close(LastPageException)
                 pageCompleteChannel.close(LastPageException)
             }
@@ -35,6 +38,8 @@ class CommunityService(endpoint: String = DEFAULT_COMMUNITY_SERVER_URL) {
                 pageRequestChannel.send(Unit)
                 pageCompleteChannel.receive()
             }
+
+            override val hasNext = MutableStateFlow(true)
         }
 
     suspend fun getDimensions(takeFirst: Int = 20): List<DimensionMetadata> =
@@ -56,6 +61,8 @@ interface Paginated<T> {
      * Shall be suspended until the next page is fully mounted.
      */
     suspend fun mountNext()
+
+    val hasNext: StateFlow<Boolean>
 }
 
 object LastPageException : IllegalStateException("Already on the last page.")

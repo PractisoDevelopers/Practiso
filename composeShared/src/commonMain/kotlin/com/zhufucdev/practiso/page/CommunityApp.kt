@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
@@ -25,8 +25,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +46,7 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import opacity.client.ArchiveMetadata
 import opacity.client.DimensionMetadata
 import org.jetbrains.compose.resources.painterResource
@@ -58,12 +62,31 @@ import resources.outline_download
 import resources.outline_heart
 import resources.show_all_span
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory)) {
     val archives by model.archives.collectAsState(null, Dispatchers.IO)
     val dimensions by model.dimensions.collectAsState(null, Dispatchers.IO)
 
-    LazyColumn {
+    val scrollState = rememberLazyListState()
+    val leadingItemIndex by remember(scrollState) { derivedStateOf { scrollState.firstVisibleItemIndex } }
+    val isMountingNextPage by model.isMountingNextPage.collectAsState()
+    val hasNextPage by model.hasNextPage.collectAsState(true)
+
+    LaunchedEffect(leadingItemIndex, isMountingNextPage, hasNextPage) {
+        if (!hasNextPage || isMountingNextPage) {
+            return@LaunchedEffect
+        }
+
+        val lastIndexIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        if (archives?.let { it.size - lastIndexIndex > PRELOAD_EXTENT } != false) {
+            return@LaunchedEffect
+        }
+
+        model.mountNextPage()
+    }
+
+    LazyColumn(state = scrollState) {
         item {
             Row(
                 Modifier.padding(horizontal = PaddingNormal).fillMaxWidth(),
@@ -121,19 +144,26 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
 
         archives?.let { archives ->
             items(
-                items = archives,
-                key = { "archive#${it.id}" },
-                contentType = { "archive" }) {
-                OptionItem(modifier = Modifier.clickable(onClick = {})) {
+                count = archives.size,
+                key = { "archive#${archives[it].id}" },
+                contentType = { "archive" }) { index ->
+                OptionItem(
+                    modifier = Modifier.clickable(onClick = {}),
+                    separator = index != archives.lastIndex
+                ) {
                     ArchiveOption(
                         modifier = Modifier.fillMaxWidth(),
-                        model = it
+                        model = archives[index]
                     )
                 }
             }
-        } ?: items(5) {
-            OptionItem {
-                PractisoOptionSkeleton()
+        }
+
+        if (archives == null || isMountingNextPage) {
+            items(5) {
+                OptionItem(separator = it != 5) {
+                    PractisoOptionSkeleton()
+                }
             }
         }
     }
@@ -259,10 +289,13 @@ private fun ArchiveOption(modifier: Modifier = Modifier, model: ArchiveMetadata)
 @Composable
 private fun OptionItem(
     modifier: Modifier = Modifier,
+    separator: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     Box(modifier) {
         Box(Modifier.padding(PaddingNormal)) { content() }
     }
-    HorizontalSeparator()
+    if (separator) HorizontalSeparator()
 }
+
+private const val PRELOAD_EXTENT = 3

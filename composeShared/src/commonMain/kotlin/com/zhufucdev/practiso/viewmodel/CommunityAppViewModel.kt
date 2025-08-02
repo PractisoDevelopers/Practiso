@@ -7,16 +7,20 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.DEFAULT_COMMUNITY_SERVER_URL
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
 import opacity.client.SortOptions
 
 class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewModel() {
@@ -30,6 +34,7 @@ class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewMo
             .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
 
     private val _archiveSortOptions = MutableStateFlow(SortOptions())
+
     private val _archivePaginator =
         refreshCounter
             .combine(_archiveSortOptions) { _, s -> s }
@@ -49,6 +54,25 @@ class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewMo
         set(value) {
             _archiveSortOptions.value = value
         }
+
+    private val _isMountingNextPage = MutableStateFlow(false)
+    val isMountingNextPage: StateFlow<Boolean> = _isMountingNextPage
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val hasNextPage = _archivePaginator.flatMapLatest { it.hasNext }
+
+    fun mountNextPage() {
+        _isMountingNextPage.tryEmit(true)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _archivePaginator.first().mountNext()
+            } catch (e: Exception) {
+                // TODO: handle [e]
+            } finally {
+                _isMountingNextPage.tryEmit(false)
+            }
+        }
+    }
 
     companion object {
         @OptIn(ExperimentalCoroutinesApi::class)
