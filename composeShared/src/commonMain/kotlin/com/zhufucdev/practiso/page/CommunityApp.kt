@@ -227,12 +227,14 @@ private fun ArchiveOption(modifier: Modifier = Modifier, model: ArchiveMetadata)
         preview = {
             FlowRow(
                 verticalArrangement = Arrangement.Center,
-                horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
+                horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
             ) {
+                val lineHeight = LocalTextStyle.current.lineHeight.value.dp
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painterResource(Res.drawable.outline_download),
-                        contentDescription = stringResource(Res.string.downloads_para)
+                        contentDescription = stringResource(Res.string.downloads_para),
+                        modifier = Modifier.size(lineHeight, lineHeight)
                     )
                     Text(model.downloads.toString())
                 }
@@ -240,7 +242,8 @@ private fun ArchiveOption(modifier: Modifier = Modifier, model: ArchiveMetadata)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painterResource(Res.drawable.outline_heart),
-                        contentDescription = stringResource(Res.string.likes_para)
+                        contentDescription = stringResource(Res.string.likes_para),
+                        modifier = Modifier.size(lineHeight, lineHeight)
                     )
                     Text(model.likes.toString())
                 }
