@@ -1,8 +1,11 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,19 +33,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SectionCaption
+import com.zhufucdev.practiso.composable.SingleLineTextShimmer
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.style.NotoEmojiFontFamily
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import kotlinx.coroutines.Dispatchers
+import opacity.client.ArchiveMetadata
 import opacity.client.DimensionMetadata
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
+import resources.archives_para
 import resources.dimensions_para
+import resources.downloads_para
+import resources.likes_para
 import resources.n_questions_span
+import resources.outline_download
+import resources.outline_heart
 import resources.show_all_span
 
 @Composable
@@ -51,11 +66,16 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
     LazyColumn {
         item {
             Row(
-                Modifier.padding(horizontal = PaddingNormal),
-                verticalAlignment = Alignment.CenterVertically
+                Modifier.padding(horizontal = PaddingNormal).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SectionCaption(stringResource(Res.string.dimensions_para))
-                Spacer(Modifier.weight(1f))
+                SectionCaption(
+                    pluralStringResource(
+                        Res.plurals.dimensions_para,
+                        dimensions?.size ?: 0
+                    )
+                )
                 TextButton(onClick = {
 
                 }) {
@@ -86,9 +106,37 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
                     }
                 }
             }
+            Spacer(Modifier.height(PaddingNormal))
+        }
+
+        item {
+            Row(
+                modifier = Modifier.padding(horizontal = PaddingNormal).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                SectionCaption(pluralStringResource(Res.plurals.archives_para, archives?.size ?: 2))
+            }
+        }
+
+        archives?.let { archives ->
+            items(
+                items = archives,
+                key = { "archive#${it.id}" },
+                contentType = { "archive" }) {
+                OptionItem(modifier = Modifier.clickable(onClick = {})) {
+                    ArchiveOption(
+                        modifier = Modifier.fillMaxWidth(),
+                        model = it
+                    )
+                }
+            }
+        } ?: items(5) {
+            OptionItem {
+                PractisoOptionSkeleton()
+            }
         }
     }
-
 }
 
 private val DimensionCardWidth = 200.dp
@@ -132,16 +180,10 @@ private fun DimensionCardSkeleton(
         )
     },
     name: @Composable () -> Unit = {
-        val height = LocalTextStyle.current.lineHeight.value.dp
-        Spacer(
-            Modifier.fillMaxWidth().height(height).shimmerBackground()
-        )
+        SingleLineTextShimmer(Modifier.fillMaxWidth())
     },
     description: @Composable () -> Unit = {
-        val height = LocalTextStyle.current.lineHeight.value.dp
-        Spacer(
-            Modifier.fillMaxWidth(fraction = 0.618f).height(height).shimmerBackground()
-        )
+        SingleLineTextShimmer(Modifier.fillMaxWidth(fraction = 0.618f))
     },
 ) {
     val content: @Composable ColumnScope.() -> Unit = {
@@ -173,4 +215,47 @@ private fun DimensionCardSkeleton(
     } else {
         Card(modifier = modifier, content = content)
     }
+}
+
+@Composable
+private fun ArchiveOption(modifier: Modifier = Modifier, model: ArchiveMetadata) {
+    PractisoOptionSkeleton(
+        modifier = modifier,
+        label = {
+            Text(model.name)
+        },
+        preview = {
+            FlowRow(
+                verticalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painterResource(Res.drawable.outline_download),
+                        contentDescription = stringResource(Res.string.downloads_para)
+                    )
+                    Text(model.downloads.toString())
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painterResource(Res.drawable.outline_heart),
+                        contentDescription = stringResource(Res.string.likes_para)
+                    )
+                    Text(model.likes.toString())
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun OptionItem(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier) {
+        Box(Modifier.padding(PaddingNormal)) { content() }
+    }
+    HorizontalSeparator()
 }

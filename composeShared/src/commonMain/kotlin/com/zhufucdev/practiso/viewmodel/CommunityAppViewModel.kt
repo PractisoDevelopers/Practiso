@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.runningFold
+import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
-import opacity.client.ArchiveMetadata
 import opacity.client.SortOptions
 
 class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewModel() {
@@ -40,12 +39,14 @@ class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewMo
         _archivePaginator
             .map { it.items }
             .flatMapLatest {
-                it.runningFold(listOf<ArchiveMetadata>()) { acc, value -> acc + value }
+                it.runningReduce { acc, value -> acc + value }
             }
 
     var archiveSortOptions: SortOptions
         get() = _archiveSortOptions.value
-        set(value) { _archiveSortOptions.value = value }
+        set(value) {
+            _archiveSortOptions.value = value
+        }
 
     companion object {
         val Factory = viewModelFactory {

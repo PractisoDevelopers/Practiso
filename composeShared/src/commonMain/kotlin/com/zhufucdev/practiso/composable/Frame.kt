@@ -65,7 +65,7 @@ fun ImageFrameSkeleton(
 @Composable
 fun OptionSkeleton(
     modifier: Modifier = Modifier,
-    prefix: @Composable () -> Unit = {},
+    leading: @Composable () -> Unit = {},
     content: @Composable () -> Unit = {
         SingleLineTextShimmer(Modifier.fillMaxWidth())
     },
@@ -75,7 +75,7 @@ fun OptionSkeleton(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
     ) {
-        prefix()
+        leading()
         content()
     }
 }
@@ -104,9 +104,4 @@ fun OptionsFrameSkeleton(
             content(this)
         }
     }
-}
-
-@Composable
-private fun SingleLineTextShimmer(modifier: Modifier = Modifier) {
-    Spacer(Modifier.height(LocalTextStyle.current.lineHeight.value.dp).then(modifier))
 }

@@ -131,7 +131,7 @@ fun EditableOptionsFrame(
         content = {
             options.forEachIndexed { index, option ->
                 OptionSkeleton(
-                    prefix = {
+                    leading = {
                         TooltipBox(
                             positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                             state = rememberTooltipState(),
@@ -193,7 +193,7 @@ fun EditableOptionsFrame(
 
             Box {
                 OptionSkeleton(
-                    prefix = {
+                    leading = {
                         Checkbox(
                             checked = false,
                             enabled = false,

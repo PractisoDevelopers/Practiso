@@ -304,7 +304,7 @@ fun LibraryApp(
                 flatContent(
                     value = dimensions,
                     caption = {
-                        SectionCaption(stringResource(Res.string.dimensions_para))
+                        SectionCaption(pluralStringResource(Res.plurals.dimensions_para, dimensions?.size ?: 0))
                     },
                     content = {
                         var removalDialogExpanded by remember { mutableStateOf(false) }

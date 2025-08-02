@@ -35,7 +35,10 @@
     <string name="import_archive_title">Import Archive</string>
     <string name="templates_para">Templates</string>
     <string name="questions_para">Questions</string>
-    <string name="dimensions_para">Dimensions</string>
+    <plurals name="dimensions_para">
+        <item quantity="one">Dimension</item>
+        <item quantity="other">Dimensions</item>
+    </plurals>
     <string name="library_is_empty_para">Library is empty</string>
     <string name="add_item_to_get_started_para">Add item to get started</string>
     <string name="new_question_para">New question</string>
@@ -253,4 +256,10 @@
     <string name="close_para">Close</string>
     <string name="community_para">Community</string>
     <string name="show_all_span">show all</string>
+    <plurals name="archives_para">
+        <item quantity="one">Archive</item>
+        <item quantity="other">Archives</item>
+    </plurals>
+    <string name="likes_para">Likes</string>
+    <string name="downloads_para">Downloads</string>
 </resources>

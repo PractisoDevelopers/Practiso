@@ -34,7 +34,9 @@
     <string name="import_archive_title">导入存档</string>
     <string name="templates_para">模板</string>
     <string name="questions_para">题目</string>
-    <string name="dimensions_para">聚类</string>
+    <plurals name="dimensions_para">
+        <item quantity="other">聚类</item>
+    </plurals>
     <string name="library_is_empty_para">题库为空</string>
     <string name="add_item_to_get_started_para">添加项目以开始</string>
     <string name="new_question_para">新题目</string>
@@ -234,4 +236,7 @@
     <string name="exclude_para">排除</string>
     <string name="categorize_para">归类</string>
     <string name="close_para">关闭</string>
+    <plurals name="archives_para">
+        <item quantity="other">存档</item>
+    </plurals>
 </resources>

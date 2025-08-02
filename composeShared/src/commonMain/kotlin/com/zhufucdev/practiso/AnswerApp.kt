@@ -460,7 +460,7 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                 }
 
                                 OptionSkeleton(
-                                    prefix = {
+                                    leading = {
                                         if (correctChoices <= 1) {
                                             RadioButton(
                                                 selected = checked,

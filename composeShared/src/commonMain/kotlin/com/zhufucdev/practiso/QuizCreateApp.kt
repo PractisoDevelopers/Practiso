@@ -148,6 +148,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.add_frame_para
@@ -661,7 +662,7 @@ private fun SampleImageFrame() {
 private fun SampleOptionsFrame() {
     OptionsFrameSkeleton {
         repeat(4) {
-            OptionSkeleton(prefix = {
+            OptionSkeleton(leading = {
                 RadioButton(
                     selected = false, onClick = null
                 )
@@ -751,7 +752,7 @@ private fun CategorizeDialog(
         ) {
             item {
                 Text(
-                    stringResource(Res.string.dimensions_para),
+            pluralStringResource(Res.plurals.dimensions_para, 2),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = PaddingSmall).animateItem()
                 )

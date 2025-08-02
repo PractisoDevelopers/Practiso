@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 data class ArchiveMetadata(
     val id: String,
     val name: String,
+    val downloads: Int,
+    val likes: Int,
     val ownerName: String?,
     val uploadTime: Instant,
     val updateTime: Instant,

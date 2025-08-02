@@ -34,7 +34,9 @@
     <string name="import_archive_title">Import Archive</string>
     <string name="templates_para">範本</string>
     <string name="questions_para">題目</string>
-    <string name="dimensions_para">聚類</string>
+    <plurals name="dimensions_para">
+        <item quantity="other">聚類</item>
+    </plurals>
     <string name="library_is_empty_para">題庫為空</string>
     <string name="add_item_to_get_started_para">新增項目以開始</string>
     <string name="new_question_para">新題目</string>
@@ -234,4 +236,7 @@
     <string name="exclude_para">Exclude</string>
     <string name="categorize_para">Categorize</string>
     <string name="close_para">Close</string>
+    <plurals name="archives_para">
+        <item quantity="other">封存</item>
+    </plurals>
 </resources>
