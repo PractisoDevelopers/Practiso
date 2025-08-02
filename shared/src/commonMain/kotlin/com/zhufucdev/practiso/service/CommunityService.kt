@@ -25,8 +25,10 @@ class CommunityService(endpoint: String = DEFAULT_COMMUNITY_SERVER_URL) {
 
                     response = client.getArchiveList(sortOptions, response.next)
                     emit(response.page)
+                    pageCompleteChannel.send(Unit)
                 }
-                pageCompleteChannel.close(IllegalStateException("Already on the last page."))
+                pageRequestChannel.close(LastPageException)
+                pageCompleteChannel.close(LastPageException)
             }
 
             override suspend fun mountNext() {
@@ -55,5 +57,7 @@ interface Paginated<T> {
      */
     suspend fun mountNext()
 }
+
+object LastPageException : IllegalStateException("Already on the last page.")
 
 const val DEFAULT_COMMUNITY_SERVER_URL = "https://opacity.zhufucdev.com"
