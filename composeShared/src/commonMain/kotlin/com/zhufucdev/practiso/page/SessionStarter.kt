@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +26,6 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,13 +34,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.composable.DialogContentSkeleton
+import com.zhufucdev.practiso.composable.DialogWithTextInput
 import com.zhufucdev.practiso.composable.DimensionSkeleton
 import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.QuizSkeleton
@@ -54,7 +51,6 @@ import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.platform.createOptionView
-import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
@@ -261,8 +257,7 @@ fun SessionStarter(
                 shape = FloatingActionButtonDefaults.extendedFabShape,
                 modifier = Modifier.pseudoClickable().imePadding()
             ) {
-                DialogContentSkeleton(
-                    modifier = Modifier.padding(PaddingBig).fillMaxWidth(),
+                DialogWithTextInput(
                     icon = {
                         Icon(
                             painter = painterResource(Res.drawable.baseline_flag_checkered),
@@ -274,24 +269,19 @@ fun SessionStarter(
                             stringResource(Res.string.create_session_para),
                             style = MaterialTheme.typography.titleMedium
                         )
-                    }
-                ) {
-                    OutlinedTextField(
-                        value = model.newSessionName,
-                        onValueChange = { model.newSessionName = it },
-                        label = { Text(stringResource(Res.string.session_name_para)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall, Alignment.End),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    },
+                    inputValue = model.newSessionName,
+                    onInputValueChange = { model.newSessionName = it },
+                    singleLine = true,
+                    label = { Text(stringResource(Res.string.session_name_para)) },
+                    negativeButton = {
                         OutlinedButton(
                             onClick = { coroutine.launch { collapse() } }
                         ) {
                             Text(stringResource(Res.string.cancel_para))
                         }
+                    },
+                    positiveButton = {
                         Button(
                             enabled = model.newSessionName.isNotBlank(),
                             onClick = {
@@ -305,7 +295,7 @@ fun SessionStarter(
                             Text(stringResource(Res.string.confirm_para))
                         }
                     }
-                }
+                )
             }
         }
     ) {

@@ -14,6 +14,8 @@ private const val KeyShowAccuracy = "show_accuracy"
 private const val KeyQuizAutoplay = "quiz_autoplay"
 private const val KeyFeiModelId = "fei_model_id"
 private const val KeyFeiCompatibility = "fei_compatibility"
+private const val KeyCommunityServerUrl = "community_server_url"
+private const val KeyCommunityUseCustomServer = "community_use_custom_ser"
 
 class SettingsModel(private val settings: Settings, val coroutineScope: CoroutineScope) {
     val answerPageStyle = MutableStateFlow(
@@ -28,6 +30,10 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
     val feiModelIndex = MutableStateFlow(settings.getInt(KeyFeiModelId, defaultValue = 0))
     val feiCompatibilityMode =
         MutableStateFlow(settings.getBoolean(KeyFeiCompatibility, defaultValue = false))
+    val communityUseCustomServer =
+        MutableStateFlow(settings.getBoolean(KeyCommunityUseCustomServer, defaultValue = false))
+    val communityServerUrl =
+        MutableStateFlow(settings.getStringOrNull(KeyCommunityServerUrl))
 
     init {
         with(coroutineScope) {
@@ -54,6 +60,20 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
             launch {
                 feiCompatibilityMode.collectLatest {
                     settings.putBoolean(KeyFeiCompatibility, it)
+                }
+            }
+            launch {
+                communityServerUrl.collectLatest {
+                    if (it == null) {
+                        settings.remove(KeyCommunityServerUrl)
+                    } else {
+                        settings.putString(KeyCommunityServerUrl, it)
+                    }
+                }
+            }
+            launch {
+                communityUseCustomServer.collectLatest {
+                    settings.putBoolean(KeyCommunityUseCustomServer, it)
                 }
             }
         }

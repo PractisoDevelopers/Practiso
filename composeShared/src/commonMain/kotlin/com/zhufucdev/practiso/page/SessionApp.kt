@@ -46,7 +46,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -89,7 +88,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.Database
-import com.zhufucdev.practiso.composable.DialogContentSkeleton
+import com.zhufucdev.practiso.composable.DialogWithTextInput
 import com.zhufucdev.practiso.composable.FabCreate
 import com.zhufucdev.practiso.composable.FlipCard
 import com.zhufucdev.practiso.composable.HorizontalControl
@@ -1439,40 +1438,33 @@ private fun SessionRenameDialog(
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
-        Card {
-            DialogContentSkeleton(
-                icon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                title = { Text(stringResource(Res.string.rename_session_para)) },
-                modifier = Modifier.padding(PaddingBig)
-            ) {
-                OutlinedTextField(
-                    value = nameBuffer,
-                    onValueChange = { nameBuffer = it },
-                    label = { Text(stringResource(Res.string.session_name_para)) },
-                    singleLine = true
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall, Alignment.End),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedButton(
-                        onClick = onDismissRequest
-                    ) {
-                        Text(stringResource(Res.string.cancel_para))
-                    }
-                    Button(
-                        enabled = nameBuffer.isNotBlank(),
-                        onClick = {
-                            coroutine.launch {
-                                onRename(nameBuffer)
-                                onDismissRequest()
-                            }
+        DialogWithTextInput(
+            icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+            title = { Text(stringResource(Res.string.rename_session_para)) },
+            inputValue = nameBuffer,
+            onInputValueChange = { nameBuffer = it },
+            label = { Text(stringResource(Res.string.session_name_para)) },
+            singleLine = true,
+            positiveButton = {
+                Button(
+                    enabled = nameBuffer.isNotBlank(),
+                    onClick = {
+                        coroutine.launch {
+                            onRename(nameBuffer)
+                            onDismissRequest()
                         }
-                    ) {
-                        Text(stringResource(Res.string.rename_para))
                     }
+                ) {
+                    Text(stringResource(Res.string.rename_para))
+                }
+            },
+            negativeButton = {
+                OutlinedButton(
+                    onClick = onDismissRequest
+                ) {
+                    Text(stringResource(Res.string.cancel_para))
                 }
             }
-        }
+        )
     }
 }
