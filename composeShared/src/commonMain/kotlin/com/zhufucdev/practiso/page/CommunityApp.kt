@@ -149,7 +149,7 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
                 contentType = { "archive" }) { index ->
                 OptionItem(
                     modifier = Modifier.clickable(onClick = {}),
-                    separator = index != archives.lastIndex
+                    separator = isMountingNextPage || index != archives.lastIndex
                 ) {
                     ArchiveOption(
                         modifier = Modifier.fillMaxWidth(),
@@ -161,7 +161,7 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
 
         if (archives == null || isMountingNextPage) {
             items(5) {
-                OptionItem(separator = it != 5) {
+                OptionItem(separator = it != 4) {
                     PractisoOptionSkeleton()
                 }
             }
