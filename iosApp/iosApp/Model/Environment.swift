@@ -1,5 +1,5 @@
 import Foundation
-import SwiftUICore
+import SwiftUI
 @preconcurrency import ComposeApp
 
 struct ImageServiceKey : EnvironmentKey {

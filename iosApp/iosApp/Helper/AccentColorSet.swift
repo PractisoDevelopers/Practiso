@@ -1,5 +1,5 @@
 import Foundation
-import SwiftUICore
+import SwiftUI
 
 extension Color {
     init(accentColorSet: UInt) {
