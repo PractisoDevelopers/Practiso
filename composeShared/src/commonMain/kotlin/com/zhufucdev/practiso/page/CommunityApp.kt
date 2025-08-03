@@ -33,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.Download
+import com.zhufucdev.practiso.DownloadDispatcher
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
@@ -58,6 +59,7 @@ import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import opacity.client.DimensionMetadata
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -339,10 +341,16 @@ private fun ArchiveOption(
         PlainTooltipBox(
             text = stringResource(Res.string.download_and_import_para)
         ) {
-            val downloadState by Dispatchers.Download[model.taskId].collectAsState(Dispatchers.IO)
+            val downloadState by produceState<DownloadState?>(null) {
+                withContext(Dispatchers.IO) {
+                    DownloadDispatcher[model.taskId].collect {
+                        value = it
+                    }
+                }
+            }
             Box(Modifier.size(32.dp, 32.dp)) {
                 when (val state = downloadState) {
-                    null -> IconButton(
+                    null, is DownloadState.Completed -> IconButton(
                         onClick = onDownloadRequest,
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -352,7 +360,7 @@ private fun ArchiveOption(
                         )
                     }
 
-                    is DownloadState.Configure, is DownloadState.Preparing, is DownloadState.Completed -> {
+                    is DownloadState.Configure, is DownloadState.Preparing -> {
                         CircularProgressIndicator(Modifier.fillMaxSize())
                     }
 
