@@ -170,6 +170,7 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
 }
 
 private val DimensionCardWidth = 200.dp
+private const val DEFAULT_DIMOJI = "📝"
 
 @Composable
 private fun DimensionCard(
@@ -181,7 +182,7 @@ private fun DimensionCard(
         modifier = modifier,
         onClick = onClick,
         emoji = {
-            Text(model.emoji ?: "📝")
+            Text(model.emoji ?: DEFAULT_DIMOJI)
         },
         name = {
             Text(model.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -259,27 +260,48 @@ private fun ArchiveOption(modifier: Modifier = Modifier, model: ArchiveMetadata)
             )
         },
         preview = {
-            FlowRow(
-                verticalArrangement = Arrangement.Center,
-                horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
-            ) {
-                val lineHeight = LocalTextStyle.current.lineHeight.value.dp
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painterResource(Res.drawable.outline_download),
-                        contentDescription = stringResource(Res.string.downloads_para),
-                        modifier = Modifier.size(lineHeight, lineHeight)
-                    )
-                    Text(model.downloads.toString())
+            Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
+                FlowRow(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+                ) {
+                    model.dimensions.take(5).forEach {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                it.emoji ?: DEFAULT_DIMOJI,
+                                fontFamily = NotoEmojiFontFamily()
+                            )
+                            Text(
+                                "${it.name} (${it.quizCount})",
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painterResource(Res.drawable.outline_heart),
-                        contentDescription = stringResource(Res.string.likes_para),
-                        modifier = Modifier.size(lineHeight, lineHeight)
-                    )
-                    Text(model.likes.toString())
+                FlowRow(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
+                ) {
+                    val lineHeight = LocalTextStyle.current.lineHeight.value.dp
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(Res.drawable.outline_download),
+                            contentDescription = stringResource(Res.string.downloads_para),
+                            modifier = Modifier.size(lineHeight, lineHeight)
+                        )
+                        Text(model.downloads.toString())
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(Res.drawable.outline_heart),
+                            contentDescription = stringResource(Res.string.likes_para),
+                            modifier = Modifier.size(lineHeight, lineHeight)
+                        )
+                        Text(model.likes.toString())
+                    }
                 }
             }
         }
