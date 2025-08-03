@@ -42,7 +42,7 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
     val ArchiveMetadata.resourceUrl: Url
         get() = buildUrl {
             takeFrom(endpoint)
-            appendPathSegments("archives", id)
+            appendPathSegments("archive", id)
         }
 }
 
