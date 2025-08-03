@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toOkioPath
+import java.io.File
 
 object AndroidPlatform : Platform() {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
@@ -40,6 +41,13 @@ object AndroidPlatform : Platform() {
 
     override val logicalProcessorsCount: Int
         get() = Runtime.getRuntime().availableProcessors()
+
+    override fun createTemporaryFile(prefix: String, suffix: String): Path {
+        if (prefix.contains("..") || prefix.contains("/")) {
+            throw IllegalArgumentException("Path penetration in prefix.")
+        }
+        return File.createTempFile(prefix, suffix, SharedContext.cacheDir).toOkioPath()
+    }
 }
 
 actual fun getPlatform(): Platform = AndroidPlatform

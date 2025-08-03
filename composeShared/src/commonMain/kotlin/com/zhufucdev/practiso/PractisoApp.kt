@@ -155,7 +155,7 @@ fun PractisoApp(navController: NavHostController) {
                 composable(TopLevelDestination.Community.route) {
                     AdaptiveApp(navController, TopLevelDestination.Community, searchVM) {
                         ScaffoldedApp(it, searchVM) {
-                            CommunityApp(model = communityVM)
+                            CommunityApp(communityVM = communityVM)
                         }
                     }
                 }

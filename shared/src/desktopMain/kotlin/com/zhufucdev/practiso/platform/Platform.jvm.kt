@@ -8,8 +8,10 @@ import com.github.tkuenneth.nativeparameterstoreaccess.MacOSDefaults
 import com.github.tkuenneth.nativeparameterstoreaccess.WindowsRegistry
 import com.zhufucdev.practiso.database.AppDatabase
 import okio.FileSystem
+import okio.Path
 import okio.Path.Companion.toOkioPath
 import java.awt.Color
+import java.io.File
 import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
@@ -49,6 +51,13 @@ abstract class JVMPlatform : Platform() {
 
     override val logicalProcessorsCount: Int
         get() = Runtime.getRuntime().availableProcessors()
+
+    override fun createTemporaryFile(prefix: String, suffix: String): Path {
+        if (prefix.contains("..") || prefix.contains("/")) {
+            throw IllegalArgumentException("Path penetration in prefix.")
+        }
+        return File.createTempFile(prefix, suffix).toOkioPath()
+    }
 }
 
 fun getUserHome() = System.getProperty("user.home")!!

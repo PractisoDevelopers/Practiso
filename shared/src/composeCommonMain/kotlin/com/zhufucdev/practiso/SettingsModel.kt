@@ -81,7 +81,9 @@ class SettingsModel(private val settings: Settings, val coroutineScope: Coroutin
 }
 
 @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-val AppSettings = with(CoroutineScope(newSingleThreadContext("AppSettings"))) {
+object AppSettingsScope : CoroutineScope by CoroutineScope(newSingleThreadContext("AppSettings"))
+
+val AppSettings = with(AppSettingsScope) {
     val model = SettingsModel(getDefaultSettingsFactory().create(), this)
     launch {
         model.feiModelIndex.collectLatest { modelIdx ->

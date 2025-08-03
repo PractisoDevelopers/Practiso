@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,7 +19,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,26 +39,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.Download
 import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SingleLineTextShimmer
 import com.zhufucdev.practiso.composable.shimmerBackground
+import com.zhufucdev.practiso.datamodel.ArchiveHandle
+import com.zhufucdev.practiso.platform.DownloadState
 import com.zhufucdev.practiso.style.NotoEmojiFontFamily
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
+import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import opacity.client.ArchiveMetadata
+import kotlinx.coroutines.launch
 import opacity.client.DimensionMetadata
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.archives_para
+import resources.baseline_cloud_download
 import resources.dimensions_para
+import resources.download_and_import_para
 import resources.downloads_para
 import resources.likes_para
 import resources.n_questions_span
@@ -64,14 +76,17 @@ import resources.show_all_span
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory)) {
-    val archives by model.archives.collectAsState(null, Dispatchers.IO)
-    val dimensions by model.dimensions.collectAsState(null, Dispatchers.IO)
+fun CommunityApp(
+    communityVM: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory),
+    importVM: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
+) {
+    val archives by communityVM.archives.collectAsState(null, Dispatchers.IO)
+    val dimensions by communityVM.dimensions.collectAsState(null, Dispatchers.IO)
 
     val scrollState = rememberLazyListState()
     val leadingItemIndex by remember(scrollState) { derivedStateOf { scrollState.firstVisibleItemIndex } }
-    val isMountingNextPage by model.isMountingNextPage.collectAsState()
-    val hasNextPage by model.hasNextPage.collectAsState(true)
+    val isMountingNextPage by communityVM.isMountingNextPage.collectAsState()
+    val hasNextPage by communityVM.hasNextPage.collectAsState(true)
 
     LaunchedEffect(leadingItemIndex, isMountingNextPage, hasNextPage) {
         if (!hasNextPage || isMountingNextPage) {
@@ -83,7 +98,7 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
             return@LaunchedEffect
         }
 
-        model.mountNextPage()
+        communityVM.mountNextPage()
     }
 
     LazyColumn(state = scrollState) {
@@ -145,7 +160,7 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
         archives?.let { archives ->
             items(
                 count = archives.size,
-                key = { "archive#${archives[it].id}" },
+                key = { "archive#${archives[it].metadata.id}" },
                 contentType = { "archive" }) { index ->
                 OptionItem(
                     modifier = Modifier.clickable(onClick = {}),
@@ -153,7 +168,13 @@ fun CommunityApp(model: CommunityAppViewModel = viewModel(factory = CommunityApp
                 ) {
                     ArchiveOption(
                         modifier = Modifier.fillMaxWidth(),
-                        model = archives[index]
+                        model = archives[index],
+                        onDownloadRequest = {
+                            importVM.viewModelScope.launch {
+                                val pack = archives[index].download()
+                                importVM.event.import.trySend(pack)
+                            }
+                        }
                     )
                 }
             }
@@ -248,64 +269,103 @@ private fun DimensionCardSkeleton(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ArchiveOption(modifier: Modifier = Modifier, model: ArchiveMetadata) {
-    PractisoOptionSkeleton(
-        modifier = modifier,
-        label = {
-            Text(
-                model.name.removeSuffix(".psarchive"),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        preview = {
-            Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
-                FlowRow(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
-                ) {
-                    model.dimensions.take(5).forEach {
+private fun ArchiveOption(
+    modifier: Modifier = Modifier,
+    model: ArchiveHandle,
+    onDownloadRequest: () -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        PractisoOptionSkeleton(
+            label = {
+                Text(
+                    model.metadata.name.removeSuffix(".psarchive"),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            preview = {
+                Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
+                    FlowRow(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+                    ) {
+                        model.metadata.dimensions.take(5).forEach {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    it.emoji ?: DEFAULT_DIMOJI,
+                                    fontFamily = NotoEmojiFontFamily()
+                                )
+                                Text(
+                                    "${it.name} (${it.quizCount})",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    FlowRow(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
+                    ) {
+                        val lineHeight = LocalTextStyle.current.lineHeight.value.dp
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                it.emoji ?: DEFAULT_DIMOJI,
-                                fontFamily = NotoEmojiFontFamily()
+                            Icon(
+                                painterResource(Res.drawable.outline_download),
+                                contentDescription = stringResource(Res.string.downloads_para),
+                                modifier = Modifier.size(lineHeight, lineHeight)
                             )
-                            Text(
-                                "${it.name} (${it.quizCount})",
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                            Text(model.metadata.downloads.toString())
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painterResource(Res.drawable.outline_heart),
+                                contentDescription = stringResource(Res.string.likes_para),
+                                modifier = Modifier.size(lineHeight, lineHeight)
                             )
+                            Text(model.metadata.likes.toString())
                         }
                     }
                 }
-
-                FlowRow(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
-                ) {
-                    val lineHeight = LocalTextStyle.current.lineHeight.value.dp
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+            }
+        )
+        PlainTooltipBox(
+            text = stringResource(Res.string.download_and_import_para)
+        ) {
+            val downloadState by Dispatchers.Download[model.taskId].collectAsState(Dispatchers.IO)
+            Box(Modifier.size(32.dp, 32.dp)) {
+                when (val state = downloadState) {
+                    null -> IconButton(
+                        onClick = onDownloadRequest,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                         Icon(
-                            painterResource(Res.drawable.outline_download),
-                            contentDescription = stringResource(Res.string.downloads_para),
-                            modifier = Modifier.size(lineHeight, lineHeight)
+                            painterResource(Res.drawable.baseline_cloud_download),
+                            contentDescription = stringResource(Res.string.download_and_import_para)
                         )
-                        Text(model.downloads.toString())
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painterResource(Res.drawable.outline_heart),
-                            contentDescription = stringResource(Res.string.likes_para),
-                            modifier = Modifier.size(lineHeight, lineHeight)
+                    is DownloadState.Configure, is DownloadState.Preparing, is DownloadState.Completed -> {
+                        CircularProgressIndicator(Modifier.fillMaxSize())
+                    }
+
+                    is DownloadState.Downloading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.fillMaxSize(),
+                            progress = { state.progress }
                         )
-                        Text(model.likes.toString())
                     }
                 }
             }
         }
-    )
+    }
 }
 
 @Composable

@@ -1,32 +1,36 @@
 package com.zhufucdev.practiso.service
 
+import com.zhufucdev.practiso.datamodel.ArchiveHandle
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
-import opacity.client.ArchiveMetadata
 import opacity.client.DimensionMetadata
 import opacity.client.OpacityClient
 import opacity.client.SortOptions
 
-class CommunityService(endpoint: String = DEFAULT_COMMUNITY_SERVER_URL) {
+class CommunityService(
+    endpoint: String = DEFAULT_COMMUNITY_SERVER_URL,
+    private val downloadScope: CoroutineScope,
+) {
     private val client = OpacityClient(endpoint, PlatformHttpClientFactory)
 
     fun getArchivePagination(sortOptions: SortOptions = SortOptions()) =
-        object : Paginated<ArchiveMetadata> {
+        object : Paginated<ArchiveHandle> {
             private val pageRequestChannel = Channel<Unit>()
             private val pageCompleteChannel = Channel<Unit>()
 
-            override val items: Flow<List<ArchiveMetadata>> = flow {
+            override val items: Flow<List<ArchiveHandle>> = flow {
                 var response = client.getArchiveList(sortOptions)
-                emit(response.page)
+                emit(response.page.map { ArchiveHandle(it, client, downloadScope) })
                 while (response.next != null) {
                     pageRequestChannel.receive()
 
                     response = client.getArchiveList(sortOptions, response.next)
-                    emit(response.page)
+                    emit(response.page.map { ArchiveHandle(it, client, downloadScope) })
                     pageCompleteChannel.send(Unit)
                 }
                 hasNext.tryEmit(false)

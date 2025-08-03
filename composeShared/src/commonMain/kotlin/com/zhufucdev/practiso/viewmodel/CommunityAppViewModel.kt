@@ -5,10 +5,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.AppSettings
+import com.zhufucdev.practiso.AppSettingsScope
+import com.zhufucdev.practiso.Download
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.DEFAULT_COMMUNITY_SERVER_URL
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -77,15 +81,22 @@ class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewMo
     companion object {
         @OptIn(ExperimentalCoroutinesApi::class)
         val Factory = viewModelFactory {
+            var downloadScope: CoroutineScope? = null
+            val service = AppSettings.communityServerUrl.combine(
+                AppSettings.communityUseCustomServer,
+                ::Pair
+            )
+                .mapLatest { (server, use) ->
+                    downloadScope?.cancel()
+                    downloadScope = CoroutineScope(Dispatchers.Download)
+                    CommunityService(
+                        server.takeIf { use } ?: DEFAULT_COMMUNITY_SERVER_URL,
+                        downloadScope = downloadScope
+                    )
+                }
+                .shareIn(AppSettingsScope, started = SharingStarted.Lazily, replay = 1)
             initializer {
-                CommunityAppViewModel(
-                    AppSettings.communityServerUrl.combine(
-                        AppSettings.communityUseCustomServer,
-                        ::Pair
-                    ).mapLatest { (server, use) ->
-                        CommunityService(server.takeIf { use } ?: DEFAULT_COMMUNITY_SERVER_URL)
-                    }
-                )
+                CommunityAppViewModel(service)
             }
         }
     }

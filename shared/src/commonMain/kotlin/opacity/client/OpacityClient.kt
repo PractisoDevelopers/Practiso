@@ -4,7 +4,9 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
+import io.ktor.http.buildUrl
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 
@@ -36,5 +38,11 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
         }
         return response.body()
     }
+
+    val ArchiveMetadata.resourceUrl: Url
+        get() = buildUrl {
+            takeFrom(endpoint)
+            appendPathSegments("archives", id)
+        }
 }
 

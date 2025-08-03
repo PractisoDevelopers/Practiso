@@ -267,4 +267,5 @@
     <string name="custom_server_url_para">Custom server URL</string>
     <string name="not_specified_para">Not specified</string>
     <string name="failed_to_load_next_page_para">Failed to load next page</string>
+    <string name="download_and_import_para">Download &amp; Import</string>
 </resources>
