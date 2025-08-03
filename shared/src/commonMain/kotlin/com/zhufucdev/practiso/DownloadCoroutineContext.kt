@@ -20,8 +20,9 @@ object DownloadDispatcher : CoroutineDispatcher() {
         context: CoroutineContext,
         block: Runnable,
     ) {
-        if (context is DownloadContext && get(context.taskId).value !is DownloadState.Completed) {
-            _tasks[context.taskId] = context
+        val downloadCtx = context[DownloadContext.Key]
+        if (downloadCtx != null && get(downloadCtx.taskId).value !is DownloadState.Completed) {
+            _tasks[downloadCtx.taskId] = downloadCtx
         }
         Dispatchers.IO.dispatch(context, block)
     }

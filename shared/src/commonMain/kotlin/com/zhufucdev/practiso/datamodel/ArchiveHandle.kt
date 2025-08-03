@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import opacity.client.ArchiveMetadata
 import opacity.client.OpacityClient
 
@@ -30,13 +29,11 @@ class ArchiveHandle(
         val destination = getPlatform().createTemporaryFile("remote-archive", suffix = ".psarchive")
 
         with(coroutineScope) {
-            launch {
-                withContext(Dispatchers.Download + DownloadContext(taskId)) {
-                    downloadSingle(
-                        file = DownloadableFile(metadata.name, url),
-                        destination = destination
-                    )
-                }.collect {
+            launch(DownloadContext(taskId)) {
+                downloadSingle(
+                    file = DownloadableFile(metadata.name, url),
+                    destination = destination
+                ).collect {
                     Dispatchers.Download[taskId] = it
                 }
             }
