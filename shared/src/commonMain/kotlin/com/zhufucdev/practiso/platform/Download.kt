@@ -15,12 +15,17 @@ expect fun downloadSingle(file: DownloadableFile, destination: Path): Flow<Downl
 sealed class DownloadState {
     data class Preparing(val filesFound: List<DownloadableFile>) : DownloadState()
     data class Configure(val build: SendChannel<Configuration.() -> Unit>) : DownloadState()
+
+    /**
+     * @param progress ranging [0, 1) representing [no progress, completed),
+     * though completion has its own state.
+     */
     data class Downloading(val file: DownloadableFile, val progress: Float) : DownloadState()
     data class Completed(val file: DownloadableFile) : DownloadState()
 }
 
 data class Configuration(
-    var discretion: DownloadDiscretion = DownloadDiscretion.Immediate
+    var discretion: DownloadDiscretion = DownloadDiscretion.Immediate,
 )
 
 enum class DownloadDiscretion {
@@ -49,7 +54,11 @@ class DownloadException : Exception {
 }
 
 sealed class GroupedDownloadState {
-    data class Planed(val filesToDownload: List<DownloadableFile>, val configure: suspend (Configuration.() -> Unit) -> Unit) : GroupedDownloadState()
+    data class Planed(
+        val filesToDownload: List<DownloadableFile>,
+        val configure: suspend (Configuration.() -> Unit) -> Unit,
+    ) : GroupedDownloadState()
+
     data class Progress(
         val ongoingDownloads: Map<DownloadableFile, Float>,
         val completedFiles: List<DownloadableFile>,
