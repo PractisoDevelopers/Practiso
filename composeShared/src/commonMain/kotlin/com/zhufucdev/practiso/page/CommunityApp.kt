@@ -52,6 +52,7 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.datamodel.ArchiveHandle
 import com.zhufucdev.practiso.platform.DownloadState
 import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.NotoEmojiFontFamily
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -179,13 +180,14 @@ fun CommunityApp(
                                 val pack = handle.download()
                                 importVM.event.import.trySend(pack)
                                 // remove cache afterwards
-                                importVM.event.importFinish.first()
-                                (DownloadDispatcher[handle.taskId].value?.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
-                                    ?.destination
-                                    ?.let {
-                                        DownloadDispatcher[handle.taskId] = null
-                                        getPlatform().filesystem.delete(it)
-                                    }
+                                if (importVM.event.importFinish.first() == ImportState.IdleReason.Completion) {
+                                    (DownloadDispatcher[handle.taskId].value?.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
+                                        ?.destination
+                                        ?.let {
+                                            DownloadDispatcher[handle.taskId] = null
+                                            getPlatform().filesystem.delete(it)
+                                        }
+                                }
                             }
                         }
                     )
