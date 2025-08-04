@@ -8,9 +8,7 @@ import com.zhufucdev.practiso.platform.DownloadState
 import com.zhufucdev.practiso.platform.DownloadableFile
 import com.zhufucdev.practiso.platform.downloadSingle
 import com.zhufucdev.practiso.platform.getPlatform
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import opacity.client.ArchiveMetadata
 import opacity.client.OpacityClient
@@ -18,11 +16,18 @@ import opacity.client.OpacityClient
 class ArchiveHandle(
     val metadata: ArchiveMetadata,
     private val client: OpacityClient,
-    private val coroutineScope: CoroutineScope,
 ) {
     val taskId = "archive[id=${metadata.id}]"
 
     suspend fun download(): NamedSource {
+        val currentState = DownloadDispatcher[taskId].value
+        if (currentState is DownloadState.Completed) {
+            return NamedSource(
+                metadata.name,
+                getPlatform().filesystem.source(currentState.destination)
+            )
+        }
+
         val url = with(client) {
             metadata.resourceUrl
         }
@@ -43,7 +48,7 @@ class ArchiveHandle(
             }
         }
 
-        val lastState = DownloadDispatcher[taskId].first()
+        val lastState = DownloadDispatcher[taskId].value
         if (lastState !is DownloadState.Completed) {
             throw IllegalStateException("Download not completed. Instead, last state is ${lastState?.let { it::class.simpleName }}.")
         }

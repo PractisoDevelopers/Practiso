@@ -355,7 +355,11 @@ private fun ArchiveOption(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Icon(
-                            painterResource(Res.drawable.baseline_cloud_download),
+                            if (state == null) {
+                                painterResource(Res.drawable.outline_download)
+                            } else {
+                                painterResource(Res.drawable.baseline_cloud_download)
+                            },
                             contentDescription = stringResource(Res.string.download_and_import_para)
                         )
                     }
