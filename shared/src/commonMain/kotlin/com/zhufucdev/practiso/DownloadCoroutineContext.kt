@@ -51,7 +51,7 @@ object DownloadDispatcher : CoroutineDispatcher() {
         states.getOrPut(taskId) { MutableStateFlow(null) }
     }
 
-    suspend operator fun set(taskId: String, state: DownloadState) {
+    suspend operator fun set(taskId: String, state: DownloadState?) {
         (get(taskId) as MutableStateFlow).emit(state)
     }
 }

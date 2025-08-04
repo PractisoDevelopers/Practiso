@@ -51,6 +51,7 @@ import com.zhufucdev.practiso.composable.SingleLineTextShimmer
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.datamodel.ArchiveHandle
 import com.zhufucdev.practiso.platform.DownloadState
+import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.style.NotoEmojiFontFamily
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -58,6 +59,7 @@ import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import opacity.client.DimensionMetadata
@@ -173,8 +175,17 @@ fun CommunityApp(
                         model = archives[index],
                         onDownloadRequest = {
                             importVM.viewModelScope.launch {
-                                val pack = archives[index].download()
+                                val handle = archives[index]
+                                val pack = handle.download()
                                 importVM.event.import.trySend(pack)
+                                // remove cache afterwards
+                                importVM.event.importComplete.first()
+                                (DownloadDispatcher[handle.taskId].value?.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
+                                    ?.destination
+                                    ?.let {
+                                        getPlatform().filesystem.delete(it)
+                                        DownloadDispatcher[handle.taskId] = null
+                                    }
                             }
                         }
                     )
