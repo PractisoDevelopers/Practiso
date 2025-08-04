@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
@@ -24,18 +24,19 @@ import kotlinx.coroutines.sync.Mutex
 
 class ImportViewModel(db: AppDatabase) : ViewModel() {
     private val service = ImportService(db)
-    private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
+    private val _state =
+        MutableStateFlow<ImportState>(ImportState.Idle(ImportState.IdleReason.Initialization))
     private val mutex = Mutex()
 
     val state: StateFlow<ImportState> get() = _state
 
     data class Events(
         val import: Channel<NamedSource> = Channel(),
-        val importComplete: SharedFlow<Unit>,
+        val importComplete: SharedFlow<ImportState.IdleReason>,
     )
 
     val event = Events(
-        importComplete = _state.filter { it is ImportState.Idle }.map { Unit }
+        importComplete = _state.filterIsInstance<ImportState.Idle>().map { it.reason }
             .shareIn(
                 viewModelScope,
                 SharingStarted.Lazily

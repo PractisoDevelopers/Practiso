@@ -28,7 +28,7 @@ import okio.use
 import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface ImportState {
-    data object Idle : ImportState
+    data class Idle(val reason: IdleReason) : ImportState
     data class Unarchiving(val target: String) : ImportState
     data class Confirmation(
         val total: Int,
@@ -45,6 +45,10 @@ sealed interface ImportState {
         val skip: SendChannel<Unit>? = null,
         val ignore: SendChannel<Unit>? = null,
     ) : ImportState
+
+    enum class IdleReason {
+        Initialization, Completion, Cancellation
+    }
 }
 
 class ImportService(private val db: AppDatabase = Database.app) {
@@ -74,7 +78,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
                     }
                 }
             ) {
-                send(ImportState.Idle)
+                send(ImportState.Idle(ImportState.IdleReason.Cancellation))
                 return@channelFlow
             }
         }
@@ -196,7 +200,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
             }
         }
 
-        send(ImportState.Idle)
+        send(ImportState.Idle(ImportState.IdleReason.Completion))
     }
 
     fun import(namedSource: NamedSource): Flow<ImportState> = channelFlow {
@@ -222,7 +226,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
         }
         if (pack == null) {
             cancelChannel.receive()
-            send(ImportState.Idle)
+            send(ImportState.Idle(ImportState.IdleReason.Cancellation))
             return@channelFlow
         }
 
