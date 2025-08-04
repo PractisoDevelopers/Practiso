@@ -72,7 +72,7 @@ actual fun downloadRecursively(
 
                 try {
                     progressChannel.receiveAsFlow()
-                        .map { it.toDownloadState(file) }
+                        .map { it.toDownloadState(file, delegate.fileDestination) }
                         .collect { send(it) }
                 } finally {
                     downloadTask.cancel()
@@ -104,7 +104,7 @@ actual fun downloadSingle(
         SingleFileURLSessionDownloadDelegate(null, destination, updateChannel)
     )
     downloadTask.resume()
-    updateChannel.receiveAsFlow().collect { emit(it.toDownloadState(file)) }
+    updateChannel.receiveAsFlow().collect { emit(it.toDownloadState(file, destination)) }
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
@@ -114,16 +114,16 @@ class SingleFileURLSessionDownloadDelegate internal constructor(
     private val updateChannel: SendChannel<Update>,
 ) : NSObject(),
     NSURLSessionDownloadDelegateProtocol {
+    val fileDestination get() = destination.let { if (fileName != null) it.resolve(fileName) else it }
     override fun URLSession(
         session: NSURLSession,
         downloadTask: NSURLSessionDownloadTask,
         didFinishDownloadingToURL: NSURL,
     ) {
         updateChannel.trySend(Update.Progress(1f))
-        val destinationPath = destination.let { if (fileName != null) it.resolve(fileName) else it }
         memScoped {
             val destinationUrl = alloc<ObjCObjectVar<NSURL?>> {
-                value = destinationPath.toNSURL()
+                value = fileDestination.toNSURL()
             }
 
             val err = alloc<ObjCObjectVar<NSError?>>()
@@ -171,18 +171,23 @@ class SingleFileURLSessionDownloadDelegate internal constructor(
     }
 
     internal sealed class Update {
-        data object Completed : Update()
-        data class Progress(val value: Float) : Update()
+        abstract fun toDownloadState(
+            file: DownloadableFile,
+            destination: Path,
+        ): DownloadState
+
+        data object Completed : Update() {
+            override fun toDownloadState(
+                file: DownloadableFile,
+                destination: Path,
+            ): DownloadState = DownloadState.Completed(file, destination)
+        }
+
+        data class Progress(val value: Float) : Update() {
+            override fun toDownloadState(
+                file: DownloadableFile,
+                destination: Path,
+            ): DownloadState = DownloadState.Downloading(file, value)
+        }
     }
 }
-
-internal fun SingleFileURLSessionDownloadDelegate.Update.toDownloadState(file: DownloadableFile): DownloadState =
-    when (this) {
-        SingleFileURLSessionDownloadDelegate.Update.Completed -> {
-            DownloadState.Completed(file)
-        }
-
-        is SingleFileURLSessionDownloadDelegate.Update.Progress -> {
-            DownloadState.Downloading(file, value)
-        }
-    }

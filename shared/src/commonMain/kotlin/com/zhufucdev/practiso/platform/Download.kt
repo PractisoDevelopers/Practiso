@@ -21,7 +21,7 @@ sealed class DownloadState {
      * though completion has its own state.
      */
     data class Downloading(val file: DownloadableFile, val progress: Float) : DownloadState()
-    data class Completed(val file: DownloadableFile) : DownloadState()
+    data class Completed(val file: DownloadableFile, val destination: Path) : DownloadState()
 }
 
 data class Configuration(

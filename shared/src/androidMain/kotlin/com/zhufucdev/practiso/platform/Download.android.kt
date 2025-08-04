@@ -3,6 +3,7 @@ package com.zhufucdev.practiso.platform
 import android.app.DownloadManager
 import android.net.Uri
 import androidx.core.content.getSystemService
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.zhufucdev.practiso.SharedContext
 import kotlinx.coroutines.async
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.runningFold
 import okio.Path
+import okio.Path.Companion.toOkioPath
 import kotlin.time.Duration.Companion.milliseconds
 
 actual fun downloadRecursively(
@@ -160,7 +162,7 @@ private val Int.dmErrorDescription
 sealed class DMState {
     data class Completed(val destination: Uri) : DMState() {
         override fun toDownloadState(file: DownloadableFile): DownloadState {
-            return DownloadState.Completed(file)
+            return DownloadState.Completed(file, destination.toFile().toOkioPath())
         }
     }
 

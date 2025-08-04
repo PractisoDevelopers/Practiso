@@ -74,5 +74,5 @@ private fun HttpClient.downloadFileTo(
     }
     sink.close()
 
-    emit(DownloadState.Completed(file))
+    emit(DownloadState.Completed(file, path))
 }
