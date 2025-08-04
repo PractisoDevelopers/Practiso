@@ -7,7 +7,6 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Runnable
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -57,7 +56,7 @@ object DownloadDispatcher : CoroutineDispatcher() {
 }
 
 val Dispatchers.Download: CoroutineContext
-    get() = DownloadDispatcher + SupervisorJob() + CoroutineExceptionHandler { context, exception ->
+    get() = DownloadDispatcher + CoroutineExceptionHandler { context, exception ->
         val downloadCtx = context[DownloadContext.Key]
         if (downloadCtx != null) {
             states[downloadCtx.taskId]?.tryEmit(null)

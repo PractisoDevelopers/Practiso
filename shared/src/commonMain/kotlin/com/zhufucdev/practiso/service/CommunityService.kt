@@ -25,12 +25,12 @@ class CommunityService(
 
             override val items: Flow<List<ArchiveHandle>> = flow {
                 var response = client.getArchiveList(sortOptions)
-                emit(response.page.map { ArchiveHandle(it, client) })
+                emit(response.page.map { ArchiveHandle(it, client, downloadScope) })
                 while (response.next != null) {
                     pageRequestChannel.receive()
 
                     response = client.getArchiveList(sortOptions, response.next)
-                    emit(response.page.map { ArchiveHandle(it, client) })
+                    emit(response.page.map { ArchiveHandle(it, client, downloadScope) })
                     pageCompleteChannel.send(Unit)
                 }
                 hasNext.tryEmit(false)

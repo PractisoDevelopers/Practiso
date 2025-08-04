@@ -8,14 +8,16 @@ import com.zhufucdev.practiso.platform.DownloadState
 import com.zhufucdev.practiso.platform.DownloadableFile
 import com.zhufucdev.practiso.platform.downloadSingle
 import com.zhufucdev.practiso.platform.getPlatform
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import opacity.client.ArchiveMetadata
 import opacity.client.OpacityClient
 
 class ArchiveHandle(
     val metadata: ArchiveMetadata,
     private val client: OpacityClient,
+    private val coroutineScope: CoroutineScope
 ) {
     val taskId = "archive[id=${metadata.id}]"
 
@@ -34,7 +36,7 @@ class ArchiveHandle(
 
         val destination = getPlatform().createTemporaryFile("remote-archive", suffix = ".psarchive")
 
-        withContext(DownloadContext(taskId) + Dispatchers.Download) {
+        coroutineScope.launch(DownloadContext(taskId) + Dispatchers.Download) {
             downloadSingle(
                 file = DownloadableFile(metadata.name, url),
                 destination = destination
@@ -46,7 +48,7 @@ class ArchiveHandle(
                 }
                 DownloadDispatcher[taskId] = it
             }
-        }
+        }.join()
 
         val lastState = DownloadDispatcher[taskId].value
         if (lastState !is DownloadState.Completed) {
