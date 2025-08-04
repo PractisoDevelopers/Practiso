@@ -32,11 +32,11 @@ class ImportViewModel(db: AppDatabase) : ViewModel() {
 
     data class Events(
         val import: Channel<NamedSource> = Channel(),
-        val importComplete: SharedFlow<ImportState.IdleReason>,
+        val importFinish: SharedFlow<ImportState.IdleReason>,
     )
 
     val event = Events(
-        importComplete = _state.filterIsInstance<ImportState.Idle>().map { it.reason }
+        importFinish = _state.filterIsInstance<ImportState.Idle>().map { it.reason }
             .shareIn(
                 viewModelScope,
                 SharingStarted.Lazily

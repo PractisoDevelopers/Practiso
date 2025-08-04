@@ -179,12 +179,12 @@ fun CommunityApp(
                                 val pack = handle.download()
                                 importVM.event.import.trySend(pack)
                                 // remove cache afterwards
-                                importVM.event.importComplete.first()
+                                importVM.event.importFinish.first()
                                 (DownloadDispatcher[handle.taskId].value?.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
                                     ?.destination
                                     ?.let {
-                                        getPlatform().filesystem.delete(it)
                                         DownloadDispatcher[handle.taskId] = null
+                                        getPlatform().filesystem.delete(it)
                                     }
                             }
                         }

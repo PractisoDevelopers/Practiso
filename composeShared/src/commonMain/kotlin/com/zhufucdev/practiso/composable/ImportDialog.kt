@@ -101,7 +101,7 @@ fun ImportDialog(state: ImportState) {
                         }
 
                         is ImportState.Error,
-                        ImportState.Idle,
+                        is ImportState.Idle,
                             -> error("Should never reach here")
                     }
                 }

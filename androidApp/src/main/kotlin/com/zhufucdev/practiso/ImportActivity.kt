@@ -52,7 +52,7 @@ class ImportActivity : ComponentActivity() {
                                 source = it.source()
                             )
                             importer.event.import.send(target)
-                            importer.event.importComplete.first()
+                            importer.event.importFinish.first()
                         }
                     }
                     finish()

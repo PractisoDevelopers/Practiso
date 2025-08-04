@@ -228,7 +228,7 @@ fun PractisoApp(navController: NavHostController) {
     }
 
     val importState by importViewModel.state.collectAsState()
-    if (importState != ImportState.Idle) {
+    if (importState !is ImportState.Idle) {
         ImportDialog(importState)
     }
 }
