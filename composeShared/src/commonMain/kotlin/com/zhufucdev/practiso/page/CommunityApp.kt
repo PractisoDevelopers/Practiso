@@ -1,6 +1,13 @@
 package com.zhufucdev.practiso.page
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -411,7 +418,13 @@ private fun ArchiveOption(
                 )
             },
             preview = {
-                AnimatedContent(state, modifier = Modifier.fillMaxWidth()) { state ->
+                AnimatedContent(state, modifier = Modifier.fillMaxWidth(), transitionSpec = {
+                    if (state is DownloadState.Downloading) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        defaultAnimatedContentSpecs
+                    }
+                }) { state ->
                     when (state) {
                         is DownloadStopped.Idle,
                         is DownloadState.Completed,
@@ -491,7 +504,13 @@ private fun ArchiveOption(
                 }
             }
         )
-        AnimatedContent(state) { state ->
+        AnimatedContent(state, transitionSpec = {
+            if (state is DownloadState.Downloading) {
+                EnterTransition.None togetherWith ExitTransition.None
+            } else {
+                defaultAnimatedContentSpecs
+            }
+        }) { state ->
             Box(Modifier.size(32.dp, 32.dp)) {
                 when (state) {
                     is DownloadState.Completed -> IconButton(
@@ -578,3 +597,8 @@ private suspend fun downloadAndImport(
         downloadManager.cancel(handle.taskId)
     }
 }
+
+private val defaultAnimatedContentSpecs =
+    (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
+            scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)))
+        .togetherWith(fadeOut(animationSpec = tween(90)))
