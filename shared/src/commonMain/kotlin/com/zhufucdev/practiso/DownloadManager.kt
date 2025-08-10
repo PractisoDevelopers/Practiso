@@ -32,8 +32,14 @@ class DownloadManager(private val coroutineScope: CoroutineScope = CoroutineScop
 
         val broadcast = get(taskId)
         val newJob = coroutineScope.launch(SessionContext(sessionId = taskId)) {
-            state.collect {
-                broadcast.tryEmit(it)
+            try {
+                state.collect {
+                    broadcast.tryEmit(it)
+                }
+            } catch (e: Exception) {
+                broadcast.tryEmit(DownloadStopped.Error(e))
+                trackingJobs.remove(taskId)
+                throw e
             }
         }
         trackingJobs[taskId] = newJob

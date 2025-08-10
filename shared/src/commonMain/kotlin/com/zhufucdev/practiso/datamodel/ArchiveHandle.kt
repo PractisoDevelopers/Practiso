@@ -3,6 +3,7 @@ package com.zhufucdev.practiso.datamodel
 import com.zhufucdev.practiso.DownloadManager
 import com.zhufucdev.practiso.platform.DownloadDiscretion
 import com.zhufucdev.practiso.platform.DownloadState
+import com.zhufucdev.practiso.platform.DownloadStopped
 import com.zhufucdev.practiso.platform.DownloadableFile
 import com.zhufucdev.practiso.platform.downloadSingle
 import com.zhufucdev.practiso.platform.getPlatform
@@ -58,10 +59,14 @@ class ArchiveHandle(
                 throw CancellationException("Tracker is cancelled")
             }
             val lastState = state.first()
-            if (lastState !is DownloadState.Completed) {
-                throw AssertionError("Download not completed. Instead, last state is ${lastState.let { it::class.simpleName }}.")
+            when (lastState) {
+                is DownloadState.Completed ->
+                    NamedSource(metadata.name, fs.source(destination))
+                is DownloadStopped.Error ->
+                    throw lastState.model
+                else ->
+                    throw AssertionError("Download not completed. Instead, last state is ${lastState.let { it::class.simpleName }}.")
             }
-            NamedSource(metadata.name, fs.source(destination))
         }
     }
 }
