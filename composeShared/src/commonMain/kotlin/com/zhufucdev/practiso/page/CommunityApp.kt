@@ -476,15 +476,15 @@ private fun ArchiveOption(
                         }
 
                         is DownloadStopped.Error -> {
-                            FlowRow(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(PaddingSmall)) {
                                 Text(stringResource(Res.string.download_error_para))
-                                TextButton(
-                                    onClick = {
+                                Text(
+                                    stringResource(Res.string.details_para),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clickable(onClick = {
                                         onErrorDetailsRequest(state.model)
-                                    }
-                                ) {
-                                    Text(stringResource(Res.string.details_para))
-                                }
+                                    })
+                                )
                             }
                         }
 
