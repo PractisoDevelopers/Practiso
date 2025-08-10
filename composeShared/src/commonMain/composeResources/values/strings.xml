@@ -282,4 +282,5 @@
     <string name="something_went_wrong_para">Something went wrong</string>
     <string name="use_another_server_or_try_again_later_para">Use another server, or try again later</string>
     <string name="refresh_para">Refresh</string>
+    <string name="download_error_para">Download error</string>
 </resources>

@@ -6,7 +6,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.AppSettingsScope
-import com.zhufucdev.practiso.Download
+import com.zhufucdev.practiso.DownloadManager
+import com.zhufucdev.practiso.UniqueIO
 import com.zhufucdev.practiso.datamodel.AppException
 import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
@@ -36,7 +37,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import opacity.client.SortOptions
 
-class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewModel() {
+class CommunityAppViewModel(
+    private val server: Flow<CommunityService>,
+    val downloadManager: Flow<DownloadManager>,
+) : ViewModel() {
     private val refreshCounter = MutableStateFlow(0)
     private val _pageState = MutableStateFlow<PageState>(Loading)
 
@@ -126,21 +130,26 @@ class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewMo
         @OptIn(ExperimentalCoroutinesApi::class)
         val Factory = viewModelFactory {
             var downloadScope: CoroutineScope? = null
-            val service = AppSettings.communityServerUrl.combine(
+            val serviceWithDm = AppSettings.communityServerUrl.combine(
                 AppSettings.communityUseCustomServer,
                 ::Pair
             )
                 .mapLatest { (server, use) ->
                     downloadScope?.cancel()
-                    downloadScope = CoroutineScope(Dispatchers.Download)
-                    CommunityService(
-                        server.takeIf { use } ?: DEFAULT_COMMUNITY_SERVER_URL,
-                        downloadScope = downloadScope
+                    downloadScope = CoroutineScope(Dispatchers.UniqueIO)
+                    Pair(
+                        CommunityService(
+                            server.takeIf { use } ?: DEFAULT_COMMUNITY_SERVER_URL
+                        ),
+                        DownloadManager(downloadScope)
                     )
                 }
                 .shareIn(AppSettingsScope, started = SharingStarted.Lazily, replay = 1)
             initializer {
-                CommunityAppViewModel(service)
+                CommunityAppViewModel(
+                    serviceWithDm.map { it.first },
+                    serviceWithDm.map { it.second }
+                )
             }
         }
     }

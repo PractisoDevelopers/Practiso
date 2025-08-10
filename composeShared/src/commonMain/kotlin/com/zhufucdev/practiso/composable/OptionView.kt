@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,14 +22,14 @@ import com.zhufucdev.practiso.style.PaddingSmall
 @Composable
 fun PractisoOptionSkeleton(
     modifier: Modifier = Modifier,
-    label: @Composable () -> Unit = {
+    label: @Composable ColumnScope.() -> Unit = {
         Spacer(
             Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
                 .fillMaxWidth(fraction = 0.618f)
                 .shimmerBackground()
         )
     },
-    preview: (@Composable () -> Unit)? = {
+    preview: (@Composable ColumnScope.() -> Unit)? = {
         Spacer(
             Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
                 .fillMaxWidth()
@@ -49,7 +50,7 @@ fun PractisoOptionSkeleton(
         CompositionLocalProvider(
             LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(color = LocalTextStyle.current.color)
         ) {
-            preview?.invoke()
+            preview?.invoke(this)
         }
     }
 }

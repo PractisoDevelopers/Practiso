@@ -22,13 +22,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarResult
@@ -41,17 +42,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zhufucdev.practiso.DownloadDispatcher
+import com.zhufucdev.practiso.DownloadManager
 import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PlaceHolder
@@ -72,12 +72,14 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import opacity.client.ArchiveMetadata
 import opacity.client.DimensionMetadata
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -86,9 +88,11 @@ import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.archives_para
 import resources.baseline_cloud_download
+import resources.cancel_para
 import resources.details_para
 import resources.dimensions_para
 import resources.download_and_import_para
+import resources.download_error_para
 import resources.downloads_para
 import resources.failed_to_download_archive_para
 import resources.likes_para
@@ -96,6 +100,7 @@ import resources.n_questions_span
 import resources.outline_download
 import resources.outline_heart
 import resources.refresh_para
+import resources.retry_para
 import resources.show_all_span
 import resources.something_went_wrong_para
 import resources.use_another_server_or_try_again_later_para
@@ -125,6 +130,7 @@ private fun DefaultPage(communityVM: CommunityAppViewModel, importVM: ImportView
     val leadingItemIndex by remember(scrollState) { derivedStateOf { scrollState.firstVisibleItemIndex } }
     val isMountingNextPage by communityVM.isMountingNextPage.collectAsState()
     val hasNextPage by communityVM.hasNextPage.collectAsState(true)
+    val pageScope = rememberCoroutineScope()
 
     var errorModel by remember { mutableStateOf<Exception?>(null) }
 
@@ -202,17 +208,29 @@ private fun DefaultPage(communityVM: CommunityAppViewModel, importVM: ImportView
                 count = archives.size,
                 key = { "archive#${archives[it].metadata.id}" },
                 contentType = { "archive" }) { index ->
+                val handle = archives[index]
+                val state by communityVM.downloadManager.flatMapMerge {
+                    it[handle.taskId]
+                }.collectAsState(DownloadStopped.Idle)
+
                 OptionItem(
                     modifier = Modifier.clickable(onClick = {}),
                     separator = isMountingNextPage || index != archives.lastIndex
                 ) {
                     ArchiveOption(
                         modifier = Modifier.fillMaxWidth(),
-                        model = archives[index],
+                        model = handle.metadata,
+                        state = state,
                         onDownloadRequest = {
-                            importVM.viewModelScope.launch {
+                            pageScope.launch {
                                 try {
-                                    downloadAndImport(archives[index], importVM)
+                                    downloadAndImport(
+                                        handle = archives[index],
+                                        downloadManager = communityVM.downloadManager.first(),
+                                        importVmEvents = importVM.event
+                                    )
+                                } catch (_: CancellationException) {
+
                                 } catch (e: Exception) {
                                     val action = snackbars.showSnackbar(
                                         message = getString(Res.string.failed_to_download_archive_para),
@@ -222,6 +240,15 @@ private fun DefaultPage(communityVM: CommunityAppViewModel, importVM: ImportView
                                         errorModel = e
                                     }
                                 }
+                            }
+                        },
+                        onErrorDetailsRequest = {
+                            errorModel = it
+                        },
+                        onCancelRequest = {
+                            val taskId = archives[index].taskId
+                            pageScope.launch {
+                                communityVM.downloadManager.first().cancel(taskId)
                             }
                         }
                     )
@@ -363,8 +390,11 @@ private fun DimensionCardSkeleton(
 @Composable
 private fun ArchiveOption(
     modifier: Modifier = Modifier,
-    model: ArchiveHandle,
+    model: ArchiveMetadata,
+    state: DownloadCycle,
     onDownloadRequest: () -> Unit,
+    onCancelRequest: () -> Unit,
+    onErrorDetailsRequest: (Exception) -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -372,96 +402,142 @@ private fun ArchiveOption(
         modifier = modifier
     ) {
         PractisoOptionSkeleton(
+            modifier = Modifier.weight(1f),
             label = {
                 Text(
-                    model.metadata.name.removeSuffix(".psarchive"),
+                    model.name.removeSuffix(".psarchive"),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             },
             preview = {
-                Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
-                    FlowRow(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
-                    ) {
-                        model.metadata.dimensions.take(5).forEach {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    it.emoji ?: DEFAULT_DIMOJI,
-                                    fontFamily = NotoEmojiFontFamily()
-                                )
-                                Text(
-                                    "${it.name} (${it.quizCount})",
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                AnimatedContent(state, modifier = Modifier.fillMaxWidth()) { state ->
+                    when (state) {
+                        is DownloadStopped.Idle,
+                        is DownloadState.Completed,
+                            -> {
+                            Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
+                                FlowRow(
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+                                ) {
+                                    model.dimensions.take(5).forEach {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                it.emoji ?: DEFAULT_DIMOJI,
+                                                fontFamily = NotoEmojiFontFamily()
+                                            )
+                                            Text(
+                                                "${it.name} (${it.quizCount})",
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+
+                                FlowRow(
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
+                                ) {
+                                    val lineHeight = LocalTextStyle.current.lineHeight.value.dp
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            painterResource(Res.drawable.outline_download),
+                                            contentDescription = stringResource(Res.string.downloads_para),
+                                            modifier = Modifier.size(lineHeight, lineHeight)
+                                        )
+                                        Text(model.downloads.toString())
+                                    }
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            painterResource(Res.drawable.outline_heart),
+                                            contentDescription = stringResource(Res.string.likes_para),
+                                            modifier = Modifier.size(lineHeight, lineHeight)
+                                        )
+                                        Text(model.likes.toString())
+                                    }
+                                }
                             }
                         }
-                    }
 
-                    FlowRow(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
-                    ) {
-                        val lineHeight = LocalTextStyle.current.lineHeight.value.dp
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painterResource(Res.drawable.outline_download),
-                                contentDescription = stringResource(Res.string.downloads_para),
-                                modifier = Modifier.size(lineHeight, lineHeight)
-                            )
-                            Text(model.metadata.downloads.toString())
+                        is DownloadStopped.Error -> {
+                            FlowRow(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
+                                Text(stringResource(Res.string.download_error_para))
+                                TextButton(
+                                    onClick = {
+                                        onErrorDetailsRequest(state.model)
+                                    }
+                                ) {
+                                    Text(stringResource(Res.string.details_para))
+                                }
+                            }
                         }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painterResource(Res.drawable.outline_heart),
-                                contentDescription = stringResource(Res.string.likes_para),
-                                modifier = Modifier.size(lineHeight, lineHeight)
+                        is DownloadState.Downloading -> {
+                            LinearProgressIndicator(
+                                progress = { state.progress },
+                                modifier = Modifier.weight(1f)
                             )
-                            Text(model.metadata.likes.toString())
+                        }
+
+                        is DownloadState.Preparing,
+                        is DownloadState.Configure,
+                            -> {
+                            LinearProgressIndicator(Modifier.weight(1f))
                         }
                     }
                 }
             }
         )
-        PlainTooltipBox(
-            text = stringResource(Res.string.download_and_import_para)
-        ) {
-            val downloadState by produceState<DownloadCycle>(DownloadStopped.Idle) {
-                withContext(Dispatchers.IO) {
-                    DownloadDispatcher[model.taskId].collect {
-                        value = it
+        AnimatedContent(state) { state ->
+            Box(Modifier.size(32.dp, 32.dp)) {
+                when (state) {
+                    is DownloadState.Completed -> IconButton(
+                        onClick = onDownloadRequest,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Icon(
+                            painterResource(Res.drawable.outline_download),
+                            contentDescription = stringResource(Res.string.download_and_import_para)
+                        )
                     }
-                }
-            }
-            AnimatedContent(downloadState) { state ->
-                Box(Modifier.size(32.dp, 32.dp)) {
-                    when (state) {
-                        is DownloadStopped, is DownloadState.Completed -> IconButton(
-                            onClick = onDownloadRequest,
+
+                    is DownloadStopped.Idle ->
+                        PlainTooltipBox(
+                            text = stringResource(Res.string.download_and_import_para)
+                        ) {
+                            IconButton(
+                                onClick = onDownloadRequest,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Icon(
+                                    painterResource(Res.drawable.baseline_cloud_download),
+                                    contentDescription = null
+                                )
+                            }
+                        }
+
+                    is DownloadStopped.Error ->
+                        PlainTooltipBox(text = stringResource(Res.string.retry_para)) {
+                            IconButton(
+                                onClick = onDownloadRequest,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = null
+                                )
+                            }
+                        }
+
+                    is DownloadState -> PlainTooltipBox(stringResource(Res.string.cancel_para)) {
+                        IconButton(
+                            onClick = onCancelRequest,
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            Icon(
-                                if (state is DownloadState.Completed) {
-                                    painterResource(Res.drawable.outline_download)
-                                } else {
-                                    painterResource(Res.drawable.baseline_cloud_download)
-                                },
-                                contentDescription = stringResource(Res.string.download_and_import_para)
-                            )
-                        }
-
-                        is DownloadState.Configure, is DownloadState.Preparing -> {
-                            CircularProgressIndicator(Modifier.fillMaxSize())
-                        }
-
-                        is DownloadState.Downloading -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.fillMaxSize(),
-                                progress = { state.progress }
-                            )
+                            Icon(Icons.Default.Close, contentDescription = null)
                         }
                     }
                 }
@@ -484,17 +560,21 @@ private fun OptionItem(
 
 private const val PRELOAD_EXTENT = 3
 
-private suspend fun downloadAndImport(handle: ArchiveHandle, importVM: ImportViewModel) {
-    val pack = handle.download()
-    importVM.event.import.trySend(pack)
+private suspend fun downloadAndImport(
+    handle: ArchiveHandle,
+    downloadManager: DownloadManager,
+    importVmEvents: ImportViewModel.Events,
+) {
+    val pack = handle.getAsSource(downloadManager)
+    importVmEvents.import.trySend(pack)
 
     // remove cache afterwards
-    if (importVM.event.importFinish.first() == ImportState.IdleReason.Completion) {
-        (DownloadDispatcher[handle.taskId].value.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
+    if (importVmEvents.importFinish.first() == ImportState.IdleReason.Completion) {
+        (downloadManager[handle.taskId].value.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
             ?.destination
             ?.let {
-                DownloadDispatcher.remove(handle.taskId)
                 getPlatform().filesystem.delete(it)
             }
+        downloadManager.cancel(handle.taskId)
     }
 }

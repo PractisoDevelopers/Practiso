@@ -1,6 +1,5 @@
 import com.zhufucdev.practiso.service.CommunityService
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -8,7 +7,7 @@ import kotlin.test.assertNotNull
 
 class CommunityServiceTest {
     @OptIn(DelicateCoroutinesApi::class)
-    private val service = CommunityService(downloadScope = GlobalScope)
+    private val service = CommunityService()
 
     @Test
     fun shouldQueryArchiveList() {

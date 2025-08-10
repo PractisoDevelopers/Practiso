@@ -2,7 +2,6 @@ package com.zhufucdev.practiso.service
 
 import com.zhufucdev.practiso.datamodel.ArchiveHandle
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +13,6 @@ import opacity.client.SortOptions
 
 class CommunityService(
     endpoint: String = DEFAULT_COMMUNITY_SERVER_URL,
-    private val downloadScope: CoroutineScope,
 ) {
     private val client = OpacityClient(endpoint, PlatformHttpClientFactory)
 
@@ -25,12 +23,12 @@ class CommunityService(
 
             override val items: Flow<List<ArchiveHandle>> = flow {
                 var response = client.getArchiveList(sortOptions)
-                emit(response.page.map { ArchiveHandle(it, client, downloadScope) })
+                emit(response.page.map { ArchiveHandle(it, client) })
                 while (response.next != null) {
                     pageRequestChannel.receive()
 
                     response = client.getArchiveList(sortOptions, response.next)
-                    emit(response.page.map { ArchiveHandle(it, client, downloadScope) })
+                    emit(response.page.map { ArchiveHandle(it, client) })
                     pageCompleteChannel.send(Unit)
                 }
                 hasNext.tryEmit(false)
