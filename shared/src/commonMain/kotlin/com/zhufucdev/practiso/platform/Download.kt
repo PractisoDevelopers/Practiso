@@ -29,9 +29,9 @@ sealed class DownloadState : DownloadCycle() {
     data class Completed(val file: DownloadableFile, val destination: Path) : DownloadState()
 }
 
-sealed class DownloadEnd : DownloadCycle() {
-    data object Idle : DownloadEnd()
-    data class Error(val model: Exception) : DownloadEnd()
+sealed class DownloadStopped : DownloadCycle() {
+    data object Idle : DownloadStopped()
+    data class Error(val model: Exception) : DownloadStopped()
 }
 
 data class Configuration(

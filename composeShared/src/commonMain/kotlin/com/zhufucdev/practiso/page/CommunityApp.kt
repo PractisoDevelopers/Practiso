@@ -63,8 +63,8 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.ArchiveHandle
 import com.zhufucdev.practiso.platform.DownloadCycle
-import com.zhufucdev.practiso.platform.DownloadEnd
 import com.zhufucdev.practiso.platform.DownloadState
+import com.zhufucdev.practiso.platform.DownloadStopped
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.NotoEmojiFontFamily
@@ -429,7 +429,7 @@ private fun ArchiveOption(
         PlainTooltipBox(
             text = stringResource(Res.string.download_and_import_para)
         ) {
-            val downloadState by produceState<DownloadCycle>(DownloadEnd.Idle) {
+            val downloadState by produceState<DownloadCycle>(DownloadStopped.Idle) {
                 withContext(Dispatchers.IO) {
                     DownloadDispatcher[model.taskId].collect {
                         value = it
@@ -439,7 +439,7 @@ private fun ArchiveOption(
             AnimatedContent(downloadState) { state ->
                 Box(Modifier.size(32.dp, 32.dp)) {
                     when (state) {
-                        is DownloadEnd, is DownloadState.Completed -> IconButton(
+                        is DownloadStopped, is DownloadState.Completed -> IconButton(
                             onClick = onDownloadRequest,
                             modifier = Modifier.fillMaxSize()
                         ) {

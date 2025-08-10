@@ -4,8 +4,8 @@ import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.DownloadException
 import com.zhufucdev.practiso.platform.DownloadCycle
-import com.zhufucdev.practiso.platform.DownloadEnd
 import com.zhufucdev.practiso.platform.DownloadState
+import com.zhufucdev.practiso.platform.DownloadStopped
 import com.zhufucdev.practiso.platform.randomUUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -45,7 +45,7 @@ object DownloadDispatcher : CoroutineDispatcher() {
         if (differentSession && notCompleted) {
             return
         }
-        if (differentSession && (!notCompleted || state is DownloadEnd)) {
+        if (differentSession && (!notCompleted || state is DownloadStopped)) {
             sessions[ctx.taskId] = ctx.sessionId
         }
 
@@ -53,7 +53,7 @@ object DownloadDispatcher : CoroutineDispatcher() {
     }
 
     suspend operator fun get(taskId: String): StateFlow<DownloadCycle> = rwMutex.withLock {
-        states.getOrPut(taskId) { MutableStateFlow(DownloadEnd.Idle) }
+        states.getOrPut(taskId) { MutableStateFlow(DownloadStopped.Idle) }
     }
 
     suspend operator fun set(taskId: String, state: DownloadState) {
@@ -70,7 +70,7 @@ val Dispatchers.Download: CoroutineContext
         val downloadCtx = context[DownloadContext.Key]
         if (downloadCtx != null) {
             states[downloadCtx.taskId]?.tryEmit(
-                DownloadEnd.Error(
+                DownloadStopped.Error(
                     e as? Exception
                         ?: DownloadException(
                             cause = e,
