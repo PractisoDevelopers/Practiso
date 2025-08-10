@@ -3,7 +3,6 @@ package com.zhufucdev.practiso.platform
 import android.app.DownloadManager
 import android.net.Uri
 import androidx.core.content.getSystemService
-import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.zhufucdev.practiso.SharedContext
 import com.zhufucdev.practiso.datamodel.AppMessage
@@ -22,7 +21,6 @@ import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.runningFold
 import okio.Path
-import okio.Path.Companion.toOkioPath
 import kotlin.time.Duration.Companion.milliseconds
 
 @Throws(DownloadException::class)
@@ -33,11 +31,11 @@ actual fun downloadRecursively(
     val downloadManager = SharedContext.getSystemService<DownloadManager>()
         ?: error("DownloadManager is unavailable.")
     val files = walker.files.runningFold(mutableListOf<DownloadableFile>()) { accumulator, value ->
-            accumulator.add(value)
-            accumulator
-        }.onEach {
-            send(DownloadState.Preparing(it))
-        }.lastOrNull() ?: emptyList()
+        accumulator.add(value)
+        accumulator
+    }.onEach {
+        send(DownloadState.Preparing(it))
+    }.lastOrNull() ?: emptyList()
 
     val config = Configuration()
     suspend {
@@ -52,11 +50,12 @@ actual fun downloadRecursively(
             async {
                 try {
                     downloadManager.toDmState(taskId, file.size).collect { download ->
-                            if (download is DMState.Completed) {
-                                download.moveTo(destination.resolve(file.name))
-                            }
-                            send(download.toDownloadState(file))
+                        val destination = destination.resolve(file.name)
+                        if (download is DMState.Completed) {
+                            download.moveTo(destination)
                         }
+                        send(download.toDownloadState(file, destination))
+                    }
                 } catch (e: DownloadManagerException) {
                     throw DownloadException(
                         scope = AppScope.DownloadExecutor, appMessage = e.getAppMessage(file)
@@ -84,24 +83,24 @@ actual fun downloadSingle(
     val taskId = downloadManager.enqueue(file, config)
     downloadManager.toDmState(taskId, file.size).collect { download ->
         if (download is DMState.Completed) {
-            download.moveTo(destination.resolve(file.name))
+            download.moveTo(destination)
         }
-        emit(download.toDownloadState(file))
+        emit(download.toDownloadState(file, destination))
     }
 }
 
 private fun DownloadManager.enqueue(file: DownloadableFile, configuration: Configuration): Long =
     enqueue(
         DownloadManager.Request(file.url.toString().toUri()).apply {
-                setAllowedNetworkTypes(
-                    if (configuration.discretion == DownloadDiscretion.Immediate) {
-                        DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE
-                    } else {
-                        DownloadManager.Request.NETWORK_WIFI
-                    }
-                )
-                setTitle(file.name)
-            })
+            setAllowedNetworkTypes(
+                if (configuration.discretion == DownloadDiscretion.Immediate) {
+                    DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE
+                } else {
+                    DownloadManager.Request.NETWORK_WIFI
+                }
+            )
+            setTitle(file.name)
+        })
 
 private fun DownloadManager.toDmState(
     taskId: Long,
@@ -118,6 +117,10 @@ private fun DownloadManager.toDmState(
                 val status =
                     cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
                 when (status) {
+                    DownloadManager.STATUS_PENDING -> {
+                        return@use true
+                    }
+
                     DownloadManager.STATUS_FAILED -> {
                         val code =
                             cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
@@ -166,23 +169,23 @@ private fun DownloadManagerException.getAppMessage(taskFile: DownloadableFile): 
     }
 
 sealed class DMState {
-    data class Completed(val destination: Uri) : DMState() {
-        override fun toDownloadState(file: DownloadableFile): DownloadState {
-            return DownloadState.Completed(file, destination.toFile().toOkioPath())
+    data class Completed(val contentUri: Uri) : DMState() {
+        override fun toDownloadState(file: DownloadableFile, destination: Path): DownloadState {
+            return DownloadState.Completed(file, destination)
         }
     }
 
     data class Progress(val value: Float) : DMState() {
-        override fun toDownloadState(file: DownloadableFile): DownloadState {
+        override fun toDownloadState(file: DownloadableFile, destination: Path): DownloadState {
             return DownloadState.Downloading(file, progress = value)
         }
     }
 
-    abstract fun toDownloadState(file: DownloadableFile): DownloadState
+    abstract fun toDownloadState(file: DownloadableFile, destination: Path): DownloadState
 }
 
 fun DMState.Completed.moveTo(destination: Path) {
     destination.toFile().outputStream().use {
-        SharedContext.contentResolver.openInputStream(this.destination)!!.copyTo(it)
+        SharedContext.contentResolver.openInputStream(contentUri)!!.copyTo(it)
     }
 }
