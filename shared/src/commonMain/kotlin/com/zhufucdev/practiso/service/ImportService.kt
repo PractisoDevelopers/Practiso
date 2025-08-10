@@ -2,10 +2,10 @@ package com.zhufucdev.practiso.service
 
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.ArchivePack
-import com.zhufucdev.practiso.datamodel.ErrorMessage
-import com.zhufucdev.practiso.datamodel.ErrorModel
+import com.zhufucdev.practiso.datamodel.ImportException
 import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
@@ -39,7 +39,7 @@ sealed interface ImportState {
     data class Importing(val total: Int, val done: Int) : ImportState
 
     data class Error(
-        val model: ErrorModel,
+        val error: ImportException,
         val cancel: SendChannel<Unit>,
         val retry: SendChannel<Unit>? = null,
         val skip: SendChannel<Unit>? = null,
@@ -118,11 +118,11 @@ class ImportService(private val db: AppDatabase = Database.app) {
                         val ignoreChannel = Channel<Unit>()
                         send(
                             ImportState.Error(
-                                model = ErrorModel(
+                                error = ImportException(
                                     scope = AppScope.LibraryIntentModel,
-                                    message = ErrorMessage.CopyResource(
-                                        requester.name ?: name,
-                                        quizArchive.name
+                                    appMessage = AppMessage.ResourceError(
+                                        resource = quizArchive.name,
+                                        requester = requester.name ?: name
                                     )
                                 ),
                                 cancel = cancelChannel,
@@ -158,10 +158,10 @@ class ImportService(private val db: AppDatabase = Database.app) {
                         } catch (e: Exception) {
                             send(
                                 ImportState.Error(
-                                    model = ErrorModel(
+                                    error = ImportException(
                                         scope = AppScope.LibraryIntentModel,
                                         cause = e,
-                                        message = ErrorMessage.CopyResource(
+                                        appMessage = AppMessage.ResourceError(
                                             requester.name ?: name,
                                             quizArchive.name
                                         )
@@ -212,10 +212,10 @@ class ImportService(private val db: AppDatabase = Database.app) {
             } catch (e: Exception) {
                 send(
                     ImportState.Error(
-                        model = ErrorModel(
+                        error = ImportException(
                             scope = AppScope.LibraryIntentModel,
                             cause = e,
-                            message = ErrorMessage.InvalidFileFormat
+                            appMessage = AppMessage.InvalidFileFormat
                         ),
                         cancel = cancelChannel
                     )
@@ -282,10 +282,3 @@ class ImportService(private val db: AppDatabase = Database.app) {
         return quiz.importTo(db)
     }
 }
-
-class ResourceNotFoundException(val resourceName: String) :
-    Exception("Resource \"${resourceName}\" is absent.")
-
-class EmptyArchiveException : Exception()
-
-class ArchiveAssertionException : Exception()

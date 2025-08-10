@@ -1,8 +1,8 @@
 package com.zhufucdev.practiso.datamodel
 
 import com.zhufucdev.practiso.database.AppDatabase
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 @Serializable
 sealed interface Edit {

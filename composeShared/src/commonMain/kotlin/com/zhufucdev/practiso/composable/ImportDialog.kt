@@ -128,7 +128,7 @@ fun ImportDialog(state: ImportState) {
                     }
                 }
             } else {
-                val error = state.model
+                val error = state.error
                 DialogContentSkeleton(
                     modifier = Modifier.fillMaxWidth().padding(PaddingBig),
                     icon = {

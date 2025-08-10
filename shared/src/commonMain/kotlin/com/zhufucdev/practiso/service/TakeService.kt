@@ -18,8 +18,8 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Clock
 import kotlin.random.Random
+import kotlin.time.Clock
 
 class TakeService(private val takeId: Long, private val db: AppDatabase = Database.app) {
     fun getTake(): Flow<Take> =

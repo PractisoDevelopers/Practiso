@@ -32,7 +32,6 @@ import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.KeyedPrioritizedFrame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.image_option_para
@@ -42,6 +41,7 @@ import resources.remove_from_keys_span
 import resources.remove_para
 import resources.set_as_key_span
 import resources.text_option_para
+import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

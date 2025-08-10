@@ -129,7 +129,6 @@ import com.zhufucdev.practiso.viewmodel.SharedElementTransitionPopupViewModel
 import com.zhufucdev.practiso.viewmodel.TakeStarterViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import nl.jacobras.humanreadable.HumanReadable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -183,6 +182,7 @@ import resources.welcome_to_app_para
 import resources.will_be_identified_as_x_para
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit

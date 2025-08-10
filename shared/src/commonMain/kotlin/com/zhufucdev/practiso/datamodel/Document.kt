@@ -1,7 +1,7 @@
 package com.zhufucdev.practiso.datamodel
 
-import kotlinx.datetime.Instant
 import okio.Source
+import kotlin.time.Instant
 
 /**
  * Document allows previewing quizzes without touching the app database.

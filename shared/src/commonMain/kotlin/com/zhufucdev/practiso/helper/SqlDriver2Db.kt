@@ -8,10 +8,11 @@ import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.database.Session
 import com.zhufucdev.practiso.database.Take
 import com.zhufucdev.practiso.database.Template
-import kotlinx.datetime.Instant
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.char
+import kotlinx.datetime.parse
+import kotlin.time.Instant
 
 internal object DateTimeAdapter : ColumnAdapter<Instant, String> {
     override fun decode(databaseValue: String): Instant {
@@ -23,7 +24,7 @@ internal object DateTimeAdapter : ColumnAdapter<Instant, String> {
                 char('-')
                 monthNumber()
                 char('-')
-                dayOfMonth()
+                day()
                 char(' ')
                 hour()
                 char(':')

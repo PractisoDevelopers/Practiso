@@ -17,7 +17,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -29,6 +28,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.serializer
+import kotlin.time.Instant
 
 @Serializable
 sealed interface Frame {
@@ -364,8 +364,8 @@ private class QuizSerializer : KSerializer<Quiz> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("quiz") {
         element("id", serialDescriptor<Long>())
         element("name", serialDescriptor<String>())
-        element("creationTime", serialDescriptor<Instant>())
-        element("modificationTime", serialDescriptor<Instant>())
+        element("creationTime", InstantIsoSerializer.descriptor)
+        element("modificationTime", InstantIsoSerializer.descriptor)
     }
 
     override fun deserialize(decoder: Decoder): Quiz = decoder.decodeStructure(descriptor) {
@@ -378,8 +378,15 @@ private class QuizSerializer : KSerializer<Quiz> {
                 CompositeDecoder.DECODE_DONE -> break
                 0 -> id = decodeLongElement(descriptor, index)
                 1 -> name = decodeStringElement(descriptor, index)
-                2 -> creationTime = decodeSerializableElement(descriptor, index, serializer())
-                3 -> modificationTime = decodeSerializableElement(descriptor, index, serializer())
+                2 -> creationTime = decodeSerializableElement(
+                    descriptor, index,
+                    InstantIsoSerializer
+                )
+
+                3 -> modificationTime = decodeSerializableElement(
+                    descriptor, index,
+                    InstantIsoSerializer
+                )
             }
         }
         if (id < 0 || name == null || creationTime == Instant.DISTANT_FUTURE) {

@@ -4,7 +4,6 @@ import com.zhufucdev.practiso.datamodel.QuizArchive
 import com.zhufucdev.practiso.datamodel.archive
 import com.zhufucdev.practiso.datamodel.unarchive
 import com.zhufucdev.practiso.platform.randomUUID
-import kotlinx.datetime.Clock
 import okio.Buffer
 import okio.FileSystem
 import okio.GzipSink
@@ -16,6 +15,7 @@ import okio.gzip
 import okio.use
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 class ArchiveTest {

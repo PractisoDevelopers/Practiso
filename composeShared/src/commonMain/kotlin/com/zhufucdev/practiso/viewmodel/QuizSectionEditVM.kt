@@ -1,12 +1,14 @@
 package com.zhufucdev.practiso.viewmodel
 
-import androidx.core.bundle.Bundle
-import androidx.core.bundle.bundleOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavType
+import androidx.savedstate.SavedState
+import androidx.savedstate.read
+import androidx.savedstate.savedState
+import androidx.savedstate.write
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.QuizOption
@@ -123,11 +125,13 @@ class QuizSectionEditVM(
         private const val TopIndexIdxKey = "top_item_idx"
 
         override fun get(
-            bundle: Bundle,
+            bundle: SavedState,
             key: String,
         ): Startpoint? =
-            bundle.getBundle(key)?.let {
-                Startpoint(it.getLong(QuizIdKey), it.getInt(TopIndexIdxKey))
+            bundle.read {
+                getSavedStateOrNull(key)?.read {
+                    Startpoint(getLong(QuizIdKey), getInt(TopIndexIdxKey))
+                }
             }
 
         override fun parseValue(value: String): Startpoint {
@@ -135,16 +139,16 @@ class QuizSectionEditVM(
         }
 
         override fun put(
-            bundle: Bundle,
+            bundle: SavedState,
             key: String,
             value: Startpoint,
         ) {
-            bundle.putBundle(
-                key, bundleOf(
-                    QuizIdKey to value.quizId,
-                    TopIndexIdxKey to value.topItemIndex
-                )
-            )
+            bundle.write {
+                putSavedState(key, savedState {
+                    putLong(QuizIdKey, value.quizId)
+                    putInt(TopIndexIdxKey, value.topItemIndex)
+                })
+            }
         }
     }
 }

@@ -1,8 +1,6 @@
 package com.zhufucdev.practiso.datamodel
 
 import com.zhufucdev.practiso.database.AppDatabase
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -29,6 +27,8 @@ import okio.BufferedSource
 import okio.Sink
 import okio.Source
 import okio.buffer
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 private val xml = XML {
     recommended_0_90_2()
@@ -405,8 +405,10 @@ data class DimensionArchive(val name: String, @XmlValue val intensity: Double)
 data class QuizArchive(
     val name: String,
     @XmlSerialName("creation")
+    @Serializable(InstantIsoSerializer::class)
     val creationTime: Instant,
     @XmlSerialName("modification")
+    @Serializable(InstantIsoSerializer::class)
     val modificationTime: Instant? = null,
     @Serializable(FrameContainerSerializer::class)
     @XmlSerialName("frames")
@@ -421,6 +423,7 @@ data class QuizArchive(
 @XmlSerialName(value = "archive", namespace = "http://schema.zhufucdev.com/practiso")
 data class QuizArchiveContainer(
     @XmlSerialName("creation")
+    @Serializable(InstantIsoSerializer::class)
     val creationTime: Instant,
     @XmlValue
     val quizzes: List<QuizArchive>,
@@ -462,7 +465,8 @@ fun <T : FrameArchive> T.resources() = buildList {
 /**
  * All required resources of the frames.
  */
-fun <T : FrameArchive> List<T>.resources(): List<ArchiveResourceRequester> = flatMap { it.resources() }
+fun <T : FrameArchive> List<T>.resources(): List<ArchiveResourceRequester> =
+    flatMap { it.resources() }
 
 fun List<QuizArchive>.archive(resourceSource: (String) -> Source): Source = Buffer().apply {
     val container = QuizArchiveContainer(Clock.System.now(), this@archive)

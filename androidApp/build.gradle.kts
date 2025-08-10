@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -54,8 +55,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
     }
     buildFeatures {
         compose = true
@@ -68,10 +71,7 @@ android {
 dependencies {
     implementation(projects.shared)
     implementation(projects.composeShared)
-    implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling.preview)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
     implementation(libs.kotlinx.serialization.protobuf)
-    debugImplementation(libs.compose.ui.tooling)
 }

@@ -1,6 +1,5 @@
 package com.zhufucdev.practiso.viewmodel
 
-import androidx.core.bundle.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +8,9 @@ import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavType
+import androidx.savedstate.SavedState
+import androidx.savedstate.read
+import androidx.savedstate.write
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.Selection
@@ -78,8 +80,8 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
     }
 
     object RevealableNavType : NavType<Revealable>(isNullableAllowed = false) {
-        override fun get(bundle: Bundle, key: String): Revealable? =
-            bundle.getString(key)?.let(::parseValue)
+        override fun get(bundle: SavedState, key: String): Revealable? =
+            bundle.read { getStringOrNull(key)?.let(::parseValue) }
 
         override fun parseValue(value: String): Revealable =
             value.split("_").let {
@@ -90,28 +92,32 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
             }
 
         override fun put(
-            bundle: Bundle,
+            bundle: SavedState,
             key: String,
             value: Revealable,
         ) {
-            bundle.putString(key, "${value.type.name}_${value.id}")
+            bundle.write {
+                putString(key, "${value.type.name}_${value.id}")
+            }
         }
     }
 
     object RevealableTypeNavType : NavType<RevealableType>(isNullableAllowed = false) {
         override fun get(
-            bundle: Bundle,
+            bundle: SavedState,
             key: String,
-        ): RevealableType? = bundle.getString(key)?.let(RevealableType::valueOf)
+        ): RevealableType? = bundle.read { getStringOrNull(key)?.let(RevealableType::valueOf) }
 
         override fun parseValue(value: String): RevealableType = RevealableType.valueOf(value)
 
         override fun put(
-            bundle: Bundle,
+            bundle: SavedState,
             key: String,
             value: RevealableType,
         ) {
-            bundle.putString(key, value.name)
+            bundle.write {
+                putString(key, value.name)
+            }
         }
     }
 

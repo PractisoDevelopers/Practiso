@@ -29,16 +29,15 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.components.resources)
-            api(compose.material3)
+            api(libs.compose.material3)
             implementation(compose.ui)
-            implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.materialicons.core)
-            api(libs.androidx.lifecycle.viewmodel)
+            api(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtime.compose)
             api(libs.androidx.navigation)
-            implementation(libs.material3.adaptative)
-            implementation(libs.material3.windowsize)
+            implementation(libs.compose.material3.adaptative)
+            implementation(libs.window.core)
             implementation(libs.filekit.dialogs.compose)
             implementation(libs.humanreadable)
             implementation(libs.settings.core)
@@ -48,6 +47,13 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
         }
+    }
+
+    compilerOptions {
+        optIn.addAll(
+            "kotlin.time.ExperimentalTime",
+            "androidx.compose.material3.ExperimentalMaterial3Api"
+        )
     }
 }
 

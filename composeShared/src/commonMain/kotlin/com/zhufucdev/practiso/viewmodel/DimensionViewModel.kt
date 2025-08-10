@@ -1,7 +1,5 @@
 package com.zhufucdev.practiso.viewmodel
 
-import androidx.core.bundle.Bundle
-import androidx.core.bundle.bundleOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +8,10 @@ import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavType
+import androidx.savedstate.SavedState
+import androidx.savedstate.read
+import androidx.savedstate.savedState
+import androidx.savedstate.write
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
@@ -125,11 +127,11 @@ class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHand
         private const val DimensionIdKey = "dimension_id"
 
         override fun get(
-            bundle: Bundle,
+            bundle: SavedState,
             key: String,
-        ): Initialization? {
-            return bundle.getBundle(key)?.let {
-                Initialization(it.getLong(DimensionIdKey))
+        ): Initialization? = bundle.read {
+            getSavedStateOrNull(key)?.let {
+                Initialization(getLong(DimensionIdKey))
             }
         }
 
@@ -138,11 +140,15 @@ class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHand
         }
 
         override fun put(
-            bundle: Bundle,
+            bundle: SavedState,
             key: String,
             value: Initialization,
         ) {
-            bundle.putBundle(key, bundleOf(DimensionIdKey to value.dimensionId))
+            bundle.write {
+                putSavedState(key, savedState {
+                    putLong(DimensionIdKey, value.dimensionId)
+                })
+            }
         }
     }
 }

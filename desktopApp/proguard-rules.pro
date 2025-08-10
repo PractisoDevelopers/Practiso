@@ -4,6 +4,7 @@
 -dontwarn javax.annotation.*
 -dontwarn okhttp3.internal.**
 -dontwarn io.ktor.network.sockets.*
+-dontwarn androidx.compose.material3.internal.*
 -optimizations !method/specialization/**
 -keep class kotlinx.coroutines.internal.MainDispatcherFactory { *; }
 -keep class kotlinx.coroutines.swing.SwingDispatcherFactory { *; }
