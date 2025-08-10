@@ -22,7 +22,7 @@ class ArchiveHandle(
     val taskId = "archive[id=${metadata.id}]"
 
     @Throws(DownloadException::class)
-    suspend fun download(): NamedSource {
+    suspend fun getAsSource(): NamedSource {
         val currentState = DownloadDispatcher[taskId].value
         if (currentState is DownloadState.Completed) {
             return NamedSource(
