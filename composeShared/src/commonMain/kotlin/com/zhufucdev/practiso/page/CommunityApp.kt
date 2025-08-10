@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,8 +40,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -43,13 +52,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.DownloadDispatcher
+import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SingleLineTextShimmer
 import com.zhufucdev.practiso.composable.shimmerBackground
+import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.ArchiveHandle
+import com.zhufucdev.practiso.platform.DownloadCycle
+import com.zhufucdev.practiso.platform.DownloadEnd
 import com.zhufucdev.practiso.platform.DownloadState
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.ImportState
@@ -60,24 +74,31 @@ import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import opacity.client.DimensionMetadata
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.archives_para
 import resources.baseline_cloud_download
+import resources.details_para
 import resources.dimensions_para
 import resources.download_and_import_para
 import resources.downloads_para
+import resources.failed_to_download_archive_para
 import resources.likes_para
 import resources.n_questions_span
 import resources.outline_download
 import resources.outline_heart
+import resources.refresh_para
 import resources.show_all_span
+import resources.something_went_wrong_para
+import resources.use_another_server_or_try_again_later_para
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
@@ -85,13 +106,27 @@ fun CommunityApp(
     communityVM: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory),
     importVM: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
 ) {
+    val pageState by communityVM.pageState.collectAsState()
+    AnimatedContent(pageState) { ps ->
+        when (ps) {
+            is CommunityAppViewModel.Failed -> FailurePage(communityVM.event.refresh)
+            else -> DefaultPage(communityVM, importVM)
+        }
+    }
+}
+
+@Composable
+private fun DefaultPage(communityVM: CommunityAppViewModel, importVM: ImportViewModel) {
     val archives by communityVM.archives.collectAsState(null, Dispatchers.IO)
     val dimensions by communityVM.dimensions.collectAsState(null, Dispatchers.IO)
+    val snackbars = LocalExtensiveSnackbarState.current
 
     val scrollState = rememberLazyListState()
     val leadingItemIndex by remember(scrollState) { derivedStateOf { scrollState.firstVisibleItemIndex } }
     val isMountingNextPage by communityVM.isMountingNextPage.collectAsState()
     val hasNextPage by communityVM.hasNextPage.collectAsState(true)
+
+    var errorModel by remember { mutableStateOf<Exception?>(null) }
 
     LaunchedEffect(leadingItemIndex, isMountingNextPage, hasNextPage) {
         if (!hasNextPage || isMountingNextPage) {
@@ -103,7 +138,7 @@ fun CommunityApp(
             return@LaunchedEffect
         }
 
-        communityVM.mountNextPage()
+        communityVM.event.mountNextPage.send(Unit)
     }
 
     LazyColumn(state = scrollState) {
@@ -176,17 +211,16 @@ fun CommunityApp(
                         model = archives[index],
                         onDownloadRequest = {
                             importVM.viewModelScope.launch {
-                                val handle = archives[index]
-                                val pack = handle.download()
-                                importVM.event.import.trySend(pack)
-                                // remove cache afterwards
-                                if (importVM.event.importFinish.first() == ImportState.IdleReason.Completion) {
-                                    (DownloadDispatcher[handle.taskId].value?.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
-                                        ?.destination
-                                        ?.let {
-                                            DownloadDispatcher[handle.taskId] = null
-                                            getPlatform().filesystem.delete(it)
-                                        }
+                                try {
+                                    downloadAndImport(archives[index], importVM)
+                                } catch (e: Exception) {
+                                    val action = snackbars.showSnackbar(
+                                        message = getString(Res.string.failed_to_download_archive_para),
+                                        actionLabel = getString(Res.string.details_para)
+                                    )
+                                    if (action == SnackbarResult.ActionPerformed) {
+                                        errorModel = e
+                                    }
                                 }
                             }
                         }
@@ -201,6 +235,47 @@ fun CommunityApp(
                     PractisoOptionSkeleton()
                 }
             }
+        }
+    }
+
+    errorModel?.let { model ->
+        AppExceptionAlert(
+            model = model,
+            onDismissRequest = { errorModel = null },
+        )
+    }
+}
+
+@Composable
+private fun FailurePage(refresh: SendChannel<Unit>) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(PaddingSmall, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        PlaceHolder(
+            header = {
+                Text("🛜")
+            },
+            label = {
+                Text(
+                    stringResource(Res.string.something_went_wrong_para),
+                )
+            },
+            helper = {
+                Text(
+                    stringResource(Res.string.use_another_server_or_try_again_later_para),
+                )
+            }
+        )
+
+        Button(
+            onClick = {
+                refresh.trySend(Unit)
+            }
+        ) {
+            Icon(Icons.Default.Refresh, contentDescription = null)
+            Text(stringResource(Res.string.refresh_para))
         }
     }
 }
@@ -354,38 +429,40 @@ private fun ArchiveOption(
         PlainTooltipBox(
             text = stringResource(Res.string.download_and_import_para)
         ) {
-            val downloadState by produceState<DownloadState?>(null) {
+            val downloadState by produceState<DownloadCycle>(DownloadEnd.Idle) {
                 withContext(Dispatchers.IO) {
                     DownloadDispatcher[model.taskId].collect {
                         value = it
                     }
                 }
             }
-            Box(Modifier.size(32.dp, 32.dp)) {
-                when (val state = downloadState) {
-                    null, is DownloadState.Completed -> IconButton(
-                        onClick = onDownloadRequest,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Icon(
-                            if (state == null) {
-                                painterResource(Res.drawable.outline_download)
-                            } else {
-                                painterResource(Res.drawable.baseline_cloud_download)
-                            },
-                            contentDescription = stringResource(Res.string.download_and_import_para)
-                        )
-                    }
+            AnimatedContent(downloadState) { state ->
+                Box(Modifier.size(32.dp, 32.dp)) {
+                    when (state) {
+                        is DownloadEnd, is DownloadState.Completed -> IconButton(
+                            onClick = onDownloadRequest,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                if (state is DownloadState.Completed) {
+                                    painterResource(Res.drawable.outline_download)
+                                } else {
+                                    painterResource(Res.drawable.baseline_cloud_download)
+                                },
+                                contentDescription = stringResource(Res.string.download_and_import_para)
+                            )
+                        }
 
-                    is DownloadState.Configure, is DownloadState.Preparing -> {
-                        CircularProgressIndicator(Modifier.fillMaxSize())
-                    }
+                        is DownloadState.Configure, is DownloadState.Preparing -> {
+                            CircularProgressIndicator(Modifier.fillMaxSize())
+                        }
 
-                    is DownloadState.Downloading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.fillMaxSize(),
-                            progress = { state.progress }
-                        )
+                        is DownloadState.Downloading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.fillMaxSize(),
+                                progress = { state.progress }
+                            )
+                        }
                     }
                 }
             }
@@ -406,3 +483,18 @@ private fun OptionItem(
 }
 
 private const val PRELOAD_EXTENT = 3
+
+private suspend fun downloadAndImport(handle: ArchiveHandle, importVM: ImportViewModel) {
+    val pack = handle.download()
+    importVM.event.import.trySend(pack)
+
+    // remove cache afterwards
+    if (importVM.event.importFinish.first() == ImportState.IdleReason.Completion) {
+        (DownloadDispatcher[handle.taskId].value.takeIf { it is DownloadState.Completed } as DownloadState.Completed?)
+            ?.destination
+            ?.let {
+                DownloadDispatcher.remove(handle.taskId)
+                getPlatform().filesystem.delete(it)
+            }
+    }
+}

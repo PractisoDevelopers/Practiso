@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.platform
 
+import com.zhufucdev.practiso.datamodel.DownloadException
 import io.ktor.http.Url
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
@@ -8,11 +9,15 @@ import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.takeWhile
 import okio.Path
 
+@Throws(DownloadException::class)
 expect fun downloadRecursively(walker: DirectoryWalker, destination: Path): Flow<DownloadState>
 
+@Throws(DownloadException::class)
 expect fun downloadSingle(file: DownloadableFile, destination: Path): Flow<DownloadState>
 
-sealed class DownloadState {
+sealed class DownloadCycle
+
+sealed class DownloadState : DownloadCycle() {
     data class Preparing(val filesFound: List<DownloadableFile>) : DownloadState()
     data class Configure(val build: SendChannel<Configuration.() -> Unit>) : DownloadState()
 
@@ -22,6 +27,11 @@ sealed class DownloadState {
      */
     data class Downloading(val file: DownloadableFile, val progress: Float) : DownloadState()
     data class Completed(val file: DownloadableFile, val destination: Path) : DownloadState()
+}
+
+sealed class DownloadEnd : DownloadCycle() {
+    data object Idle : DownloadEnd()
+    data class Error(val model: Exception) : DownloadEnd()
 }
 
 data class Configuration(
@@ -47,11 +57,6 @@ data class DownloadableFile(
     val size: Long? = null,
     val sha256sum: String? = null,
 )
-
-class DownloadException : Exception {
-    constructor(message: String) : super(message)
-    constructor() : super()
-}
 
 sealed class GroupedDownloadState {
     data class Planed(

@@ -1,24 +1,30 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.compose.runtime.Composable
+import com.zhufucdev.practiso.datamodel.AppException
+import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
-import com.zhufucdev.practiso.datamodel.ErrorMessage
-import com.zhufucdev.practiso.datamodel.ErrorModel
-import org.jetbrains.compose.resources.PluralStringResource
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
+import resources.community_service_span
+import resources.download_executor_span
 import resources.error_at_n_para
-import resources.failed_to_copy_resource_x_for_quiz_y_para
 import resources.failed_to_create_interpreter_para
+import resources.failed_to_process_resource_x_para
+import resources.failed_to_process_resource_x_required_by_y_para
+import resources.failed_to_setup_resource_x_at_y_para
+import resources.failed_to_setup_resource_x_at_z_required_by_y_para
 import resources.fei_init_span
 import resources.fei_resource_span
+import resources.http_error_para
+import resources.http_transaction_error_para
+import resources.insufficient_disk_space_para
 import resources.internal_message_n_para
 import resources.invalid_file_format_para
 import resources.library_intent_model_span
 import resources.no_details_reported_para
-import resources.resource_x_was_not_found_at_y_para
+import resources.undefined_error_para
+import resources.unexpected_http_status_x_para
 import resources.unknown_span
 import resources.untracked_error_para
 
@@ -29,14 +35,18 @@ fun AppScope.localizedName(): String =
         AppScope.LibraryIntentModel -> stringResource(Res.string.library_intent_model_span)
         AppScope.FeiInitialization -> stringResource(Res.string.fei_init_span)
         AppScope.FeiResource -> stringResource(Res.string.fei_resource_span)
+        AppScope.DownloadExecutor -> stringResource(Res.string.download_executor_span)
+        AppScope.CommunityService -> stringResource(Res.string.community_service_span)
     }
 
 @Composable
-fun ErrorModel.stringTitle(): String =
+fun AppException.stringTitle(): String =
     when (scope) {
         AppScope.Unknown ->
             when {
-                cause != null -> cause!!::class.let { it.simpleName ?: it.qualifiedName }
+                this is Exception && cause != null -> cause!!::class.let {
+                    it.simpleName ?: it.qualifiedName
+                }
                     ?: stringResource(Res.string.untracked_error_para)
 
                 else -> stringResource(Res.string.untracked_error_para)
@@ -49,58 +59,67 @@ fun ErrorModel.stringTitle(): String =
     }
 
 @Composable
-fun ErrorMessage.localizedString(): String =
+fun AppMessage.localizedString(): String =
     when (this) {
-        is ErrorMessage.Localized ->
-            when (val res = resource) {
-                is StringResource -> stringResource(
-                    res,
-                    *args.toTypedArray()
-                )
+        is AppMessage.Raw -> content
 
-                is PluralStringResource -> pluralStringResource(
-                    res,
-                    args.first() as Int,
-                    *args.drop(1).toTypedArray()
-                )
+        is AppMessage.InvalidFileFormat -> stringResource(Res.string.invalid_file_format_para)
 
-                else -> error("Unsupported localization type: ${res::class.simpleName}")
-            }
-
-        is ErrorMessage.Raw -> content
-
-        is ErrorMessage.InvalidFileFormat -> stringResource(Res.string.invalid_file_format_para)
-
-        is ErrorMessage.CopyResource -> stringResource(
-            Res.string.failed_to_copy_resource_x_for_quiz_y_para,
-            requester,
-            archive
-        )
-
-        ErrorMessage.IncompatibleModel -> stringResource(
+        AppMessage.IncompatibleModel -> stringResource(
             Res.string.failed_to_create_interpreter_para
         )
 
-        is ErrorMessage.ResourceNotFound -> stringResource(
-            Res.string.resource_x_was_not_found_at_y_para,
-            name, location
+        is AppMessage.ResourceError -> {
+            when {
+                location != null && requester != null ->
+                    stringResource(
+                        Res.string.failed_to_setup_resource_x_at_z_required_by_y_para,
+                        resource, location!!, requester!!
+                    )
+
+                location != null ->
+                    stringResource(
+                        Res.string.failed_to_setup_resource_x_at_y_para,
+                        resource, location!!
+                    )
+
+                requester != null ->
+                    stringResource(
+                        Res.string.failed_to_process_resource_x_required_by_y_para,
+                        resource, requester!!
+                    )
+
+                else -> stringResource(Res.string.failed_to_process_resource_x_para, resource)
+            }
+        }
+
+        is AppMessage.GenericFailure -> stringResource(Res.string.undefined_error_para)
+        is AppMessage.GenericHttpFailure -> stringResource(Res.string.http_error_para)
+        is AppMessage.HttpStatusFailure -> stringResource(
+            Res.string.unexpected_http_status_x_para,
+            statusCode
         )
+
+        is AppMessage.HttpTransactionFailure -> stringResource(Res.string.http_transaction_error_para)
+        is AppMessage.InsufficientSpace -> stringResource(Res.string.insufficient_disk_space_para)
     }
 
 @Composable
-fun ErrorModel.stringContent(): String = buildString {
-    message?.let {
+fun AppException.stringContent(): String = buildString {
+    appMessage?.let {
         appendLine(it.localizedString())
     }
 
-    cause?.message?.let { message ->
-        cause?.let { e ->
+    (this as? Exception)?.cause?.let { e ->
+        if (e is AppException) {
+            appendLine(e.stringContent())
+        } else if (e.message != null) {
             append(
                 stringResource(
                     Res.string.internal_message_n_para,
                     (e::class.simpleName ?: e::class.qualifiedName)?.let { name ->
-                        "[$name] $message"
-                    } ?: message
+                        "[$name] ${e.message!!}"
+                    } ?: e.message!!
                 ))
         }
     }

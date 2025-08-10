@@ -12,7 +12,7 @@ import com.zhufucdev.practiso.database.ImageFrame
 import com.zhufucdev.practiso.database.TextFrame
 import com.zhufucdev.practiso.datamodel.AnyEmbeddingOutput
 import com.zhufucdev.practiso.datamodel.EmbeddingOutput
-import com.zhufucdev.practiso.datamodel.ErrorModel
+import com.zhufucdev.practiso.datamodel.FeiException
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.ImageInput
 import com.zhufucdev.practiso.datamodel.LanguageInput
@@ -78,7 +78,7 @@ class FeiService(
     private val db: AppDatabase = Database.app,
     private val defaultModel: MlModel = JinaV2SmallEn,
     private val parallelTasks: Int = 8,
-    private val inferenceSession: Flow<InferenceSession>
+    private val inferenceSession: Flow<InferenceSession>,
 ) :
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
     companion object {
@@ -289,13 +289,7 @@ class FeiService(
                     } catch (e: FeiException) {
                         val responseChannel = Channel<FeiErrorResponse>()
                         send(
-                            FeiDbState.Error(
-                                ErrorModel(
-                                    scope = e.error.scope,
-                                    cause = e.cause,
-                                    message = e.error.message
-                                ), responseChannel
-                            )
+                            FeiDbState.Error(e, responseChannel)
                         )
                         when (responseChannel.receive()) {
                             FeiErrorResponse.Retry -> continue
@@ -504,7 +498,7 @@ sealed class FeiDbState {
     ) : FeiDbState()
 
     data class Error(
-        val error: ErrorModel,
+        val error: FeiException,
         val proceed: SendChannel<FeiErrorResponse>,
     ) : FeiDbState()
 
@@ -525,8 +519,6 @@ fun Index.save(path: Path = INDEX_PATH) {
     if (!fs.exists(dir))
         fs.createDirectories(dir, mustCreate = true)
 }
-
-class FeiException(val error: ErrorModel) : Exception(error.cause)
 
 private data class FrameUpdate<T>(
     val addition: Set<T>,

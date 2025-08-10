@@ -1,11 +1,10 @@
 package com.zhufucdev.practiso.platform
 
+import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
-import com.zhufucdev.practiso.datamodel.ErrorMessage
-import com.zhufucdev.practiso.datamodel.ErrorModel
+import com.zhufucdev.practiso.datamodel.FeiException
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
-import com.zhufucdev.practiso.service.FeiException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterIsInstance
@@ -82,14 +81,12 @@ fun DirectoryWalker.throwsFeiError(): DirectoryWalker = object : DirectoryWalker
         get() = this@throwsFeiError.files
             .catch {
                 throw FeiException(
-                    error = ErrorModel(
-                        scope = AppScope.FeiResource,
-                        message = ErrorMessage.ResourceNotFound(
-                            this@throwsFeiError::class.simpleName ?: "Directory Walker",
-                            identifier
-                        ),
-                        cause = it
-                    )
+                    scope = AppScope.FeiResource,
+                    appMessage = AppMessage.ResourceError(
+                        resource = identifier,
+                        location = this@throwsFeiError::class.simpleName ?: "Directory Walker",
+                    ),
+                    cause = it
                 )
             }
 }

@@ -72,8 +72,8 @@ class CommunityAppViewModel(private val server: Flow<CommunityService>) : ViewMo
 
     val dimensions =
         refreshCounter
-            .combine(server) { _, s -> s }
-            .map { server -> server.getDimensions(5) }
+            .combine(server, ::Pair)
+            .map { (_, server) -> server.getDimensions(5) }
             .catch { markPageFailed(it) }
             .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
 

@@ -230,7 +230,6 @@
     <string name="unknown_span">unknown</string>
     <string name="fei_init_span">frame embedding inference initialization</string>
     <string name="failed_to_create_interpreter_para">Failed to create interpreter.</string>
-    <string name="resource_x_was_not_found_at_y_para">Resource %1$s at %2$s was not found.</string>
     <string name="fei_resource_span">frame embedding inference resource</string>
     <string name="waiting_for_inference_para">Waiting for inference…</string>
     <string name="interact_with_status_bar_to_continue_span">interact with status bar to continue</string>
@@ -268,4 +267,19 @@
     <string name="not_specified_para">Not specified</string>
     <string name="failed_to_load_next_page_para">Failed to load next page</string>
     <string name="download_and_import_para">Download &amp; Import</string>
+    <string name="failed_to_download_archive_para">Failed to download archive</string>
+    <string name="download_executor_span">download executor</string>
+    <string name="failed_to_process_resource_x_para">Failed to process resource %1$s</string>
+    <string name="failed_to_setup_resource_x_at_y_para">Failed to setup resource %1$s at %2$s</string>
+    <string name="failed_to_process_resource_x_required_by_y_para">Resource %1$s required by %2$s failed to be processed.</string>
+    <string name="failed_to_setup_resource_x_at_z_required_by_y_para">Resource %1$s required by %2$s failed to be setup at %3$s.</string>
+    <string name="insufficient_disk_space_para">Insufficient disk space</string>
+    <string name="undefined_error_para">Undefined error</string>
+    <string name="http_error_para">HTTP error</string>
+    <string name="http_transaction_error_para">HTTP transaction error</string>
+    <string name="unexpected_http_status_x_para">Unexpected HTTP status %1$d</string>
+    <string name="community_service_span">community service</string>
+    <string name="something_went_wrong_para">Something went wrong</string>
+    <string name="use_another_server_or_try_again_later_para">Use another server, or try again later</string>
+    <string name="refresh_para">Refresh</string>
 </resources>

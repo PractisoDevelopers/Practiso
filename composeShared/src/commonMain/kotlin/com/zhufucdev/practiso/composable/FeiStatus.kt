@@ -3,14 +3,11 @@ package com.zhufucdev.practiso.composable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -18,6 +15,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,8 +38,6 @@ import com.zhufucdev.practiso.service.FeiErrorResponse
 import com.zhufucdev.practiso.service.MissingModelResponse
 import com.zhufucdev.practiso.service.PendingDownloadResponse
 import com.zhufucdev.practiso.style.PaddingBig
-import com.zhufucdev.practiso.viewmodel.stringContent
-import com.zhufucdev.practiso.viewmodel.stringTitle
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -55,13 +51,11 @@ import resources.Res
 import resources.about_to_download_x_items_will_cost_y_of_data_when_to_para
 import resources.baseline_cloud_download
 import resources.baseline_cube_off
-import resources.baseline_rhombus_outline
 import resources.cancel_para
 import resources.choose_another_model_para
 import resources.collecting_questions_para
 import resources.current_model_is_missing_following_features
 import resources.details_para
-import resources.dismiss_para
 import resources.download_required_para
 import resources.downloading_model_para
 import resources.inference_init_error_para
@@ -69,7 +63,6 @@ import resources.inferring_n_items_para
 import resources.missing_model_para
 import resources.now_para
 import resources.proceed_anyway_para
-import resources.retry_para
 import resources.using_wifi_only_para
 import resources.you_may_enable_compatibility_mode_in_settings_para
 import resources.you_may_select_another_model_in_settings_para
@@ -365,56 +358,26 @@ fun FeiStatus(state: FeiDbState) {
     }
 
     errorDialog?.apply {
-        AlertDialog(
+        AppExceptionAlert(
+            model = error,
             onDismissRequest = {
                 errorDialog = null
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        proceed.trySend(FeiErrorResponse.Retry)
-                        errorDialog = null
-                    }
-                ) {
-                    Text(stringResource(Res.string.retry_para))
-                }
+            onConfirmRequest = {
+                proceed.trySend(FeiErrorResponse.Retry)
+                errorDialog = null
             },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        errorDialog = null
-                    }
-                ) {
-                    Text(stringResource(Res.string.dismiss_para))
-                }
-            },
-            icon = {
-                Icon(
-                    painterResource(Res.drawable.baseline_rhombus_outline),
-                    contentDescription = null
-                )
-            },
-            title = {
-                Text(
-                    error.stringTitle(),
-                    textAlign = TextAlign.Center
-                )
-            },
-            text = {
-                Text(buildString {
-                    appendLine(error.stringContent())
-                    if (error.scope == AppScope.FeiInitialization) {
-                        if (!AppSettings.feiCompatibilityMode.value) {
-                            appendLine(
-                                stringResource(Res.string.you_may_enable_compatibility_mode_in_settings_para)
-                            )
+            additionalText = {
+                if (error.scope == AppScope.FeiInitialization) {
+                    val compatibilityModeOn by AppSettings.feiCompatibilityMode.collectAsState()
+                    Text(
+                        if (!compatibilityModeOn) {
+                            stringResource(Res.string.you_may_enable_compatibility_mode_in_settings_para)
                         } else {
-                            appendLine(
-                                stringResource(Res.string.you_may_select_another_model_in_settings_para)
-                            )
+                            stringResource(Res.string.you_may_select_another_model_in_settings_para)
                         }
-                    }
-                }.trim())
+                    )
+                }
             }
         )
     }

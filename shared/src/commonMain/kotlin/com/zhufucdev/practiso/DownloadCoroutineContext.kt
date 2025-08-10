@@ -1,5 +1,10 @@
 package com.zhufucdev.practiso
 
+import com.zhufucdev.practiso.datamodel.AppMessage
+import com.zhufucdev.practiso.datamodel.AppScope
+import com.zhufucdev.practiso.datamodel.DownloadException
+import com.zhufucdev.practiso.platform.DownloadCycle
+import com.zhufucdev.practiso.platform.DownloadEnd
 import com.zhufucdev.practiso.platform.DownloadState
 import com.zhufucdev.practiso.platform.randomUUID
 import kotlinx.coroutines.CoroutineDispatcher
@@ -13,7 +18,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.CoroutineContext
 
-private val states = mutableMapOf<String, MutableStateFlow<DownloadState?>>()
+private val states = mutableMapOf<String, MutableStateFlow<DownloadCycle>>()
 private val sessions = mutableMapOf<String, String>()
 private val rwMutex = Mutex()
 
@@ -33,36 +38,50 @@ object DownloadDispatcher : CoroutineDispatcher() {
         val ctx = context[DownloadContext.Key]!!
         val differentSession =
             sessions[ctx.taskId]?.let { it != ctx.sessionId } == true
+        val state = states[ctx.taskId]?.value
         val notCompleted =
-            states[ctx.taskId]?.value?.let { it !is DownloadState.Completed } == true
+            state?.let { it !is DownloadState.Completed } == true
 
         if (differentSession && notCompleted) {
             return
         }
-        if (differentSession && !notCompleted) {
+        if (differentSession && (!notCompleted || state is DownloadEnd)) {
             sessions[ctx.taskId] = ctx.sessionId
         }
 
         Dispatchers.IO.dispatch(context, block)
     }
 
-    suspend operator fun get(taskId: String): StateFlow<DownloadState?> = rwMutex.withLock {
-        states.getOrPut(taskId) { MutableStateFlow(null) }
+    suspend operator fun get(taskId: String): StateFlow<DownloadCycle> = rwMutex.withLock {
+        states.getOrPut(taskId) { MutableStateFlow(DownloadEnd.Idle) }
     }
 
-    suspend operator fun set(taskId: String, state: DownloadState?) {
+    suspend operator fun set(taskId: String, state: DownloadState) {
         (get(taskId) as MutableStateFlow).emit(state)
+    }
+
+    suspend fun remove(taskId: String) = rwMutex.withLock {
+        states.remove(taskId)
     }
 }
 
 val Dispatchers.Download: CoroutineContext
-    get() = DownloadDispatcher + CoroutineExceptionHandler { context, exception ->
+    get() = DownloadDispatcher + CoroutineExceptionHandler { context, e ->
         val downloadCtx = context[DownloadContext.Key]
         if (downloadCtx != null) {
-            states[downloadCtx.taskId]?.tryEmit(null)
+            states[downloadCtx.taskId]?.tryEmit(
+                DownloadEnd.Error(
+                    e as? Exception
+                        ?: DownloadException(
+                            cause = e,
+                            scope = AppScope.DownloadExecutor,
+                            appMessage = AppMessage.GenericFailure
+                        )
+                )
+            )
             sessions.remove(downloadCtx.sessionId)
         }
-        exception.printStackTrace()
+        e.printStackTrace()
     }
 
 data class DownloadContext(val taskId: String, val sessionId: String = randomUUID()) :

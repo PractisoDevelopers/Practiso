@@ -17,10 +17,11 @@ import opacity.client.OpacityClient
 class ArchiveHandle(
     val metadata: ArchiveMetadata,
     private val client: OpacityClient,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
 ) {
     val taskId = "archive[id=${metadata.id}]"
 
+    @Throws(DownloadException::class)
     suspend fun download(): NamedSource {
         val currentState = DownloadDispatcher[taskId].value
         if (currentState is DownloadState.Completed) {
@@ -52,7 +53,7 @@ class ArchiveHandle(
 
         val lastState = DownloadDispatcher[taskId].value
         if (lastState !is DownloadState.Completed) {
-            throw IllegalStateException("Download not completed. Instead, last state is ${lastState?.let { it::class.simpleName }}.")
+            throw AssertionError("Download not completed. Instead, last state is ${lastState.let { it::class.simpleName }}.")
         }
         return NamedSource(metadata.name, getPlatform().filesystem.source(destination))
     }

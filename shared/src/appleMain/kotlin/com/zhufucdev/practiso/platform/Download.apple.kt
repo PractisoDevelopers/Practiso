@@ -1,6 +1,9 @@
 package com.zhufucdev.practiso.platform
 
 import com.zhufucdev.practiso.convert.toNSURL
+import com.zhufucdev.practiso.datamodel.AppMessage
+import com.zhufucdev.practiso.datamodel.AppScope
+import com.zhufucdev.practiso.datamodel.DownloadException
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
@@ -32,6 +35,7 @@ import platform.Foundation.NSURLSessionDownloadTask
 import platform.darwin.NSObject
 import platform.posix.int64_t
 
+@Throws(DownloadException::class)
 actual fun downloadRecursively(
     walker: DirectoryWalker,
     destination: Path,
@@ -82,6 +86,7 @@ actual fun downloadRecursively(
     }
 }
 
+@Throws(DownloadException::class)
 actual fun downloadSingle(
     file: DownloadableFile,
     destination: Path,
@@ -137,7 +142,12 @@ class SingleFileURLSessionDownloadDelegate internal constructor(
                     error = err.ptr
                 )
                 err.value?.localizedDescription?.let {
-                    updateChannel.close(DownloadException(it))
+                    updateChannel.close(
+                        DownloadException(
+                            appMessage = AppMessage.Raw(it),
+                            scope = AppScope.DownloadExecutor
+                        )
+                    )
                     return@memScoped
                 }
             }
@@ -151,7 +161,12 @@ class SingleFileURLSessionDownloadDelegate internal constructor(
                 error = err.ptr
             )
             err.value?.localizedDescription?.let {
-                updateChannel.close(DownloadException(it))
+                updateChannel.close(
+                    DownloadException(
+                        appMessage = AppMessage.Raw(it),
+                        scope = AppScope.DownloadExecutor
+                    )
+                )
                 return@memScoped
             }
         }

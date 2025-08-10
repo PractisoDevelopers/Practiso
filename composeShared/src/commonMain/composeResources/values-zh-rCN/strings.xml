@@ -107,7 +107,6 @@
     <string name="internal_message_n_para">内部通知： %1$s</string>
     <string name="invalid_file_format_para">无效文件格式</string>
     <string name="resource_x_for_quiz_y_was_not_found_para">未找到题目 %2$s 的资源 %1$s</string>
-    <string name="failed_to_copy_resource_x_for_quiz_y_para">无法为题目 %2$s复制资源 %1$s</string>
     <plurals name="importing_x_items_y_done">
         <item quantity="other">正在导入 %1$d 项, %2$d 项已完成</item>
     </plurals>

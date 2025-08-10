@@ -1,5 +1,8 @@
 package com.zhufucdev.practiso.platform
 
+import com.zhufucdev.practiso.datamodel.AppMessage
+import com.zhufucdev.practiso.datamodel.AppScope
+import com.zhufucdev.practiso.datamodel.DownloadException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
@@ -19,6 +22,7 @@ import okio.FileSystem
 import okio.Path
 import okio.buffer
 
+@Throws(DownloadException::class)
 actual fun downloadRecursively(
     walker: DirectoryWalker,
     destination: Path,
@@ -40,6 +44,7 @@ actual fun downloadRecursively(
     }.awaitAll()
 }
 
+@Throws(DownloadException::class)
 actual fun downloadSingle(file: DownloadableFile, destination: Path): Flow<DownloadState> = flow {
     val client = HttpClient(OkHttp)
     emit(DownloadState.Preparing(listOf(file)))
@@ -54,7 +59,11 @@ private fun HttpClient.downloadFileTo(
 
     val response = get(file.url)
     if (!response.status.isSuccess()) {
-        throw IllegalStateException("HTTP request responded with ${response.status}")
+        throw DownloadException(
+            scope = AppScope.DownloadExecutor,
+            appMessage = AppMessage.HttpStatusFailure(response.status.value),
+            kotlinMessage = "HTTP request responded with ${response.status}"
+        )
     }
 
     val length = response.headers[HttpHeaders.ContentLength]?.toFloat()

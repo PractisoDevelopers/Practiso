@@ -9,13 +9,12 @@ import com.zhufucdev.practiso.JinaV2SmallEn
 import com.zhufucdev.practiso.ListedDirectoryWalker
 import com.zhufucdev.practiso.R
 import com.zhufucdev.practiso.SharedContext
+import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
-import com.zhufucdev.practiso.datamodel.ErrorMessage
-import com.zhufucdev.practiso.datamodel.ErrorModel
+import com.zhufucdev.practiso.datamodel.FeiException
 import com.zhufucdev.practiso.datamodel.Frame
 import com.zhufucdev.practiso.datamodel.MlModel
 import com.zhufucdev.practiso.moved
-import com.zhufucdev.practiso.service.FeiException
 import com.zhufucdev.practiso.service.FeiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -122,11 +121,9 @@ actual fun createFrameEmbeddingInference(
                 )
             } catch (e: IllegalArgumentException) {
                 throw FeiException(
-                    ErrorModel(
-                        scope = AppScope.FeiInitialization,
-                        cause = e,
-                        message = ErrorMessage.IncompatibleModel
-                    )
+                    scope = AppScope.FeiInitialization,
+                    cause = e,
+                    appMessage = AppMessage.IncompatibleModel
                 )
             }
         }
@@ -221,11 +218,9 @@ actual fun createFrameEmbeddingInference(
             } catch (e: IllegalArgumentException) {
                 modelFileChannel.close()
                 throw FeiException(
-                    ErrorModel(
-                        AppScope.FeiInitialization,
-                        cause = e,
-                        message = ErrorMessage.IncompatibleModel
-                    )
+                    cause = e,
+                    scope = AppScope.FeiInitialization,
+                    appMessage = AppMessage.IncompatibleModel
                 )
             }
         }
