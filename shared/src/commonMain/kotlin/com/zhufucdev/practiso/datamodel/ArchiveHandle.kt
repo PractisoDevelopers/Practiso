@@ -11,6 +11,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import opacity.client.ArchiveMetadata
 import opacity.client.OpacityClient
 
@@ -47,8 +48,10 @@ class ArchiveHandle(
                         destination = destination
                     ).onEach {
                         if (it is DownloadState.Configure) {
-                            it.build.trySend {
-                                discretion = DownloadDiscretion.Immediate
+                            launch {
+                                it.build.send {
+                                    discretion = DownloadDiscretion.Immediate
+                                }
                             }
                         }
                     }
