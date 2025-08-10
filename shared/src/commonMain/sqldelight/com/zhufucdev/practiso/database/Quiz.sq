@@ -134,7 +134,7 @@ DELETE FROM textFrame WHERE id IN (SELECT textFrameId FROM frameByOptionsFrame W
 DELETE FROM imageFrame WHERE id IN (SELECT imageFrameId FROM frameByOptionsFrame WHERE optionsFrameId IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId IN :id));
 DELETE FROM optionsFrame WHERE id IN (SELECT optionsFrameId FROM frameByQuiz WHERE quizId IN :id);
 DELETE FROM quiz WHERE id IN :id;
-SELECT 1;
+SELECT 0;
 }
 
 getAllTextFrames:

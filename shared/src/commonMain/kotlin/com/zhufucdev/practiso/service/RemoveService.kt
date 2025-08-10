@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.service
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Quiz
@@ -42,9 +43,7 @@ class RemoveService(private val db: AppDatabase = Database.app) {
                 .awaitAll()
         }
 
-        db.transaction {
-            db.quizQueries.removeQuizzesWithFrames(id)
-        }
+        db.quizQueries.removeQuizzesWithFrames(id).awaitAsOne()
     }
 
     suspend fun removeQuizWithResources(id: Long) {
@@ -69,7 +68,7 @@ class RemoveService(private val db: AppDatabase = Database.app) {
                 .executeAsList()
                 .map(Quiz::id)
 
-            db.quizQueries.removeQuizzesWithFrames(quizIds)
+            db.quizQueries.removeQuizzesWithFrames(quizIds).awaitAsOne()
             db.dimensionQueries.removeDimension(id)
         }
     }
@@ -80,7 +79,7 @@ class RemoveService(private val db: AppDatabase = Database.app) {
                 .executeAsList()
                 .map(Quiz::id)
 
-            db.quizQueries.removeQuizzesWithFrames(quizIds)
+            db.quizQueries.removeQuizzesWithFrames(quizIds).awaitAsOne()
             db.dimensionQueries.removeDimensions(ids)
         }
     }

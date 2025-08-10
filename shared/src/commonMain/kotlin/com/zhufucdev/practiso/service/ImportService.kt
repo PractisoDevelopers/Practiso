@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.service
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.AppMessage
@@ -100,9 +101,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
                 val platform = getPlatform()
 
                 suspend fun rollback(resourcesIndicates: IntRange) {
-                    db.transaction {
-                        db.quizQueries.removeQuizzesWithFrames(listOf(importedQuiz))
-                    }
+                    db.quizQueries.removeQuizzesWithFrames(listOf(importedQuiz)).awaitAsOne()
                     resources.slice(resourcesIndicates).forEach { (name) ->
                         platform.filesystem.delete(platform.resourcePath.resolve(name))
                     }
