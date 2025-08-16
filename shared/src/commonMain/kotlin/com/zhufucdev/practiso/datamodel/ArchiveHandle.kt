@@ -21,7 +21,7 @@ class ArchiveHandle(
 ) {
     val taskId = "archive[id=${metadata.id}]"
 
-    @Throws(DownloadException::class)
+    @Throws(CancellationException::class, DownloadException::class)
     suspend fun getAsSource(downloadManager: DownloadManager? = null): NamedSource {
         val fs = getPlatform().filesystem
         if (downloadManager != null) {

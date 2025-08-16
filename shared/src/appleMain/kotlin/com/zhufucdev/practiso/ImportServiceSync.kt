@@ -30,7 +30,7 @@ class ImportServiceSync(db: AppDatabase) {
                     }
                 }
 
-                ImportState.Idle -> {}
+                is ImportState.Idle -> {}
                 is ImportState.Importing -> {}
                 is ImportState.Unarchiving -> {}
             }
