@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
+import opacity.client.BonjourResponse
 import opacity.client.DimensionMetadata
 import opacity.client.OpacityClient
 import opacity.client.SortOptions
@@ -46,6 +47,8 @@ class CommunityService(
 
     suspend fun getDimensions(takeFirst: Int = 20): List<DimensionMetadata> =
         client.getDimensionList(takeFirst)
+
+    suspend fun getServerInfo(): BonjourResponse = client.getBonjour()
 }
 
 /**
