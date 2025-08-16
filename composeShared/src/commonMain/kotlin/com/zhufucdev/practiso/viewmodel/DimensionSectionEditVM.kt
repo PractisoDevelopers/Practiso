@@ -4,11 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.NavType
-import androidx.savedstate.SavedState
-import androidx.savedstate.read
-import androidx.savedstate.savedState
-import androidx.savedstate.write
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.DimensionOption
@@ -121,34 +116,4 @@ class DimensionSectionEditVM(
 
     @Serializable
     data class Startpoint(val dimensionId: Long, val topItemIndex: Int)
-
-    object StartpointNavType : NavType<Startpoint>(false) {
-        private const val DimensionIdKey = "dimension_id"
-        private const val TopItemIndexKey = "top_item_idx"
-
-        override fun put(
-            bundle: SavedState,
-            key: String,
-            value: Startpoint,
-        ) {
-            bundle.write {
-                putSavedState(key, savedState {
-                    putLong(DimensionIdKey, value.dimensionId)
-                    putInt(TopItemIndexKey, value.topItemIndex)
-                })
-            }
-        }
-
-        override fun get(
-            bundle: SavedState,
-            key: String,
-        ): Startpoint? = bundle.read {
-            getSavedStateOrNull(key)?.read {
-                Startpoint(getLong(DimensionIdKey), getInt(TopItemIndexKey))
-            }
-        }
-
-        override fun parseValue(value: String): Startpoint =
-            throw UnsupportedOperationException()
-    }
 }

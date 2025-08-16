@@ -183,11 +183,7 @@ fun PractisoApp(navController: NavHostController) {
                         }
                     }
                 }
-                composable<DimensionSectionEditVM.Startpoint>(
-                    typeMap = mapOf(
-                        typeOf<DimensionSectionEditVM.Startpoint>() to DimensionSectionEditVM.StartpointNavType
-                    )
-                ) { stackEntry ->
+                composable<DimensionSectionEditVM.Startpoint> { stackEntry ->
                     AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
                         DimensionSectionEditApp(
                             startpoint = stackEntry.toRoute(),
@@ -195,11 +191,7 @@ fun PractisoApp(navController: NavHostController) {
                         )
                     }
                 }
-                composable<QuizSectionEditVM.Startpoint>(
-                    typeMap = mapOf(
-                        typeOf<QuizSectionEditVM.Startpoint>() to QuizSectionEditVM.StartpointNavType
-                    )
-                ) { stackEntry ->
+                composable<QuizSectionEditVM.Startpoint> { stackEntry ->
                     AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
                         QuizSectionEditApp(
                             startpoint = stackEntry.toRoute(),
@@ -207,11 +199,7 @@ fun PractisoApp(navController: NavHostController) {
                         )
                     }
                 }
-                composable<DimensionViewModel.Initialization>(
-                    typeMap = mapOf(
-                        typeOf<DimensionViewModel.Initialization>() to DimensionViewModel.InitializationNavType
-                    )
-                ) { stackEntry ->
+                composable<DimensionViewModel.RouteParams> { stackEntry ->
                     AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
                         ScaffoldedApp(it, searchVM) {
                             DimensionApp(stackEntry.toRoute())

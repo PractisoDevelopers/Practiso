@@ -96,11 +96,11 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun DimensionApp(
-    initialization: DimensionViewModel.Initialization,
+    routeParams: DimensionViewModel.RouteParams,
     model: DimensionViewModel = viewModel(factory = DimensionViewModel.Factory),
 ) {
-    LaunchedEffect(model, initialization) {
-        model.event.init.send(initialization)
+    LaunchedEffect(model, routeParams) {
+        model.event.init.send(routeParams)
     }
 
     val quizzes by model.quizzes.collectAsState(null, Dispatchers.IO)

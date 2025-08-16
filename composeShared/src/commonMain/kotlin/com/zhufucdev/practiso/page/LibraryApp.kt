@@ -327,7 +327,7 @@ fun LibraryApp(
                                     Modifier.combineClickable(
                                         onClick = {
                                             navController.navigate(
-                                                DimensionViewModel.Initialization(
+                                                DimensionViewModel.RouteParams(
                                                     it.id
                                                 )
                                             )

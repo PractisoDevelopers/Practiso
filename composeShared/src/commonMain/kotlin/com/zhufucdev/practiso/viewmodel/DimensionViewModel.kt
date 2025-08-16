@@ -7,11 +7,6 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.NavType
-import androidx.savedstate.SavedState
-import androidx.savedstate.read
-import androidx.savedstate.savedState
-import androidx.savedstate.write
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
@@ -70,7 +65,7 @@ class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHand
     data class Events(
         val remove: Channel<Collection<Long>> = Channel(),
         val add: Channel<Collection<Long>> = Channel(),
-        val init: Channel<Initialization> = Channel(),
+        val init: Channel<RouteParams> = Channel(),
         val generate: Channel<Unit> = Channel(),
         val update: Channel<Pair<Long, Double>> = Channel()
     )
@@ -121,34 +116,5 @@ class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHand
     }
 
     @Serializable
-    data class Initialization(val dimensionId: Long)
-
-    object InitializationNavType : NavType<Initialization>(false) {
-        private const val DimensionIdKey = "dimension_id"
-
-        override fun get(
-            bundle: SavedState,
-            key: String,
-        ): Initialization? = bundle.read {
-            getSavedStateOrNull(key)?.let {
-                Initialization(getLong(DimensionIdKey))
-            }
-        }
-
-        override fun parseValue(value: String): Initialization {
-            throw UnsupportedOperationException()
-        }
-
-        override fun put(
-            bundle: SavedState,
-            key: String,
-            value: Initialization,
-        ) {
-            bundle.write {
-                putSavedState(key, savedState {
-                    putLong(DimensionIdKey, value.dimensionId)
-                })
-            }
-        }
-    }
+    data class RouteParams(val dimensionId: Long)
 }

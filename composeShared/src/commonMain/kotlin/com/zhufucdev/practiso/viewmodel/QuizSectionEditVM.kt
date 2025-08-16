@@ -4,11 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.NavType
-import androidx.savedstate.SavedState
-import androidx.savedstate.read
-import androidx.savedstate.savedState
-import androidx.savedstate.write
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.QuizOption
@@ -119,36 +114,4 @@ class QuizSectionEditVM(
 
     @Serializable
     data class Startpoint(val quizId: Long, val topItemIndex: Int)
-
-    object StartpointNavType : NavType<Startpoint>(false) {
-        private const val QuizIdKey = "quiz_id"
-        private const val TopIndexIdxKey = "top_item_idx"
-
-        override fun get(
-            bundle: SavedState,
-            key: String,
-        ): Startpoint? =
-            bundle.read {
-                getSavedStateOrNull(key)?.read {
-                    Startpoint(getLong(QuizIdKey), getInt(TopIndexIdxKey))
-                }
-            }
-
-        override fun parseValue(value: String): Startpoint {
-            throw UnsupportedOperationException()
-        }
-
-        override fun put(
-            bundle: SavedState,
-            key: String,
-            value: Startpoint,
-        ) {
-            bundle.write {
-                putSavedState(key, savedState {
-                    putLong(QuizIdKey, value.quizId)
-                    putInt(TopIndexIdxKey, value.topItemIndex)
-                })
-            }
-        }
-    }
 }
