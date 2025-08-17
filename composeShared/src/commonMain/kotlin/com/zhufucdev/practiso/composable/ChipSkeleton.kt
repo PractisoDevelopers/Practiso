@@ -18,7 +18,7 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 
 @Composable
-private fun DimensionContent(label: @Composable () -> Unit, tailingIcon: @Composable () -> Unit) {
+private fun ChipContent(label: @Composable () -> Unit, tailingIcon: @Composable () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(PaddingNormal),
         modifier = Modifier.padding(vertical = PaddingSmall, horizontal = PaddingNormal)
@@ -33,7 +33,7 @@ private fun DimensionContent(label: @Composable () -> Unit, tailingIcon: @Compos
 }
 
 @Composable
-fun DimensionSkeleton(
+fun ChipSkeleton(
     modifier: Modifier = Modifier,
     selected: Boolean = false,
     label: @Composable () -> Unit = {
@@ -51,6 +51,6 @@ fun DimensionSkeleton(
         colors = cardColors,
         elevation = CardDefaults.cardElevation(0.dp),
         modifier = Modifier.clip(CardDefaults.shape) then modifier
-    ) { DimensionContent(label, tailingIcon) }
+    ) { ChipContent(label, tailingIcon) }
 }
 

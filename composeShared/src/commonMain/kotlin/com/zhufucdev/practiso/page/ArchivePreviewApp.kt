@@ -54,6 +54,7 @@ fun ArchivePreviewApp(
     animatedContent: AnimatedContentScope,
 ) {
     val archive by previewVM.archive.collectAsState()
+    val preview by previewVM.preview.collectAsState(null)
     val downloadError by previewVM.downloadError.collectAsState()
 
     Scaffold(
@@ -106,6 +107,12 @@ fun ArchivePreviewApp(
                             }
                         )
                     } ?: PractisoOptionSkeleton(Modifier.fillParentMaxWidth())
+                }
+            }
+
+            if (archive?.dimensions?.let { it.size > 1 } == true) {
+                item {
+
                 }
             }
         }

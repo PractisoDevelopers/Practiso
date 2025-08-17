@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +17,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -28,22 +27,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.composable.ChipSkeleton
 import com.zhufucdev.practiso.composable.DialogWithTextInput
-import com.zhufucdev.practiso.composable.DimensionSkeleton
 import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.QuizSkeleton
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
+import com.zhufucdev.practiso.composable.SomeGroup
+import com.zhufucdev.practiso.composable.filter
+import com.zhufucdev.practiso.composable.filteredItems
+import com.zhufucdev.practiso.composable.rememberFilterController
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.combineClickable
@@ -55,7 +55,6 @@ import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel
-import com.zhufucdev.practiso.viewmodel.SessionStarterAppViewModel.Item
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -70,53 +69,15 @@ import resources.no_options_available_para
 import resources.select_category_to_begin_para
 import resources.session_name_para
 import resources.stranded_quizzes_para
+import kotlin.math.max
+import kotlin.math.min
 
 @Composable
 fun SessionStarter(
     model: SessionStarterAppViewModel = viewModel(factory = SessionStarterAppViewModel.Factory),
 ) {
-    val items: List<Item>? by model.items.collectAsState()
-    val itemById by remember(items) {
-        derivedStateOf { items?.associateBy { it.id } ?: emptyMap() }
-    }
+    val items by model.items.collectAsState()
     val coroutine = rememberCoroutineScope()
-    val currentItems: List<Item>? by remember(model, items) {
-        derivedStateOf {
-            items?.filter { it.id in model.currentItemIds }
-        }
-    }
-    val quizzes: Set<QuizOption>? by remember(currentItems) {
-        derivedStateOf {
-            currentItems?.takeIf { it.isNotEmpty() }?.flatMap(Item::quizzes)?.toSet()
-        }
-    }
-    val selectedQuizzes: List<QuizOption>? by remember(model.selection, quizzes) {
-        derivedStateOf {
-            quizzes?.filter {
-                it.quiz.id in model.selection.quizIds || it in model.selection.dimensionIds.flatMap { i ->
-                    itemById[i]?.quizzes ?: emptyList()
-                }
-            }
-        }
-    }
-    val unselectedQuizzes: List<QuizOption>? by remember(model.selection, quizzes) {
-        derivedStateOf {
-            quizzes?.filter {
-                it.quiz.id !in model.selection.quizIds && it !in model.selection.dimensionIds.flatMap { i ->
-                    itemById[i]?.quizzes ?: emptyList()
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(items) {
-        items?.let {
-            it.firstOrNull()?.let { firstItem ->
-                model.event.addCurrentItem.send(firstItem.id)
-            }
-        }
-    }
-
     AnimatedContent(items?.isEmpty() == true) { empty ->
         if (empty) {
             PlaceHolder(
@@ -131,116 +92,102 @@ fun SessionStarter(
                 }
             )
         } else {
-            Column(Modifier.fillMaxSize()) {
-                Spacer(Modifier.height(PaddingNormal))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(PaddingNormal)) {
-                    item("start_spacer") {
-                        Spacer(Modifier.width(0.dp))
-                    }
-                    items?.let {
-                        items(it, key = { d -> d.id }) { d ->
-                            DimensionSkeleton(
-                                selected = currentItems!!.contains(d),
-                                label = {
-                                    Text(
-                                        if (d is Item.Categorized) {
-                                            d.dimension.name
-                                        } else {
-                                            stringResource(Res.string.stranded_quizzes_para)
-                                        }
-                                    )
-                                },
-                                modifier = Modifier.combineClickable(
-                                    onClick = {
-                                        coroutine.launch {
-                                            if (currentItems!!.contains(d)) {
-                                                model.event.removeCurrentItem.send(d.id)
-                                            } else {
-                                                model.event.addCurrentItem.send(d.id)
-                                            }
-                                        }
-                                    },
-                                    onSecondaryClick = {
-                                        coroutine.launch {
-                                            if (model.selection.dimensionIds.contains(d.id)) {
-                                                model.event.deselectCategory.send(d.id)
-                                            } else {
-                                                model.event.selectCategory.send(d.id)
-                                            }
-                                            model.event.addCurrentItem.send(d.id)
-                                        }
+            val filterController = rememberFilterController(
+                items = items ?: emptyList(),
+                groupSelector = { it.dimensions }
+            )
+            val backgroundColor = MaterialTheme.colorScheme.background
+            LazyColumn(Modifier.fillMaxSize()) {
+                items?.let {
+                    filter(
+                        Modifier.fillMaxWidth().background(backgroundColor).padding(PaddingNormal),
+                        controller = filterController,
+                        key = { it.id },
+                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
+                        verticalArrangement = Arrangement.spacedBy(PaddingSmall),
+                        targetHeightExpanded = min(
+                            max(100, filterController.groupedItems.size * 24),
+                            200
+                        ).dp
+                    ) { item ->
+                        ChipSkeleton(
+                            selected = item in filterController.selectedGroups,
+                            label = {
+                                Text(
+                                    if (item is SomeGroup) {
+                                        item.value.name
+                                    } else {
+                                        stringResource(Res.string.stranded_quizzes_para)
                                     }
                                 )
+                            },
+                            modifier = Modifier.combineClickable(
+                                onClick = {
+                                    filterController.toggleGroup(item)
+                                },
+                                onSecondaryClick = {
+                                    filterController.toggleGroup(item, true)
+                                    if (item !is SomeGroup) {
+                                        return@combineClickable
+                                    }
+
+                                    coroutine.launch {
+                                        if (item.value.id in model.selection.dimensionIds) {
+                                            model.event.selectCategory.send(item.value.id)
+                                        } else {
+                                            model.event.deselectCategory.send(item.value.id)
+                                        }
+                                    }
+                                }
                             )
-                        }
-                    } ?: items(4) {
-                        DimensionSkeleton()
+                        )
                     }
-                    item("end_spacer") {
-                        Spacer(Modifier.width(PaddingSmall))
+                } ?: stickyHeader {
+                    Row(
+                        modifier = Modifier.padding(PaddingNormal),
+                        horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
+                    ) {
+                        repeat(4) {
+                            ChipSkeleton()
+                        }
                     }
                 }
-                Spacer(Modifier.height(PaddingNormal))
-                LazyColumn {
-                    selectedQuizzes?.let {
-                        it.forEachIndexed { index, option ->
-                            item(option.quiz.id) {
-                                QuizItem(
-                                    option,
-                                    hasSeparator = index < it.lastIndex || unselectedQuizzes!!.isNotEmpty(),
-                                    checked = true,
-                                    onClick = {
-                                        coroutine.launch {
-                                            model.event.deselectQuiz.send(option.quiz.id)
-                                        }
-                                    },
-                                    modifier = Modifier.animateItem()
-                                )
+                if (filterController.selectedGroups.isEmpty()) {
+                    item {
+                        Text(stringResource(Res.string.select_category_to_begin_para))
+                    }
+                }
+                filteredItems(
+                    filterController,
+                    key = { it.quiz.id },
+                    sort = { a, b ->
+                        val aSelected = model.isItemSelected(a)
+                        val bSelected = model.isItemSelected(b)
+                        when {
+                            aSelected && !bSelected -> -1
+                            !aSelected && bSelected -> 1
+                            else -> (a.quiz.id - b.quiz.id).toInt()
+                        }
+                    }
+                ) {
+                    QuizItem(
+                        modifier = Modifier.animateItem(),
+                        option = it.quiz,
+                        hasSeparator = true,
+                        checked = model.isItemSelected(it),
+                        onClick = {
+                            coroutine.launch {
+                                if (it.quiz.id !in model.selection.quizIds) {
+                                    model.event.selectQuiz.send(it.quiz.id)
+                                } else {
+                                    model.event.deselectQuiz.send(it.quiz.id)
+                                }
                             }
                         }
-                    } ?: items?.let { _ ->
-                        item {
-                            Text(
-                                stringResource(Res.string.select_category_to_begin_para),
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(horizontal = PaddingNormal)
-                                    .animateItem()
-                            )
-                        }
-                    } ?: items(8) { index ->
-                        Spacer(Modifier.height(PaddingNormal))
-                        QuizSkeleton(modifier = Modifier.padding(horizontal = PaddingNormal))
-                        Spacer(Modifier.height(PaddingNormal))
-                        if (index < 7) {
-                            Spacer(
-                                Modifier.fillMaxWidth().padding(start = PaddingNormal)
-                                    .height(1.dp)
-                                    .background(MaterialTheme.colorScheme.surfaceBright)
-                            )
-                        }
-                    }
-
-                    unselectedQuizzes?.let {
-                        it.forEachIndexed { index, option ->
-                            item(option.quiz.id) {
-                                QuizItem(
-                                    option,
-                                    hasSeparator = index < it.lastIndex,
-                                    checked = false,
-                                    onClick = {
-                                        coroutine.launch {
-                                            model.event.selectQuiz.send(option.quiz.id)
-                                        }
-                                    },
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
-                        }
-                    }
-
-                    item("space") {
-                        Spacer(Modifier.height(PaddingSpace))
-                    }
+                    )
+                }
+                item {
+                    Spacer(Modifier.height(PaddingSpace))
                 }
             }
         }

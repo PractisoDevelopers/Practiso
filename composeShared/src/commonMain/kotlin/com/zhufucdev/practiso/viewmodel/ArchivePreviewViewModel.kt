@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.lifecycle.viewmodel.initializer
@@ -13,9 +14,11 @@ import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.service.CommunityService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import opacity.client.ArchiveMetadata
 
 @OptIn(SavedStateHandleSaveableApi::class)
@@ -38,7 +41,11 @@ class ArchivePreviewViewModel(
                 val (_, archiveId) = pair
                 archiveId?.let { service.getArchivePreview(it) }
             }
-    val dimojis = archive.map { it?.dimensions }
+            .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
+    val dimojis =
+        archive
+            .map { it?.dimensions }
+            .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
     fun loadParameters(routeParams: ArchivePreviewRouteParams) {
         _archive.tryEmit(routeParams.metadata)
