@@ -3,9 +3,11 @@
 package com.zhufucdev.practiso
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -87,6 +89,7 @@ import com.zhufucdev.practiso.composition.rememberExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
+import com.zhufucdev.practiso.page.ArchivePreviewApp
 import com.zhufucdev.practiso.page.CommunityApp
 import com.zhufucdev.practiso.page.DimensionApp
 import com.zhufucdev.practiso.page.DimensionSectionEditApp
@@ -97,17 +100,21 @@ import com.zhufucdev.practiso.page.SessionStarter
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
+import com.zhufucdev.practiso.route.ArchiveMetadataNavType
+import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
+import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
+import com.zhufucdev.practiso.viewmodel.ArchivePreviewViewModel
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
-import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import opacity.client.ArchiveMetadata
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.deactivate_global_search_span
@@ -129,81 +136,107 @@ fun PractisoApp(navController: NavHostController) {
         CompositionLocalProvider(
             LocalSharedImportViewModel provides importViewModel
         ) {
-            NavHost(
-                navController = navController,
-                startDestination = TopLevelDestination.Session.route,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { fadeOut() }
-            ) {
-                composable(TopLevelDestination.Session.route) {
-                    AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
-                        ScaffoldedApp(it, searchVM) {
-                            SessionApp()
-                        }
-                    }
-                }
-                composable(TopLevelDestination.Library.route) {
-                    LaunchedEffect(libraryVM) {
-                        libraryVM.event.removeReveal.send(Unit)
-                    }
-                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                        ScaffoldedApp(it, searchVM) {
-                            LibraryApp(model = libraryVM)
-                        }
-                    }
-                }
-                composable(TopLevelDestination.Community.route) {
-                    AdaptiveApp(navController, TopLevelDestination.Community, searchVM) {
-                        ScaffoldedApp(it, searchVM) {
-                            CommunityApp(communityVM = communityVM, importVM = importViewModel)
-                        }
-                    }
-                }
-                composable<LibraryAppViewModel.Revealable>(
-                    typeMap = mapOf(
-                        typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
-                        typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
-                    )
-                ) { backtrace ->
-                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                        ScaffoldedApp(it, searchVM) {
-                            LaunchedEffect(backtrace) {
-                                libraryVM.event.reveal.send(backtrace.toRoute())
+            SharedTransitionLayout {
+                NavHost(
+                    navController = navController,
+                    startDestination = TopLevelDestination.Session.route,
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { fadeOut() }
+                ) {
+                    composable(TopLevelDestination.Session.route) {
+                        AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                            ScaffoldedApp(it, searchVM) {
+                                SessionApp()
                             }
-                            LibraryApp(
-                                model = libraryVM
+                        }
+                    }
+                    composable(TopLevelDestination.Library.route) {
+                        LaunchedEffect(libraryVM) {
+                            libraryVM.event.removeReveal.send(Unit)
+                        }
+                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                            ScaffoldedApp(it, searchVM) {
+                                LibraryApp(model = libraryVM)
+                            }
+                        }
+                    }
+                    composable(TopLevelDestination.Community.route) {
+                        AdaptiveApp(navController, TopLevelDestination.Community, searchVM) {
+                            ScaffoldedApp(it, searchVM) {
+                                CommunityApp(
+                                    communityVM = communityVM,
+                                    importVM = importViewModel,
+                                    sharedTransition = this@SharedTransitionLayout,
+                                    animatedContent = this@composable
+                                )
+                            }
+                        }
+                    }
+                    composable<LibraryAppViewModel.Revealable>(
+                        typeMap = mapOf(
+                            typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
+                            typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
+                        )
+                    ) { backtrace ->
+                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                            ScaffoldedApp(it, searchVM) {
+                                LaunchedEffect(backtrace) {
+                                    libraryVM.event.reveal.send(backtrace.toRoute())
+                                }
+                                LibraryApp(
+                                    model = libraryVM
+                                )
+                            }
+                        }
+                    }
+                    composable("${TopLevelDestination.Session.route}/new") {
+                        AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                            ScaffoldedApp(it, searchVM) {
+                                SessionStarter()
+                            }
+                        }
+                    }
+                    composable<DimensionSectionEditVM.Startpoint> { stackEntry ->
+                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                            DimensionSectionEditApp(
+                                startpoint = stackEntry.toRoute(),
+                                libraryVm = libraryVM
                             )
                         }
                     }
-                }
-                composable("${TopLevelDestination.Session.route}/new") {
-                    AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
-                        ScaffoldedApp(it, searchVM) {
-                            SessionStarter()
+                    composable<QuizSectionEditVM.Startpoint> { stackEntry ->
+                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                            QuizSectionEditApp(
+                                startpoint = stackEntry.toRoute(),
+                                libraryVM = libraryVM
+                            )
                         }
                     }
-                }
-                composable<DimensionSectionEditVM.Startpoint> { stackEntry ->
-                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                        DimensionSectionEditApp(
-                            startpoint = stackEntry.toRoute(),
-                            libraryVm = libraryVM
-                        )
-                    }
-                }
-                composable<QuizSectionEditVM.Startpoint> { stackEntry ->
-                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                        QuizSectionEditApp(
-                            startpoint = stackEntry.toRoute(),
-                            libraryVM = libraryVM
-                        )
-                    }
-                }
-                composable<DimensionViewModel.RouteParams> { stackEntry ->
-                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                        ScaffoldedApp(it, searchVM) {
-                            DimensionApp(stackEntry.toRoute())
+                    composable<DimensionAppRouteParams> { stackEntry ->
+                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                            ScaffoldedApp(it, searchVM) {
+                                DimensionApp(stackEntry.toRoute())
+                            }
                         }
+                    }
+                    composable<ArchivePreviewRouteParams>(
+                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+                        typeMap = mapOf(
+                            typeOf<ArchiveMetadata>() to ArchiveMetadataNavType
+                        )
+                    ) { stackEntry ->
+                        val vm: ArchivePreviewViewModel =
+                            viewModel(factory = ArchivePreviewViewModel.Factory)
+                        LaunchedEffect(vm) {
+                            vm.loadParameters(stackEntry.toRoute())
+                        }
+                        ArchivePreviewApp(
+                            previewVM = vm,
+                            importVM = importViewModel,
+                            sharedTransition = this@SharedTransitionLayout,
+                            animatedContent = this@composable
+                        )
                     }
                 }
             }

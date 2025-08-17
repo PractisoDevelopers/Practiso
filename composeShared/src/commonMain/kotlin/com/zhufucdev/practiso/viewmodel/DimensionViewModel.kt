@@ -11,6 +11,7 @@ import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
+import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.service.CategorizeService
 import com.zhufucdev.practiso.service.ClusterService
 import com.zhufucdev.practiso.service.ClusterState
@@ -33,7 +34,6 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.serialization.Serializable
 
 @OptIn(SavedStateHandleSaveableApi::class, ExperimentalCoroutinesApi::class)
 class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHandle) : ViewModel() {
@@ -65,7 +65,7 @@ class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHand
     data class Events(
         val remove: Channel<Collection<Long>> = Channel(),
         val add: Channel<Collection<Long>> = Channel(),
-        val init: Channel<RouteParams> = Channel(),
+        val init: Channel<DimensionAppRouteParams> = Channel(),
         val generate: Channel<Unit> = Channel(),
         val update: Channel<Pair<Long, Double>> = Channel()
     )
@@ -114,7 +114,4 @@ class DimensionViewModel(db: AppDatabase, fei: FeiService, state: SavedStateHand
                 }
             }
     }
-
-    @Serializable
-    data class RouteParams(val dimensionId: Long)
 }

@@ -1,23 +1,17 @@
 package com.zhufucdev.practiso.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.zhufucdev.practiso.AppSettings
-import com.zhufucdev.practiso.AppSettingsScope
 import com.zhufucdev.practiso.DownloadManager
-import com.zhufucdev.practiso.UniqueIO
 import com.zhufucdev.practiso.datamodel.AppException
 import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.DownloadException
+import com.zhufucdev.practiso.helper.getCommunityServiceWithDownloadManager
 import com.zhufucdev.practiso.service.CommunityService
-import com.zhufucdev.practiso.service.DEFAULT_COMMUNITY_SERVER_URL
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +23,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
@@ -38,9 +31,9 @@ import kotlinx.coroutines.selects.select
 import opacity.client.SortOptions
 
 class CommunityAppViewModel(
-    private val server: Flow<CommunityService>,
-    val downloadManager: Flow<DownloadManager>,
-) : ViewModel() {
+    communityService: Flow<CommunityService>,
+    downloadManager: Flow<DownloadManager>,
+) : ArchiveDownloadManagedViewModel(communityService, downloadManager) {
     private val refreshCounter = MutableStateFlow(0)
     private val _pageState = MutableStateFlow<PageState>(Loading)
 
@@ -76,7 +69,7 @@ class CommunityAppViewModel(
 
     val dimensions =
         refreshCounter
-            .combine(server, ::Pair)
+            .combine(communityService, ::Pair)
             .map { (_, server) -> server.getDimensions(5) }
             .catch { markPageFailed(it) }
             .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
@@ -86,7 +79,7 @@ class CommunityAppViewModel(
     private val _archivePaginator =
         refreshCounter
             .combine(_archiveSortOptions) { _, s -> s }
-            .combine(server) { sort, service -> service.getArchivePagination(sort) }
+            .combine(communityService) { sort, service -> service.getArchivePagination(sort) }
             .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -129,26 +122,11 @@ class CommunityAppViewModel(
     companion object {
         @OptIn(ExperimentalCoroutinesApi::class)
         val Factory = viewModelFactory {
-            var downloadScope: CoroutineScope? = null
-            val serviceWithDm = AppSettings.communityServerUrl.combine(
-                AppSettings.communityUseCustomServer,
-                ::Pair
-            )
-                .mapLatest { (server, use) ->
-                    downloadScope?.cancel()
-                    downloadScope = CoroutineScope(Dispatchers.UniqueIO)
-                    Pair(
-                        CommunityService(
-                            server.takeIf { use } ?: DEFAULT_COMMUNITY_SERVER_URL
-                        ),
-                        DownloadManager(downloadScope)
-                    )
-                }
-                .shareIn(AppSettingsScope, started = SharingStarted.Lazily, replay = 1)
+            val bundle = getCommunityServiceWithDownloadManager()
             initializer {
                 CommunityAppViewModel(
-                    serviceWithDm.map { it.first },
-                    serviceWithDm.map { it.second }
+                    bundle.map { it.first },
+                    bundle.map { it.second }
                 )
             }
         }

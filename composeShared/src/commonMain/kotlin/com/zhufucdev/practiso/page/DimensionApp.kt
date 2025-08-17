@@ -61,6 +61,7 @@ import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.datamodel.QuizIntensity
+import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.service.ClusterState
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
@@ -96,7 +97,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun DimensionApp(
-    routeParams: DimensionViewModel.RouteParams,
+    routeParams: DimensionAppRouteParams,
     model: DimensionViewModel = viewModel(factory = DimensionViewModel.Factory),
 ) {
     LaunchedEffect(model, routeParams) {

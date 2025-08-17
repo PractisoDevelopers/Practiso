@@ -19,7 +19,7 @@ class ArchiveHandle(
     val metadata: ArchiveMetadata,
     private val client: OpacityClient,
 ) {
-    val taskId = "archive[id=${metadata.id}]"
+    val taskId = metadata.downloadTaskId
 
     @Throws(CancellationException::class, DownloadException::class)
     suspend fun getAsSource(downloadManager: DownloadManager? = null): NamedSource {

@@ -31,11 +31,14 @@ class DownloadManager(private val coroutineScope: CoroutineScope = CoroutineScop
         }
 
         val broadcast = get(taskId)
-        val newJob = coroutineScope.launch(SessionContext(sessionId = taskId)) {
+        val newJob = coroutineScope.launch(UniqueContext(sessionId = taskId)) {
             try {
                 state.collect {
                     broadcast.tryEmit(it)
                 }
+            } catch (_: CancellationException) {
+                broadcast.tryEmit(DownloadStopped.Idle)
+                trackingJobs.remove(taskId)
             } catch (e: Exception) {
                 broadcast.tryEmit(DownloadStopped.Error(e))
                 trackingJobs.remove(taskId)

@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
+import opacity.client.ArchiveMetadata
+import opacity.client.ArchivePreview
 import opacity.client.BonjourResponse
 import opacity.client.DimensionMetadata
 import opacity.client.OpacityClient
@@ -18,18 +20,18 @@ class CommunityService(
     private val client = OpacityClient(endpoint, PlatformHttpClientFactory)
 
     fun getArchivePagination(sortOptions: SortOptions = SortOptions()) =
-        object : Paginated<ArchiveHandle> {
+        object : Paginated<ArchiveMetadata> {
             private val pageRequestChannel = Channel<Unit>()
             private val pageCompleteChannel = Channel<Unit>()
 
-            override val items: Flow<List<ArchiveHandle>> = flow {
+            override val items: Flow<List<ArchiveMetadata>> = flow {
                 var response = client.getArchiveList(sortOptions)
-                emit(response.page.map { ArchiveHandle(it, client) })
+                emit(response.page)
                 while (response.next != null) {
                     pageRequestChannel.receive()
 
                     response = client.getArchiveList(sortOptions, response.next)
-                    emit(response.page.map { ArchiveHandle(it, client) })
+                    emit(response.page)
                     pageCompleteChannel.send(Unit)
                 }
                 hasNext.tryEmit(false)
@@ -45,8 +47,13 @@ class CommunityService(
             override val hasNext = MutableStateFlow(true)
         }
 
+    fun ArchiveMetadata.toHandle(): ArchiveHandle = ArchiveHandle(this, client)
+
     suspend fun getDimensions(takeFirst: Int = 20): List<DimensionMetadata> =
         client.getDimensionList(takeFirst)
+
+    suspend fun getArchivePreview(archiveId: String): List<ArchivePreview> =
+        client.getArchivePreview(archiveId)
 
     suspend fun getServerInfo(): BonjourResponse = client.getBonjour()
 }

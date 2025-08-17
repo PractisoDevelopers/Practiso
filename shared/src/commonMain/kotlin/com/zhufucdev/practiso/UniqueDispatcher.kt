@@ -13,7 +13,7 @@ import kotlin.coroutines.CoroutineContext
 /**
  * A special dispatcher that does not dispatch duplicated requests.
  * Eventually, dispatch is handled by parent dispatcher.
- * Duplication is determined by [SessionContext.sessionId].
+ * Duplication is determined by [UniqueContext.sessionId].
  */
 open class UniqueDispatcher(private val delegate: CoroutineDispatcher = Dispatchers.Default) :
     CoroutineDispatcher() {
@@ -21,7 +21,7 @@ open class UniqueDispatcher(private val delegate: CoroutineDispatcher = Dispatch
     private val rwMutex = Mutex()
 
     override fun isDispatchNeeded(context: CoroutineContext): Boolean {
-        return context[SessionContext.Key] != null
+        return context[UniqueContext.Key] != null
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -29,7 +29,7 @@ open class UniqueDispatcher(private val delegate: CoroutineDispatcher = Dispatch
         context: CoroutineContext,
         block: Runnable,
     ) {
-        val ctx = context[SessionContext.Key]!!
+        val ctx = context[UniqueContext.Key]!!
         if (!sessions.contains(ctx.sessionId)) {
             val job = context[Job]
             job?.invokeOnCompletion {
@@ -48,11 +48,11 @@ private object UniqueIoDispatcher : UniqueDispatcher(Dispatchers.IO)
 
 val Dispatchers.UniqueIO: CoroutineDispatcher get() = UniqueIoDispatcher
 
-data class SessionContext(
+data class UniqueContext(
     val sessionId: String,
 ) :
     CoroutineContext.Element {
     override val key = Key
 
-    object Key : CoroutineContext.Key<SessionContext>
+    object Key : CoroutineContext.Key<UniqueContext>
 }

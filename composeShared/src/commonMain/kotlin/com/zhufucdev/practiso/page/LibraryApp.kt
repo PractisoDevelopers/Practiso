@@ -85,12 +85,12 @@ import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
+import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
-import com.zhufucdev.practiso.viewmodel.DimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
@@ -304,7 +304,12 @@ fun LibraryApp(
                 flatContent(
                     value = dimensions,
                     caption = {
-                        SectionCaption(pluralStringResource(Res.plurals.dimensions_para, dimensions?.size ?: 0))
+                        SectionCaption(
+                            pluralStringResource(
+                                Res.plurals.dimensions_para,
+                                dimensions?.size ?: 0
+                            )
+                        )
                     },
                     content = {
                         var removalDialogExpanded by remember { mutableStateOf(false) }
@@ -327,9 +332,7 @@ fun LibraryApp(
                                     Modifier.combineClickable(
                                         onClick = {
                                             navController.navigate(
-                                                DimensionViewModel.RouteParams(
-                                                    it.id
-                                                )
+                                                DimensionAppRouteParams(it.id)
                                             )
                                         },
                                         onSecondaryClick = {
@@ -670,7 +673,10 @@ private fun DimensionCreationDialog(
                     onValueChange = { nameBuffer = it },
                     label = { Text(stringResource(Res.string.dimension_name)) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done
+                    ),
                 )
                 Row(Modifier.fillMaxWidth()) {
                     OutlinedButton(

@@ -73,5 +73,15 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
             others = properties.filterIsInstance<GenericBonjourProperty>()
         )
     }
+
+    suspend fun getArchivePreview(archiveId: String): GetArchivePreviewResponse {
+        val response = http.get {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("archive", archiveId)
+            }
+        }
+        return response.body()
+    }
 }
 
