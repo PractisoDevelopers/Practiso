@@ -74,7 +74,7 @@ fun <T, K> LazyListScope.filter(
         }
         return when (group) {
             is SomeGroup<K> -> key(group.value)
-            is NoGroup -> NoGroup
+            is NoGroup -> "no_group"
         }
     }
 
@@ -180,13 +180,7 @@ fun <T, K> LazyListScope.filter(
                     ) {
                         items(
                             count = sortedGroups.size,
-                            key = key?.let { key ->
-                                {
-                                    val group = sortedGroups[it]
-                                    if (group is SomeGroup<K>) key(group.value)
-                                    else NoGroup
-                                }
-                            }) { index ->
+                            key = { getKey(sortedGroups[it], it) }) { index ->
                             Box(
                                 Modifier.sharedElement(
                                     rememberSharedContentState(getKey(sortedGroups[index], index)),
