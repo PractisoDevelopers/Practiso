@@ -7,6 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
 import kotlinx.coroutines.launch
@@ -16,13 +17,17 @@ import resources.navigate_up_para
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavigateUpButton() {
+fun NavigateUpButton(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val coroutine = rememberCoroutineScope()
     PlainTooltipBox(
         stringResource(Res.string.navigate_up_para)
     ) {
         IconButton(
             onClick = {
+                if (onClick != null) {
+                    onClick()
+                    return@IconButton
+                }
                 coroutine.launch {
                     Navigator.navigate(Navigation.Backward)
                 }

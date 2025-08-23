@@ -231,12 +231,16 @@ fun PractisoApp(navController: NavHostController) {
                         LaunchedEffect(vm) {
                             vm.loadParameters(stackEntry.toRoute())
                         }
-                        ArchivePreviewApp(
-                            previewVM = vm,
-                            importVM = importViewModel,
-                            sharedTransition = this@SharedTransitionLayout,
-                            animatedContent = this@composable
-                        )
+                        CompositionLocalProvider(
+                            LocalNavController provides navController
+                        ) {
+                            ArchivePreviewApp(
+                                previewVM = vm,
+                                importVM = importViewModel,
+                                sharedTransition = this@SharedTransitionLayout,
+                                animatedContent = this@composable
+                            )
+                        }
                     }
                 }
             }
