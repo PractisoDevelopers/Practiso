@@ -78,7 +78,7 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
         val response = http.get {
             url {
                 takeFrom(endpoint)
-                appendPathSegments("archive", archiveId)
+                appendPathSegments("archive", archiveId, "preview")
             }
         }
         return response.body()
