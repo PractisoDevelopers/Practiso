@@ -224,9 +224,9 @@ fun LibraryApp(
     }
 
     val navController = currentNavController()
-    val templates by model.templates.collectAsState(null)
-    val dimensions by model.dimensions.collectAsState(null)
-    val quizzes by model.quiz.collectAsState(null)
+    val templates by model.templates.collectAsState()
+    val dimensions by model.dimensions.collectAsState()
+    val quizzes by model.quiz.collectAsState()
     val revealing by model.revealing.collectAsState()
     val offsets = buildList {
         add(0)

@@ -9,9 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.Database
 import com.zhufucdev.practiso.database.AppDatabase
-import com.zhufucdev.practiso.database.TakeStat
 import com.zhufucdev.practiso.datamodel.Selection
-import com.zhufucdev.practiso.datamodel.SessionOption
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
@@ -21,11 +19,11 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.service.CreateService
 import com.zhufucdev.practiso.service.LibraryService
 import com.zhufucdev.practiso.service.RecommendationService
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -36,21 +34,15 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
     private val recommendationService = RecommendationService(db)
     private val createService = CreateService(db)
 
-    val sessions by lazy {
-        MutableStateFlow<List<SessionOption>?>(null).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                libraryService.getSessions().collect(this@apply)
-            }
-        }
-    }
+    val sessions =
+        libraryService
+            .getSessions()
+            .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
-    val recentTakeStats by lazy {
-        MutableStateFlow<List<TakeStat>?>(null).apply {
-            viewModelScope.launch(Dispatchers.IO) {
-                libraryService.getRecentTakes().collect(this@apply)
-            }
-        }
-    }
+    val recentTakeStats =
+        libraryService
+            .getRecentTakes()
+            .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
     @OptIn(SavedStateHandleSaveableApi::class)
     val useRecommendations by state.saveable(saver = protobufMutableStateFlowSaver()) {
@@ -59,9 +51,7 @@ class SessionViewModel(val db: AppDatabase, state: SavedStateHandle) :
 
     @OptIn(SavedStateHandleSaveableApi::class)
     val currentCreatorIndex by state.saveable(saver = protobufMutableStateFlowSaver()) {
-        MutableStateFlow(
-            -1
-        )
+        MutableStateFlow(-1)
     }
 
     data class Events(

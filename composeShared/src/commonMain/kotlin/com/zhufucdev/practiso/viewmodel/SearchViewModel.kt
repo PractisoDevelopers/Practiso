@@ -18,11 +18,14 @@ import com.zhufucdev.practiso.datamodel.toQuizOptionFlow
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -34,21 +37,21 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
     val expanded by state.saveable(saver = protobufMutableStateFlowSaver()) { MutableStateFlow(false) }
     val query by state.saveable(saver = protobufMutableStateFlowSaver()) { MutableStateFlow("") }
     val searching = MutableStateFlow(false)
-    val result = MutableStateFlow(emptyList<PractisoOption>()).apply {
-        viewModelScope.launch {
-            query.collectLatest { query ->
-                if (query.isEmpty()) {
-                    emit(emptyList())
-                    searching.emit(false)
-                    return@collectLatest
-                }
-                val tokens = query.split(Regex(" +"))
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val result =
+        query.flatMapMerge { query ->
+            if (query.isEmpty()) {
+                searching.emit(false)
+                return@flatMapMerge flowOf(emptyList())
+            }
+            val tokens = query.split(Regex(" +"))
 
-                searching.emit(true)
+            searching.emit(true)
+            channelFlow {
                 coroutineScope {
                     val options = mutableListOf<PractisoOption>()
                     val mutex = Mutex()
-                    launch(Dispatchers.IO) {
+                    launch {
                         val quizFrames = db.quizQueries
                             .getQuizFrames(db.quizQueries.getAllQuiz())
                             .toQuizOptionFlow()
@@ -60,11 +63,11 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
 
                         mutex.lock()
                         options.addAll(quizFrames)
-                        emit(options.toList())
+                        send(options.toList())
                         mutex.unlock()
                     }
 
-                    launch(Dispatchers.IO) {
+                    launch {
                         val dimensions = db.dimensionQueries
                             .getAllDimensions()
                             .asFlow()
@@ -74,14 +77,13 @@ class SearchViewModel(state: SavedStateHandle, private val db: AppDatabase) : Vi
                             .filter { tokens.any { t -> t in it.dimension.name } }
                         mutex.lock()
                         options.addAll(dimensions)
-                        emit(options.toList())
+                        send(options.toList())
                         mutex.unlock()
                     }
                 }
                 searching.emit(false)
             }
         }
-    }
 
     data class Events(
         val open: Channel<Unit> = Channel(),

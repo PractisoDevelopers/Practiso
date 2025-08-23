@@ -51,20 +51,20 @@ fun QuizSectionEditApp(
 ) {
     var deleteDialogShown by remember { mutableStateOf(false) }
     val coroutine = rememberCoroutineScope()
-    val items by libraryVM.quiz.collectAsState(emptyList())
+    val items by libraryVM.quiz.collectAsState()
 
     LaunchedEffect(startpoint, model) {
         model.loadStartpoint(startpoint)
     }
 
     SectionEditScaffold(
-        items,
+        items ?: emptyList(),
         initialTopItemIndex = maxOf(startpoint.topItemIndex, 0),
         model = model,
         bottomBar = {
             BottomAppBar(
                 actions = {
-                    CommonActions(model, items)
+                    CommonActions(model, items ?: emptyList())
                     PlainTooltipBox(stringResource(Res.string.remove_para)) {
                         IconButton(
                             onClick = {

@@ -61,7 +61,7 @@ fun DimensionSectionEditApp(
     libraryVm: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
     model: DimensionSectionEditVM = viewModel(factory = DimensionSectionEditVM.Factory),
 ) {
-    val items by libraryVm.dimensions.collectAsState(emptyList())
+    val items by libraryVm.dimensions.collectAsState()
     val coroutine = rememberCoroutineScope()
     var deleteDialogState by remember { mutableStateOf<DeleteDialogState>(DeleteDialogState.Hidden) }
 
@@ -70,13 +70,13 @@ fun DimensionSectionEditApp(
     }
 
     SectionEditScaffold(
-        items,
+        items ?: emptyList(),
         initialTopItemIndex = maxOf(startpoint.topItemIndex, 0),
         model = model,
         bottomBar = {
             BottomAppBar(
                 actions = {
-                    CommonActions(model, items)
+                    CommonActions(model, items ?: emptyList())
                     PlainTooltipBox(stringResource(Res.string.remove_para)) {
                         IconButton(
                             onClick = {

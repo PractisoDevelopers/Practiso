@@ -113,6 +113,7 @@ import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
 import com.zhufucdev.practiso.viewmodel.SearchViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import opacity.client.ArchiveMetadata
 import org.jetbrains.compose.resources.stringResource
@@ -541,7 +542,7 @@ private fun TopSearchBar(
                 .padding(horizontal = padding.value.dp)
                     then modifier
     ) {
-        val options by model.result.collectAsState()
+        val options by model.result.collectAsState(emptyList(), Dispatchers.IO)
         val searching by model.searching.collectAsState()
         AnimatedVisibility(visible = searching, enter = fadeIn(), exit = fadeOut()) {
             LinearProgressIndicator(Modifier.fillMaxWidth())

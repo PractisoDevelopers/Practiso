@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -72,7 +73,7 @@ class CommunityAppViewModel(
             .combine(communityService, ::Pair)
             .map { (_, server) -> server.getDimensions(5) }
             .catch { markPageFailed(it) }
-            .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
+            .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
     private val _archiveSortOptions = MutableStateFlow(SortOptions())
 
@@ -90,6 +91,7 @@ class CommunityAppViewModel(
                 it.runningReduce { acc, value -> acc + value }
             }
             .catch { markPageFailed(it) }
+            .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
     var archiveSortOptions: SortOptions
         get() = _archiveSortOptions.value

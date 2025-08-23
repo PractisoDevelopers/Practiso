@@ -110,8 +110,8 @@ private fun DefaultPage(
     sharedTransition: SharedTransitionScope,
     animatedContent: AnimatedContentScope,
 ) {
-    val archives by communityVM.archives.collectAsState(null, Dispatchers.IO)
-    val dimensions by communityVM.dimensions.collectAsState(null, Dispatchers.IO)
+    val archives by communityVM.archives.collectAsState(Dispatchers.IO)
+    val dimensions by communityVM.dimensions.collectAsState(Dispatchers.IO)
     val snackbars = LocalExtensiveSnackbarState.current
     val navController = LocalNavController.current!!
 

@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -44,17 +44,17 @@ class LibraryAppViewModel(private val db: AppDatabase, state: SavedStateHandle) 
     val templates =
         libraryService.getTemplates()
             .flowOn(Dispatchers.IO)
-            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
+            .stateIn(viewModelScope, SharingStarted.Lazily, initialValue = null)
 
     val quiz =
         libraryService.getQuizzes()
             .flowOn(Dispatchers.IO)
-            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
+            .stateIn(viewModelScope, SharingStarted.Lazily, initialValue = null)
 
     val dimensions =
         libraryService.getDimensions()
             .flowOn(Dispatchers.IO)
-            .shareIn(viewModelScope, SharingStarted.Lazily, replay = 1)
+            .stateIn(viewModelScope, SharingStarted.Lazily, initialValue = null)
 
     private val removeService = RemoveService(db)
 
