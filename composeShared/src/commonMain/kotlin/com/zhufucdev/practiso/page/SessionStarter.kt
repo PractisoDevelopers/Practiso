@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -100,11 +101,12 @@ fun SessionStarter(
             LazyColumn(Modifier.fillMaxSize()) {
                 items?.let {
                     filter(
-                        Modifier.fillMaxWidth().background(backgroundColor).padding(PaddingNormal),
+                        Modifier.fillMaxWidth().background(backgroundColor),
                         controller = filterController,
                         key = { it.id },
                         horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
                         verticalArrangement = Arrangement.spacedBy(PaddingSmall),
+                        contentPadding = PaddingValues(PaddingNormal),
                         targetHeightExpanded = min(
                             max(100, filterController.groupedItems.size * 24),
                             200

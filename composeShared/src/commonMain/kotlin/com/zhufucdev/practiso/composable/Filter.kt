@@ -14,11 +14,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -89,7 +89,11 @@ fun <T, K> LazyListScope.filter(
         }
 
         SharedTransitionLayout(
-            modifier then Modifier.pointerInput(controller, lazyRowState.canScrollForward, lazyRowState.canScrollBackward) {
+            modifier then Modifier.pointerInput(
+                controller,
+                lazyRowState.canScrollForward,
+                lazyRowState.canScrollBackward
+            ) {
                 if (!lazyRowState.canScrollForward && !lazyRowState.canScrollBackward) {
                     return@pointerInput
                 }
@@ -122,6 +126,7 @@ fun <T, K> LazyListScope.filter(
                     val expansionColumnHeightDp by controller.impl.expandedColumnHeightAnimator.asState()
                     Column(
                         Modifier.fillParentMaxWidth()
+                            .padding(contentPadding)
                             .heightIn(max = expansionColumnHeightDp.dp + 48.dp)
                     ) {
                         FlowRow(
@@ -200,9 +205,9 @@ fun <T, K> LazyListScope.filter(
 @Suppress("UNCHECKED_CAST")
 fun <T, K> LazyListScope.filteredItems(
     controller: FilterController<T, K>,
-    key: ((T) -> Any)? = null,
+    key: ((List<T>, Int) -> Any)? = null,
     sort: ((T, T) -> Int)? = null,
-    itemContent: @Composable LazyItemScope.(T) -> Unit,
+    itemContent: @Composable LazyItemScope.(List<T>, Int) -> Unit,
 ) {
     val items by derivedStateOf {
         controller.impl.items.let {
@@ -217,7 +222,20 @@ fun <T, K> LazyListScope.filteredItems(
             }
         }
     }
-    items(items = items, key = key, itemContent = itemContent)
+    items(count = items.size, key = key?.let { key -> { key(items, it) } }) { index ->
+        itemContent(items, index)
+    }
+}
+
+fun <T, K> LazyListScope.filteredItems(
+    controller: FilterController<T, K>,
+    key: ((T) -> Any)? = null,
+    sort: ((T, T) -> Int)? = null,
+    itemContent: @Composable LazyItemScope.(T) -> Unit,
+) {
+    filteredItems(controller, key = key?.let { key -> { items, index -> key(items[index]) } }, sort = sort) { items, index ->
+        itemContent(items[index])
+    }
 }
 
 @Stable
