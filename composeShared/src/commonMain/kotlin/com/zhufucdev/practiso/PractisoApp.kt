@@ -66,7 +66,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
-import androidx.window.core.layout.WindowWidthSizeClass
 import com.zhufucdev.practiso.composable.BackHandlerOrIgnored
 import com.zhufucdev.practiso.composable.BackdropKey
 import com.zhufucdev.practiso.composable.ExtensiveSnackbar
@@ -259,6 +258,8 @@ fun PractisoApp(navController: NavHostController) {
     }
 }
 
+private const val BOTTOM_NAVIGATION_BREAKPOINT = 600
+private const val SIDE_NAVIGATION_BREAKPOINT = 840
 @Composable
 private fun AdaptiveApp(
     navController: NavHostController,
@@ -273,10 +274,10 @@ private fun AdaptiveApp(
         LocalNavController provides navController,
         LocalTopLevelDestination provides destination
     ) {
-        when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
-            WindowWidthSizeClass.COMPACT -> content(windowAdaptiveInfo)
+        when (windowAdaptiveInfo.windowSizeClass.minWidthDp) {
+            in 0 until BOTTOM_NAVIGATION_BREAKPOINT -> content(windowAdaptiveInfo)
 
-            WindowWidthSizeClass.MEDIUM -> Row {
+            in BOTTOM_NAVIGATION_BREAKPOINT until SIDE_NAVIGATION_BREAKPOINT -> Row {
                 val coroutine = rememberCoroutineScope()
                 NavigationRail {
                     Spacer(Modifier.padding(top = PaddingNormal))
@@ -301,7 +302,7 @@ private fun AdaptiveApp(
                 content(windowAdaptiveInfo)
             }
 
-            WindowWidthSizeClass.EXPANDED -> Row {
+            else -> Row {
                 PermanentDrawerSheet {
                     val coroutine = rememberCoroutineScope()
                     Spacer(Modifier.padding(top = PaddingNormal))
@@ -360,28 +361,26 @@ private fun ScaffoldedApp(
                 }
             },
             bottomBar = {
-                when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
-                    WindowWidthSizeClass.COMPACT -> {
-                        NavigationBar {
-                            val coroutine = rememberCoroutineScope()
-                            val destination = currentTopLevelDestination()
-                            TopLevelDestination.entries.forEach {
-                                NavigationBarItem(
-                                    selected = destination == it,
-                                    onClick = {
-                                        coroutine.launch {
-                                            searchViewModel.event.close.send(Unit)
+                if (!windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(BOTTOM_NAVIGATION_BREAKPOINT)) {
+                    NavigationBar {
+                        val coroutine = rememberCoroutineScope()
+                        val destination = currentTopLevelDestination()
+                        TopLevelDestination.entries.forEach {
+                            NavigationBarItem(
+                                selected = destination == it,
+                                onClick = {
+                                    coroutine.launch {
+                                        searchViewModel.event.close.send(Unit)
+                                    }
+                                    if (navBackStackEntry?.destination?.route != it.route) {
+                                        navController.navigate(it.route) {
+                                            launchSingleTop = true
                                         }
-                                        if (navBackStackEntry?.destination?.route != it.route) {
-                                            navController.navigate(it.route) {
-                                                launchSingleTop = true
-                                            }
-                                        }
-                                    },
-                                    icon = it.icon,
-                                    label = { Text(stringResource(it.nameRes)) },
-                                )
-                            }
+                                    }
+                                },
+                                icon = it.icon,
+                                label = { Text(stringResource(it.nameRes)) },
+                            )
                         }
                     }
                 }
