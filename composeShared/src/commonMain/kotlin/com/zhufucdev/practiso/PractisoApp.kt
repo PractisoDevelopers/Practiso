@@ -89,8 +89,8 @@ import com.zhufucdev.practiso.composition.rememberExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
-import com.zhufucdev.practiso.page.ArchivePreviewApp
 import com.zhufucdev.practiso.page.CommunityApp
+import com.zhufucdev.practiso.page.CommunityArchiveApp
 import com.zhufucdev.practiso.page.DimensionApp
 import com.zhufucdev.practiso.page.DimensionSectionEditApp
 import com.zhufucdev.practiso.page.LibraryApp
@@ -105,8 +105,8 @@ import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
-import com.zhufucdev.practiso.viewmodel.ArchivePreviewViewModel
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
+import com.zhufucdev.practiso.viewmodel.CommunityArchiveViewModel
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
@@ -227,15 +227,15 @@ fun PractisoApp(navController: NavHostController) {
                             typeOf<ArchiveMetadata>() to ArchiveMetadataNavType
                         )
                     ) { stackEntry ->
-                        val vm: ArchivePreviewViewModel =
-                            viewModel(factory = ArchivePreviewViewModel.Factory)
+                        val vm: CommunityArchiveViewModel =
+                            viewModel(factory = CommunityArchiveViewModel.Factory)
                         LaunchedEffect(vm) {
                             vm.loadParameters(stackEntry.toRoute())
                         }
                         CompositionLocalProvider(
                             LocalNavController provides navController
                         ) {
-                            ArchivePreviewApp(
+                            CommunityArchiveApp(
                                 previewVM = vm,
                                 importVM = importViewModel,
                                 sharedTransition = this@SharedTransitionLayout,

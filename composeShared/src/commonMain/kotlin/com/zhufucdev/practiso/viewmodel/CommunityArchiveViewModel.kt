@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.stateIn
 import opacity.client.ArchiveMetadata
 
 @OptIn(SavedStateHandleSaveableApi::class)
-class ArchivePreviewViewModel(
+class CommunityArchiveViewModel(
     state: SavedStateHandle,
     communityService: Flow<CommunityService>,
     downloadManager: Flow<DownloadManager>,
@@ -51,11 +51,11 @@ class ArchivePreviewViewModel(
         _archive.tryEmit(routeParams.metadata)
     }
 
-    companion object {
+    companion object Companion {
         val Factory = viewModelFactory {
             val bundle = getCommunityServiceWithDownloadManager()
             initializer {
-                ArchivePreviewViewModel(
+                CommunityArchiveViewModel(
                     createPlatformSavedStateHandle(),
                     communityService = bundle.map { it.first },
                     downloadManager = bundle.map { it.second })

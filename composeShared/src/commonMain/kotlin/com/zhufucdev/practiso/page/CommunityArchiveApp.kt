@@ -74,7 +74,7 @@ import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.uiSharedId
-import com.zhufucdev.practiso.viewmodel.ArchivePreviewViewModel
+import com.zhufucdev.practiso.viewmodel.CommunityArchiveViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import opacity.client.ArchivePreview
@@ -97,8 +97,8 @@ private const val TEXT_CANVAS_HEIGHT_DP = 240
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalCoroutinesApi::class)
 @Composable
-fun ArchivePreviewApp(
-    previewVM: ArchivePreviewViewModel = viewModel(factory = ArchivePreviewViewModel.Factory),
+fun CommunityArchiveApp(
+    previewVM: CommunityArchiveViewModel = viewModel(factory = CommunityArchiveViewModel.Factory),
     importVM: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
     sharedTransition: SharedTransitionScope,
     animatedContent: AnimatedContentScope,
