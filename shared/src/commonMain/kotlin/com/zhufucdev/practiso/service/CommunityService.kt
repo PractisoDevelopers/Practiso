@@ -19,33 +19,33 @@ class CommunityService(
 ) {
     private val client = OpacityClient(endpoint, PlatformHttpClientFactory)
 
-    fun getArchivePagination(sortOptions: SortOptions = SortOptions()) =
-        object : Paginated<ArchiveMetadata> {
-            private val pageRequestChannel = Channel<Unit>()
-            private val pageCompleteChannel = Channel<Unit>()
-
-            override val items: Flow<List<ArchiveMetadata>> = flow {
-                var response = client.getArchiveList(sortOptions)
-                emit(response.page)
-                while (response.next != null) {
-                    pageRequestChannel.receive()
-
-                    response = client.getArchiveList(sortOptions, response.next)
-                    emit(response.page)
-                    pageCompleteChannel.send(Unit)
-                }
-                hasNext.tryEmit(false)
-                pageRequestChannel.close(LastPageException)
-                pageCompleteChannel.close(LastPageException)
+    fun getArchivePagination(sortOptions: SortOptions = SortOptions()): Paginated<ArchiveMetadata> =
+        object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
+            override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
+                return client.getArchiveList(sortOptions).let { it.page to it.next }
             }
 
-            override suspend fun mountNext() {
-                pageRequestChannel.send(Unit)
-                pageCompleteChannel.receive()
+            override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
+                return client.getArchiveList(sortOptions, priorPointer).let { it.page to it.next }
             }
-
-            override val hasNext = MutableStateFlow(true)
         }
+
+    fun getDimensionArchivePagination(
+        dimensionName: String,
+        sortOptions: SortOptions = SortOptions(),
+    ): Paginated<ArchiveMetadata> =
+        object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
+            override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
+                return client.getDimensionArchiveList(dimensionName, sortOptions)
+                    .let { it.page to it.next }
+            }
+
+            override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
+                return client.getDimensionArchiveList(dimensionName, sortOptions, priorPointer)
+                    .let { it.page to it.next }
+            }
+        }
+
 
     fun ArchiveMetadata.toHandle(): ArchiveHandle = ArchiveHandle(this, client)
 
@@ -56,6 +56,36 @@ class CommunityService(
         client.getArchivePreview(archiveId)
 
     suspend fun getServerInfo(): BonjourResponse = client.getBonjour()
+}
+
+private abstract class NextPointerBasedPaginated<T, K> : Paginated<T> {
+    private val pageRequestChannel = Channel<Unit>()
+    private val pageCompleteChannel = Channel<Unit>()
+
+    override val items: Flow<List<T>> = flow {
+        var response = getFirstPage()
+        emit(response.first)
+        while (response.second != null) {
+            pageRequestChannel.receive()
+
+            response = getFollowingPages(response.second!!)
+            emit(response.first)
+            pageCompleteChannel.send(Unit)
+        }
+        hasNext.tryEmit(false)
+        pageRequestChannel.close(LastPageException)
+        pageCompleteChannel.close(LastPageException)
+    }
+
+    override suspend fun mountNext() {
+        pageRequestChannel.send(Unit)
+        pageCompleteChannel.receive()
+    }
+
+    override val hasNext = MutableStateFlow(true)
+
+    abstract suspend fun getFirstPage(): Pair<List<T>, K?>
+    abstract suspend fun getFollowingPages(priorPointer: K): Pair<List<T>, K?>
 }
 
 /**

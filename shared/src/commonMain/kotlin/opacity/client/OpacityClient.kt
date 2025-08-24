@@ -34,6 +34,22 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
         return response.body()
     }
 
+    suspend fun getDimensionArchiveList(
+        dimensionName: String,
+        sortOptions: SortOptions,
+        predecessorId: String? = null,
+    ): GetArchivesResponse {
+        val response = http.get {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("dimension", dimensionName, "archives")
+                sortOptions.appendTo(parameters)
+                predecessorId?.let { parameters.append("predecessor", it) }
+            }
+        }
+        return response.body()
+    }
+
     suspend fun getDimensionList(takeFirst: Int = 20): GetDimensionListResponse {
         val response = http.get {
             url {
