@@ -257,7 +257,7 @@ fun PractisoApp(navController: NavHostController) {
                                 LaunchedEffect(vm, stackEntry) {
                                     vm.loadRouteParams(stackEntry.toRoute())
                                 }
-                                CommunityDimensionApp(vm)
+                                CommunityDimensionApp(vm, importViewModel)
                             }
                         }
                     }
