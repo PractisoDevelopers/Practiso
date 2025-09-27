@@ -90,6 +90,7 @@ import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.page.CommunityApp
 import com.zhufucdev.practiso.page.CommunityArchiveApp
+import com.zhufucdev.practiso.page.CommunityDimensionApp
 import com.zhufucdev.practiso.page.DimensionApp
 import com.zhufucdev.practiso.page.DimensionSectionEditApp
 import com.zhufucdev.practiso.page.LibraryApp
@@ -101,11 +102,13 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.route.ArchiveMetadataNavType
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
+import com.zhufucdev.practiso.route.CommunityDimensionRouteParams
 import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.CommunityArchiveViewModel
+import com.zhufucdev.practiso.viewmodel.CommunityDimensionViewModel
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
@@ -228,7 +231,7 @@ fun PractisoApp(navController: NavHostController) {
                     ) { stackEntry ->
                         val vm: CommunityArchiveViewModel =
                             viewModel(factory = CommunityArchiveViewModel.Factory)
-                        LaunchedEffect(vm) {
+                        LaunchedEffect(vm, stackEntry) {
                             vm.loadParameters(stackEntry.toRoute())
                         }
                         CompositionLocalProvider(
@@ -240,6 +243,22 @@ fun PractisoApp(navController: NavHostController) {
                                 sharedTransition = this@SharedTransitionLayout,
                                 animatedContent = this@composable
                             )
+                        }
+                    }
+                    composable<CommunityDimensionRouteParams> { stackEntry ->
+                        AdaptiveApp(
+                            navController = navController,
+                            destination = TopLevelDestination.Community,
+                            searchViewModel = searchVM
+                        ) { window ->
+                            ScaffoldedApp(window, searchVM) {
+                                val vm: CommunityDimensionViewModel =
+                                    viewModel(factory = CommunityDimensionViewModel.Factory)
+                                LaunchedEffect(vm, stackEntry) {
+                                    vm.loadRouteParams(stackEntry.toRoute())
+                                }
+                                CommunityDimensionApp(vm)
+                            }
                         }
                     }
                 }
@@ -260,6 +279,7 @@ fun PractisoApp(navController: NavHostController) {
 
 private const val BOTTOM_NAVIGATION_BREAKPOINT = 600
 private const val SIDE_NAVIGATION_BREAKPOINT = 840
+
 @Composable
 private fun AdaptiveApp(
     navController: NavHostController,
@@ -361,7 +381,10 @@ private fun ScaffoldedApp(
                 }
             },
             bottomBar = {
-                if (!windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(BOTTOM_NAVIGATION_BREAKPOINT)) {
+                if (!windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
+                        BOTTOM_NAVIGATION_BREAKPOINT
+                    )
+                ) {
                     NavigationBar {
                         val coroutine = rememberCoroutineScope()
                         val destination = currentTopLevelDestination()
