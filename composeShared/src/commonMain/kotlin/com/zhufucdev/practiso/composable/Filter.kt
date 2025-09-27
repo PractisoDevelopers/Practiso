@@ -233,7 +233,11 @@ fun <T, K> LazyListScope.filteredItems(
     sort: ((T, T) -> Int)? = null,
     itemContent: @Composable LazyItemScope.(T) -> Unit,
 ) {
-    filteredItems(controller, key = key?.let { key -> { items, index -> key(items[index]) } }, sort = sort) { items, index ->
+    filteredItems(
+        controller,
+        key = key?.let { key -> { items, index -> key(items[index]) } },
+        sort = sort
+    ) { items, index ->
         itemContent(items[index])
     }
 }
@@ -253,6 +257,12 @@ fun <T, K> rememberFilterController(
     groupSelector: (T) -> Collection<K>,
 ): FilterController<T, K> =
     remember(items, groupSelector) { FilterControllerImpl(items, groupSelector) }
+
+fun <T, K> FilterController(
+    items: Collection<T>,
+    groupSelector: (T) -> Collection<K>,
+): FilterController<T, K> =
+    FilterControllerImpl(items, groupSelector)
 
 sealed interface FilterGroup<K>
 data object NoGroup : FilterGroup<Any>

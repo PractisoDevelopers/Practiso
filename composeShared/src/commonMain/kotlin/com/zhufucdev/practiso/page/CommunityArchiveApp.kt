@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -65,7 +64,6 @@ import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SomeGroup
 import com.zhufucdev.practiso.composable.filter
 import com.zhufucdev.practiso.composable.filteredItems
-import com.zhufucdev.practiso.composable.rememberFilterController
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.platform.DownloadCycle
 import com.zhufucdev.practiso.platform.DownloadState
@@ -77,7 +75,6 @@ import com.zhufucdev.practiso.uiSharedId
 import com.zhufucdev.practiso.viewmodel.CommunityArchiveViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import opacity.client.ArchivePreview
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -108,15 +105,7 @@ fun CommunityArchiveApp(
     val archive by previewVM.archive.collectAsState()
     val preview by previewVM.preview.collectAsState(null)
     val downloadError by previewVM.downloadError.collectAsState()
-    val filterController = rememberFilterController(
-        items = preview ?: emptyList(),
-        groupSelector = ArchivePreview::dimensions
-    )
-    LaunchedEffect(filterController.groupedItems) {
-        filterController.groupedItems.keys.forEach {
-            filterController.toggleGroup(it, selected = true)
-        }
-    }
+    val filterController by previewVM.filterController.collectAsState()
 
     val previewScrollState = rememberLazyListState()
     val density = LocalDensity.current

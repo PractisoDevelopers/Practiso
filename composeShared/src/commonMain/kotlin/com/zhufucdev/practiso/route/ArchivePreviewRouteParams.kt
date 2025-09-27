@@ -4,4 +4,7 @@ import kotlinx.serialization.Serializable
 import opacity.client.ArchiveMetadata
 
 @Serializable
-data class ArchivePreviewRouteParams(val metadata: ArchiveMetadata)
+data class ArchivePreviewRouteParams(
+    val metadata: ArchiveMetadata,
+    val selectedDimensions: List<String>? = null,
+)

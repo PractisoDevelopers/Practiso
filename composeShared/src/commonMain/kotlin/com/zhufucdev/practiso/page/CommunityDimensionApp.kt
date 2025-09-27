@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
@@ -8,16 +9,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.ArchiveMetadataOption
 import com.zhufucdev.practiso.composable.OptionItem
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
+import com.zhufucdev.practiso.composition.LocalNavController
+import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.viewmodel.CommunityDimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import resources.Res
 import resources.details_para
@@ -29,6 +36,7 @@ fun CommunityDimensionApp(
     importModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
 ) {
     val snackbars = LocalExtensiveSnackbarState.current
+    val navController = LocalNavController.current
 
     val archives by dimensionModel.archives.collectAsState(Dispatchers.IO)
     val downloadError by dimensionModel.downloadError.collectAsState()
@@ -53,7 +61,20 @@ fun CommunityDimensionApp(
             items(count = archives.items.size, key = { archives.items[it].id }) { index ->
                 val archive = archives.items[index]
                 val state by dimensionModel.getDownloadStateFlow(archive).collectAsState()
-                OptionItem(separator = index < archives.items.lastIndex || archives.isMounting) {
+                val lifecycleScope = rememberCoroutineScope()
+                OptionItem(
+                    modifier = Modifier.clickable(onClick = {
+                        lifecycleScope.launch {
+                            navController?.navigate(
+                                ArchivePreviewRouteParams(
+                                    metadata = archive,
+                                    selectedDimensions = listOf(dimensionModel.dimension.first())
+                                )
+                            )
+                        }
+                    }),
+                    separator = index < archives.items.lastIndex || archives.isMounting
+                ) {
                     ArchiveMetadataOption(
                         model = archive,
                         state = state,
