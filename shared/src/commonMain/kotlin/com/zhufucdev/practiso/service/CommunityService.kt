@@ -1,12 +1,9 @@
 package com.zhufucdev.practiso.service
 
 import com.zhufucdev.practiso.datamodel.ArchiveHandle
+import com.zhufucdev.practiso.datamodel.NextPointerBasedPaginated
+import com.zhufucdev.practiso.datamodel.Paginated
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flow
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
 import opacity.client.BonjourResponse
@@ -58,55 +55,5 @@ class CommunityService(
     suspend fun getServerInfo(): BonjourResponse = client.getBonjour()
 }
 
-private abstract class NextPointerBasedPaginated<T, K> : Paginated<T> {
-    private val pageRequestChannel = Channel<Unit>()
-    private val pageCompleteChannel = Channel<Unit>()
-
-    override val items: Flow<List<T>> = flow {
-        var response = getFirstPage()
-        emit(response.first)
-        while (response.second != null) {
-            pageRequestChannel.receive()
-
-            response = getFollowingPages(response.second!!)
-            emit(response.first)
-            pageCompleteChannel.send(Unit)
-        }
-        hasNext.tryEmit(false)
-        pageRequestChannel.close(LastPageException)
-        pageCompleteChannel.close(LastPageException)
-    }
-
-    override suspend fun mountNext() {
-        pageRequestChannel.send(Unit)
-        pageCompleteChannel.receive()
-    }
-
-    override val hasNext = MutableStateFlow(true)
-
-    abstract suspend fun getFirstPage(): Pair<List<T>, K?>
-    abstract suspend fun getFollowingPages(priorPointer: K): Pair<List<T>, K?>
-}
-
-/**
- * List of [T] items with paging.
- */
-interface Paginated<T> {
-    /**
-     * The currently mounted [Flow].
-     * Shall not emit empty lists unless the data source is empty.
-     */
-    val items: Flow<List<T>>
-
-    /**
-     * Load the next page and update [items].
-     * Shall be suspended until the next page is fully mounted.
-     */
-    suspend fun mountNext()
-
-    val hasNext: StateFlow<Boolean>
-}
-
-object LastPageException : IllegalStateException("Already on the last page.")
 
 const val DEFAULT_COMMUNITY_SERVER_URL = "https://opacity.zhufucdev.com"

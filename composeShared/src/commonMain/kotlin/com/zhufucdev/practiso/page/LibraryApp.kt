@@ -509,7 +509,7 @@ private fun ListItem(
         },
         content = {
             Box(modifier) {
-                PractisoOptionView(option, modifier = Modifier.padding(PaddingNormal))
+                PractisoOptionView(option = option, modifier = Modifier.padding(PaddingNormal))
             }
         }
     )

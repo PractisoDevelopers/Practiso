@@ -8,7 +8,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -53,7 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.DEFAULT_DIMOJI
 import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.ArchiveMetadataOption
-import com.zhufucdev.practiso.composable.HorizontalSeparator
+import com.zhufucdev.practiso.composable.OptionItem
 import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SectionCaption
@@ -62,6 +61,7 @@ import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
+import com.zhufucdev.practiso.route.CommunityDimensionRouteParams
 import com.zhufucdev.practiso.style.NotoEmojiFontFamily
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
@@ -110,7 +110,7 @@ private fun DefaultPage(
     sharedTransition: SharedTransitionScope,
     animatedContent: AnimatedContentScope,
 ) {
-    val archives by communityVM.archives.collectAsState(Dispatchers.IO)
+    val archives by communityVM.archivePresenter.collectAsState(Dispatchers.IO)
     val dimensions by communityVM.dimensions.collectAsState(Dispatchers.IO)
     val snackbars = LocalExtensiveSnackbarState.current
     val navController = LocalNavController.current!!
@@ -118,24 +118,14 @@ private fun DefaultPage(
     val scrollState = rememberLazyListState()
 
     val leadingItemIndex by remember(scrollState) { derivedStateOf { scrollState.firstVisibleItemIndex } }
-    val isMountingNextPage by communityVM.isMountingNextPage.collectAsState()
-    val hasNextPage by communityVM.hasNextPage.collectAsState(true)
     val downloadError by communityVM.downloadError.collectAsState()
 
     var alertError by remember { mutableStateOf<Exception?>(null) }
 
-    LaunchedEffect(leadingItemIndex, isMountingNextPage, hasNextPage) {
-        // pagination
-        if (!hasNextPage || isMountingNextPage) {
-            return@LaunchedEffect
+    LaunchedEffect(leadingItemIndex, archives) {
+        if (archives?.shouldMountNext(scrollState) == true) {
+            communityVM.event.mountNextPage.send(Unit)
         }
-
-        val lastIndexIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-        if (archives?.let { it.size - lastIndexIndex > PRELOAD_EXTENT } != false) {
-            return@LaunchedEffect
-        }
-
-        communityVM.event.mountNextPage.send(Unit)
     }
 
     LaunchedEffect(downloadError) {
@@ -184,7 +174,9 @@ private fun DefaultPage(
                         item(dim.name) {
                             DimensionCard(
                                 model = dim,
-                                onClick = {},
+                                onClick = {
+                                    navController.navigate(CommunityDimensionRouteParams(dim.name))
+                                },
                                 modifier = Modifier.width(DimensionCardWidth)
                             )
                         }
@@ -204,23 +196,23 @@ private fun DefaultPage(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SectionCaption(pluralStringResource(Res.plurals.archives_para, archives?.size ?: 2))
+                SectionCaption(pluralStringResource(Res.plurals.archives_para, archives?.items?.size ?: 2))
             }
         }
 
         archives?.let { archives ->
             items(
-                count = archives.size,
-                key = { "archive#${archives[it].id}" },
+                count = archives.items.size,
+                key = { "archive#${archives.items[it].id}" },
                 contentType = { "archive" }) { index ->
-                val archive = archives[index]
+                val archive = archives.items[index]
                 val state by communityVM.getDownloadStateFlow(archive).collectAsState()
 
                 OptionItem(
                     modifier = Modifier.clickable(onClick = {
                         navController.navigate(ArchivePreviewRouteParams(archive))
                     }),
-                    separator = isMountingNextPage || index != archives.lastIndex
+                    separator = archives.isMounting || index != archives.items.lastIndex
                 ) {
                     ArchiveMetadataOption(
                         modifier = with(sharedTransition) {
@@ -248,7 +240,7 @@ private fun DefaultPage(
             }
         }
 
-        if (archives == null || isMountingNextPage) {
+        if (archives?.isMounting != false) {
             items(5) {
                 OptionItem(separator = it != 4) {
                     PractisoOptionSkeleton()
@@ -379,17 +371,3 @@ private fun DimensionCardSkeleton(
         Card(modifier = modifier, content = content)
     }
 }
-
-@Composable
-private fun OptionItem(
-    modifier: Modifier = Modifier,
-    separator: Boolean = true,
-    content: @Composable () -> Unit,
-) {
-    Box(modifier) {
-        Box(Modifier.padding(PaddingNormal)) { content() }
-    }
-    if (separator) HorizontalSeparator()
-}
-
-private const val PRELOAD_EXTENT = 3

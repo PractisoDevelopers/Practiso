@@ -20,10 +20,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.runningReduce
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
@@ -50,15 +49,8 @@ class CommunityAppViewModel(
                     }
 
                     event.mountNextPage.onReceive {
-                        _isMountingNextPage.tryEmit(true)
                         viewModelScope.launch(Dispatchers.IO) {
-                            try {
-                                _archivePaginator.first().mountNext()
-                            } catch (e: Exception) {
-                                // TODO: handle [e]
-                            } finally {
-                                _isMountingNextPage.tryEmit(false)
-                            }
+                            archivePresenter.first()?.mountNextPage()
                         }
                     }
                 }
@@ -77,20 +69,16 @@ class CommunityAppViewModel(
 
     private val _archiveSortOptions = MutableStateFlow(SortOptions())
 
-    private val _archivePaginator =
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val archivePresenter =
         refreshCounter
             .combine(_archiveSortOptions) { _, s -> s }
             .combine(communityService) { sort, service -> service.getArchivePagination(sort) }
             .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val archives =
-        _archivePaginator
-            .map { it.items }
-            .flatMapLatest {
-                it.runningReduce { acc, value -> acc + value }
+            .map { PaginatedListPresenter(it, viewModelScope) }
+            .onEach {
+                it.appendErrorHandler { err -> markPageFailed(err); true }
             }
-            .catch { markPageFailed(it) }
             .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
     var archiveSortOptions: SortOptions
@@ -98,12 +86,6 @@ class CommunityAppViewModel(
         set(value) {
             _archiveSortOptions.value = value
         }
-
-    private val _isMountingNextPage = MutableStateFlow(false)
-    val isMountingNextPage: StateFlow<Boolean> = _isMountingNextPage
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val hasNextPage = _archivePaginator.flatMapLatest { it.hasNext }
 
     private fun markPageFailed(reason: Throwable) {
         _pageState.tryEmit(
