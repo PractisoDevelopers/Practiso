@@ -1,5 +1,8 @@
 package com.zhufucdev.practiso.page
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.SnackbarResult
@@ -20,6 +23,7 @@ import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
+import com.zhufucdev.practiso.uiSharedId
 import com.zhufucdev.practiso.viewmodel.CommunityDimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.Dispatchers
@@ -30,10 +34,13 @@ import resources.Res
 import resources.details_para
 import resources.failed_to_download_archive_para
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun CommunityDimensionApp(
     dimensionModel: CommunityDimensionViewModel = viewModel(factory = CommunityDimensionViewModel.Factory),
     importModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
+    sharedTransition: SharedTransitionScope,
+    animatedContent: AnimatedContentScope,
 ) {
     val snackbars = LocalExtensiveSnackbarState.current
     val navController = LocalNavController.current
@@ -76,6 +83,12 @@ fun CommunityDimensionApp(
                     separator = index < archives.items.lastIndex || archives.isMounting
                 ) {
                     ArchiveMetadataOption(
+                        modifier = with(sharedTransition) {
+                            Modifier.sharedElement(
+                                rememberSharedContentState(archive.uiSharedId),
+                                animatedContent
+                            )
+                        },
                         model = archive,
                         state = state,
                         onDownloadRequest = {

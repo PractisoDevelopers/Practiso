@@ -245,7 +245,10 @@ fun PractisoApp(navController: NavHostController) {
                             )
                         }
                     }
-                    composable<CommunityDimensionRouteParams> { stackEntry ->
+                    composable<CommunityDimensionRouteParams>(
+                        enterTransition = { fadeIn() },
+                        exitTransition = { fadeOut() }
+                    ) { stackEntry ->
                         AdaptiveApp(
                             navController = navController,
                             destination = TopLevelDestination.Community,
@@ -257,7 +260,12 @@ fun PractisoApp(navController: NavHostController) {
                                 LaunchedEffect(vm, stackEntry) {
                                     vm.loadRouteParams(stackEntry.toRoute())
                                 }
-                                CommunityDimensionApp(vm, importViewModel)
+                                CommunityDimensionApp(
+                                    dimensionModel = vm,
+                                    importModel = importViewModel,
+                                    sharedTransition = this@SharedTransitionLayout,
+                                    animatedContent = this
+                                )
                             }
                         }
                     }
