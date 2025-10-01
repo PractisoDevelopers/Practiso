@@ -45,6 +45,8 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -72,6 +74,7 @@ import com.zhufucdev.practiso.composable.ExtensiveSnackbar
 import com.zhufucdev.practiso.composable.FeiStatus
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.ImportDialog
+import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionView
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
@@ -86,7 +89,6 @@ import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.composition.currentTopLevelDestination
 import com.zhufucdev.practiso.composition.rememberExtensiveSnackbarState
 import com.zhufucdev.practiso.datamodel.DimensionOption
-import com.zhufucdev.practiso.datamodel.PractisoOption
 import com.zhufucdev.practiso.datamodel.QuizOption
 import com.zhufucdev.practiso.page.CommunityApp
 import com.zhufucdev.practiso.page.CommunityArchiveApp
@@ -254,15 +256,34 @@ fun PractisoApp(navController: NavHostController) {
                             destination = TopLevelDestination.Community,
                             searchViewModel = searchVM
                         ) { window ->
-                            ScaffoldedApp(window, searchVM) {
-                                val vm: CommunityDimensionViewModel =
-                                    viewModel(factory = CommunityDimensionViewModel.Factory)
-                                LaunchedEffect(vm, stackEntry) {
-                                    vm.loadRouteParams(stackEntry.toRoute())
+                            val vm: CommunityDimensionViewModel =
+                                viewModel(factory = CommunityDimensionViewModel.Factory)
+                            LaunchedEffect(vm, stackEntry) {
+                                vm.loadRouteParams(stackEntry.toRoute())
+                            }
+                            val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+                            ScaffoldedApp(
+                                windowAdaptiveInfo = window,
+                                searchViewModel = searchVM,
+                                topBar = {
+                                    TopAppBar(
+                                        title = {
+                                            val dimensionName by vm.dimension.collectAsState()
+                                            Text(dimensionName)
+                                        },
+                                        navigationIcon = {
+                                            NavigateUpButton {
+                                                navController.popBackStack()
+                                            }
+                                        },
+                                        scrollBehavior = topBarScrollBehavior
+                                    )
                                 }
+                            ) {
                                 CommunityDimensionApp(
                                     dimensionModel = vm,
                                     importModel = importViewModel,
+                                    scrollConnection = topBarScrollBehavior.nestedScrollConnection,
                                     sharedTransition = this@SharedTransitionLayout,
                                     animatedContent = this
                                 )
@@ -362,6 +383,7 @@ private fun AdaptiveApp(
 private fun ScaffoldedApp(
     windowAdaptiveInfo: WindowAdaptiveInfo,
     searchViewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
+    topBar: @Composable () -> Unit = { ScaffoldedApp_TopSearchBar(model = searchViewModel) },
     content: @Composable () -> Unit,
 ) {
     val navController = currentNavController()
@@ -373,47 +395,25 @@ private fun ScaffoldedApp(
         LocalExtensiveSnackbarState provides snackbars
     ) {
         Scaffold(
-            topBar = {
-                TopSearchBar(model = searchViewModel) {
-                    navController.navigate(
-                        LibraryAppViewModel.Revealable(
-                            id = it.id,
-                            type =
-                                when (it) {
-                                    is DimensionOption -> LibraryAppViewModel.RevealableType.Dimension
-                                    is QuizOption -> LibraryAppViewModel.RevealableType.Quiz
-                                    else -> error("Unsupported revealing type: ${it::class.simpleName}")
-                                }
-                        )
-                    )
-                }
-            },
+            topBar = topBar,
             bottomBar = {
                 if (!windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
                         BOTTOM_NAVIGATION_BREAKPOINT
                     )
                 ) {
-                    NavigationBar {
-                        val coroutine = rememberCoroutineScope()
-                        val destination = currentTopLevelDestination()
-                        TopLevelDestination.entries.forEach {
-                            NavigationBarItem(
-                                selected = destination == it,
-                                onClick = {
-                                    coroutine.launch {
-                                        searchViewModel.event.close.send(Unit)
-                                    }
-                                    if (navBackStackEntry?.destination?.route != it.route) {
-                                        navController.navigate(it.route) {
-                                            launchSingleTop = true
-                                        }
-                                    }
-                                },
-                                icon = it.icon,
-                                label = { Text(stringResource(it.nameRes)) },
-                            )
+                    val coroutine = rememberCoroutineScope()
+                    ScaffoldedApp_NavigationBar(
+                        onClickDestination = {
+                            coroutine.launch {
+                                searchViewModel.event.close.send(Unit)
+                            }
+                            if (navBackStackEntry?.destination?.route != it.route) {
+                                navController.navigate(it.route) {
+                                    launchSingleTop = true
+                                }
+                            }
                         }
-                    }
+                    )
                 }
             },
             floatingActionButton = {
@@ -444,12 +444,30 @@ private fun ScaffoldedApp(
     }
 }
 
+@Composable
+private fun ScaffoldedApp_NavigationBar(
+    onClickDestination: (TopLevelDestination) -> Unit,
+) {
+    NavigationBar {
+        val destination = currentTopLevelDestination()
+        TopLevelDestination.entries.forEach {
+            NavigationBarItem(
+                selected = destination == it,
+                onClick = {
+                    onClickDestination(it)
+                },
+                icon = it.icon,
+                label = { Text(stringResource(it.nameRes)) },
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopSearchBar(
+private fun ScaffoldedApp_TopSearchBar(
     modifier: Modifier = Modifier,
     model: SearchViewModel,
-    onSearchResultClick: (PractisoOption) -> Unit,
 ) {
     val query by model.query.collectAsState()
     val active by model.active.collectAsState()
@@ -457,6 +475,7 @@ private fun TopSearchBar(
 
     val padding = animateFloatAsState(if (expanded) 0f else PaddingNormal.value)
     val coroutine = rememberCoroutineScope()
+    val navController = currentNavController()
 
     if (active) {
         BackHandlerOrIgnored { event ->
@@ -597,7 +616,17 @@ private fun TopSearchBar(
                     coroutine.launch {
                         model.event.close.send(Unit)
                     }
-                    onSearchResultClick(option)
+                    navController.navigate(
+                        LibraryAppViewModel.Revealable(
+                            id = option.id,
+                            type =
+                                when (option) {
+                                    is DimensionOption -> LibraryAppViewModel.RevealableType.Dimension
+                                    is QuizOption -> LibraryAppViewModel.RevealableType.Quiz
+                                    else -> error("Unsupported revealing type: ${option::class.simpleName}")
+                                }
+                        )
+                    )
                 }) {
                     PractisoOptionView(option, modifier = Modifier.padding(PaddingNormal))
                 }

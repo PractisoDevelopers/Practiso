@@ -15,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.ArchiveMetadataOption
@@ -39,6 +41,7 @@ import resources.failed_to_download_archive_para
 fun CommunityDimensionApp(
     dimensionModel: CommunityDimensionViewModel = viewModel(factory = CommunityDimensionViewModel.Factory),
     importModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
+    scrollConnection: NestedScrollConnection,
     sharedTransition: SharedTransitionScope,
     animatedContent: AnimatedContentScope,
 ) {
@@ -63,7 +66,7 @@ fun CommunityDimensionApp(
         }
     }
 
-    LazyColumn {
+    LazyColumn(Modifier.nestedScroll(scrollConnection)) {
         archives?.let { archives ->
             items(count = archives.items.size, key = { archives.items[it].id }) { index ->
                 val archive = archives.items[index]

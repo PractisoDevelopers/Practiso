@@ -23,6 +23,7 @@ fun NavigateUpButton(modifier: Modifier = Modifier, onClick: (() -> Unit)? = nul
         stringResource(Res.string.navigate_up_para)
     ) {
         IconButton(
+            modifier = modifier,
             onClick = {
                 if (onClick != null) {
                     onClick()
