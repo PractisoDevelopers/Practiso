@@ -5,10 +5,12 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +52,10 @@ fun CommunityDimensionApp(
 
     val archives by dimensionModel.archives.collectAsState(Dispatchers.IO)
     val downloadError by dimensionModel.downloadError.collectAsState()
+
     var alertError by remember { mutableStateOf<Exception?>(null) }
+    val listScrollState = rememberLazyListState()
+    val firstVisibleArchiveIndex by remember(listScrollState) { derivedStateOf { listScrollState.firstVisibleItemIndex } }
 
     LaunchedEffect(downloadError, snackbars) {
         if (downloadError == null) {
@@ -66,7 +71,19 @@ fun CommunityDimensionApp(
         }
     }
 
-    LazyColumn(Modifier.nestedScroll(scrollConnection)) {
+    LaunchedEffect(firstVisibleArchiveIndex, archives) {
+        val archives = archives
+        if (archives == null || !archives.shouldMountNext(listScrollState)) {
+            return@LaunchedEffect
+        }
+
+        dimensionModel.event.mountNextPage.send(Unit)
+    }
+
+    LazyColumn(
+        modifier = Modifier.nestedScroll(scrollConnection),
+        state = listScrollState
+    ) {
         archives?.let { archives ->
             items(count = archives.items.size, key = { archives.items[it].id }) { index ->
                 val archive = archives.items[index]

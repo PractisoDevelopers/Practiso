@@ -7,6 +7,8 @@ import com.zhufucdev.practiso.DownloadManager
 import com.zhufucdev.practiso.helper.getCommunityServiceWithDownloadManager
 import com.zhufucdev.practiso.route.CommunityDimensionRouteParams
 import com.zhufucdev.practiso.service.CommunityService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,6 +16,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import opacity.client.SortOptions
 
 class CommunityDimensionViewModel(
@@ -43,6 +48,21 @@ class CommunityDimensionViewModel(
         _dimension.tryEmit(params.dimensionName)
     }
 
+    val event = Events()
+    init {
+        viewModelScope.launch {
+            while (isActive) {
+                select {
+                    event.mountNextPage.onReceive {
+                        viewModelScope.launch(Dispatchers.IO) {
+                            archives.value?.mountNextPage()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
         val Factory
             get() = viewModelFactory {
@@ -55,4 +75,8 @@ class CommunityDimensionViewModel(
                 }
             }
     }
+
+    data class Events(
+        val mountNextPage: Channel<Unit> = Channel()
+    )
 }
