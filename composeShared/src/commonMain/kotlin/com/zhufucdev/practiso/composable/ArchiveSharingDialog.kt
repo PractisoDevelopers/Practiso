@@ -567,6 +567,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                                         navController.navigate(ArchivePreviewRouteParams(metadata = metadata))
                                     }
                                     isFetchingMetadata = false
+                                    dismiss()
                                 }
                             }) {
                                 if (isFetchingMetadata) {
