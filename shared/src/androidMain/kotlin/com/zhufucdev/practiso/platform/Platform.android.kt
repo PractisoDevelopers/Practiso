@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso.platform
 
 import android.os.Build
+import android.provider.Settings
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
@@ -16,6 +17,8 @@ import java.io.File
 
 object AndroidPlatform : Platform() {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
+    override val deviceName: String
+        get() = Settings.Global.getString(SharedContext.contentResolver, Settings.Global.DEVICE_NAME)
 
     override fun createDbDriver(): SqlDriver {
         return AndroidSqliteDriver(

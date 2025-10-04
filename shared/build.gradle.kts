@@ -79,6 +79,7 @@ kotlin {
             implementation(libs.litert.support)
             implementation(libs.androidx.lifecycle.service)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.tink.android)
         }
         androidInstrumentedTest.dependencies {
             implementation(libs.bundles.androidx.test)

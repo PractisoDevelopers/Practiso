@@ -36,6 +36,7 @@
 		6A806BCB2D60E0F200453A72 /* Archive@x2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Archive@x2.png"; sourceTree = "<group>"; };
 		6A9D7F882D54D83700A57747 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		6ABC794D2DAF542A00BC8C74 /* PractisoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PractisoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6ADCD2592E8ECE8D00846A67 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* Practiso.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Practiso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB3632DC29227652001CCB65 /* Config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
@@ -108,6 +109,7 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				6ADCD2592E8ECE8D00846A67 /* iosApp.entitlements */,
 				6A1439BC2DC614B400A43071 /* CoreML */,
 				6A03DC1B2D2ADEA900AF3F06 /* AHAP */,
 				6A2D44252D98E22E00E18022 /* Settings.bundle */,
@@ -491,6 +493,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3B535J795R;
@@ -521,6 +524,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3B535J795R;

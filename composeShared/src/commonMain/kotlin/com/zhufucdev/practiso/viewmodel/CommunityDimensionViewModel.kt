@@ -4,9 +4,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.DownloadManager
-import com.zhufucdev.practiso.helper.getCommunityServiceWithDownloadManager
 import com.zhufucdev.practiso.route.CommunityDimensionRouteParams
 import com.zhufucdev.practiso.service.CommunityService
+import com.zhufucdev.practiso.service.getCommunityServiceWithDownloadManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

@@ -12,6 +12,7 @@ import okio.Path
 import okio.Path.Companion.toOkioPath
 import java.awt.Color
 import java.io.File
+import java.net.InetAddress
 import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
@@ -89,6 +90,15 @@ class MacOSPlatform : JVMPlatform() {
             )
             colors[it.toInt() + 1]
         }
+    override val deviceName: String by lazy {
+        runCatching {
+            getHostnameFromSyscall("scutil", "--get", "ComputerName")
+        }.getOrElse {
+            runCatching {
+                getHostnameFromDns()
+            }.getOrDefault("Mac")
+        }
+    }
 }
 
 class WindowsPlatform : JVMPlatform() {
@@ -123,6 +133,10 @@ class WindowsPlatform : JVMPlatform() {
                 it shr (24) and (0xFF)
             )
         }
+
+    override val deviceName: String
+        get() = System.getenv("COMPUTERNAME").takeIf { it.isNotBlank() }
+            ?: runCatching { getHostnameFromDns() }.getOrDefault("Windows")
 }
 
 class LinuxPlatform : JVMPlatform() {
@@ -142,6 +156,20 @@ class LinuxPlatform : JVMPlatform() {
 
     override val accentColor: Color?
         get() = null
+
+    override val deviceName: String by lazy {
+        File("/etc/hostname")
+            .takeIf { it.exists() }
+            ?.bufferedReader()
+            ?.use { it.readLine() }
+            ?: runCatching {
+                getHostnameFromSyscall()
+            }.getOrElse {
+                runCatching {
+                    InetAddress.getLocalHost().hostName
+                }.getOrDefault("Linux")
+            }
+    }
 }
 
 class OtherPlatform : JVMPlatform() {
@@ -152,7 +180,16 @@ class OtherPlatform : JVMPlatform() {
         get() = null
 
     override val dataPath: String by lazy { Path(getUserHome(), ".practiso").absolutePathString() }
+    override val deviceName: String
+        get() = runCatching {
+            getHostnameFromSyscall()
+        }.getOrDefault("JVM")
 }
+
+private fun getHostnameFromSyscall(vararg segments: String = arrayOf("hostname")) =
+    Runtime.getRuntime().exec(segments).inputReader().use { it.readLine() }
+
+private fun getHostnameFromDns() = InetAddress.getLocalHost().hostName
 
 val JvmPlatform by lazy {
     System.getProperty("os.name").lowercase().let { os ->

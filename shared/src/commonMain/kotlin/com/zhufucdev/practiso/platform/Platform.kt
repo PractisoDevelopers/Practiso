@@ -6,6 +6,7 @@ import okio.Path
 
 abstract class Platform {
     abstract val name: String
+    abstract val deviceName: String
     abstract val resourcePath: Path
     abstract val filesystem: FileSystem
     abstract val logicalProcessorsCount: Int

@@ -1,6 +1,9 @@
 package com.zhufucdev.practiso
 
 import com.russhwolf.settings.Settings
+import com.zhufucdev.practiso.platform.getPlatform
+import com.zhufucdev.practiso.service.CommunityIdentity
+import io.ktor.util.encodeBase64
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -8,6 +11,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
+import okio.Buffer
+import okio.Sink
+import okio.buffer
+import okio.gzip
 
 private const val KeyAnswerPageStyle = "answer_page_style"
 private const val KeyShowAccuracy = "show_accuracy"
@@ -16,75 +23,121 @@ private const val KeyFeiModelId = "fei_model_id"
 private const val KeyFeiCompatibility = "fei_compatibility"
 private const val KeyCommunityServerUrl = "community_server_url"
 private const val KeyCommunityUseCustomServer = "community_use_custom_ser"
+private const val KeyClientName = "client_name"
 
-class SettingsModel(private val settings: Settings, val coroutineScope: CoroutineScope) {
+class SettingsModel(
+    private val default: Settings,
+    private val secure: Settings,
+    val coroutineScope: CoroutineScope,
+) {
     val answerPageStyle = MutableStateFlow(
-        PageStyle.entries[settings.getInt(
+        PageStyle.entries[default.getInt(
             KeyAnswerPageStyle,
             PageStyle.Horizontal.ordinal
         )]
     )
     val showAccuracy =
-        MutableStateFlow(settings.getBoolean(KeyShowAccuracy, false))
-    val showNextQuizAutomatically = MutableStateFlow(settings.getBoolean(KeyQuizAutoplay, false))
-    val feiModelIndex = MutableStateFlow(settings.getInt(KeyFeiModelId, defaultValue = 0))
+        MutableStateFlow(default.getBoolean(KeyShowAccuracy, false))
+    val showNextQuizAutomatically = MutableStateFlow(default.getBoolean(KeyQuizAutoplay, false))
+    val feiModelIndex = MutableStateFlow(default.getInt(KeyFeiModelId, defaultValue = 0))
     val feiCompatibilityMode =
-        MutableStateFlow(settings.getBoolean(KeyFeiCompatibility, defaultValue = false))
+        MutableStateFlow(default.getBoolean(KeyFeiCompatibility, defaultValue = false))
     val communityUseCustomServer =
-        MutableStateFlow(settings.getBoolean(KeyCommunityUseCustomServer, defaultValue = false))
+        MutableStateFlow(default.getBoolean(KeyCommunityUseCustomServer, defaultValue = false))
     val communityServerUrl =
-        MutableStateFlow(settings.getStringOrNull(KeyCommunityServerUrl))
+        MutableStateFlow(default.getStringOrNull(KeyCommunityServerUrl))
+    val clientName =
+        MutableStateFlow(default.getStringOrNull(KeyClientName) ?: getPlatform().deviceName)
+
+    fun getCommunityIdentity(serverUrl: String) =
+        HybridSettingsCommunityIdentity(serverUrl, default, secure)
 
     init {
         with(coroutineScope) {
             launch {
                 answerPageStyle.collectLatest {
-                    settings.putInt(KeyAnswerPageStyle, it.ordinal)
+                    default.putInt(KeyAnswerPageStyle, it.ordinal)
                 }
             }
             launch {
                 showAccuracy.collectLatest {
-                    settings.putBoolean(KeyShowAccuracy, it)
+                    default.putBoolean(KeyShowAccuracy, it)
                 }
             }
             launch {
                 showNextQuizAutomatically.collectLatest {
-                    settings.putBoolean(KeyQuizAutoplay, it)
+                    default.putBoolean(KeyQuizAutoplay, it)
                 }
             }
             launch {
                 feiModelIndex.collectLatest {
-                    settings.putInt(KeyFeiModelId, it)
+                    default.putInt(KeyFeiModelId, it)
                 }
             }
             launch {
                 feiCompatibilityMode.collectLatest {
-                    settings.putBoolean(KeyFeiCompatibility, it)
+                    default.putBoolean(KeyFeiCompatibility, it)
                 }
             }
             launch {
                 communityServerUrl.collectLatest {
                     if (it == null) {
-                        settings.remove(KeyCommunityServerUrl)
+                        default.remove(KeyCommunityServerUrl)
                     } else {
-                        settings.putString(KeyCommunityServerUrl, it)
+                        default.putString(KeyCommunityServerUrl, it)
                     }
                 }
             }
             launch {
                 communityUseCustomServer.collectLatest {
-                    settings.putBoolean(KeyCommunityUseCustomServer, it)
+                    default.putBoolean(KeyCommunityUseCustomServer, it)
+                }
+            }
+            launch {
+                clientName.collectLatest {
+                    default.putString(KeyClientName, it)
                 }
             }
         }
     }
 }
 
+class HybridSettingsCommunityIdentity(
+    serverUrl: String,
+    private val insecure: Settings,
+    private val secure: Settings = insecure,
+) : CommunityIdentity {
+    private val keyPrefix =
+        Buffer().apply {
+            (Buffer().apply { write(serverUrl.toByteArray()) } as Sink)
+                .gzip()
+                .buffer()
+                .writeAll(this)
+        }
+            .readByteArray()
+            .encodeBase64()
+
+    override var authToken: String?
+        get() = secure.getStringOrNull("${keyPrefix}_token")
+        set(value) {
+            val key = "${keyPrefix}_token"
+            if (value != null) {
+                secure.putString(key, value)
+            } else {
+                secure.remove(key)
+            }
+        }
+}
+
 @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 object AppSettingsScope : CoroutineScope by CoroutineScope(newSingleThreadContext("AppSettings"))
 
 val AppSettings = with(AppSettingsScope) {
-    val model = SettingsModel(getDefaultSettingsFactory().create(), this)
+    val model = SettingsModel(
+        getDefaultSettingsFactory().create(),
+        getSecureSettingsFactory().create(),
+        this
+    )
     launch {
         model.feiModelIndex.collectLatest { modelIdx ->
             Database.fei.setFeiModel(KnownModels[modelIdx])

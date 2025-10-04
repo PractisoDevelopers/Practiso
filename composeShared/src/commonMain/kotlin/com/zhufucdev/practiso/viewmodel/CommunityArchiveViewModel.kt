@@ -9,11 +9,11 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.DownloadManager
 import com.zhufucdev.practiso.composable.FilterController
 import com.zhufucdev.practiso.composable.SomeGroup
-import com.zhufucdev.practiso.helper.getCommunityServiceWithDownloadManager
 import com.zhufucdev.practiso.helper.protobufMutableStateFlowSaver
 import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.service.CommunityService
+import com.zhufucdev.practiso.service.getCommunityServiceWithDownloadManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

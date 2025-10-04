@@ -4,11 +4,13 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.core.content.getSystemService
+import com.google.crypto.tink.aead.AeadConfig
 
 abstract class PractisoApp : Application() {
     override fun onCreate() {
         super.onCreate()
         createFeiNotificationChannel()
+        AeadConfig.register()
 
         instance = this
     }

@@ -284,4 +284,20 @@
     <string name="refresh_para">Refresh</string>
     <string name="download_error_para">Download error</string>
     <string name="collapse_filter_para">Collapse filter</string>
+    <plurals name="sharing_n_items_para">
+        <item quantity="one">Sharing %1$d item</item>
+        <item quantity="other">Sharing %1$d items</item>
+    </plurals>
+    <string name="export_to_file_para">Export to file</string>
+    <string name="share_para">Share</string>
+    <string name="continue_in_system_file_manager_para">Continue in system file manager</string>
+    <string name="action_was_cancelled_para">Action was cancelled</string>
+    <string name="upload_to_community_para">Upload to community</string>
+    <string name="waiting_for_service_para">Waiting for service…</string>
+    <string name="name_of_entry_para">Name of entry</string>
+    <string name="upload_para">Upload</string>
+    <string name="registration_required_para">Registration required</string>
+    <string name="device_name_para">Device name</string>
+    <string name="owner_name_para">Owner name</string>
+    <string name="shared_with_the_community_para">Shared with the community</string>
 </resources>

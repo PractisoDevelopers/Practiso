@@ -108,6 +108,7 @@ import com.zhufucdev.practiso.route.CommunityDimensionRouteParams
 import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.service.ImportState
 import com.zhufucdev.practiso.style.PaddingNormal
+import com.zhufucdev.practiso.viewmodel.ArchiveSharingViewModel
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.CommunityArchiveViewModel
 import com.zhufucdev.practiso.viewmodel.CommunityDimensionViewModel
@@ -134,6 +135,8 @@ fun PractisoApp(navController: NavHostController) {
         viewModel(factory = LibraryAppViewModel.Factory)
     val searchVM: SearchViewModel =
         viewModel(factory = SearchViewModel.Factory)
+    val archiveSharingVM: ArchiveSharingViewModel =
+        viewModel(factory = ArchiveSharingViewModel.Factory)
     val importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
     val communityVM: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory)
 
@@ -213,7 +216,8 @@ fun PractisoApp(navController: NavHostController) {
                         AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
                             QuizSectionEditApp(
                                 startpoint = stackEntry.toRoute(),
-                                libraryVM = libraryVM
+                                libraryVM = libraryVM,
+                                archiveSharingVM = archiveSharingVM
                             )
                         }
                     }

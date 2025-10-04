@@ -12,6 +12,7 @@ object Bonjour {
         return when (key) {
             CompatibilityVersion.KEY -> CompatibilityVersion(value.toInt())
             BuildDate.KEY -> BuildDate(LocalDate.parse(value))
+            MaxNameLength.KEY -> MaxNameLength(value.toInt())
             else -> GenericBonjourProperty(key, value)
         }
     }

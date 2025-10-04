@@ -6,6 +6,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -23,23 +24,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.composable.ArchiveSharingDialog
 import com.zhufucdev.practiso.composable.CommonActions
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.SectionEditScaffold
+import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
+import com.zhufucdev.practiso.viewmodel.ArchiveSharingViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
-import resources.archive_para
-import resources.baseline_archive_arrow_down_outline
 import resources.dismiss_para
 import resources.remove_para
+import resources.share_para
 import resources.would_you_like_to_remove_n_items_para
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +48,7 @@ import resources.would_you_like_to_remove_n_items_para
 fun QuizSectionEditApp(
     startpoint: QuizSectionEditVM.Startpoint,
     libraryVM: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
+    archiveSharingVM: ArchiveSharingViewModel = viewModel(factory = ArchiveSharingViewModel.Factory),
     model: QuizSectionEditVM = viewModel(factory = QuizSectionEditVM.Factory),
 ) {
     var deleteDialogShown by remember { mutableStateOf(false) }
@@ -77,29 +79,48 @@ fun QuizSectionEditApp(
                     }
                 },
                 floatingActionButton = {
-                    AnimatedVisibility(
-                        visible = model.selection.isNotEmpty(),
-                        enter = scaleIn(tween()),
-                        exit = scaleOut()
-                    ) {
-                        PlainTooltipBox(stringResource(Res.string.archive_para)) {
-                            FloatingActionButton(
-                                onClick = {
+                    SharedElementTransitionPopup(
+                        key = "share",
+                        popup = {
+                            ArchiveSharingDialog(
+                                model = archiveSharingVM,
+                                onDismissRequested = {
                                     coroutine.launch {
-                                        val archiveFile = FileKit.openFileSaver(
-                                            suggestedName = model.describeSelection(),
-                                            extension = "psarchive"
-                                        )
-                                        if (archiveFile != null) {
-                                            model.events.exportToFile.send(archiveFile)
-                                        }
+                                        collapse()
                                     }
-                                },
+                                }
+                            )
+                        },
+                        sharedElement = {
+                            FloatingActionButton(onClick = {}, modifier = it) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        content = {
+                            AnimatedVisibility(
+                                visible = model.selection.isNotEmpty(),
+                                enter = scaleIn(tween()),
+                                exit = scaleOut(),
+                                modifier = Modifier.sharedElement()
                             ) {
-                                Icon(painterResource(Res.drawable.baseline_archive_arrow_down_outline), contentDescription = null)
+                                PlainTooltipBox(stringResource(Res.string.share_para)) {
+                                    FloatingActionButton(
+                                        onClick = {
+                                            archiveSharingVM.loadParameters(selection = model.selection)
+                                            coroutine.launch {
+                                                expand()
+                                            }
+                                        },
+                                    ) {
+                                        Icon(Icons.Default.Share, contentDescription = null)
+                                    }
+                                }
                             }
                         }
-                    }
+                    )
                 }
             )
         }

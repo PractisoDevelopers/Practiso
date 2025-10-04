@@ -8,8 +8,8 @@ import com.zhufucdev.practiso.datamodel.AppException
 import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.DownloadException
-import com.zhufucdev.practiso.helper.getCommunityServiceWithDownloadManager
 import com.zhufucdev.practiso.service.CommunityService
+import com.zhufucdev.practiso.service.getCommunityServiceWithDownloadManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
