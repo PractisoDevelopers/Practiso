@@ -65,6 +65,7 @@ import androidx.savedstate.SavedState
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.composition.pseudoClickable
+import com.zhufucdev.practiso.helper.protobufSaver
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.service.CommunityRegistrationInfo
 import com.zhufucdev.practiso.service.UploadArchive
@@ -76,6 +77,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -435,7 +437,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
             ) {
                 when (uploadState) {
                     is UploadArchive.ArchiveNameRequired -> {
-                        var buffer by rememberSaveable {
+                        var buffer by rememberSaveable(stateSaver = protobufSaver()) {
                             mutableStateOf(LengthConstrainedTextFieldBuffer(""))
                         }
                         LaunchedEffect(true) {
@@ -474,7 +476,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             Text(stringResource(Res.string.registration_required_para))
                         }
 
-                        var ownerNameBuffer by remember {
+                        var ownerNameBuffer by rememberSaveable(stateSaver = protobufSaver()) {
                             mutableStateOf(LengthConstrainedTextFieldBuffer(AppSettings.clientName.value))
                         }
                         LengthConstrainedTextField(
@@ -486,7 +488,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                         )
                         Spacer(Modifier.height(PaddingSmall))
 
-                        var deviceNameBuffer by remember {
+                        var deviceNameBuffer by rememberSaveable(stateSaver = protobufSaver()) {
                             mutableStateOf(LengthConstrainedTextFieldBuffer(ownerNameBuffer.value))
                         }
                         LengthConstrainedTextField(
@@ -593,6 +595,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
 }
 
 @Immutable
+@Serializable
 private data class LengthConstrainedTextFieldBuffer(
     val value: String,
     val isOversized: Boolean = false,

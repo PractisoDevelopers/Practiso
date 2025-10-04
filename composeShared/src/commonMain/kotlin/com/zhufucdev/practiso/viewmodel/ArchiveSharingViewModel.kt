@@ -13,7 +13,6 @@ import com.zhufucdev.practiso.service.ExportService
 import com.zhufucdev.practiso.service.UploadArchive
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sink
-import io.github.vinceglb.filekit.utils.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -107,7 +106,7 @@ abstract class CommonArchiveSharingViewModel(
                             }
                         }
                         community.uploadArchive(
-                            SystemFileSystem.source(temporaryFilePath.toFile().toKotlinxIoPath())
+                            SystemFileSystem.source(kotlinx.io.files.Path(temporaryFilePath.toString()))
                                 .buffered()
                         )
                             .collect { state ->
