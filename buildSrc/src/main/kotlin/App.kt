@@ -1,6 +1,6 @@
-const val appVersion = "2.0.0-alpha"
+const val appVersion = "2.1.0-alpha"
 
 data class AndroidSdk(val min: Int, val target: Int)
 data class AndroidApp(val sdk: AndroidSdk, val versionCode: Int)
 
-val androidApp = AndroidApp(sdk = AndroidSdk(min = 27, target = 35), versionCode = 37)
+val androidApp = AndroidApp(sdk = AndroidSdk(min = 27, target = 35), versionCode = 38)
