@@ -295,6 +295,7 @@ fun ArchiveSharingDialogScaffold(
             )
         ) {
             OutlinedButton(onClick = {
+                model.cancel()
                 onDismissRequested()
             }) {
                 Text(stringResource(Res.string.cancel_para))

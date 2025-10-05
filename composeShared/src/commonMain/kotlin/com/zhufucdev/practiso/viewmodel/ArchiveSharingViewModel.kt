@@ -13,7 +13,10 @@ import com.zhufucdev.practiso.service.ExportService
 import com.zhufucdev.practiso.service.UploadArchive
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sink
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
@@ -22,9 +25,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flattenMerge
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -50,6 +54,7 @@ expect class ArchiveSharingViewModel : CommonArchiveSharingViewModel {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 abstract class CommonArchiveSharingViewModel(
     private val db: AppDatabase,
     exportService: ExportService,
@@ -74,6 +79,12 @@ abstract class CommonArchiveSharingViewModel(
         this.selection = selection
     }
 
+    fun cancel() {
+        jobPool.forEach(Job::cancel)
+        selection = emptySet()
+        uploadState = null
+    }
+
     init {
         viewModelScope.launch {
             while (isActive) {
@@ -90,28 +101,32 @@ abstract class CommonArchiveSharingViewModel(
                     }
 
                     _uploadToCommunity.onReceive {
-                        val community = communityService.first()
-                        val platform = getPlatform()
-                        val temporaryFilePath =
-                            platform.createTemporaryFile(
-                                prefix = "share-with-community",
-                                suffix = ".psarchive"
-                            )
-                        withContext(Dispatchers.IO) {
-                            val temporarySink = platform.filesystem.sink(temporaryFilePath)
-                            temporarySink.gzip().buffer().use { sink ->
-                                exportService.exportAsSource(selection)
-                                    .buffer()
-                                    .use { source -> source.readAll(sink) }
+                        launchToJobPool {
+                            val platform = getPlatform()
+                            val temporaryFilePath =
+                                platform.createTemporaryFile(
+                                    prefix = "share-with-community",
+                                    suffix = ".psarchive"
+                                )
+                            withContext(Dispatchers.IO) {
+                                val temporarySink = platform.filesystem.sink(temporaryFilePath)
+                                temporarySink.gzip().buffer().use { sink ->
+                                    exportService.exportAsSource(selection)
+                                        .buffer()
+                                        .use { source -> source.readAll(sink) }
+                                }
                             }
+                            communityService.mapLatest { community ->
+                                community.uploadArchive(
+                                    SystemFileSystem.source(kotlinx.io.files.Path(temporaryFilePath.toString()))
+                                        .buffered()
+                                )
+                            }
+                                .flattenMerge()
+                                .collect {
+                                    uploadState = it
+                                }
                         }
-                        community.uploadArchive(
-                            SystemFileSystem.source(kotlinx.io.files.Path(temporaryFilePath.toString()))
-                                .buffered()
-                        )
-                            .collect { state ->
-                                uploadState = state
-                            }
                     }
                 }
             }
@@ -150,5 +165,10 @@ abstract class CommonArchiveSharingViewModel(
         } else {
             quizzes.first().name ?: getString(Res.string.new_question_para)
         }
+    }
+
+    private val jobPool = mutableListOf<Job>()
+    private fun launchToJobPool(action: suspend CoroutineScope.() -> Unit) {
+        jobPool.add(viewModelScope.launch(block = action))
     }
 }
