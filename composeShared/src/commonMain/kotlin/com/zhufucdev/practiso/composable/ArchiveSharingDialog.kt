@@ -150,6 +150,7 @@ fun ArchiveSharingDialogScaffold(
             title = {
                 pageNavStack
                     .lastOrNull()
+                    ?.decorations
                     ?.topBarTitle
                     ?.invoke()
                     ?: Text(
@@ -191,6 +192,8 @@ fun ArchiveSharingDialogScaffold(
             },
             sizeTransform = { SizeTransform() }
         ) {
+            var latestBuildId = 0
+
             fun composable(
                 routeName: String,
                 content: @Composable ArchiveSharingPageScope.(NavBackStackEntry) -> Unit,
@@ -200,11 +203,12 @@ fun ArchiveSharingDialogScaffold(
                         pageNavStack.indexOfLast { it.routeName == routeName }
                             .takeIf { it >= 0 } ?: pageNavStack.size
                     }
+
                     LaunchedEffect(routeName) {
                         if (pageNavStack.size <= positionInStack) {
-                            pageNavStack.add(PageNavStackEntry(routeName))
+                            pageNavStack.add(PageNavStackEntry(routeName, ownerId = latestBuildId))
                         } else if (pageNavStack[positionInStack].routeName != routeName) {
-                            pageNavStack[positionInStack] = PageNavStackEntry(routeName)
+                            pageNavStack[positionInStack] = PageNavStackEntry(routeName, ownerId = latestBuildId)
                         }
                     }
 
@@ -218,12 +222,28 @@ fun ArchiveSharingDialogScaffold(
                             onDismissRequested()
                         }
 
-                        private fun updateStackEntry(transform: (PageNavStackEntry) -> PageNavStackEntry) {
-                            if (pageNavStack.size <= positionInStack) {
-                                pageNavStack.add(transform(PageNavStackEntry(routeName)))
+                        private fun updateDecorations(
+                            buildIdConstraint: Int? = null,
+                            transform: (PageNavDecorations) -> PageNavDecorations,
+                        ): Int? {
+                            return if (pageNavStack.size <= positionInStack) {
+                                val entry = PageNavStackEntry(
+                                    routeName,
+                                    transform(PageNavDecorations()),
+                                    ownerId = ++latestBuildId
+                                )
+                                // build id constraint not applied here
+                                pageNavStack.add(entry)
+                                entry.ownerId
                             } else {
+                                val entry = pageNavStack[positionInStack]
+                                if (buildIdConstraint?.let { it == entry.ownerId } == false) {
+                                    return null
+                                }
+                                val buildId = ++latestBuildId
                                 pageNavStack[positionInStack] =
-                                    transform(pageNavStack[positionInStack])
+                                    entry.copy(decorations = transform(entry.decorations), ownerId = buildId)
+                                buildId
                             }
                         }
 
@@ -232,11 +252,11 @@ fun ArchiveSharingDialogScaffold(
                             content: @Composable (RowScope.() -> Unit),
                         ) {
                             DisposableEffect(content) {
-                                updateStackEntry {
+                                val buildId = updateDecorations {
                                     it.copy(actionButton = content)
                                 }
                                 onDispose {
-                                    updateStackEntry {
+                                    updateDecorations(buildId) {
                                         it.copy(actionButton = null)
                                     }
                                 }
@@ -246,11 +266,11 @@ fun ArchiveSharingDialogScaffold(
                         @Composable
                         override fun TopBarTitle(content: @Composable (() -> Unit)) {
                             DisposableEffect(content) {
-                                updateStackEntry {
+                                val buildId = updateDecorations {
                                     it.copy(topBarTitle = content)
                                 }
                                 onDispose {
-                                    updateStackEntry {
+                                    updateDecorations(buildId) {
                                         it.copy(topBarTitle = null)
                                     }
                                 }
@@ -301,7 +321,7 @@ fun ArchiveSharingDialogScaffold(
                 Text(stringResource(Res.string.cancel_para))
             }
             Spacer(Modifier.weight(1f))
-            pageNavStack.lastOrNull()?.actionButton?.invoke(this)
+            pageNavStack.lastOrNull()?.decorations?.actionButton?.invoke(this)
         }
     }
 }
@@ -363,10 +383,15 @@ interface ArchiveSharingPageScope {
     fun TopBarTitle(content: @Composable () -> Unit)
 }
 
-private data class PageNavStackEntry(
-    val routeName: String,
+private data class PageNavDecorations(
     val actionButton: (@Composable RowScope.() -> Unit)? = null,
     val topBarTitle: (@Composable () -> Unit)? = null,
+)
+
+private data class PageNavStackEntry(
+    val routeName: String,
+    val decorations: PageNavDecorations = PageNavDecorations(),
+    val ownerId: Int
 )
 
 fun ArchiveSharingDialogBuilder.exportToFileOption(model: ArchiveSharingViewModel) {
