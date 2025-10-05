@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -86,10 +87,13 @@ import resources.action_was_cancelled_para
 import resources.baseline_archive_arrow_down_outline
 import resources.baseline_check_circle_outline
 import resources.cancel_para
+import resources.clear_token_para
 import resources.continue_in_system_file_manager_para
 import resources.device_name_para
 import resources.export_to_file_para
+import resources.from_server_x_para
 import resources.http_error_para
+import resources.must_reregister_to_proceed_para
 import resources.name_of_entry_para
 import resources.outline_alert_circle
 import resources.outline_cloud_upload
@@ -208,7 +212,8 @@ fun ArchiveSharingDialogScaffold(
                         if (pageNavStack.size <= positionInStack) {
                             pageNavStack.add(PageNavStackEntry(routeName, ownerId = latestBuildId))
                         } else if (pageNavStack[positionInStack].routeName != routeName) {
-                            pageNavStack[positionInStack] = PageNavStackEntry(routeName, ownerId = latestBuildId)
+                            pageNavStack[positionInStack] =
+                                PageNavStackEntry(routeName, ownerId = latestBuildId)
                         }
                     }
 
@@ -242,7 +247,10 @@ fun ArchiveSharingDialogScaffold(
                                 }
                                 val buildId = ++latestBuildId
                                 pageNavStack[positionInStack] =
-                                    entry.copy(decorations = transform(entry.decorations), ownerId = buildId)
+                                    entry.copy(
+                                        decorations = transform(entry.decorations),
+                                        ownerId = buildId
+                                    )
                                 buildId
                             }
                         }
@@ -391,7 +399,7 @@ private data class PageNavDecorations(
 private data class PageNavStackEntry(
     val routeName: String,
     val decorations: PageNavDecorations = PageNavDecorations(),
-    val ownerId: Int
+    val ownerId: Int,
 )
 
 fun ArchiveSharingDialogBuilder.exportToFileOption(model: ArchiveSharingViewModel) {
@@ -573,7 +581,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             painterResource(Res.drawable.baseline_check_circle_outline),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(42.dp)
+                            modifier = Modifier.size(48.dp)
                         )
                         Text(
                             stringResource(Res.string.shared_with_the_community_para),
@@ -614,6 +622,29 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             stringResource(Res.string.waiting_for_service_para),
                             textAlign = TextAlign.Center
                         )
+                    }
+
+                    is UploadArchive.SignOffRequired -> {
+                        Icon(
+                            painterResource(Res.drawable.outline_alert_circle),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Text(stringResource(Res.string.must_reregister_to_proceed_para))
+                        uploadState.serverMessage?.let {
+                            Text(stringResource(Res.string.from_server_x_para, it))
+                        }
+                        ActionButtons {
+                            Button(
+                                onClick = {
+                                    pageCoroutine.launch { uploadState.proceed.send(Unit) }
+                                },
+                                colors = ButtonDefaults.buttonColors(contentColor = MaterialTheme.colorScheme.errorContainer)
+                            ) {
+                                Text(stringResource(Res.string.clear_token_para))
+                            }
+                        }
                     }
                 }
             }

@@ -300,4 +300,8 @@
     <string name="device_name_para">Device name</string>
     <string name="owner_name_para">Owner name</string>
     <string name="shared_with_the_community_para">Shared with the community</string>
+    <string name="account_removed_para">Account removed</string>
+    <string name="must_reregister_to_proceed_para">Your account has been removed, and local login info is no long valid. To proceed, you will have to register for a new one.</string>
+    <string name="from_server_x_para">From server: %1$s</string>
+    <string name="clear_token_para">Clear token</string>
 </resources>

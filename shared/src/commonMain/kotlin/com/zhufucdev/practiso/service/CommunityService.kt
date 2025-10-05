@@ -84,7 +84,13 @@ class CommunityService(
             archiveName = duplexSubmissionChannel.receive()
         }
         emitAll(
-            client.uploadArchive(content.peek(), archiveName, clientName, ownerName, identity.authToken)
+            client.uploadArchive(
+                content.peek(),
+                archiveName,
+                clientName,
+                ownerName,
+                identity.authToken
+            )
                 .transform {
                     when (it) {
                         is ArchiveUploadState.Success -> {
@@ -94,8 +100,8 @@ class CommunityService(
                             emit(UploadArchive.Success(it.archiveId))
                         }
 
-                        is ArchiveUploadState.Failure -> {
-                            if (it.statusCode == HttpStatusCode.Unauthorized && identity.authToken == null) {
+                        is ArchiveUploadState.Failure -> when {
+                            it.statusCode == HttpStatusCode.Unauthorized && identity.authToken == null -> {
                                 val duplexSubmissionChannel = Channel<CommunityRegistrationInfo>()
                                 emit(UploadArchive.RegistrationRequired(duplexSubmissionChannel))
                                 val info = duplexSubmissionChannel.receive()
@@ -107,9 +113,22 @@ class CommunityService(
                                         info.ownerName
                                     )
                                 )
-                            } else {
-                                emit(UploadArchive.Failure(it.statusCode, it.message))
                             }
+
+                            it.statusCode == HttpStatusCode.Forbidden && identity.authToken != null -> {
+                                val duplexProceedChannel = Channel<Unit>()
+                                emit(
+                                    UploadArchive.SignOffRequired(
+                                        serverMessage = it.message,
+                                        proceed = duplexProceedChannel
+                                    )
+                                )
+                                duplexProceedChannel.receive()
+                                identity.authToken = null
+                                emitAll(uploadArchiveImpl(content.peek(), archiveName))
+                            }
+
+                            else -> emit(UploadArchive.Failure(it.statusCode, it.message))
                         }
 
                         is ArchiveUploadState.InProgress -> {
@@ -133,6 +152,8 @@ sealed class UploadArchive {
         UploadArchive()
 
     data class ArchiveNameRequired(val submission: SendChannel<String>) : UploadArchive()
+    data class SignOffRequired(val serverMessage: String?, val proceed: SendChannel<Unit>) :
+        UploadArchive()
 
     data class InProgress(val stats: StateFlow<TransferStats>) : UploadArchive()
     data class Failure(val statusCode: HttpStatusCode, val message: String?) : UploadArchive()
