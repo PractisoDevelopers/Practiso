@@ -304,4 +304,7 @@
     <string name="must_reregister_to_proceed_para">Your account has been removed, and local login info is no long valid. To proceed, you will have to register for a new one.</string>
     <string name="from_server_x_para">From server: %1$s</string>
     <string name="clear_token_para">Clear token</string>
+    <string name="share_with_other_apps_para">Share with other apps</string>
+    <string name="file_name_para">File name</string>
+    <string name="sending_para">Sending…</string>
 </resources>

@@ -79,7 +79,7 @@ abstract class CommonArchiveSharingViewModel(
         this.selection = selection
     }
 
-    fun cancel() {
+    open fun cancel() {
         jobPool.forEach(Job::cancel)
         selection = emptySet()
         uploadState = null
@@ -169,7 +169,7 @@ abstract class CommonArchiveSharingViewModel(
     }
 
     private val jobPool = mutableListOf<Job>()
-    private fun launchToJobPool(action: suspend CoroutineScope.() -> Unit) {
+    protected fun launchToJobPool(action: suspend CoroutineScope.() -> Unit) {
         jobPool.add(viewModelScope.launch(block = action))
     }
 }

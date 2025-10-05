@@ -2,11 +2,13 @@ package com.zhufucdev.practiso
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.collectAsState
@@ -21,7 +23,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-class MainActivity : NavigatorComponentActivity() {
+class MainActivity : NavigatorComponentActivity(), ForActivityResultLaunchable {
     private val notificationDialog =
         MutableStateFlow<PermissionRationaleState>(PermissionRationaleState.Hidden)
 
@@ -53,7 +55,7 @@ class MainActivity : NavigatorComponentActivity() {
         }
     }
 
-    private val launcher by lazy {
+    private val permissionRequestLauncher by lazy {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (!isGranted && shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                 lifecycleScope.launch {
@@ -64,9 +66,20 @@ class MainActivity : NavigatorComponentActivity() {
         }
     }
 
+    private val activityResultChannel = Channel<ActivityResult>()
+    private val activityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            activityResultChannel.trySend(it)
+        }
+
+    override suspend fun startActivityForResult(intent: Intent): ActivityResult {
+        activityResultLauncher.launch(intent)
+        return activityResultChannel.receive()
+    }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun requireNotificationPermission() {
-        launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        permissionRequestLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
