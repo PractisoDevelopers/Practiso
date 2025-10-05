@@ -13,6 +13,7 @@ import com.zhufucdev.practiso.service.getCommunityServiceWithDownloadManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,13 +30,14 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import opacity.client.SortOptions
+import kotlin.time.Duration.Companion.seconds
 
 class CommunityAppViewModel(
     communityService: Flow<CommunityService>,
     downloadManager: Flow<DownloadManager>,
 ) : ArchiveDownloadManagedViewModel(communityService, downloadManager) {
     private val refreshCounter = MutableStateFlow(0)
-    private val _pageState = MutableStateFlow<PageState>(Loading)
+    private val _pageState = MutableStateFlow<PageState>(Loaded)
 
     val event = Events()
 
@@ -46,6 +48,10 @@ class CommunityAppViewModel(
                     event.refresh.onReceive {
                         _pageState.tryEmit(Loading)
                         refreshCounter.getAndUpdate { it + 1 }
+                        delay(2.seconds)
+                        if (_pageState.value !is Failed) {
+                            _pageState.tryEmit(Loaded)
+                        }
                     }
 
                     event.mountNextPage.onReceive {

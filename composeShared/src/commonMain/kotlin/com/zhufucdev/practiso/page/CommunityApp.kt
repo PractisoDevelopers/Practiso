@@ -6,6 +6,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -94,7 +98,7 @@ fun CommunityApp(
     animatedContent: AnimatedContentScope,
 ) {
     val pageState by communityVM.pageState.collectAsState()
-    AnimatedContent(pageState) { ps ->
+    AnimatedContent(pageState, transitionSpec = { fadeIn() togetherWith fadeOut() }) { ps ->
         when (ps) {
             is CommunityAppViewModel.Failed -> FailurePage(communityVM.event.refresh)
             else -> DefaultPage(communityVM, importVM, sharedTransition, animatedContent)
@@ -119,6 +123,7 @@ private fun DefaultPage(
 
     val leadingItemIndex by remember(scrollState) { derivedStateOf { scrollState.firstVisibleItemIndex } }
     val downloadError by communityVM.downloadError.collectAsState()
+    val pageState by communityVM.pageState.collectAsState()
 
     var alertError by remember { mutableStateOf<Exception?>(null) }
 
@@ -142,108 +147,115 @@ private fun DefaultPage(
         }
     }
 
-    LazyColumn(state = scrollState) {
-        item {
-            Row(
-                Modifier.padding(horizontal = PaddingNormal).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                SectionCaption(
-                    pluralStringResource(
-                        Res.plurals.dimensions_para,
-                        dimensions?.size ?: 0
-                    )
-                )
-                TextButton(onClick = {
-
-                }) {
-                    Text(stringResource(Res.string.show_all_span).uppercase())
-                }
-            }
+    PullToRefreshBox(
+        isRefreshing = pageState is CommunityAppViewModel.Loading,
+        onRefresh = {
+            communityVM.event.refresh.trySend(Unit)
         }
-
-        item {
-            LazyRow(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(PaddingNormal),
-                contentPadding = PaddingValues(horizontal = PaddingNormal)
-            ) {
-                dimensions?.let {
-                    it.forEach { dim ->
-                        item(dim.name) {
-                            DimensionCard(
-                                model = dim,
-                                onClick = {
-                                    navController.navigate(CommunityDimensionRouteParams(dim.name))
-                                },
-                                modifier = Modifier.width(DimensionCardWidth)
-                            )
-                        }
-                    }
-                } ?: repeat(5) {
-                    item(it.toString()) {
-                        DimensionCardSkeleton(Modifier.width(DimensionCardWidth))
-                    }
-                }
-            }
-            Spacer(Modifier.height(PaddingNormal))
-        }
-
-        item {
-            Row(
-                modifier = Modifier.padding(horizontal = PaddingNormal).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                SectionCaption(pluralStringResource(Res.plurals.archives_para, archives?.items?.size ?: 2))
-            }
-        }
-
-        archives?.let { archives ->
-            items(
-                count = archives.items.size,
-                key = { "archive#${archives.items[it].id}" },
-                contentType = { "archive" }) { index ->
-                val archive = archives.items[index]
-                val state by communityVM.getDownloadStateFlow(archive).collectAsState()
-
-                OptionItem(
-                    modifier = Modifier.clickable(onClick = {
-                        navController.navigate(ArchivePreviewRouteParams(archive))
-                    }),
-                    separator = archives.isMounting || index != archives.items.lastIndex
+    ) {
+        LazyColumn(state = scrollState) {
+            item {
+                Row(
+                    Modifier.padding(horizontal = PaddingNormal).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    ArchiveMetadataOption(
-                        modifier = with(sharedTransition) {
-                            Modifier.fillMaxWidth()
-                                .sharedElement(
-                                    sharedTransition.rememberSharedContentState(archive.uiSharedId),
-                                    animatedVisibilityScope = animatedContent
-                                )
-                        },
-                        model = archive,
-                        state = state,
-                        onDownloadRequest = {
-                            communityVM.archiveEvent.downloadAndImport.trySend(
-                                archive to importVM.event
-                            )
-                        },
-                        onErrorDetailsRequest = {
-                            alertError = it
-                        },
-                        onCancelRequest = {
-                            communityVM.archiveEvent.cancelDownload.trySend(archive)
-                        }
+                    SectionCaption(
+                        pluralStringResource(
+                            Res.plurals.dimensions_para,
+                            dimensions?.size ?: 0
+                        )
                     )
+                    TextButton(onClick = {
+
+                    }) {
+                        Text(stringResource(Res.string.show_all_span).uppercase())
+                    }
                 }
             }
-        }
 
-        if (archives?.isMounting != false) {
-            items(5) {
-                OptionItem(separator = it != 4) {
-                    PractisoOptionSkeleton()
+            item {
+                LazyRow(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(PaddingNormal),
+                    contentPadding = PaddingValues(horizontal = PaddingNormal)
+                ) {
+                    dimensions?.let {
+                        it.forEach { dim ->
+                            item(dim.name) {
+                                DimensionCard(
+                                    model = dim,
+                                    onClick = {
+                                        navController.navigate(CommunityDimensionRouteParams(dim.name))
+                                    },
+                                    modifier = Modifier.width(DimensionCardWidth)
+                                )
+                            }
+                        }
+                    } ?: repeat(5) {
+                        item(it.toString()) {
+                            DimensionCardSkeleton(Modifier.width(DimensionCardWidth))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(PaddingNormal))
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.padding(horizontal = PaddingNormal).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    SectionCaption(pluralStringResource(Res.plurals.archives_para, archives?.items?.size ?: 2))
+                }
+            }
+
+            archives?.let { archives ->
+                items(
+                    count = archives.items.size,
+                    key = { "archive#${archives.items[it].id}" },
+                    contentType = { "archive" }) { index ->
+                    val archive = archives.items[index]
+                    val state by communityVM.getDownloadStateFlow(archive).collectAsState()
+
+                    OptionItem(
+                        modifier = Modifier.clickable(onClick = {
+                            navController.navigate(ArchivePreviewRouteParams(archive))
+                        }),
+                        separator = archives.isMounting || index != archives.items.lastIndex
+                    ) {
+                        ArchiveMetadataOption(
+                            modifier = with(sharedTransition) {
+                                Modifier.fillMaxWidth()
+                                    .sharedElement(
+                                        sharedTransition.rememberSharedContentState(archive.uiSharedId),
+                                        animatedVisibilityScope = animatedContent
+                                    )
+                            },
+                            model = archive,
+                            state = state,
+                            onDownloadRequest = {
+                                communityVM.archiveEvent.downloadAndImport.trySend(
+                                    archive to importVM.event
+                                )
+                            },
+                            onErrorDetailsRequest = {
+                                alertError = it
+                            },
+                            onCancelRequest = {
+                                communityVM.archiveEvent.cancelDownload.trySend(archive)
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (archives?.isMounting != false) {
+                items(5) {
+                    OptionItem(separator = it != 4) {
+                        PractisoOptionSkeleton()
+                    }
                 }
             }
         }
