@@ -126,6 +126,7 @@ abstract class CommonArchiveSharingViewModel(
                                 .collect {
                                     uploadState = it
                                 }
+                            platform.filesystem.delete(temporaryFilePath)
                         }
                     }
                 }
