@@ -48,8 +48,7 @@ compose.desktop {
         }
 
         buildTypes.release.proguard {
-            version.set("7.6.1")
-            configurationFiles.from(project.file("proguard-rules.pro"))
+            isEnabled = false
         }
     }
 }
