@@ -594,14 +594,16 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             Button(onClick = {
                                 coroutine.launch {
                                     isFetchingMetadata = true
-                                    val metadata = model.communityService
-                                        .first()
-                                        .getArchiveMetadata(uploadState.archiveId)
-                                    if (metadata != null) {
-                                        navController.navigate(ArchivePreviewRouteParams(metadata = metadata))
+                                    val metadata = runCatching {
+                                        model.communityService
+                                            .first()
+                                            .getArchiveMetadata(uploadState.archiveId)
                                     }
-                                    isFetchingMetadata = false
-                                    dismiss()
+                                    metadata.getOrNull()?.let {
+                                        navController.navigate(ArchivePreviewRouteParams(metadata = it))
+                                        isFetchingMetadata = false
+                                        dismiss()
+                                    }
                                 }
                             }) {
                                 if (isFetchingMetadata) {

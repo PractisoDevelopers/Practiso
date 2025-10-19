@@ -900,29 +900,33 @@ private fun ListItem(
     Column(modifier) {
         HorizontalDraggable(
             enabled = swipable,
-            targetWidth = HorizontalDraggingControlTargetWidth * 2 + PaddingSmall * 3,
             controls = {
-                HorizontalControl(
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    modifier = Modifier.clickable(
-                        enabled = onEdit != null,
-                        onClick = { onEdit?.invoke() })
-                ) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = stringResource(Res.string.edit_para)
-                    )
+                item(width = HorizontalDraggingControlTargetWidth) {
+                    HorizontalControl(
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        modifier = Modifier.clickable(
+                            enabled = onEdit != null,
+                            onClick = { onEdit?.invoke() })
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = stringResource(Res.string.edit_para)
+                        )
+                    }
                 }
-                HorizontalControl(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    modifier = Modifier.clickable(
-                        enabled = onDelete != null,
-                        onClick = { onDelete?.invoke() })
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(Res.string.remove_para)
-                    )
+
+                item(width = HorizontalDraggingControlTargetWidth) {
+                    HorizontalControl(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        modifier = Modifier.clickable(
+                            enabled = onDelete != null,
+                            onClick = { onDelete?.invoke() })
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(Res.string.remove_para)
+                        )
+                    }
                 }
             },
             content = content

@@ -22,7 +22,7 @@ import opacity.client.DimensionMetadata
 import opacity.client.OpacityClient
 import opacity.client.SortOptions
 import opacity.client.TransferStats
-
+import opacity.client.Whoami
 
 class CommunityService(
     endpoint: String = DEFAULT_COMMUNITY_SERVER_URL,
@@ -70,6 +70,13 @@ class CommunityService(
         client.getArchiveMetadata(archiveId)
 
     suspend fun getServerInfo(): BonjourResponse = client.getBonjour()
+
+    suspend fun getWhoami(): Whoami? = identity.authToken?.let { client.getWhoami(it) }
+
+    suspend fun deleteArchive(archiveId: String) {
+        val token = identity.authToken ?: throw IllegalStateException("Identity unavailable")
+        client.deleteArchive(archiveId, token)
+    }
 
     private fun uploadArchiveImpl(
         content: Source,
@@ -124,7 +131,7 @@ class CommunityService(
                                     )
                                 )
                                 duplexProceedChannel.receive()
-                                identity.authToken = null
+                                identity.clear()
                                 emitAll(uploadArchiveImpl(content.peek(), archiveName))
                             }
 
@@ -163,4 +170,5 @@ data class CommunityRegistrationInfo(val clientName: String, val ownerName: Stri
 
 interface CommunityIdentity {
     var authToken: String?
+    fun clear()
 }

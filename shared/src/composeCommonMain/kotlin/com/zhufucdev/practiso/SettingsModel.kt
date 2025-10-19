@@ -127,6 +127,10 @@ class HybridSettingsCommunityIdentity(
                 secure.remove(key)
             }
         }
+
+    override fun clear() {
+        authToken = null
+    }
 }
 
 @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)

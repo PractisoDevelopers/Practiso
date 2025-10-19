@@ -4,6 +4,7 @@ import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.onUpload
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
@@ -183,6 +184,37 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
         } else {
             val metadata: ArchiveMetadata = response.body()
             return metadata
+        }
+    }
+
+    suspend fun getWhoami(authToken: String): Whoami {
+        val response = http.get {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("whoami")
+            }
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $authToken")
+            }
+        }
+        return response.body()
+    }
+
+    suspend fun deleteArchive(archiveId: String, authToken: String) {
+        val response = http.delete {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("archive", archiveId)
+            }
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $authToken")
+            }
+        }
+        if (response.status == HttpStatusCode.Unauthorized) {
+            throw AuthorizationException(response.bodyAsText(), response.status.value)
+        }
+        if (!response.status.isSuccess()) {
+            throw HttpStatusAssertionException(response.status.value)
         }
     }
 }

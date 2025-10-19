@@ -9,23 +9,48 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import com.zhufucdev.practiso.datamodel.ActionLabel
 import com.zhufucdev.practiso.datamodel.AppException
-import com.zhufucdev.practiso.datamodel.AppMessage
-import com.zhufucdev.practiso.datamodel.AppScope
+import com.zhufucdev.practiso.datamodel.InteractiveException
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.viewmodel.stringContent
+import com.zhufucdev.practiso.viewmodel.stringLabel
 import com.zhufucdev.practiso.viewmodel.stringTitle
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.baseline_rhombus_outline
-import resources.dismiss_para
-import resources.retry_para
+
+@Composable
+fun AppExceptionAlert(
+    modifier: Modifier = Modifier,
+    model: Exception,
+    onDismissRequest: () -> Unit
+) {
+    val interactive = model as? InteractiveException
+    AppExceptionAlertScaffold(
+        modifier = modifier,
+        model = model as? AppException ?: AppException.Generic,
+        onDismissRequest = onDismissRequest,
+        onPrimaryActionRequest = interactive?.let { ie ->
+            {
+                ie.sendPrimary()
+                onDismissRequest()
+            }
+        },
+        onSecondaryActionRequest = interactive?.let { ie ->
+            {
+                ie.sendSecondary()
+                onDismissRequest()
+            }
+        },
+        primaryActionLabel = interactive?.primaryActionLabel ?: ActionLabel.Confirm,
+        secondaryActionLabel = interactive?.secondaryActionLabel ?: ActionLabel.Cancel
+    ) { model ->
+        Text(model.stringContent())
+    }
+}
 
 @Composable
 fun AppExceptionAlert(
@@ -33,47 +58,69 @@ fun AppExceptionAlert(
     model: Exception,
     icon: (@Composable () -> Unit)? = null,
     onDismissRequest: () -> Unit,
-    onConfirmRequest: (() -> Unit)? = null,
+    onRetryRequest: (() -> Unit)? = null,
     additionalText: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    val model by remember {
-        derivedStateOf {
-            if (model is AppException) {
-                model
-            } else {
-                object : Exception(model), AppException {
-                    override val scope: AppScope
-                        get() = AppScope.Unknown
-                    override val appMessage: AppMessage?
-                        get() = AppMessage.GenericFailure
-                }
+    AppExceptionAlertScaffold(
+        modifier = modifier,
+        model = model as? AppException ?: AppException.Generic,
+        icon = icon,
+        onDismissRequest = onDismissRequest,
+        onPrimaryActionRequest = onRetryRequest,
+        onSecondaryActionRequest = onDismissRequest,
+        text = { model ->
+            Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
+                Text(model.stringContent())
+                additionalText?.invoke(this)
             }
         }
-    }
+    )
+}
+
+@Composable
+fun AppExceptionAlertScaffold(
+    modifier: Modifier = Modifier,
+    model: AppException,
+    icon: (@Composable () -> Unit)? = null,
+    onDismissRequest: () -> Unit,
+    onPrimaryActionRequest: (() -> Unit)? = null,
+    onSecondaryActionRequest: (() -> Unit)? = null,
+    primaryActionLabel: ActionLabel = ActionLabel.Confirm,
+    secondaryActionLabel: ActionLabel = ActionLabel.Cancel,
+    text: @Composable (AppException) -> Unit
+) {
     AlertDialog(
         modifier = modifier,
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            if (onConfirmRequest != null) {
+            if (onPrimaryActionRequest != null) {
                 Button(
-                    onClick = onConfirmRequest
+                    onClick = onPrimaryActionRequest
                 ) {
-                    Text(stringResource(Res.string.retry_para))
+                    Text(primaryActionLabel.stringLabel())
                 }
             } else {
                 OutlinedButton(
-                    onClick = onDismissRequest
+                    onClick = {
+                        if (onSecondaryActionRequest != null) {
+                            onSecondaryActionRequest()
+                        } else {
+                            onDismissRequest()
+                        }
+                    }
                 ) {
-                    Text(stringResource(Res.string.dismiss_para))
+                    Text(primaryActionLabel.stringLabel())
                 }
             }
         },
         dismissButton = {
-            if (onConfirmRequest != null) {
+            if (onPrimaryActionRequest != null) {
                 OutlinedButton(
-                    onClick = onDismissRequest
+                    onClick = {
+                        onSecondaryActionRequest?.invoke()
+                    }
                 ) {
-                    Text(stringResource(Res.string.dismiss_para))
+                    Text(secondaryActionLabel.stringLabel())
                 }
             }
         },
@@ -89,11 +136,6 @@ fun AppExceptionAlert(
                 contentDescription = null
             )
         },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
-                Text(model.stringContent())
-                additionalText?.invoke(this)
-            }
-        }
+        text = { text(model) }
     )
 }

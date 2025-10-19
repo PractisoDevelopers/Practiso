@@ -88,7 +88,6 @@ import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.route.DimensionAppRouteParams
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
-import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.style.PaddingSpace
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
@@ -495,16 +494,17 @@ private fun ListItem(
     HorizontalDraggable(
         modifier = with(lazyItemScope) { Modifier.animateItem() },
         enabled = swipable,
-        targetWidth = HorizontalDraggingControlTargetWidth + PaddingSmall * 2,
         controls = {
-            HorizontalControl(
-                color = MaterialTheme.colorScheme.errorContainer,
-                modifier = Modifier.clickable(onClick = onDelete, enabled = swipable)
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = stringResource(Res.string.remove_para)
-                )
+            item(width = HorizontalDraggingControlTargetWidth) {
+                HorizontalControl(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.clickable(onClick = onDelete, enabled = swipable)
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = stringResource(Res.string.remove_para)
+                    )
+                }
             }
         },
         content = {

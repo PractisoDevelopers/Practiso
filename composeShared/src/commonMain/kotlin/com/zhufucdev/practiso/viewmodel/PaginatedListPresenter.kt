@@ -19,12 +19,13 @@ class PaginatedListPresenter<T>(
     private val inner: Paginated<T>,
     lifecycleScope: CoroutineScope,
     val preloadExtent: Int = 3,
+    listDelegate: MutableList<T> = mutableStateListOf()
 ) {
     var hasNextPage by mutableStateOf(inner.hasNext)
         private set
     var isMounting by mutableStateOf(true)
         private set
-    private val _items = mutableStateListOf<T>()
+    private val _items = listDelegate
     val items: List<T> get() = _items
 
     init {
@@ -37,7 +38,7 @@ class PaginatedListPresenter<T>(
     }
 
     /**
-     * Mount the next page and update [items].
+     * Mount the next page and update [listDelegate].
      * @return Any exception associated with this mount.
      * Can be null if it is handled by [PaginatedListPresenterErrorHandler]
      * registered by using [appendErrorHandler].

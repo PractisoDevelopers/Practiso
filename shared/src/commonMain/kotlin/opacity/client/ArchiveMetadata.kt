@@ -10,6 +10,7 @@ data class ArchiveMetadata(
     val name: String,
     val downloads: Int,
     val likes: Int,
+    val ownerId: Int = -1,
     val ownerName: String?,
     @Serializable(InstantIsoSerializer::class)
     val uploadTime: Instant,

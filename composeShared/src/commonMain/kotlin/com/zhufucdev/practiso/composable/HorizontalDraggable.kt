@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -45,13 +46,14 @@ fun HorizontalDraggable(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     lock: ExclusionLock = SharedHorizontalDraggableExclusion,
-    targetWidth: Dp,
-    controls: @Composable RowScope.() -> Unit,
+    controls: HorizontalDraggableScope.() -> Unit,
     content: @Composable () -> Unit,
 ) = withExclusionLock(lock) {
     val dragAnimator = remember { Animatable(0f) }
     val coroutine = rememberCoroutineScope()
     var dragOffset by remember { mutableFloatStateOf(0f) }
+    var targetWidth by remember(controls) { mutableFloatStateOf(0f) }
+    var paddedWidth by remember(controls) { mutableFloatStateOf(0f) }
 
     LaunchOstracization {
         dragAnimator.animateTo(0f) {
@@ -62,8 +64,8 @@ fun HorizontalDraggable(
     fun onDragEnd() {
         coroutine.launch {
             dragAnimator.snapTo(dragOffset)
-            if (-dragOffset.dp > targetWidth * 0.5f) {
-                dragAnimator.animateTo(-targetWidth.value) {
+            if (-dragOffset.dp > ((targetWidth + paddedWidth) * 0.5f).dp) {
+                dragAnimator.animateTo(-(targetWidth + paddedWidth)) {
                     dragOffset = value
                 }
             } else {
@@ -78,7 +80,7 @@ fun HorizontalDraggable(
         Surface(
             Modifier.fillMaxWidth().offset(x = dragOffset.dp)
                 .pointerInput(enabled) {
-                    if (!enabled) {
+                    if (!enabled || targetWidth <= 0) {
                         return@pointerInput
                     }
 
@@ -113,13 +115,33 @@ fun HorizontalDraggable(
                     .padding(PaddingSmall),
                 horizontalArrangement = Arrangement.spacedBy(PaddingSmall)
             ) {
-                controls()
+                val items = remember(controls) {
+                    buildList {
+                        controls(object : HorizontalDraggableScope, RowScope by this@Row {
+                            override fun item(
+                                width: Dp,
+                                content: @Composable (() -> Unit)
+                            ) {
+                                targetWidth += width.value
+                                add(content)
+                            }
+                        })
+                    }
+                }
+                LaunchedEffect(items) {
+                    paddedWidth = PaddingSmall.value * (items.size + 1)
+                }
+                items.forEach { it() }
             }
         }
     }
 }
 
 val HorizontalDraggingControlTargetWidth = 80.dp
+
+interface HorizontalDraggableScope : RowScope {
+    fun item(width: Dp, content: @Composable () -> Unit)
+}
 
 @Composable
 fun RowScope.HorizontalControl(

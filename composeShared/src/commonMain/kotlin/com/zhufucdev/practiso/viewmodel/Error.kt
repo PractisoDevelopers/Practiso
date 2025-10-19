@@ -6,6 +6,7 @@ import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
+import resources.account_removed_para
 import resources.community_service_span
 import resources.download_executor_span
 import resources.error_at_n_para
@@ -102,6 +103,7 @@ fun AppMessage.localizedString(): String =
 
         is AppMessage.HttpTransactionFailure -> stringResource(Res.string.http_transaction_error_para)
         is AppMessage.InsufficientSpace -> stringResource(Res.string.insufficient_disk_space_para)
+        is AppMessage.AccountRemoved -> stringResource(Res.string.account_removed_para)
     }
 
 @Composable

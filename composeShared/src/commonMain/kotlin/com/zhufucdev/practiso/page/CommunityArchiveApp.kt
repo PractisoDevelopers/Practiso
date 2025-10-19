@@ -34,10 +34,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
@@ -104,7 +107,7 @@ fun CommunityArchiveApp(
 
     val archive by previewVM.archive.collectAsState()
     val preview by previewVM.preview.collectAsState(null)
-    val downloadError by previewVM.downloadError.collectAsState()
+    val downloadError by previewVM.downloadError.collectAsState(null)
     val filterController by previewVM.filterController.collectAsState()
 
     val previewScrollState = rememberLazyListState()
@@ -114,6 +117,14 @@ fun CommunityArchiveApp(
             previewScrollState.firstVisibleItemIndex < 1 &&
                     previewScrollState.firstVisibleItemScrollOffset < with(density) { (TEXT_CANVAS_HEIGHT_DP.dp - PaddingNormal).toPx() }
         }
+    }
+
+    var alertError by remember { mutableStateOf<Exception?>(null) }
+    LaunchedEffect(downloadError) {
+        if (downloadError == null) {
+            return@LaunchedEffect
+        }
+        alertError = downloadError
     }
 
     Scaffold { safeArea ->
@@ -294,10 +305,10 @@ fun CommunityArchiveApp(
         }
     }
 
-    downloadError?.let { model ->
+    alertError?.let { model ->
         AppExceptionAlert(
             model = model,
-            onDismissRequest = { previewVM.archiveEvent.clearDownloadError.trySend(Unit) },
+            onDismissRequest = { alertError = null },
         )
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -35,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -56,6 +58,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.DEFAULT_DIMOJI
 import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.ArchiveMetadataOption
+import com.zhufucdev.practiso.composable.HorizontalControl
+import com.zhufucdev.practiso.composable.HorizontalDraggable
+import com.zhufucdev.practiso.composable.HorizontalDraggingControlTargetWidth
 import com.zhufucdev.practiso.composable.OptionItem
 import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
@@ -75,6 +80,7 @@ import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.SendChannel
+import opacity.Privileges
 import opacity.client.DimensionMetadata
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
@@ -83,6 +89,7 @@ import resources.Res
 import resources.archives_para
 import resources.details_para
 import resources.dimensions_para
+import resources.failed_to_delete_item_para
 import resources.failed_to_download_archive_para
 import resources.n_questions_span
 import resources.refresh_para
@@ -116,13 +123,15 @@ private fun DefaultPage(
 ) {
     val archives by communityVM.archivePresenter.collectAsState(Dispatchers.IO)
     val dimensions by communityVM.dimensions.collectAsState(Dispatchers.IO)
+    val whoami by communityVM.whoami.collectAsState(Dispatchers.IO)
     val snackbars = LocalExtensiveSnackbarState.current
     val navController = LocalNavController.current!!
 
     val scrollState = rememberLazyListState()
 
     val leadingItemIndex by remember(scrollState) { derivedStateOf { scrollState.firstVisibleItemIndex } }
-    val downloadError by communityVM.downloadError.collectAsState()
+    val downloadError by communityVM.downloadError.collectAsState(null)
+    val removalError by communityVM.removalError.collectAsState(null)
     val pageState by communityVM.pageState.collectAsState()
 
     var alertError by remember { mutableStateOf<Exception?>(null) }
@@ -146,6 +155,23 @@ private fun DefaultPage(
             alertError = downloadError
         }
     }
+
+    LaunchedEffect(removalError) {
+        if (removalError == null) {
+            return@LaunchedEffect
+        }
+
+        val action = snackbars.showSnackbar(
+            message = getString(Res.string.failed_to_delete_item_para),
+            actionLabel = getString(Res.string.details_para),
+            withDismissAction = true
+        )
+        if (action == SnackbarResult.ActionPerformed) {
+            alertError = removalError
+        }
+    }
+
+    val privileges by remember(communityVM) { derivedStateOf { whoami?.getOrNull()?.mode?.let(::Privileges) } }
 
     PullToRefreshBox(
         isRefreshing = pageState is CommunityAppViewModel.Loading,
@@ -207,7 +233,12 @@ private fun DefaultPage(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    SectionCaption(pluralStringResource(Res.plurals.archives_para, archives?.items?.size ?: 2))
+                    SectionCaption(
+                        pluralStringResource(
+                            Res.plurals.archives_para,
+                            archives?.items?.size ?: 2
+                        )
+                    )
                 }
             }
 
@@ -220,33 +251,57 @@ private fun DefaultPage(
                     val state by communityVM.getDownloadStateFlow(archive).collectAsState()
 
                     OptionItem(
-                        modifier = Modifier.clickable(onClick = {
-                            navController.navigate(ArchivePreviewRouteParams(archive))
-                        }),
-                        separator = archives.isMounting || index != archives.items.lastIndex
+                        separator = archives.isMounting || index != archives.items.lastIndex,
+                        modifier = Modifier.animateItem()
                     ) {
-                        ArchiveMetadataOption(
-                            modifier = with(sharedTransition) {
-                                Modifier.fillMaxWidth()
-                                    .sharedElement(
-                                        sharedTransition.rememberSharedContentState(archive.uiSharedId),
-                                        animatedVisibilityScope = animatedContent
-                                    )
-                            },
-                            model = archive,
-                            state = state,
-                            onDownloadRequest = {
-                                communityVM.archiveEvent.downloadAndImport.trySend(
-                                    archive to importVM.event
-                                )
-                            },
-                            onErrorDetailsRequest = {
-                                alertError = it
-                            },
-                            onCancelRequest = {
-                                communityVM.archiveEvent.cancelDownload.trySend(archive)
+                        HorizontalDraggable(
+                            controls = {
+                                val own = archive.ownerId == whoami?.getOrNull()?.ownerId
+                                if (own && privileges?.user?.write == true || !own && privileges?.others?.write == true) {
+                                    item(width = HorizontalDraggingControlTargetWidth) {
+                                        HorizontalControl(
+                                            color = MaterialTheme.colorScheme.errorContainer,
+                                            modifier = Modifier.clickable(onClick = {
+                                                communityVM.event.deleteArchive.trySend(archive.id)
+                                            })
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                        )
+                        ) {
+                            Surface(onClick = {
+                                navController.navigate(ArchivePreviewRouteParams(archive))
+                            }) {
+                                ArchiveMetadataOption(
+                                    modifier = with(sharedTransition) {
+                                        Modifier.fillMaxWidth()
+                                            .padding(PaddingNormal)
+                                            .sharedElement(
+                                                sharedTransition.rememberSharedContentState(archive.uiSharedId),
+                                                animatedVisibilityScope = animatedContent
+                                            )
+                                    },
+                                    model = archive,
+                                    state = state,
+                                    onDownloadRequest = {
+                                        communityVM.archiveEvent.downloadAndImport.trySend(
+                                            archive to importVM.event
+                                        )
+                                    },
+                                    onErrorDetailsRequest = {
+                                        alertError = it
+                                    },
+                                    onCancelRequest = {
+                                        communityVM.archiveEvent.cancelDownload.trySend(archive)
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -254,7 +309,7 @@ private fun DefaultPage(
             if (archives?.isMounting != false) {
                 items(5) {
                     OptionItem(separator = it != 4) {
-                        PractisoOptionSkeleton()
+                        PractisoOptionSkeleton(modifier = Modifier.padding(PaddingNormal))
                     }
                 }
             }
@@ -265,7 +320,6 @@ private fun DefaultPage(
         AppExceptionAlert(
             model = model,
             onDismissRequest = {
-                communityVM.archiveEvent.clearDownloadError.trySend(Unit)
                 alertError = null
             },
         )

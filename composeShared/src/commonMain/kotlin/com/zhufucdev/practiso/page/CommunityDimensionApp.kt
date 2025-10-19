@@ -3,10 +3,11 @@ package com.zhufucdev.practiso.page
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +28,7 @@ import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
+import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.uiSharedId
 import com.zhufucdev.practiso.viewmodel.CommunityDimensionViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
@@ -51,7 +53,7 @@ fun CommunityDimensionApp(
     val navController = LocalNavController.current
 
     val archives by dimensionModel.archives.collectAsState(Dispatchers.IO)
-    val downloadError by dimensionModel.downloadError.collectAsState()
+    val downloadError by dimensionModel.downloadError.collectAsState(null)
 
     var alertError by remember { mutableStateOf<Exception?>(null) }
     val listScrollState = rememberLazyListState()
@@ -90,7 +92,9 @@ fun CommunityDimensionApp(
                 val state by dimensionModel.getDownloadStateFlow(archive).collectAsState()
                 val lifecycleScope = rememberCoroutineScope()
                 OptionItem(
-                    modifier = Modifier.clickable(onClick = {
+                    separator = index < archives.items.lastIndex || archives.isMounting
+                ) {
+                    Surface(onClick = {
                         lifecycleScope.launch {
                             navController?.navigate(
                                 ArchivePreviewRouteParams(
@@ -99,28 +103,27 @@ fun CommunityDimensionApp(
                                 )
                             )
                         }
-                    }),
-                    separator = index < archives.items.lastIndex || archives.isMounting
-                ) {
-                    ArchiveMetadataOption(
-                        modifier = with(sharedTransition) {
-                            Modifier.sharedElement(
-                                rememberSharedContentState(archive.uiSharedId),
-                                animatedContent
-                            )
-                        },
-                        model = archive,
-                        state = state,
-                        onDownloadRequest = {
-                            dimensionModel.archiveEvent.downloadAndImport.trySend(archive to importModel.event)
-                        },
-                        onCancelRequest = {
-                            dimensionModel.archiveEvent.cancelDownload.trySend(archive)
-                        },
-                        onErrorDetailsRequest = {
-                            alertError = it
-                        }
-                    )
+                    }) {
+                        ArchiveMetadataOption(
+                            modifier = with(sharedTransition) {
+                                Modifier.padding(PaddingNormal).sharedElement(
+                                    rememberSharedContentState(archive.uiSharedId),
+                                    animatedContent
+                                )
+                            },
+                            model = archive,
+                            state = state,
+                            onDownloadRequest = {
+                                dimensionModel.archiveEvent.downloadAndImport.trySend(archive to importModel.event)
+                            },
+                            onCancelRequest = {
+                                dimensionModel.archiveEvent.cancelDownload.trySend(archive)
+                            },
+                            onErrorDetailsRequest = {
+                                alertError = it
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -128,7 +131,7 @@ fun CommunityDimensionApp(
         if (archives?.isMounting != false) {
             items(count = 5) {
                 OptionItem(separator = it != 4) {
-                    PractisoOptionSkeleton()
+                    PractisoOptionSkeleton(modifier = Modifier.padding(PaddingNormal))
                 }
             }
         }

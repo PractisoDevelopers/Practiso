@@ -1,8 +1,8 @@
 package com.zhufucdev.practiso.platform
 
-import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.DownloadException
+import com.zhufucdev.practiso.datamodel.HttpResponseException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
@@ -59,10 +59,9 @@ private fun HttpClient.downloadFileTo(
 
     val response = get(file.url)
     if (!response.status.isSuccess()) {
-        throw DownloadException(
+        throw HttpResponseException(
             scope = AppScope.DownloadExecutor,
-            appMessage = AppMessage.HttpStatusFailure(response.status.value),
-            kotlinMessage = "HTTP request responded with ${response.status}"
+            status = response.status.value,
         )
     }
 

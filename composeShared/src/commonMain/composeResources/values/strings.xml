@@ -307,4 +307,5 @@
     <string name="share_with_other_apps_para">Share with other apps</string>
     <string name="file_name_para">File name</string>
     <string name="sending_para">Sending…</string>
+    <string name="failed_to_delete_item_para">Failed to delete item</string>
 </resources>

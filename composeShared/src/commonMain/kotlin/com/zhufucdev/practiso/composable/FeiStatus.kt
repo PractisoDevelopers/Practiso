@@ -363,7 +363,7 @@ fun FeiStatus(state: FeiDbState) {
             onDismissRequest = {
                 errorDialog = null
             },
-            onConfirmRequest = {
+            onRetryRequest = {
                 proceed.trySend(FeiErrorResponse.Retry)
                 errorDialog = null
             },

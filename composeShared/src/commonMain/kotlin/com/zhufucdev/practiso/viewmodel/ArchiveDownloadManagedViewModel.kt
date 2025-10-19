@@ -17,11 +17,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -35,12 +35,11 @@ abstract class ArchiveDownloadManagedViewModel(
     data class Events(
         val downloadAndImport: Channel<Pair<ArchiveMetadata, ImportViewModel.Events>> = Channel(),
         val cancelDownload: Channel<ArchiveMetadata> = Channel(),
-        val clearDownloadError: Channel<Unit> = Channel(),
     )
 
-    private val _downloadError = MutableStateFlow<Exception?>(null)
+    private val _downloadError = Channel<Exception>()
 
-    val downloadError: StateFlow<Exception?> get() = _downloadError
+    val downloadError: Flow<Exception?> get() = _downloadError.receiveAsFlow()
     val archiveEvent = Events()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -67,10 +66,6 @@ abstract class ArchiveDownloadManagedViewModel(
                         downloadManager.first()
                             .cancel(with(communityService.first()) { archive.toHandle().taskId })
                     }
-
-                    archiveEvent.clearDownloadError.onReceive {
-                        _downloadError.tryEmit(null)
-                    }
                 }
             }
         }
@@ -87,7 +82,7 @@ abstract class ArchiveDownloadManagedViewModel(
             // noop
             return
         } catch (e: Exception) {
-            _downloadError.tryEmit(e)
+            _downloadError.send(e)
             return
         }
         e.import.trySend(pack)
