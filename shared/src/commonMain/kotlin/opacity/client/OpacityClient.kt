@@ -26,11 +26,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
+import kotlinx.serialization.json.Json
 
 class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) {
     private val http = httpClientFactory.create {
         install(ContentNegotiation) {
-            json()
+            json(Json {
+                ignoreUnknownKeys = true
+            })
         }
     }
 
