@@ -479,7 +479,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             if (buffer.value.isEmpty()) {
                                 buffer = LengthConstrainedTextFieldBuffer.of(
                                     contentDescription,
-                                    serverInfo?.maxNameLength?.value
+                                    serverInfo?.getOrNull()?.maxNameLength?.value
                                 )
                             }
                         }
@@ -489,7 +489,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             state = buffer,
                             onStateChange = { buffer = it },
                             label = { Text(stringResource(Res.string.name_of_entry_para)) },
-                            maxLength = serverInfo?.maxNameLength?.value
+                            maxLength = serverInfo?.getOrNull()?.maxNameLength?.value
                         )
                         ActionButtons {
                             Button(
@@ -518,7 +518,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             state = ownerNameBuffer,
                             onStateChange = { ownerNameBuffer = it },
                             label = { Text(stringResource(Res.string.owner_name_para)) },
-                            maxLength = serverInfo?.maxNameLength?.value
+                            maxLength = serverInfo?.getOrNull()?.maxNameLength?.value
                         )
                         Spacer(Modifier.height(PaddingSmall))
 
@@ -530,7 +530,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             state = deviceNameBuffer,
                             onStateChange = { deviceNameBuffer = it },
                             label = { Text(stringResource(Res.string.device_name_para)) },
-                            maxLength = serverInfo?.maxNameLength?.value
+                            maxLength = serverInfo?.getOrNull()?.maxNameLength?.value
                         )
 
                         ActionButtons {

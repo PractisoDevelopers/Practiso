@@ -8,6 +8,7 @@ sealed class AppMessage {
     data class HttpStatusFailure(val statusCode: Int) : AppMessage()
     data object HttpTransactionFailure : AppMessage()
     data object GenericHttpFailure : AppMessage()
+    data object NetworkUnavailable : AppMessage()
     data object InsufficientSpace : AppMessage()
     data class ResourceError(
         val resource: String,

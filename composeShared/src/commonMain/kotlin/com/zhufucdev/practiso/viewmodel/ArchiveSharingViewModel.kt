@@ -70,8 +70,8 @@ abstract class CommonArchiveSharingViewModel(
         private set
     var uploadState: UploadArchive? by mutableStateOf(null)
 
-    val serverInfo: StateFlow<BonjourResponse?> =
-        communityService.map { it.getServerInfo() }
+    val serverInfo: StateFlow<Result<BonjourResponse>?> =
+        communityService.map { runCatching { it.getServerInfo() } }
             .flowOn(Dispatchers.IO)
             .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
 

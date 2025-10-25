@@ -7,9 +7,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.zhufucdev.practiso.DownloadManager
 import com.zhufucdev.practiso.datamodel.AccountRemovedException
 import com.zhufucdev.practiso.datamodel.AppException
-import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
-import com.zhufucdev.practiso.datamodel.DownloadException
 import com.zhufucdev.practiso.datamodel.HttpResponseException
 import com.zhufucdev.practiso.helper.removeWithRollbackablity
 import com.zhufucdev.practiso.service.CommunityService
@@ -148,13 +146,9 @@ class CommunityAppViewModel(
         _pageState.tryEmit(
             Failed(
                 if (reason is AppException) {
-                    reason as Exception
+                    reason as Throwable
                 } else {
-                    DownloadException(
-                        reason,
-                        scope = AppScope.CommunityService,
-                        appMessage = AppMessage.GenericFailure
-                    )
+                    reason
                 }
             )
         )
@@ -176,7 +170,7 @@ class CommunityAppViewModel(
     sealed class PageState
     data object Loading : PageState()
     data object Loaded : PageState()
-    data class Failed(val reason: Exception) : PageState()
+    data class Failed(val reason: Throwable) : PageState()
 
     data class Events(
         val mountNextPage: Channel<Unit> = Channel(),

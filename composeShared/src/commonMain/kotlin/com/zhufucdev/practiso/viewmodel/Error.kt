@@ -23,6 +23,7 @@ import resources.insufficient_disk_space_para
 import resources.internal_message_n_para
 import resources.invalid_file_format_para
 import resources.library_intent_model_span
+import resources.network_unavailable_para
 import resources.no_details_reported_para
 import resources.undefined_error_para
 import resources.unexpected_http_status_x_para
@@ -104,6 +105,7 @@ fun AppMessage.localizedString(): String =
         is AppMessage.HttpTransactionFailure -> stringResource(Res.string.http_transaction_error_para)
         is AppMessage.InsufficientSpace -> stringResource(Res.string.insufficient_disk_space_para)
         is AppMessage.AccountRemoved -> stringResource(Res.string.account_removed_para)
+        is AppMessage.NetworkUnavailable -> stringResource(Res.string.network_unavailable_para)
     }
 
 @Composable

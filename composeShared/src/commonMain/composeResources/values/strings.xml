@@ -308,4 +308,5 @@
     <string name="file_name_para">File name</string>
     <string name="sending_para">Sending…</string>
     <string name="failed_to_delete_item_para">Failed to delete item</string>
+    <string name="network_unavailable_para">Network unavailable</string>
 </resources>

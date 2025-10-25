@@ -9,7 +9,9 @@ import androidx.compose.runtime.setValue
 import com.zhufucdev.practiso.datamodel.LastPageException
 import com.zhufucdev.practiso.datamodel.Paginated
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.ensureActive
 
 /**
  * Presents [Paginated] in a continuous, infinite-scrolling list.
@@ -25,14 +27,20 @@ class PaginatedListPresenter<T>(
         private set
     var isMounting by mutableStateOf(true)
         private set
+    private val itemCollectorSupervisor: Deferred<Unit>
     private val _items = listDelegate
     val items: List<T> get() = _items
 
     init {
-        lifecycleScope.launch {
+        itemCollectorSupervisor = lifecycleScope.async {
             inner.items.collect {
                 _items.addAll(it)
                 isMounting = false
+            }
+        }
+        itemCollectorSupervisor.invokeOnCompletion { err ->
+            if (err != null) {
+                handle(err)
             }
         }
     }
@@ -46,6 +54,7 @@ class PaginatedListPresenter<T>(
     suspend fun mountNextPage(): Exception? {
         isMounting = true
         try {
+            itemCollectorSupervisor.ensureActive()
             inner.mountNext()
             return null
         } catch (e: Exception) {
@@ -64,7 +73,7 @@ class PaginatedListPresenter<T>(
         errorHandlers.add(handler)
     }
 
-    private fun handle(error: Exception): Boolean {
+    private fun handle(error: Throwable): Boolean {
         return errorHandlers.firstOrNull { it(error) } != null
     }
 
@@ -79,4 +88,4 @@ class PaginatedListPresenter<T>(
         return items.size - lastIndexIndex <= preloadExtent
     }
 }
-typealias PaginatedListPresenterErrorHandler<T> = PaginatedListPresenter<T>.(Exception) -> Boolean
+typealias PaginatedListPresenterErrorHandler<T> = PaginatedListPresenter<T>.(Throwable) -> Boolean

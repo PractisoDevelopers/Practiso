@@ -69,6 +69,7 @@ import com.zhufucdev.practiso.composable.SingleLineTextShimmer
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
+import com.zhufucdev.practiso.datamodel.AppException
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.route.CommunityDimensionRouteParams
 import com.zhufucdev.practiso.style.NotoEmojiFontFamily
@@ -77,6 +78,7 @@ import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.uiSharedId
 import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
+import com.zhufucdev.practiso.viewmodel.localizedString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.SendChannel
@@ -107,7 +109,7 @@ fun CommunityApp(
     val pageState by communityVM.pageState.collectAsState()
     AnimatedContent(pageState, transitionSpec = { fadeIn() togetherWith fadeOut() }) { ps ->
         when (ps) {
-            is CommunityAppViewModel.Failed -> FailurePage(communityVM.event.refresh)
+            is CommunityAppViewModel.Failed -> FailurePage(ps.reason, communityVM.event.refresh)
             else -> DefaultPage(communityVM, importVM, sharedTransition, animatedContent)
         }
     }
@@ -327,7 +329,7 @@ private fun DefaultPage(
 }
 
 @Composable
-private fun FailurePage(refresh: SendChannel<Unit>) {
+private fun FailurePage(reason: Throwable, refresh: SendChannel<Unit>) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(PaddingSmall, Alignment.CenterVertically),
@@ -339,7 +341,8 @@ private fun FailurePage(refresh: SendChannel<Unit>) {
             },
             label = {
                 Text(
-                    stringResource(Res.string.something_went_wrong_para),
+                    (reason as? AppException)?.appMessage?.localizedString()
+                        ?: stringResource(Res.string.something_went_wrong_para),
                 )
             },
             helper = {
