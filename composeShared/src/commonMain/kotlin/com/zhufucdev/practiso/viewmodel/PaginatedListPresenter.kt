@@ -54,7 +54,11 @@ class PaginatedListPresenter<T>(
     suspend fun mountNextPage(): Exception? {
         isMounting = true
         try {
-            itemCollectorSupervisor.ensureActive()
+            itemCollectorSupervisor.apply {
+                if (!isCompleted || isCancelled) {
+                    ensureActive()
+                }
+            }
             inner.mountNext()
             return null
         } catch (e: Exception) {
