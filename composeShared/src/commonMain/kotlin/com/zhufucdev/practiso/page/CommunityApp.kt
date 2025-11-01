@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -61,7 +62,7 @@ import com.zhufucdev.practiso.composable.ArchiveMetadataOption
 import com.zhufucdev.practiso.composable.HorizontalControl
 import com.zhufucdev.practiso.composable.HorizontalDraggable
 import com.zhufucdev.practiso.composable.HorizontalDraggingControlTargetWidth
-import com.zhufucdev.practiso.composable.OptionItem
+import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SectionCaption
@@ -438,5 +439,21 @@ private fun DimensionCardSkeleton(
         Card(modifier = modifier, onClick = onClick, content = content)
     } else {
         Card(modifier = modifier, content = content)
+    }
+}
+
+@Composable
+private fun OptionItem(
+    modifier: Modifier = Modifier,
+    separator: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier) {
+        content()
+    }
+    if (separator) {
+        Box(Modifier.padding(start = PaddingNormal)) {
+            HorizontalSeparator()
+        }
     }
 }

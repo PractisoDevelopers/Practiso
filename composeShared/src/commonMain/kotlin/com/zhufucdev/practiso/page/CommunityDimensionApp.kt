@@ -3,6 +3,7 @@ package com.zhufucdev.practiso.page
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -23,7 +24,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.ArchiveMetadataOption
-import com.zhufucdev.practiso.composable.OptionItem
+import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
@@ -143,5 +144,21 @@ fun CommunityDimensionApp(
                 alertError = null
             }
         )
+    }
+}
+
+@Composable
+private fun OptionItem(
+    modifier: Modifier = Modifier,
+    separator: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier) {
+        content()
+    }
+    if (separator) {
+        Box(Modifier.padding(start = PaddingNormal)) {
+            HorizontalSeparator()
+        }
     }
 }

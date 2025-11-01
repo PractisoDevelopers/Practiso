@@ -589,7 +589,9 @@ fun <T> LazyListScope.flatContent(
     } ?: items(skeletonsCount) { i ->
         skeleton()
         if (i < skeletonsCount - 1) {
-            HorizontalSeparator()
+            Box(Modifier.padding(start = PaddingNormal)) {
+                HorizontalSeparator()
+            }
         }
     }
 }
