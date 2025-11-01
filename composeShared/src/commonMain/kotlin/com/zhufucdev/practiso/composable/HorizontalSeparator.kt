@@ -13,6 +13,6 @@ import androidx.compose.ui.unit.dp
 fun HorizontalSeparator(modifier: Modifier = Modifier) {
     Spacer(
         Modifier.height(1.dp).fillMaxWidth()
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) then modifier
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)) then modifier
     )
 }
