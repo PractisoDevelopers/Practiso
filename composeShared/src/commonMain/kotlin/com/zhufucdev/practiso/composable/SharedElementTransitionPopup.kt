@@ -60,6 +60,7 @@ fun SharedElementTransitionPopup(
         key = key,
         factory = SharedElementTransitionPopupViewModel.Factory
     ),
+    dismissGestureEnabled: Boolean = true,
     popup: @Composable SharedElementTransitionPopupScope.() -> Unit,
     sharedElement: @Composable (Modifier) -> Unit,
     content: @Composable SharedElementTransitionPopupScope.() -> Unit,
@@ -147,7 +148,10 @@ fun SharedElementTransitionPopup(
                                 .scale(popupScale)
                                 .offset(y = releaseAnimator.value.dp)
                                 .offset(popupOffset.x.dp, popupOffset.y.dp)
-                                .pointerInput(true) {
+                                .pointerInput(dismissGestureEnabled) {
+                                    if (!dismissGestureEnabled) {
+                                        return@pointerInput
+                                    }
                                     val velocityTracker = VelocityTracker()
                                     detectVerticalDragGestures(
                                         onDragEnd = {

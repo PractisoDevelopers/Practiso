@@ -138,7 +138,6 @@ import resources.accuracy_slash_completeness_para
 import resources.baseline_arrow_collapse_up
 import resources.baseline_check_circle_outline
 import resources.baseline_chevron_down
-import resources.baseline_eye_off_outline
 import resources.baseline_flag_checkered
 import resources.baseline_pin
 import resources.baseline_pin_outline
@@ -161,6 +160,7 @@ import resources.new_take_para
 import resources.new_timer_para
 import resources.no_recommendations_span
 import resources.no_take_available_span
+import resources.outline_eye_off
 import resources.pin_para
 import resources.quickly_start_new_session_para
 import resources.recently_used_para
@@ -992,7 +992,7 @@ private fun ColumnScope.TakeStarterContent(
                                     else Alignment.CenterEnd
                             ) {
                                 Icon(
-                                    painter = painterResource(Res.drawable.baseline_eye_off_outline),
+                                    painter = painterResource(Res.drawable.outline_eye_off),
                                     contentDescription = null,
                                 )
                             }

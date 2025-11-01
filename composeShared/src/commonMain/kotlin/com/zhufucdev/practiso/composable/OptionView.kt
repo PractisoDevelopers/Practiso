@@ -22,20 +22,8 @@ import com.zhufucdev.practiso.style.PaddingSmall
 @Composable
 fun PractisoOptionSkeleton(
     modifier: Modifier = Modifier,
-    label: @Composable ColumnScope.() -> Unit = {
-        Spacer(
-            Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
-                .fillMaxWidth(fraction = 0.618f)
-                .shimmerBackground()
-        )
-    },
-    preview: (@Composable ColumnScope.() -> Unit)? = {
-        Spacer(
-            Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
-                .fillMaxWidth()
-                .shimmerBackground()
-        )
-    },
+    label: @Composable ColumnScope.() -> Unit = { PractisoOptionSkeletonDefaults.Label() },
+    preview: (@Composable ColumnScope.() -> Unit)? = { PractisoOptionSkeletonDefaults.Preview() },
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(PaddingSmall),
@@ -74,4 +62,24 @@ fun PractisoOptionView(
         },
         modifier = modifier
     )
+}
+
+object PractisoOptionSkeletonDefaults {
+    @Composable
+    fun Label() {
+        Spacer(
+            Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
+                .fillMaxWidth(fraction = 0.618f)
+                .shimmerBackground()
+        )
+    }
+
+    @Composable
+    fun Preview() {
+        Spacer(
+            Modifier.height(LocalTextStyle.current.lineHeight.value.dp)
+                .fillMaxWidth()
+                .shimmerBackground()
+        )
+    }
 }

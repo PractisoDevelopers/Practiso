@@ -309,4 +309,10 @@
     <string name="sending_para">Sending…</string>
     <string name="failed_to_delete_item_para">Failed to delete item</string>
     <string name="network_unavailable_para">Network unavailable</string>
+    <string name="credentials_para">Credentials</string>
+    <string name="stored_access_tokens_and_account_info_to_current_server_para">Stored access tokens and account info for current server</string>
+    <string name="no_tokens_para">No tokens</string>
+    <string name="authorization_token_para">Authorization token</string>
+    <string name="clearing_credentials_wont_remove_activities_para">Clearing credentials will NOT remove your activities from the server. If cleared from all your devices, you will no longer be able to access your account. Proceed?</string>
+    <string name="owner_id_para">Owner ID</string>
 </resources>
