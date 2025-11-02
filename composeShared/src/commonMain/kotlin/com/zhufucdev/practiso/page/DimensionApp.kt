@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -112,12 +113,14 @@ fun DimensionApp(
     val clustering by model.clusterState.collectAsState(null)
 
     val coroutine = rememberCoroutineScope()
-    AnimatedContent(quizzes to dimension, transitionSpec = {
+    val gridState = rememberLazyGridState()
+    AnimatedContent(quizzes?.isEmpty() to dimension, transitionSpec = {
         fadeIn() togetherWith fadeOut()
-    }) { (quizzes, dimension) ->
+    }) { (quizzesEmpty, dimension) ->
         if (dimension !is DimensionState.Missing) {
-            if (quizzes?.isEmpty() != true) {
+            if (quizzesEmpty != true) {
                 LazyVerticalGrid(
+                    state = gridState,
                     columns = GridCells.Fixed(2),
                     verticalArrangement = Arrangement.spacedBy(PaddingSmall),
                     horizontalArrangement = Arrangement.spacedBy(PaddingSmall),
@@ -129,6 +132,7 @@ fun DimensionApp(
                     ),
                     userScrollEnabled = quizzes != null
                 ) {
+                    val quizzes = quizzes
                     if (quizzes != null && clustering == null) {
                         items(quizzes, { it.quiz.id }) { quiz ->
                             var cachedQuiz by remember(quiz) { mutableStateOf(quiz) }
