@@ -56,13 +56,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.savedstate.SavedState
 import com.zhufucdev.practiso.AppSettings
 import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.composition.pseudoClickable
@@ -128,12 +126,8 @@ fun ArchiveSharingDialogScaffold(
 
         DisposableEffect(navController) {
             var stackSize = navController.currentBackStack.value.size
-            val listener = object : NavController.OnDestinationChangedListener {
-                override fun onDestinationChanged(
-                    controller: NavController,
-                    destination: NavDestination,
-                    arguments: SavedState?,
-                ) {
+            val listener =
+                NavController.OnDestinationChangedListener { _, _, _ ->
                     val newStackSize = navController.currentBackStack.value.size
                     if (newStackSize < stackSize) {
                         // popped
@@ -143,7 +137,6 @@ fun ArchiveSharingDialogScaffold(
                     }
                     stackSize = newStackSize
                 }
-            }
             navController.addOnDestinationChangedListener(listener)
             onDispose {
                 navController.removeOnDestinationChangedListener(listener)
@@ -157,13 +150,15 @@ fun ArchiveSharingDialogScaffold(
                     ?.decorations
                     ?.topBarTitle
                     ?.invoke()
-                    ?: Text(
-                        pluralStringResource(
-                            Res.plurals.sharing_n_items_para,
-                            model.selection.size,
-                            model.selection.size
+                    ?: model.getDistinctQuizIds().size.let { quantity ->
+                        Text(
+                            pluralStringResource(
+                                Res.plurals.sharing_n_items_para,
+                                quantity,
+                                quantity
+                            )
                         )
-                    )
+                    }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             navigationIcon = {

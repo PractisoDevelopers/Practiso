@@ -79,6 +79,11 @@ SELECT Q.*
 FROM quiz Q JOIN quizByDimension D ON D.quizId = Q.id
 WHERE D.dimensionId IN ?;
 
+getQuizIdsByDimensions:
+SELECT DISTINCT D.quizId
+FROM quizByDimension D
+WHERE D.dimensionId IN ?;
+
 getQuizByOptionsFrameId:
 SELECT Q.*
 FROM quiz Q JOIN frameByQuiz F ON Q.id = F.quizId

@@ -7,6 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.zhufucdev.practiso.database.AppDatabase
+import com.zhufucdev.practiso.database.Dimension
+import com.zhufucdev.practiso.database.Quiz
+import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.ExportService
@@ -66,7 +69,7 @@ abstract class CommonArchiveSharingViewModel(
     val exportToFile: SendChannel<PlatformFile> = _exportToFile
     val uploadToCommunity: SendChannel<Unit> = _uploadToCommunity
 
-    var selection: Collection<Long> by mutableStateOf(emptySet())
+    var selection: Selection by mutableStateOf(Selection())
         private set
     var uploadState: UploadArchive? by mutableStateOf(null)
 
@@ -75,13 +78,13 @@ abstract class CommonArchiveSharingViewModel(
             .flowOn(Dispatchers.IO)
             .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
 
-    fun loadParameters(selection: Collection<Long>) {
+    fun loadParameters(selection: Selection) {
         this.selection = selection
     }
 
     open fun cancel() {
         jobPool.forEach(Job::cancel)
-        selection = emptySet()
+        selection = Selection()
         uploadState = null
     }
 
@@ -92,7 +95,7 @@ abstract class CommonArchiveSharingViewModel(
                     _exportToFile.onReceive { destFile ->
                         destFile.sink().asOkioSink().gzip()
                             .use { sink ->
-                                exportService.exportAsSource(selection)
+                                exportService.exportAsSource(getDistinctQuizIds())
                                     .buffer()
                                     .use { source ->
                                         source.readAll(sink)
@@ -111,7 +114,7 @@ abstract class CommonArchiveSharingViewModel(
                             withContext(Dispatchers.IO) {
                                 val temporarySink = platform.filesystem.sink(temporaryFilePath)
                                 temporarySink.gzip().buffer().use { sink ->
-                                    exportService.exportAsSource(selection)
+                                    exportService.exportAsSource(getDistinctQuizIds())
                                         .buffer()
                                         .use { source -> source.readAll(sink) }
                                 }
@@ -135,24 +138,27 @@ abstract class CommonArchiveSharingViewModel(
     }
 
     suspend fun describeSelection(): String {
-        val quizzes = db.quizQueries.getQuizByIds(selection)
-            .executeAsList()
-            .sortedBy { it.name }
+        val names =
+            (db.dimensionQueries.getDimensionsByIds(selection.dimensionIds).executeAsList()
+                .map(Dimension::name) +
+                    db.quizQueries.getQuizByIds(selection.quizIds)
+                        .executeAsList()
+                        .map(Quiz::name))
+                .sortedBy { it }
 
-        if (quizzes.isEmpty()) {
+        if (names.isEmpty()) {
             return getString(Res.string.empty_span)
         }
 
-        val nMore = quizzes.size - 2
+        val nMore = names.size - 2
         return if (nMore >= 1) {
             val names = coroutineScope {
-                quizzes.slice(0 until 2).mapIndexed { index, quiz ->
+                names.slice(0 until 2).mapIndexed { index, name ->
                     async {
-                        quiz.name
-                            ?: getString(
-                                if (index == 0) Res.string.new_question_para
-                                else Res.string.new_question_span
-                            )
+                        name ?: getString(
+                            if (index == 0) Res.string.new_question_para
+                            else Res.string.new_question_span
+                        )
                     }
                 }
             }.awaitAll().joinToString()
@@ -160,13 +166,18 @@ abstract class CommonArchiveSharingViewModel(
         } else if (nMore == 0) {
             getString(
                 Res.string.x_and_y_span,
-                quizzes[0].name ?: getString(Res.string.new_question_para),
-                quizzes[1].name ?: getString(Res.string.new_question_span)
+                names[0] ?: getString(Res.string.new_question_para),
+                names[1] ?: getString(Res.string.new_question_span)
             )
         } else {
-            quizzes.first().name ?: getString(Res.string.new_question_para)
+            names.first() ?: getString(Res.string.new_question_para)
         }
     }
+
+    fun getDistinctQuizIds(): Set<Long> =
+        selection.quizIds + db.quizQueries.getQuizIdsByDimensions(
+            selection.dimensionIds
+        ).executeAsList()
 
     private val jobPool = mutableListOf<Job>()
     protected fun launchToJobPool(action: suspend CoroutineScope.() -> Unit) {

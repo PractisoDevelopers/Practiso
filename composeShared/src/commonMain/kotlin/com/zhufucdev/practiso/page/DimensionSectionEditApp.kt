@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
@@ -29,14 +30,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.composable.ArchiveSharingDialog
 import com.zhufucdev.practiso.composable.CommonActions
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.SectionEditScaffold
+import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.style.PaddingBig
+import com.zhufucdev.practiso.viewmodel.ArchiveSharingViewModel
 import com.zhufucdev.practiso.viewmodel.DimensionSectionEditVM
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import kotlinx.coroutines.Dispatchers
@@ -53,17 +60,20 @@ import resources.n_questions_within_x_what_to_do_with_them
 import resources.new_take_para
 import resources.remove_para
 import resources.removing_n_items_para
+import resources.share_para
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun DimensionSectionEditApp(
     startpoint: DimensionSectionEditVM.Startpoint,
-    libraryVm: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
     model: DimensionSectionEditVM = viewModel(factory = DimensionSectionEditVM.Factory),
+    libraryVm: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
+    archiveSharingVM: ArchiveSharingViewModel = viewModel(factory = ArchiveSharingViewModel.Factory),
 ) {
     val items by libraryVm.dimensions.collectAsState()
     val coroutine = rememberCoroutineScope()
     var deleteDialogState by remember { mutableStateOf<DeleteDialogState>(DeleteDialogState.Hidden) }
+    var showSharingDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(model) {
         model.loadStartpoint(startpoint)
@@ -77,6 +87,17 @@ fun DimensionSectionEditApp(
             BottomAppBar(
                 actions = {
                     CommonActions(model, items ?: emptyList())
+                    PlainTooltipBox(stringResource(Res.string.share_para)) {
+                        IconButton(
+                            onClick = {
+                                archiveSharingVM.loadParameters(selection = Selection(dimensionIds = model.selection))
+                                showSharingDialog = true
+                            },
+                            enabled = model.selection.isNotEmpty()
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null)
+                        }
+                    }
                     PlainTooltipBox(stringResource(Res.string.remove_para)) {
                         IconButton(
                             onClick = {
@@ -187,6 +208,15 @@ fun DimensionSectionEditApp(
         }
 
         else -> {}
+    }
+
+    if (showSharingDialog) {
+        Dialog(onDismissRequest = { showSharingDialog = false }) {
+            ArchiveSharingDialog(
+                model = archiveSharingVM,
+                onDismissRequested = { showSharingDialog = false }
+            )
+        }
     }
 }
 

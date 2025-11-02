@@ -77,7 +77,11 @@ actual class ArchiveSharingViewModel(
                                     getPlatform().filesystem.sink(file.toOkioPath())
                                         .gzip()
                                         .buffer()
-                                val source = exportService.exportAsSource(selection)
+                                val quizIds =
+                                    selection.quizIds + db.quizQueries.getQuizIdsByDimensions(
+                                        selection.dimensionIds
+                                    ).executeAsList()
+                                val source = exportService.exportAsSource(quizIds)
                                 sink.writeAll(source)
                                 sink.close()
                                 source.close()

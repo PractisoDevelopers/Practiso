@@ -208,7 +208,8 @@ fun PractisoApp(navController: NavHostController) {
                         AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
                             DimensionSectionEditApp(
                                 startpoint = stackEntry.toRoute(),
-                                libraryVm = libraryVM
+                                libraryVm = libraryVM,
+                                archiveSharingVM = archiveSharingVM
                             )
                         }
                     }

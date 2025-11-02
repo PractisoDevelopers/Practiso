@@ -31,6 +31,7 @@ import com.zhufucdev.practiso.composable.CommonActions
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.SectionEditScaffold
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
+import com.zhufucdev.practiso.datamodel.Selection
 import com.zhufucdev.practiso.viewmodel.ArchiveSharingViewModel
 import com.zhufucdev.practiso.viewmodel.LibraryAppViewModel
 import com.zhufucdev.practiso.viewmodel.QuizSectionEditVM
@@ -109,7 +110,7 @@ fun QuizSectionEditApp(
                                 PlainTooltipBox(stringResource(Res.string.share_para)) {
                                     FloatingActionButton(
                                         onClick = {
-                                            archiveSharingVM.loadParameters(selection = model.selection)
+                                            archiveSharingVM.loadParameters(selection = Selection(quizIds = model.selection))
                                             coroutine.launch {
                                                 expand()
                                             }
