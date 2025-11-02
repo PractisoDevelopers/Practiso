@@ -96,6 +96,7 @@ import resources.device_name_para
 import resources.frame_embedding_model_para
 import resources.known_model_names_title
 import resources.navigate_up_para
+import resources.no_tokens_para
 import resources.not_specified_para
 import resources.outline_eye
 import resources.outline_eye_off
@@ -577,26 +578,30 @@ private fun CommunityIdentityDialog(
                             PractisoOptionSkeleton(
                                 label = { Text(stringResource(Res.string.authorization_token_para)) },
                                 preview = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        BasicTextField(
-                                            value = model.authToken
-                                                ?: stringResource(Res.string.authorization_token_para),
-                                            onValueChange = {},
-                                            readOnly = true,
-                                            textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
-                                            visualTransformation = if (!revealToken) PasswordVisualTransformation() else VisualTransformation.None,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        IconButton(
-                                            onClick = {
-                                                revealToken = !revealToken
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(if (!revealToken) Res.drawable.outline_eye else Res.drawable.outline_eye_off),
-                                                contentDescription = null,
+                                    val token = model.authToken
+                                    if (token != null) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            BasicTextField(
+                                                value = token,
+                                                onValueChange = {},
+                                                readOnly = true,
+                                                textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
+                                                visualTransformation = if (!revealToken) PasswordVisualTransformation() else VisualTransformation.None,
+                                                modifier = Modifier.weight(1f)
                                             )
+                                            IconButton(
+                                                onClick = {
+                                                    revealToken = !revealToken
+                                                }
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(if (!revealToken) Res.drawable.outline_eye else Res.drawable.outline_eye_off),
+                                                    contentDescription = null,
+                                                )
+                                            }
                                         }
+                                    } else {
+                                        Text(stringResource(Res.string.no_tokens_para))
                                     }
                                 }
                             )
@@ -608,14 +613,16 @@ private fun CommunityIdentityDialog(
 
                         Spacer(Modifier.height(PaddingNormal))
                         Row {
-                            Button(
-                                onClick = { tryingToClear = true },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            ) {
-                                Text(stringResource(Res.string.clear_para))
+                            if (model.authToken != null) {
+                                Button(
+                                    onClick = { tryingToClear = true },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                ) {
+                                    Text(stringResource(Res.string.clear_para))
+                                }
                             }
                             Spacer(Modifier.weight(1f))
                             Button(onClick = onDismissRequest) {
