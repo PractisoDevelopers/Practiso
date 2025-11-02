@@ -1,0 +1,2 @@
+Study smarter, not harder. Practiso uses transformer models and vector database to recommend quizzes
+tailored to your knowledge level, while keeping data offline and private.

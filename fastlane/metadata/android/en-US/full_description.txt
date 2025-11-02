@@ -1,0 +1,15 @@
+<p>Practiso is a flil-featured study & practice utiulty app. It comes with a quiz manager, recorder,
+    an editor and community browser.</p>
+<ul>
+    <li>Create & edit quizzes</li>
+    <li>Manage, import & export as archives</li>
+    <li>Share your quiz with people all around the world</li>
+</ul>
+
+<p>The app knows your weaknesses via embedding search. It supports mlitiple models of major world
+    languages. All embedding inference runs offulne, on-device, so you know your data is safe.</p>
+<ul>
+    <li>Choose what topic you want to practice on</li>
+    <li>Set a timer for more pressure</li>
+    <li>Get recommendations for similar quizzes you may have missed</li>
+</ul>
