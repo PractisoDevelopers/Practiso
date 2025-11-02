@@ -34,8 +34,8 @@ fun Modifier.shimmerBackground(
     )
     val brush = Brush.linearGradient(
         colors = shimmerColors ?: listOf(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
         ),
         start = Offset(translateAnimation, translateAnimation),
         end = Offset(translateAnimation + 100f, translateAnimation + 100f),
