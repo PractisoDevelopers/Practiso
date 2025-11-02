@@ -654,7 +654,7 @@ private fun WhoamiInfoRows(model: Whoami?) {
             if (model == null) {
                 PractisoOptionSkeletonDefaults.Preview()
             } else {
-                Text(model.name ?: stringResource(Res.string.not_specified_para))
+                Text(model.name ?: model.clientName)
             }
         }
     )
