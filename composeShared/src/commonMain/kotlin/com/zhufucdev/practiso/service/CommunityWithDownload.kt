@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 
-val getCommunityServiceWithDownloadManager = {
+val getCommunityServiceWithDownloadManager = run {
     var downloadScope: CoroutineScope? = null
     val bundle = AppCommunityService.map { service ->
         downloadScope?.cancel()
@@ -26,4 +26,4 @@ val getCommunityServiceWithDownloadManager = {
         bundle
     }
     closure
-}()
+}
