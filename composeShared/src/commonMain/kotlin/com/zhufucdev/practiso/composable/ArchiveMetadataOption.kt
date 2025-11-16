@@ -113,12 +113,15 @@ fun ArchiveMetadataOption(
                                         }
                                     }
                                     if (model.dimensions.size > 5) {
-                                        InverseText(
+                                        NegativeText(
                                             text = "+${model.dimensions.size - 5}",
                                             style = TextStyle(
                                                 fontWeight = FontWeight.Black,
                                             ),
-                                            margin = PaddingValues(horizontal = PaddingSmall, vertical = 1.dp),
+                                            margin = PaddingValues(
+                                                horizontal = PaddingSmall,
+                                                vertical = 1.dp
+                                            ),
                                             shape = RoundedCornerShape(PaddingSmall)
                                         )
                                     }

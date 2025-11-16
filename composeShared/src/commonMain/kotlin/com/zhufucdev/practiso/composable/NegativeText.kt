@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.toSize
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun InverseText(
+fun NegativeText(
     modifier: Modifier = Modifier,
     text: String,
     style: TextStyle = TextStyle.Default,
@@ -89,7 +89,7 @@ fun InverseText(
 @Composable
 fun InverseTextPreview() {
     Surface(color = Color.Magenta) {
-        InverseText(
+        NegativeText(
             text = "I am Batman",
             modifier = Modifier.padding(12.dp),
             shape = RoundedCornerShape(12.dp),
