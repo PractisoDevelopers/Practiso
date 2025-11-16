@@ -39,7 +39,7 @@ abstract class ArchiveDownloadManagedViewModel(
 
     private val _downloadError = Channel<Exception>()
 
-    val downloadError: Flow<Exception?> get() = _downloadError.receiveAsFlow()
+    val downloadError: Flow<Exception> get() = _downloadError.receiveAsFlow()
     val archiveEvent = Events()
 
     @OptIn(ExperimentalCoroutinesApi::class)
