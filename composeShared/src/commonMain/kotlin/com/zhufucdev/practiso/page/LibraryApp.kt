@@ -77,7 +77,6 @@ import com.zhufucdev.practiso.composable.SharedHorizontalDraggableExclusion
 import com.zhufucdev.practiso.composition.combineClickable
 import com.zhufucdev.practiso.composition.composeFromBottomUp
 import com.zhufucdev.practiso.composition.currentNavController
-import com.zhufucdev.practiso.composition.currentSharedImportViewModel
 import com.zhufucdev.practiso.datamodel.DimensionOption
 import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.PractisoOption
@@ -130,7 +129,7 @@ import kotlin.math.max
 @Composable
 fun LibraryApp(
     model: LibraryAppViewModel = viewModel(factory = LibraryAppViewModel.Factory),
-    importer: ImportViewModel = currentSharedImportViewModel(),
+    importer: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
 ) {
     var showActions by remember { mutableStateOf(false) }
     var showDimCreationDialog by remember { mutableStateOf(false) }

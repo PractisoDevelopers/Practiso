@@ -82,7 +82,6 @@ import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.LocalBottomUpComposable
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
-import com.zhufucdev.practiso.composition.LocalSharedImportViewModel
 import com.zhufucdev.practiso.composition.LocalTopLevelDestination
 import com.zhufucdev.practiso.composition.TopLevelDestination
 import com.zhufucdev.practiso.composition.currentNavController
@@ -137,175 +136,172 @@ fun PractisoApp(navController: NavHostController) {
         viewModel(factory = SearchViewModel.Factory)
     val archiveSharingVM: ArchiveSharingViewModel =
         viewModel(factory = ArchiveSharingViewModel.Factory)
-    val importViewModel: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
+    val importVM: ImportViewModel = viewModel(factory = ImportViewModel.Factory)
     val communityVM: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory)
 
     BottomUpComposableScope {
-        CompositionLocalProvider(
-            LocalSharedImportViewModel provides importViewModel
-        ) {
-            SharedTransitionLayout {
-                NavHost(
-                    navController = navController,
-                    startDestination = TopLevelDestination.Session.route,
-                    enterTransition = { EnterTransition.None },
-                    exitTransition = { fadeOut() }
-                ) {
-                    composable(TopLevelDestination.Session.route) {
-                        AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
-                            ScaffoldedApp(it, searchVM) {
-                                SessionApp()
-                            }
+        SharedTransitionLayout {
+            NavHost(
+                navController = navController,
+                startDestination = TopLevelDestination.Session.route,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { fadeOut() }
+            ) {
+                composable(TopLevelDestination.Session.route) {
+                    AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            SessionApp()
                         }
                     }
-                    composable(TopLevelDestination.Library.route) {
-                        LaunchedEffect(libraryVM) {
-                            libraryVM.event.removeReveal.send(Unit)
-                        }
-                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                            ScaffoldedApp(it, searchVM) {
-                                LibraryApp(model = libraryVM)
-                            }
+                }
+                composable(TopLevelDestination.Library.route) {
+                    LaunchedEffect(libraryVM) {
+                        libraryVM.event.removeReveal.send(Unit)
+                    }
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            LibraryApp(model = libraryVM, importer = importVM)
                         }
                     }
-                    composable(TopLevelDestination.Community.route) {
-                        AdaptiveApp(navController, TopLevelDestination.Community, searchVM) {
-                            ScaffoldedApp(it, searchVM) {
-                                CommunityApp(
-                                    communityVM = communityVM,
-                                    importVM = importViewModel,
-                                    sharedTransition = this@SharedTransitionLayout,
-                                    animatedContent = this@composable
-                                )
-                            }
-                        }
-                    }
-                    composable<LibraryAppViewModel.Revealable>(
-                        typeMap = mapOf(
-                            typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
-                            typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
-                        )
-                    ) { backtrace ->
-                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                            ScaffoldedApp(it, searchVM) {
-                                LaunchedEffect(backtrace) {
-                                    libraryVM.event.reveal.send(backtrace.toRoute())
-                                }
-                                LibraryApp(
-                                    model = libraryVM
-                                )
-                            }
-                        }
-                    }
-                    composable("${TopLevelDestination.Session.route}/new") {
-                        AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
-                            ScaffoldedApp(it, searchVM) {
-                                SessionStarter()
-                            }
-                        }
-                    }
-                    composable<DimensionSectionEditVM.Startpoint> { stackEntry ->
-                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                            DimensionSectionEditApp(
-                                startpoint = stackEntry.toRoute(),
-                                libraryVm = libraryVM,
-                                archiveSharingVM = archiveSharingVM
-                            )
-                        }
-                    }
-                    composable<QuizSectionEditVM.Startpoint> { stackEntry ->
-                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                            QuizSectionEditApp(
-                                startpoint = stackEntry.toRoute(),
-                                libraryVM = libraryVM,
-                                archiveSharingVM = archiveSharingVM
-                            )
-                        }
-                    }
-                    composable<DimensionAppRouteParams> { stackEntry ->
-                        AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
-                            ScaffoldedApp(it, searchVM) {
-                                DimensionApp(stackEntry.toRoute())
-                            }
-                        }
-                    }
-                    composable<ArchivePreviewRouteParams>(
-                        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
-                        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-                        typeMap = mapOf(
-                            typeOf<ArchiveMetadata>() to ArchiveMetadataNavType
-                        )
-                    ) { stackEntry ->
-                        val vm: CommunityArchiveViewModel =
-                            viewModel(factory = CommunityArchiveViewModel.Factory)
-                        LaunchedEffect(vm, stackEntry) {
-                            vm.loadParameters(stackEntry.toRoute())
-                        }
-                        CompositionLocalProvider(
-                            LocalNavController provides navController
-                        ) {
-                            CommunityArchiveApp(
-                                previewVM = vm,
-                                importVM = importViewModel,
+                }
+                composable(TopLevelDestination.Community.route) {
+                    AdaptiveApp(navController, TopLevelDestination.Community, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            CommunityApp(
+                                communityVM = communityVM,
+                                importVM = importVM,
                                 sharedTransition = this@SharedTransitionLayout,
                                 animatedContent = this@composable
                             )
                         }
                     }
-                    composable<CommunityDimensionRouteParams>(
-                        enterTransition = { fadeIn() },
-                        exitTransition = { fadeOut() }
-                    ) { stackEntry ->
-                        AdaptiveApp(
-                            navController = navController,
-                            destination = TopLevelDestination.Community,
-                            searchViewModel = searchVM
-                        ) { window ->
-                            val vm: CommunityDimensionViewModel =
-                                viewModel(factory = CommunityDimensionViewModel.Factory)
-                            LaunchedEffect(vm, stackEntry) {
-                                vm.loadRouteParams(stackEntry.toRoute())
+                }
+                composable<LibraryAppViewModel.Revealable>(
+                    typeMap = mapOf(
+                        typeOf<LibraryAppViewModel.Revealable>() to LibraryAppViewModel.RevealableNavType,
+                        typeOf<LibraryAppViewModel.RevealableType>() to LibraryAppViewModel.RevealableTypeNavType
+                    )
+                ) { backtrace ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            LaunchedEffect(backtrace) {
+                                libraryVM.event.reveal.send(backtrace.toRoute())
                             }
-                            val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-                            ScaffoldedApp(
-                                windowAdaptiveInfo = window,
-                                searchViewModel = searchVM,
-                                topBar = {
-                                    TopAppBar(
-                                        title = {
-                                            val dimensionName by vm.dimension.collectAsState()
-                                            Text(dimensionName)
-                                        },
-                                        navigationIcon = {
-                                            NavigateUpButton {
-                                                navController.popBackStack()
-                                            }
-                                        },
-                                        scrollBehavior = topBarScrollBehavior
-                                    )
-                                }
-                            ) {
-                                CommunityDimensionApp(
-                                    dimensionModel = vm,
-                                    importModel = importViewModel,
-                                    scrollConnection = topBarScrollBehavior.nestedScrollConnection,
-                                    sharedTransition = this@SharedTransitionLayout,
-                                    animatedContent = this
+                            LibraryApp(
+                                model = libraryVM,
+                                importer = importVM
+                            )
+                        }
+                    }
+                }
+                composable("${TopLevelDestination.Session.route}/new") {
+                    AdaptiveApp(navController, TopLevelDestination.Session, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            SessionStarter()
+                        }
+                    }
+                }
+                composable<DimensionSectionEditVM.Startpoint> { stackEntry ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        DimensionSectionEditApp(
+                            startpoint = stackEntry.toRoute(),
+                            libraryVm = libraryVM,
+                            archiveSharingVM = archiveSharingVM
+                        )
+                    }
+                }
+                composable<QuizSectionEditVM.Startpoint> { stackEntry ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        QuizSectionEditApp(
+                            startpoint = stackEntry.toRoute(),
+                            libraryVM = libraryVM,
+                            archiveSharingVM = archiveSharingVM
+                        )
+                    }
+                }
+                composable<DimensionAppRouteParams> { stackEntry ->
+                    AdaptiveApp(navController, TopLevelDestination.Library, searchVM) {
+                        ScaffoldedApp(it, searchVM) {
+                            DimensionApp(stackEntry.toRoute())
+                        }
+                    }
+                }
+                composable<ArchivePreviewRouteParams>(
+                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+                    typeMap = mapOf(
+                        typeOf<ArchiveMetadata>() to ArchiveMetadataNavType
+                    )
+                ) { stackEntry ->
+                    val vm: CommunityArchiveViewModel =
+                        viewModel(factory = CommunityArchiveViewModel.Factory)
+                    LaunchedEffect(vm, stackEntry) {
+                        vm.loadParameters(stackEntry.toRoute())
+                    }
+                    CompositionLocalProvider(
+                        LocalNavController provides navController
+                    ) {
+                        CommunityArchiveApp(
+                            previewVM = vm,
+                            importVM = importVM,
+                            sharedTransition = this@SharedTransitionLayout,
+                            animatedContent = this@composable
+                        )
+                    }
+                }
+                composable<CommunityDimensionRouteParams>(
+                    enterTransition = { fadeIn() },
+                    exitTransition = { fadeOut() }
+                ) { stackEntry ->
+                    AdaptiveApp(
+                        navController = navController,
+                        destination = TopLevelDestination.Community,
+                        searchViewModel = searchVM
+                    ) { window ->
+                        val vm: CommunityDimensionViewModel =
+                            viewModel(factory = CommunityDimensionViewModel.Factory)
+                        LaunchedEffect(vm, stackEntry) {
+                            vm.loadRouteParams(stackEntry.toRoute())
+                        }
+                        val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+                        ScaffoldedApp(
+                            windowAdaptiveInfo = window,
+                            searchViewModel = searchVM,
+                            topBar = {
+                                TopAppBar(
+                                    title = {
+                                        val dimensionName by vm.dimension.collectAsState()
+                                        Text(dimensionName)
+                                    },
+                                    navigationIcon = {
+                                        NavigateUpButton {
+                                            navController.popBackStack()
+                                        }
+                                    },
+                                    scrollBehavior = topBarScrollBehavior
                                 )
                             }
+                        ) {
+                            CommunityDimensionApp(
+                                dimensionModel = vm,
+                                importModel = importVM,
+                                scrollConnection = topBarScrollBehavior.nestedScrollConnection,
+                                sharedTransition = this@SharedTransitionLayout,
+                                animatedContent = this
+                            )
                         }
                     }
                 }
             }
-            CompositionLocalProvider(
-                LocalNavController provides navController
-            ) {
-                LocalBottomUpComposable.current!!.compose(SharedElementTransitionKey)
-            }
+        }
+        CompositionLocalProvider(
+            LocalNavController provides navController
+        ) {
+            LocalBottomUpComposable.current!!.compose(SharedElementTransitionKey)
         }
     }
 
-    val importState by importViewModel.state.collectAsState()
+    val importState by importVM.state.collectAsState()
     if (importState !is ImportState.Idle) {
         ImportDialog(importState)
     }
