@@ -38,9 +38,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
@@ -64,6 +63,7 @@ import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.NoGroup
 import com.zhufucdev.practiso.composable.PlainTooltipBox
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
+import com.zhufucdev.practiso.composable.SharedInitiatingImmediateMutation
 import com.zhufucdev.practiso.composable.SomeGroup
 import com.zhufucdev.practiso.composable.filter
 import com.zhufucdev.practiso.composable.filteredItems
@@ -77,6 +77,7 @@ import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.uiSharedId
 import com.zhufucdev.practiso.viewmodel.CommunityArchiveViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -90,6 +91,7 @@ import resources.retry_para
 import resources.stranded_quizzes_para
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -119,12 +121,12 @@ fun CommunityArchiveApp(
         }
     }
 
-    var alertError by remember { mutableStateOf<Exception?>(null) }
+    val alertErrorQueue = remember { mutableStateListOf<Exception>() }
     LaunchedEffect(downloadError) {
         if (downloadError == null) {
             return@LaunchedEffect
         }
-        alertError = downloadError
+        alertErrorQueue.add(downloadError!!)
     }
 
     Scaffold { safeArea ->
@@ -160,34 +162,66 @@ fun CommunityArchiveApp(
                             archive?.let { archive ->
                                 val state by previewVM.getDownloadStateFlow(archive)
                                     .collectAsState()
-                                ArchiveMetadataOption(
-                                    modifier = with(sharedTransition) {
-                                        Modifier.fillMaxWidth()
-                                            .padding(
-                                                vertical = PaddingNormal,
-                                                horizontal = PaddingBig * 2
-                                            )
-                                            .sharedElement(
-                                                sharedTransition.rememberSharedContentState(
-                                                    archive.uiSharedId
-                                                ),
-                                                animatedVisibilityScope = animatedContent
-                                            )
-                                    },
+                                SharedInitiatingImmediateMutation(
+                                    key = archive.id,
                                     model = archive,
-                                    state = state,
-                                    onDownloadRequest = {
-                                        previewVM.archiveEvent.downloadAndImport.trySend(
-                                            archive to importVM.event
-                                        )
-                                    },
-                                    onCancelRequest = {
-                                        previewVM.archiveEvent.cancelDownload.trySend(archive)
-                                    },
-                                    onErrorDetailsRequest = {
-                                        // noop
-                                    }
-                                )
+                                ) { archive ->
+                                    ArchiveMetadataOption(
+                                        modifier = with(sharedTransition) {
+                                            Modifier.fillMaxWidth()
+                                                .padding(
+                                                    vertical = PaddingNormal,
+                                                    horizontal = PaddingBig * 2
+                                                )
+                                                .sharedElement(
+                                                    sharedTransition.rememberSharedContentState(
+                                                        archive.uiSharedId
+                                                    ),
+                                                    animatedVisibilityScope = animatedContent
+                                                )
+                                        },
+                                        model = archive,
+                                        state = state,
+                                        onDownloadRequest = {
+                                            previewVM.archiveEvent.downloadAndImport.trySend(
+                                                archive to importVM.event
+                                            )
+                                        },
+                                        onCancelRequest = {
+                                            previewVM.archiveEvent.cancelDownload.trySend(archive)
+                                        },
+                                        onErrorDetailsRequest = {
+                                            // noop
+                                        },
+                                        onLikeRequested = {
+                                            transaction {
+                                                try {
+                                                    if (!archive.likedByUser) {
+                                                        mutateValue(
+                                                            archive.copy(
+                                                                likes = archive.likes + 1,
+                                                                likedByUser = true
+                                                            )
+                                                        )
+                                                        previewVM.like()
+                                                    } else {
+                                                        mutateValue(archive.copy(
+                                                            likes = max(archive.likes - 1, 0),
+                                                            likedByUser = false
+                                                        ))
+                                                        previewVM.removeLike()
+                                                    }
+                                                } catch (e: Exception) {
+                                                    alertErrorQueue.add(e)
+                                                    throw CancellationException(
+                                                        message = "Opacity client failed",
+                                                        cause = e
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
                             } ?: PractisoOptionSkeleton(Modifier.fillMaxWidth())
                         }
                     }
@@ -305,10 +339,10 @@ fun CommunityArchiveApp(
         }
     }
 
-    alertError?.let { model ->
+    alertErrorQueue.firstOrNull()?.let { model ->
         AppExceptionAlert(
             model = model,
-            onDismissRequest = { alertError = null },
+            onDismissRequest = { alertErrorQueue.removeAt(0) },
         )
     }
 }

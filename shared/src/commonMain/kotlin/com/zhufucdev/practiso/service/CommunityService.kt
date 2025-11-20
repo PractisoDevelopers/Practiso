@@ -17,6 +17,7 @@ import kotlinx.io.Source
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
 import opacity.client.ArchiveUploadState
+import opacity.client.AuthorizationException
 import opacity.client.BonjourResponse
 import opacity.client.DimensionMetadata
 import opacity.client.OpacityClient
@@ -73,10 +74,8 @@ class CommunityService(
 
     suspend fun getWhoami(): Whoami? = identity.authToken?.let { client.getWhoami(it) }
 
-    suspend fun deleteArchive(archiveId: String) {
-        val token = identity.authToken ?: throw IllegalStateException("Identity unavailable")
-        client.deleteArchive(archiveId, token)
-    }
+    suspend fun deleteArchive(archiveId: String) =
+        client.deleteArchive(archiveId, getAuthTokenOrThrow())
 
     private fun uploadArchiveImpl(
         content: Source,
@@ -151,6 +150,16 @@ class CommunityService(
             content = content,
             contentName = contentName,
         )
+
+    @Throws(AuthorizationException::class, IllegalStateException::class)
+    suspend fun like(archiveId: String) = client.like(archiveId, authToken = getAuthTokenOrThrow())
+
+    @Throws(AuthorizationException::class, IllegalStateException::class)
+    suspend fun removeLike(archiveId: String) =
+        client.removeLike(archiveId, authToken = getAuthTokenOrThrow())
+
+    fun getAuthTokenOrThrow() =
+        identity.authToken ?: throw IllegalStateException("Identity unavailable")
 }
 
 sealed class UploadArchive {

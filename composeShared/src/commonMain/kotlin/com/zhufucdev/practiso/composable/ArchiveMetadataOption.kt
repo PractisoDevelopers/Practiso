@@ -47,6 +47,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.baseline_cloud_download
+import resources.baseline_heart
 import resources.cancel_para
 import resources.details_para
 import resources.download_and_import_para
@@ -57,7 +58,6 @@ import resources.outline_download
 import resources.outline_heart
 import resources.retry_para
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveMetadataOption(
@@ -67,6 +67,7 @@ fun ArchiveMetadataOption(
     onDownloadRequest: () -> Unit,
     onCancelRequest: () -> Unit,
     onErrorDetailsRequest: (Exception) -> Unit,
+    onLikeRequested: (() -> Unit)? = null
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -141,12 +142,29 @@ fun ArchiveMetadataOption(
                                         Text(model.downloads.toString())
                                     }
 
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            painterResource(Res.drawable.outline_heart),
-                                            contentDescription = stringResource(Res.string.likes_para),
-                                            modifier = Modifier.size(lineHeight, lineHeight)
-                                        )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = if (onLikeRequested != null)
+                                            Modifier.clickable(
+                                                onClick = {
+                                                    onLikeRequested()
+                                                })
+                                        else Modifier
+                                    ) {
+                                        if (!model.likedByUser) {
+                                            Icon(
+                                                painterResource(Res.drawable.outline_heart),
+                                                contentDescription = stringResource(Res.string.likes_para),
+                                                modifier = Modifier.size(lineHeight, lineHeight)
+                                            )
+                                        } else {
+                                            Icon(
+                                                painterResource(Res.drawable.baseline_heart),
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                contentDescription = stringResource(Res.string.likes_para),
+                                                modifier = Modifier.size(lineHeight, lineHeight)
+                                            )
+                                        }
                                         Text(model.likes.toString())
                                     }
                                 }

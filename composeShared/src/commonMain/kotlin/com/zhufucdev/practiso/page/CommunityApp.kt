@@ -66,6 +66,7 @@ import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PlaceHolder
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
 import com.zhufucdev.practiso.composable.SectionCaption
+import com.zhufucdev.practiso.composable.SharedImmediateMutation
 import com.zhufucdev.practiso.composable.SingleLineTextShimmer
 import com.zhufucdev.practiso.composable.shimmerBackground
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
@@ -280,29 +281,34 @@ private fun DefaultPage(
                             Surface(onClick = {
                                 navController.navigate(ArchivePreviewRouteParams(archive))
                             }) {
-                                ArchiveMetadataOption(
-                                    modifier = with(sharedTransition) {
-                                        Modifier.fillMaxWidth()
-                                            .padding(PaddingNormal)
-                                            .sharedElement(
-                                                sharedTransition.rememberSharedContentState(archive.uiSharedId),
-                                                animatedVisibilityScope = animatedContent
+                                SharedImmediateMutation(
+                                    key = archive.id,
+                                    model = archive
+                                ) { archive ->
+                                    ArchiveMetadataOption(
+                                        modifier = with(sharedTransition) {
+                                            Modifier.fillMaxWidth()
+                                                .padding(PaddingNormal)
+                                                .sharedElement(
+                                                    sharedTransition.rememberSharedContentState(archive.uiSharedId),
+                                                    animatedVisibilityScope = animatedContent
+                                                )
+                                        },
+                                        model = archive,
+                                        state = state,
+                                        onDownloadRequest = {
+                                            communityVM.archiveEvent.downloadAndImport.trySend(
+                                                archive to importVM.event
                                             )
-                                    },
-                                    model = archive,
-                                    state = state,
-                                    onDownloadRequest = {
-                                        communityVM.archiveEvent.downloadAndImport.trySend(
-                                            archive to importVM.event
-                                        )
-                                    },
-                                    onErrorDetailsRequest = {
-                                        alertError = it
-                                    },
-                                    onCancelRequest = {
-                                        communityVM.archiveEvent.cancelDownload.trySend(archive)
-                                    }
-                                )
+                                        },
+                                        onErrorDetailsRequest = {
+                                            alertError = it
+                                        },
+                                        onCancelRequest = {
+                                            communityVM.archiveEvent.cancelDownload.trySend(archive)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

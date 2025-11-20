@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import opacity.client.ArchiveMetadata
@@ -27,7 +28,7 @@ import opacity.client.ArchivePreview
 @OptIn(SavedStateHandleSaveableApi::class)
 class CommunityArchiveViewModel(
     state: SavedStateHandle,
-    communityService: Flow<CommunityService>,
+    private val communityService: Flow<CommunityService>,
     downloadManager: Flow<DownloadManager>,
 ) : ArchiveDownloadManagedViewModel(communityService, downloadManager) {
     private val _archive by state.saveable(saver = protobufMutableStateFlowSaver<ArchiveMetadata?>()) {
@@ -72,6 +73,18 @@ class CommunityArchiveViewModel(
     fun loadParameters(routeParams: ArchivePreviewRouteParams) {
         _archive.tryEmit(routeParams.metadata)
         this.routeParams.tryEmit(routeParams)
+    }
+
+    suspend fun like() {
+        val archive = archive.first()!!
+        communityService.first()
+            .like(archive.id)
+    }
+
+    suspend fun removeLike() {
+        val archive = archive.first()!!
+        communityService.first()
+            .removeLike(archive.id)
     }
 
     companion object Companion {

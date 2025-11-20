@@ -14,6 +14,7 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.utils.buildHeaders
+import io.ktor.http.HeadersBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
@@ -85,6 +86,7 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
             appendPathSegments("archive", id)
         }
 
+    @Throws(IllegalStateException::class)
     suspend fun getBonjour(): BonjourResponse {
         val response = http.get {
             url {
@@ -134,7 +136,7 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
             }
             headers {
                 if (authToken != null) {
-                    append(HttpHeaders.Authorization, "Bearer $authToken")
+                    appendAuthToken(authToken)
                 }
             }
             setBody(
@@ -197,12 +199,13 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
                 appendPathSegments("whoami")
             }
             headers {
-                append(HttpHeaders.Authorization, "Bearer $authToken")
+                appendAuthToken(authToken)
             }
         }
         return response.body()
     }
 
+    @Throws(AuthorizationException::class, HttpStatusAssertionException::class)
     suspend fun deleteArchive(archiveId: String, authToken: String) {
         val response = http.delete {
             url {
@@ -210,15 +213,62 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
                 appendPathSegments("archive", archiveId)
             }
             headers {
-                append(HttpHeaders.Authorization, "Bearer $authToken")
+                appendAuthToken(authToken)
             }
         }
         if (response.status == HttpStatusCode.Unauthorized) {
-            throw AuthorizationException(response.bodyAsText(), response.status.value)
+            throw AuthorizationException(from = response)
         }
-        if (!response.status.isSuccess()) {
-            throw HttpStatusAssertionException(response.status.value)
+        assertSuccess(response.status)
+    }
+
+    @Throws(AuthorizationException::class, IllegalStateException::class)
+    suspend fun like(archiveId: String, authToken: String) {
+        val response = http.put {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("archive", archiveId, "like")
+            }
+            headers {
+                appendAuthToken(authToken)
+            }
+        }
+        if (response.status == HttpStatusCode.Unauthorized) {
+            throw AuthorizationException(from = response)
+        }
+        if (response.status == HttpStatusCode.Conflict) {
+            throw IllegalStateException(response.bodyAsText())
+        }
+        assertSuccess(response.status)
+    }
+
+    @Throws(AuthorizationException::class, IllegalStateException::class)
+    suspend fun removeLike(archiveId: String, authToken: String) {
+        val response = http.delete {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("archive", archiveId, "like")
+            }
+            headers {
+                appendAuthToken(authToken)
+            }
+        }
+        if (response.status == HttpStatusCode.Unauthorized) {
+            throw AuthorizationException(from = response)
+        }
+        if (response.status == HttpStatusCode.NotFound) {
+            throw IllegalStateException(response.bodyAsText())
+        }
+        assertSuccess(response.status)
+    }
+
+    private fun HeadersBuilder.appendAuthToken(value: String) {
+        append(HttpHeaders.Authorization, "Bearer $value")
+    }
+
+    private fun assertSuccess(status: HttpStatusCode) {
+        if (!status.isSuccess()) {
+            throw HttpStatusAssertionException(status.value)
         }
     }
 }
-

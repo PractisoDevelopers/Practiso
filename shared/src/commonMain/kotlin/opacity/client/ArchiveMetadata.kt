@@ -17,4 +17,5 @@ data class ArchiveMetadata(
     @Serializable(InstantIsoSerializer::class)
     val updateTime: Instant,
     val dimensions: List<DimensionMetadata>,
+    val likedByUser: Boolean = false
 )

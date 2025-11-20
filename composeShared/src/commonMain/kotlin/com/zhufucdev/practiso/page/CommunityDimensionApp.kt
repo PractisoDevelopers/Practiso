@@ -26,6 +26,7 @@ import com.zhufucdev.practiso.composable.AppExceptionAlert
 import com.zhufucdev.practiso.composable.ArchiveMetadataOption
 import com.zhufucdev.practiso.composable.HorizontalSeparator
 import com.zhufucdev.practiso.composable.PractisoOptionSkeleton
+import com.zhufucdev.practiso.composable.SharedImmediateMutation
 import com.zhufucdev.practiso.composition.LocalExtensiveSnackbarState
 import com.zhufucdev.practiso.composition.LocalNavController
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
@@ -105,25 +106,30 @@ fun CommunityDimensionApp(
                             )
                         }
                     }) {
-                        ArchiveMetadataOption(
-                            modifier = with(sharedTransition) {
-                                Modifier.padding(PaddingNormal).sharedElement(
-                                    rememberSharedContentState(archive.uiSharedId),
-                                    animatedContent
-                                )
-                            },
-                            model = archive,
-                            state = state,
-                            onDownloadRequest = {
-                                dimensionModel.archiveEvent.downloadAndImport.trySend(archive to importModel.event)
-                            },
-                            onCancelRequest = {
-                                dimensionModel.archiveEvent.cancelDownload.trySend(archive)
-                            },
-                            onErrorDetailsRequest = {
-                                alertError = it
-                            }
-                        )
+                        SharedImmediateMutation(
+                            key = archive.id,
+                            model = archive
+                        ) { archive ->
+                            ArchiveMetadataOption(
+                                modifier = with(sharedTransition) {
+                                    Modifier.padding(PaddingNormal).sharedElement(
+                                        rememberSharedContentState(archive.uiSharedId),
+                                        animatedContent
+                                    )
+                                },
+                                model = archive,
+                                state = state,
+                                onDownloadRequest = {
+                                    dimensionModel.archiveEvent.downloadAndImport.trySend(archive to importModel.event)
+                                },
+                                onCancelRequest = {
+                                    dimensionModel.archiveEvent.cancelDownload.trySend(archive)
+                                },
+                                onErrorDetailsRequest = {
+                                    alertError = it
+                                }
+                            )
+                        }
                     }
                 }
             }
