@@ -65,7 +65,7 @@ fun <T> ImmediateMutationState(initial: T): ImmediateMutationState<T> =
 
 @Composable
 fun <T> rememberImmediateMutationState(initial: T): ImmediateMutationState<T> =
-    remember { ImmediateMutationState(initial) }
+    remember(initial) { ImmediateMutationState(initial) }
 
 @Composable
 fun <T : Any> SharedInitiatingImmediateMutation(

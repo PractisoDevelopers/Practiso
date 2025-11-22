@@ -14,6 +14,7 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.getCommunityServiceWithDownloadManager
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,6 +23,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
 
@@ -31,6 +35,7 @@ class CommunityArchiveViewModel(
     private val communityService: Flow<CommunityService>,
     downloadManager: Flow<DownloadManager>,
 ) : ArchiveDownloadManagedViewModel(communityService, downloadManager) {
+    val event = Events()
     private val _archive by state.saveable(saver = protobufMutableStateFlowSaver<ArchiveMetadata?>()) {
         MutableStateFlow(null)
     }
@@ -70,6 +75,25 @@ class CommunityArchiveViewModel(
             .map { it?.dimensions }
             .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
+    init {
+        viewModelScope.launch {
+            while (isActive) {
+                select {
+                    event.refresh.onReceive {
+                        val id = archive.value?.id ?: return@onReceive
+                        try {
+                            val newMetadata = communityService.first()
+                                .getArchiveMetadata(id)
+                            _archive.tryEmit(newMetadata)
+                        } catch (_: Exception) {
+                            // noop
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun loadParameters(routeParams: ArchivePreviewRouteParams) {
         _archive.tryEmit(routeParams.metadata)
         this.routeParams.tryEmit(routeParams)
@@ -86,6 +110,10 @@ class CommunityArchiveViewModel(
         communityService.first()
             .removeLike(archive.id)
     }
+
+    data class Events(
+        val refresh: Channel<Unit> = Channel()
+    )
 
     companion object Companion {
         val Factory = viewModelFactory {

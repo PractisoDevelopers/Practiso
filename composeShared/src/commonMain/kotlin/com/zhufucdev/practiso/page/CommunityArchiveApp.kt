@@ -358,6 +358,7 @@ private fun ArchiveInfoCardContent(
                             mutateValue(newValue)
                             previewVM.removeLike()
                         }
+                        previewVM.event.refresh.trySend(Unit)
                         communityVM.event.refreshSingleArchive.trySend(
                             CommunityAppViewModel.RefreshSingleArchiveRequest(
                                 id = archive.id,
