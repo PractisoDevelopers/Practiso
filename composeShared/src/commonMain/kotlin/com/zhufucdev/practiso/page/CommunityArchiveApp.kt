@@ -358,10 +358,12 @@ private fun ArchiveInfoCardContent(
                             mutateValue(newValue)
                             previewVM.removeLike()
                         }
-                        communityVM.event.refreshSingleArchive.trySend(CommunityAppViewModel.RefreshSingleArchiveRequest(
-                            id = archive.id,
-                            preload = newValue
-                        ))
+                        communityVM.event.refreshSingleArchive.trySend(
+                            CommunityAppViewModel.RefreshSingleArchiveRequest(
+                                id = archive.id,
+                                preload = newValue
+                            )
+                        )
                     } catch (e: Exception) {
                         onError(e)
                         throw CancellationException(
