@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.zhufucdev.practiso.datamodel.AppException
 import com.zhufucdev.practiso.datamodel.AppMessage
 import com.zhufucdev.practiso.datamodel.AppScope
+import com.zhufucdev.practiso.platform.isDebugBuild
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.account_removed_para
@@ -114,7 +115,11 @@ fun AppException.stringContent(): String = buildString {
         appendLine(it.localizedString())
     }
 
-    (this as? Exception)?.cause?.let { e ->
+    if (this@stringContent is AppException.Generic && isDebugBuild()) {
+        appendLine("${inner::class.simpleName ?: inner::class.qualifiedName}: ${inner.message}")
+    }
+
+    (this@stringContent as? Exception)?.cause?.let { e ->
         if (e is AppException) {
             appendLine(e.stringContent())
         } else if (e.message != null) {

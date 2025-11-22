@@ -4,7 +4,7 @@ interface AppException {
     val scope: AppScope
     val appMessage: AppMessage? get() = null
 
-    object Generic : AppException {
+    class Generic(val inner: Exception) : Exception(inner.message, inner.cause), AppException {
         override val scope: AppScope
             get() = AppScope.Unknown
 

@@ -31,7 +31,7 @@ fun AppExceptionAlert(
     val interactive = model as? InteractiveException
     AppExceptionAlertScaffold(
         modifier = modifier,
-        model = model as? AppException ?: AppException.Generic,
+        model = model as? AppException ?: AppException.Generic(model),
         onDismissRequest = onDismissRequest,
         onPrimaryActionRequest = interactive?.let { ie ->
             {
@@ -63,7 +63,7 @@ fun AppExceptionAlert(
 ) {
     AppExceptionAlertScaffold(
         modifier = modifier,
-        model = model as? AppException ?: AppException.Generic,
+        model = model as? AppException ?: AppException.Generic(model),
         icon = icon,
         onDismissRequest = onDismissRequest,
         onPrimaryActionRequest = onRetryRequest,
