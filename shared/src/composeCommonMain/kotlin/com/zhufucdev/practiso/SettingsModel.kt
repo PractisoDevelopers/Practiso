@@ -107,6 +107,16 @@ class HybridSettingsCommunityIdentity(
     private val keyPrefix =
         serverUrl.encodeBase64()
 
+    init {
+        val legacyKey = "" // caused by a bug
+        val legacyToken = secure.getStringOrNull("${legacyKey}_token")
+        if (legacyToken != null) {
+            // migrate
+            secure.putString("${keyPrefix}_token", legacyToken)
+            secure.remove("${legacyKey}_token")
+        }
+    }
+
     override val authToken = MutableStateFlow(secure.getStringOrNull("${keyPrefix}_token"))
 
     override fun clear() {
