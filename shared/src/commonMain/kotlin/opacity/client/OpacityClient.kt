@@ -191,6 +191,7 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
         }
     }
 
+    @Throws(HttpStatusAssertionException::class)
     suspend fun getWhoami(): Whoami? {
         if (authToken == null) {
             return null
@@ -201,6 +202,7 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
                 appendPathSegments("whoami")
             }
         }
+        assertSuccess(response.status)
         return response.body()
     }
 

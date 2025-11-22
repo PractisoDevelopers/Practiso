@@ -11,10 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
-import okio.Buffer
-import okio.Sink
-import okio.buffer
-import okio.gzip
 
 private const val KeyAnswerPageStyle = "answer_page_style"
 private const val KeyShowAccuracy = "show_accuracy"
@@ -109,15 +105,7 @@ class HybridSettingsCommunityIdentity(
     private val secure: Settings = insecure,
 ) : CommunityIdentity {
     private val keyPrefix =
-        Buffer().apply {
-            (Buffer().apply { write(serverUrl.toByteArray()) } as Sink)
-                .gzip()
-                .buffer()
-                .writeAll(this)
-        }
-            .readByteArray()
-            .encodeBase64()
-
+        serverUrl.encodeBase64()
 
     override val authToken = MutableStateFlow(secure.getStringOrNull("${keyPrefix}_token"))
 

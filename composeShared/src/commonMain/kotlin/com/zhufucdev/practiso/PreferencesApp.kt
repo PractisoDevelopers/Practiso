@@ -38,7 +38,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -73,6 +72,7 @@ import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import kotlinx.coroutines.launch
+import opacity.client.HttpStatusAssertionException
 import opacity.client.OpacityClient
 import opacity.client.Whoami
 import org.jetbrains.compose.resources.painterResource
@@ -312,22 +312,20 @@ fun PreferencesApp(model: SettingsModel = AppSettings) {
                     )
                 }
                 item {
-                    val identity by remember(model) {
-                        derivedStateOf {
-                            model.getCommunityIdentity(
-                                model.communityServerUrl.value ?: DEFAULT_COMMUNITY_SERVER_URL
-                            )
-                        }
+                    val serverEndpoint by model.communityServerEndpoint.collectAsState(null)
+                    val identity = remember(model, serverEndpoint) {
+                        model.getCommunityIdentity(
+                            serverEndpoint ?: DEFAULT_COMMUNITY_SERVER_URL
+                        )
                     }
                     SharedElementTransitionPopup(
                         key = "community_identity",
                         dismissGestureEnabled = false,
                         popup = {
-                            val server by model.communityServerEndpoint.collectAsState(null)
                             CommunityIdentityDialog(
                                 modifier = Modifier.safeContentPadding().pseudoClickable(),
                                 model = identity,
-                                serverEndpoint = server,
+                                serverEndpoint = serverEndpoint,
                                 onDismissRequest = { coroutine.launch { collapse() } }
                             )
                         },
@@ -524,7 +522,11 @@ private fun CommunityIdentityDialog(
             value = null
             return@produceState
         }
-        value = opacityClient.getWhoami()
+        value = try {
+            opacityClient.getWhoami()
+        } catch (_: HttpStatusAssertionException) {
+            null
+        }
     }
 
     var tryingToClear by rememberSaveable { mutableStateOf(false) }
