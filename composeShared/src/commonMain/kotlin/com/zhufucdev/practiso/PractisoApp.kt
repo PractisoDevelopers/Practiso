@@ -244,6 +244,7 @@ fun PractisoApp(navController: NavHostController) {
                         CommunityArchiveApp(
                             previewVM = vm,
                             importVM = importVM,
+                            communityVM = communityVM,
                             sharedTransition = this@SharedTransitionLayout,
                             animatedContent = this@composable
                         )

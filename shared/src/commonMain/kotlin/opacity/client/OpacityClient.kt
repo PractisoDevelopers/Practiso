@@ -3,12 +3,12 @@ package opacity.client
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
-import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -29,12 +29,17 @@ import kotlinx.io.Source
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
 
-class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) {
+class OpacityClient(val endpoint: String, private val authToken: String? = null, httpClientFactory: HttpClientFactory) {
     private val http = httpClientFactory.create {
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
             })
+        }
+        defaultRequest {
+            if (authToken != null) {
+                headers.appendAuthToken(authToken)
+            }
         }
     }
 
@@ -127,17 +132,11 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
         contentName: String,
         clientName: String? = null,
         ownerName: String? = null,
-        authToken: String? = null,
     ) = channelFlow {
         val response = http.put {
             url {
                 takeFrom(endpoint)
                 appendPathSegments("archive")
-            }
-            headers {
-                if (authToken != null) {
-                    appendAuthToken(authToken)
-                }
             }
             setBody(
                 MultiPartFormDataContent(
@@ -192,28 +191,25 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
         }
     }
 
-    suspend fun getWhoami(authToken: String): Whoami {
+    suspend fun getWhoami(): Whoami? {
+        if (authToken == null) {
+            return null
+        }
         val response = http.get {
             url {
                 takeFrom(endpoint)
                 appendPathSegments("whoami")
-            }
-            headers {
-                appendAuthToken(authToken)
             }
         }
         return response.body()
     }
 
     @Throws(AuthorizationException::class, HttpStatusAssertionException::class)
-    suspend fun deleteArchive(archiveId: String, authToken: String) {
+    suspend fun deleteArchive(archiveId: String) {
         val response = http.delete {
             url {
                 takeFrom(endpoint)
                 appendPathSegments("archive", archiveId)
-            }
-            headers {
-                appendAuthToken(authToken)
             }
         }
         if (response.status == HttpStatusCode.Unauthorized) {
@@ -223,14 +219,14 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
     }
 
     @Throws(AuthorizationException::class, IllegalStateException::class)
-    suspend fun like(archiveId: String, authToken: String) {
+    suspend fun like(archiveId: String) {
+        if (authToken == null) {
+            throw IllegalStateException()
+        }
         val response = http.put {
             url {
                 takeFrom(endpoint)
                 appendPathSegments("archive", archiveId, "like")
-            }
-            headers {
-                appendAuthToken(authToken)
             }
         }
         if (response.status == HttpStatusCode.Unauthorized) {
@@ -243,14 +239,14 @@ class OpacityClient(val endpoint: String, httpClientFactory: HttpClientFactory) 
     }
 
     @Throws(AuthorizationException::class, IllegalStateException::class)
-    suspend fun removeLike(archiveId: String, authToken: String) {
+    suspend fun removeLike(archiveId: String) {
+        if (authToken == null) {
+            throw IllegalStateException()
+        }
         val response = http.delete {
             url {
                 takeFrom(endpoint)
                 appendPathSegments("archive", archiveId, "like")
-            }
-            headers {
-                appendAuthToken(authToken)
             }
         }
         if (response.status == HttpStatusCode.Unauthorized) {

@@ -6,12 +6,19 @@ import com.zhufucdev.practiso.datamodel.NextPointerBasedPaginated
 import com.zhufucdev.practiso.datamodel.Paginated
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transform
 import kotlinx.io.Source
 import opacity.client.ArchiveMetadata
@@ -29,16 +36,25 @@ class CommunityService(
     endpoint: String = DEFAULT_COMMUNITY_SERVER_URL,
     val identity: CommunityIdentity,
 ) {
-    private val client = OpacityClient(endpoint, PlatformHttpClientFactory)
+    private val clientScope = CoroutineScope(Dispatchers.Default)
+    private val client = identity.authToken.map { authToken ->
+        OpacityClient(
+            endpoint,
+            authToken,
+            PlatformHttpClientFactory
+        )
+    }
+        .shareIn(clientScope, started = SharingStarted.Eagerly, replay = 1)
 
     fun getArchivePagination(sortOptions: SortOptions = SortOptions()): Paginated<ArchiveMetadata> =
         object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
             override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
-                return client.getArchiveList(sortOptions).let { it.page to it.next }
+                return client.first().getArchiveList(sortOptions).let { it.page to it.next }
             }
 
             override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
-                return client.getArchiveList(sortOptions, priorPointer).let { it.page to it.next }
+                return client.first().getArchiveList(sortOptions, priorPointer)
+                    .let { it.page to it.next }
             }
         }
 
@@ -48,12 +64,15 @@ class CommunityService(
     ): Paginated<ArchiveMetadata> =
         object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
             override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
-                return client.getDimensionArchiveList(dimensionName, sortOptions)
+                return client
+                    .first()
+                    .getDimensionArchiveList(dimensionName, sortOptions)
                     .let { it.page to it.next }
             }
 
             override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
-                return client.getDimensionArchiveList(dimensionName, sortOptions, priorPointer)
+                return client.first()
+                    .getDimensionArchiveList(dimensionName, sortOptions, priorPointer)
                     .let { it.page to it.next }
             }
         }
@@ -62,20 +81,20 @@ class CommunityService(
     fun ArchiveMetadata.toHandle(): ArchiveHandle = ArchiveHandle(this, client)
 
     suspend fun getDimensions(takeFirst: Int = 20): List<DimensionMetadata> =
-        client.getDimensionList(takeFirst)
+        client.first().getDimensionList(takeFirst)
 
     suspend fun getArchivePreview(archiveId: String): List<ArchivePreview> =
-        client.getArchivePreview(archiveId)
+        client.first().getArchivePreview(archiveId)
 
     suspend fun getArchiveMetadata(archiveId: String): ArchiveMetadata? =
-        client.getArchiveMetadata(archiveId)
+        client.first().getArchiveMetadata(archiveId)
 
-    suspend fun getServerInfo(): BonjourResponse = client.getBonjour()
+    suspend fun getServerInfo(): BonjourResponse = client.first().getBonjour()
 
-    suspend fun getWhoami(): Whoami? = identity.authToken?.let { client.getWhoami(it) }
+    suspend fun getWhoami(): Whoami? = client.first().getWhoami()
 
     suspend fun deleteArchive(archiveId: String) =
-        client.deleteArchive(archiveId, getAuthTokenOrThrow())
+        client.first().deleteArchive(archiveId)
 
     private fun uploadArchiveImpl(
         content: Source,
@@ -90,24 +109,23 @@ class CommunityService(
             archiveName = duplexSubmissionChannel.receive()
         }
         emitAll(
-            client.uploadArchive(
+            client.first().uploadArchive(
                 content.peek(),
                 archiveName,
                 clientName,
                 ownerName,
-                identity.authToken
             )
                 .transform {
                     when (it) {
                         is ArchiveUploadState.Success -> {
                             if (it.authToken != null) {
-                                identity.authToken = it.authToken
+                                identity.authToken.tryEmit(it.authToken)
                             }
                             emit(UploadArchive.Success(it.archiveId))
                         }
 
                         is ArchiveUploadState.Failure -> when {
-                            it.statusCode == HttpStatusCode.Unauthorized && identity.authToken == null -> {
+                            it.statusCode == HttpStatusCode.Unauthorized && identity.authToken.first() == null -> {
                                 val duplexSubmissionChannel = Channel<CommunityRegistrationInfo>()
                                 emit(UploadArchive.RegistrationRequired(duplexSubmissionChannel))
                                 val info = duplexSubmissionChannel.receive()
@@ -121,7 +139,7 @@ class CommunityService(
                                 )
                             }
 
-                            it.statusCode == HttpStatusCode.Forbidden && identity.authToken != null -> {
+                            it.statusCode == HttpStatusCode.Forbidden && identity.authToken.first() != null -> {
                                 val duplexProceedChannel = Channel<Unit>()
                                 emit(
                                     UploadArchive.SignOffRequired(
@@ -152,14 +170,11 @@ class CommunityService(
         )
 
     @Throws(AuthorizationException::class, IllegalStateException::class)
-    suspend fun like(archiveId: String) = client.like(archiveId, authToken = getAuthTokenOrThrow())
+    suspend fun like(archiveId: String) = client.first().like(archiveId)
 
     @Throws(AuthorizationException::class, IllegalStateException::class)
     suspend fun removeLike(archiveId: String) =
-        client.removeLike(archiveId, authToken = getAuthTokenOrThrow())
-
-    fun getAuthTokenOrThrow() =
-        identity.authToken ?: throw IllegalStateException("Identity unavailable")
+        client.first().removeLike(archiveId)
 }
 
 sealed class UploadArchive {
@@ -178,6 +193,6 @@ sealed class UploadArchive {
 data class CommunityRegistrationInfo(val clientName: String, val ownerName: String)
 
 interface CommunityIdentity {
-    var authToken: String?
+    val authToken: MutableStateFlow<String?>
     fun clear()
 }

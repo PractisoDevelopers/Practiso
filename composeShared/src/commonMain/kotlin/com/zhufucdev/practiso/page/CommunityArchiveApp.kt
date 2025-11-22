@@ -75,10 +75,12 @@ import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
 import com.zhufucdev.practiso.uiSharedId
+import com.zhufucdev.practiso.viewmodel.CommunityAppViewModel
 import com.zhufucdev.practiso.viewmodel.CommunityArchiveViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import opacity.client.ArchiveMetadata
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -102,6 +104,7 @@ private const val TEXT_CANVAS_HEIGHT_DP = 240
 fun CommunityArchiveApp(
     previewVM: CommunityArchiveViewModel = viewModel(factory = CommunityArchiveViewModel.Factory),
     importVM: ImportViewModel = viewModel(factory = ImportViewModel.Factory),
+    communityVM: CommunityAppViewModel = viewModel(factory = CommunityAppViewModel.Factory),
     sharedTransition: SharedTransitionScope,
     animatedContent: AnimatedContentScope,
 ) {
@@ -160,68 +163,26 @@ fun CommunityArchiveApp(
                                 .padding(top = (TEXT_CANVAS_HEIGHT_DP - TopAppBarDefaults.TopAppBarExpandedHeight.value).dp)
                         ) {
                             archive?.let { archive ->
-                                val state by previewVM.getDownloadStateFlow(archive)
-                                    .collectAsState()
-                                SharedInitiatingImmediateMutation(
-                                    key = archive.id,
-                                    model = archive,
-                                ) { archive ->
-                                    ArchiveMetadataOption(
-                                        modifier = with(sharedTransition) {
-                                            Modifier.fillMaxWidth()
-                                                .padding(
-                                                    vertical = PaddingNormal,
-                                                    horizontal = PaddingBig * 2
-                                                )
-                                                .sharedElement(
-                                                    sharedTransition.rememberSharedContentState(
-                                                        archive.uiSharedId
-                                                    ),
-                                                    animatedVisibilityScope = animatedContent
-                                                )
-                                        },
-                                        model = archive,
-                                        state = state,
-                                        onDownloadRequest = {
-                                            previewVM.archiveEvent.downloadAndImport.trySend(
-                                                archive to importVM.event
+                                ArchiveInfoCardContent(
+                                    modifier = with(sharedTransition) {
+                                        Modifier.fillMaxWidth()
+                                            .padding(
+                                                vertical = PaddingNormal,
+                                                horizontal = PaddingBig * 2
                                             )
-                                        },
-                                        onCancelRequest = {
-                                            previewVM.archiveEvent.cancelDownload.trySend(archive)
-                                        },
-                                        onErrorDetailsRequest = {
-                                            // noop
-                                        },
-                                        onLikeRequested = {
-                                            transaction {
-                                                try {
-                                                    if (!archive.likedByUser) {
-                                                        mutateValue(
-                                                            archive.copy(
-                                                                likes = archive.likes + 1,
-                                                                likedByUser = true
-                                                            )
-                                                        )
-                                                        previewVM.like()
-                                                    } else {
-                                                        mutateValue(archive.copy(
-                                                            likes = max(archive.likes - 1, 0),
-                                                            likedByUser = false
-                                                        ))
-                                                        previewVM.removeLike()
-                                                    }
-                                                } catch (e: Exception) {
-                                                    alertErrorQueue.add(e)
-                                                    throw CancellationException(
-                                                        message = "Opacity client failed",
-                                                        cause = e
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
+                                            .sharedElement(
+                                                sharedTransition.rememberSharedContentState(
+                                                    archive.uiSharedId
+                                                ),
+                                                animatedVisibilityScope = animatedContent
+                                            )
+                                    },
+                                    archive = archive,
+                                    previewVM = previewVM,
+                                    importVM = importVM,
+                                    communityVM = communityVM,
+                                    onError = alertErrorQueue::add
+                                )
                             } ?: PractisoOptionSkeleton(Modifier.fillMaxWidth())
                         }
                     }
@@ -343,6 +304,73 @@ fun CommunityArchiveApp(
         AppExceptionAlert(
             model = model,
             onDismissRequest = { alertErrorQueue.removeAt(0) },
+        )
+    }
+}
+
+@Composable
+private fun ArchiveInfoCardContent(
+    modifier: Modifier = Modifier,
+    archive: ArchiveMetadata,
+    previewVM: CommunityArchiveViewModel,
+    importVM: ImportViewModel,
+    communityVM: CommunityAppViewModel,
+    onError: (Exception) -> Unit
+) {
+    val state by previewVM.getDownloadStateFlow(archive)
+        .collectAsState()
+    SharedInitiatingImmediateMutation(
+        key = archive.id,
+        model = archive,
+    ) { archive ->
+        ArchiveMetadataOption(
+            modifier = modifier,
+            model = archive,
+            state = state,
+            onDownloadRequest = {
+                previewVM.archiveEvent.downloadAndImport.trySend(
+                    archive to importVM.event
+                )
+            },
+            onCancelRequest = {
+                previewVM.archiveEvent.cancelDownload.trySend(archive)
+            },
+            onErrorDetailsRequest = {
+                // noop
+            },
+            onLikeRequested = {
+                transaction {
+                    try {
+                        val newValue: ArchiveMetadata
+                        if (!archive.likedByUser) {
+                            newValue =
+                                archive.copy(
+                                    likes = archive.likes + 1,
+                                    likedByUser = true
+                                )
+                            mutateValue(newValue)
+                            previewVM.like()
+                        } else {
+                            newValue = archive.copy(
+                                likes = max(archive.likes - 1, 0),
+                                likedByUser = false
+                            )
+                            mutateValue(newValue)
+                            previewVM.removeLike()
+                        }
+                        communityVM.event.refreshSingleArchive.trySend(CommunityAppViewModel.RefreshSingleArchiveRequest(
+                            id = archive.id,
+                            preload = newValue
+                        ))
+                    } catch (e: Exception) {
+                        onError(e)
+                        throw CancellationException(
+                            message = "Opacity client failed",
+                            cause = e
+                        )
+                    }
+                }
+            }
         )
     }
 }

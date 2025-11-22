@@ -9,6 +9,7 @@ import com.zhufucdev.practiso.platform.downloadSingle
 import com.zhufucdev.practiso.platform.getPlatform
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -17,7 +18,7 @@ import opacity.client.OpacityClient
 
 class ArchiveHandle(
     val metadata: ArchiveMetadata,
-    private val client: OpacityClient,
+    private val client: Flow<OpacityClient>,
 ) {
     val taskId = metadata.downloadTaskId
 
@@ -33,7 +34,7 @@ class ArchiveHandle(
                 )
             }
         }
-        val url = with(client) {
+        val url = with(client.first()) {
             metadata.resourceUrl
         }
         val destination = getPlatform().createTemporaryFile("remote-archive", suffix = ".psarchive")

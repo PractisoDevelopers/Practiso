@@ -50,7 +50,7 @@ class SettingsModel(
         MutableStateFlow(default.getStringOrNull(KeyClientName) ?: getPlatform().deviceName)
 
     fun getCommunityIdentity(serverUrl: String) =
-        HybridSettingsCommunityIdentity(serverUrl, default, secure)
+        HybridSettingsCommunityIdentity(serverUrl, coroutineScope, default, secure)
 
     init {
         with(coroutineScope) {
@@ -104,6 +104,7 @@ class SettingsModel(
 
 class HybridSettingsCommunityIdentity(
     serverUrl: String,
+    coroutineScope: CoroutineScope,
     private val insecure: Settings,
     private val secure: Settings = insecure,
 ) : CommunityIdentity {
@@ -117,19 +118,24 @@ class HybridSettingsCommunityIdentity(
             .readByteArray()
             .encodeBase64()
 
-    override var authToken: String?
-        get() = secure.getStringOrNull("${keyPrefix}_token")
-        set(value) {
-            val key = "${keyPrefix}_token"
-            if (value != null) {
-                secure.putString(key, value)
-            } else {
-                secure.remove(key)
-            }
-        }
+
+    override val authToken = MutableStateFlow(secure.getStringOrNull("${keyPrefix}_token"))
 
     override fun clear() {
-        authToken = null
+        authToken.tryEmit(null)
+    }
+
+    init {
+        coroutineScope.launch {
+            authToken.collectLatest { value ->
+                val key = "${keyPrefix}_token"
+                if (value != null) {
+                    secure.putString(key, value)
+                } else {
+                    secure.remove(key)
+                }
+            }
+        }
     }
 }
 

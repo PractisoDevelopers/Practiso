@@ -509,9 +509,10 @@ private fun CommunityIdentityDialog(
     serverEndpoint: String?,
     onDismissRequest: () -> Unit
 ) {
-    val opacityClient = remember(serverEndpoint) {
-        serverEndpoint?.let {
-            OpacityClient(it, PlatformHttpClientFactory)
+    val authToken by model.authToken.collectAsState()
+    val opacityClient: OpacityClient? = remember(serverEndpoint, authToken) {
+        serverEndpoint?.let { endpoint ->
+            OpacityClient(endpoint, authToken, PlatformHttpClientFactory)
         }
     }
     val whoami by produceState<Whoami?>(null, opacityClient) {
@@ -519,12 +520,11 @@ private fun CommunityIdentityDialog(
             value = null
             return@produceState
         }
-        val token = model.authToken
-        if (token == null) {
+        if (authToken == null) {
             value = null
             return@produceState
         }
-        value = opacityClient.getWhoami(token)
+        value = opacityClient.getWhoami()
     }
 
     var tryingToClear by rememberSaveable { mutableStateOf(false) }
@@ -578,7 +578,7 @@ private fun CommunityIdentityDialog(
                             PractisoOptionSkeleton(
                                 label = { Text(stringResource(Res.string.authorization_token_para)) },
                                 preview = {
-                                    val token = model.authToken
+                                    val token = authToken
                                     if (token != null) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             BasicTextField(
@@ -606,14 +606,14 @@ private fun CommunityIdentityDialog(
                                 }
                             )
 
-                            if (model.authToken != null) {
+                            if (authToken != null) {
                                 WhoamiInfoRows(whoami)
                             }
                         }
 
                         Spacer(Modifier.height(PaddingNormal))
                         Row {
-                            if (model.authToken != null) {
+                            if (authToken != null) {
                                 Button(
                                     onClick = { tryingToClear = true },
                                     colors = ButtonDefaults.buttonColors(

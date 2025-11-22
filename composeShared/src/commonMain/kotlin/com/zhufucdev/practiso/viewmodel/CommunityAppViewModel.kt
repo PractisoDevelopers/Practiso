@@ -101,6 +101,28 @@ class CommunityAppViewModel(
                             }
                         }
                     }
+
+                    event.refreshSingleArchive.onReceive { (id, preload) ->
+                        val archiveIndex = _archiveList.indexOfFirst { it.id == id }
+                        if (archiveIndex < 0) {
+                            return@onReceive
+                        }
+                        _archiveList[archiveIndex] = preload
+                        launch(Dispatchers.IO) {
+                            val newMetadata =  try {
+                                communityService.first().getArchiveMetadata(archiveId = id)
+                            } catch (_: Exception) {
+                                return@launch
+                            }
+                            if (newMetadata == null) {
+                                return@launch
+                            }
+                            val index = _archiveList.indexOfFirst { it.id == id }
+                            if (index >= 0) {
+                                _archiveList[index] = newMetadata
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -175,6 +197,9 @@ class CommunityAppViewModel(
     data class Events(
         val mountNextPage: Channel<Unit> = Channel(),
         val refresh: Channel<Unit> = Channel(),
-        val deleteArchive: Channel<String> = Channel()
+        val deleteArchive: Channel<String> = Channel(),
+        val refreshSingleArchive: Channel<RefreshSingleArchiveRequest> = Channel(),
     )
+
+    data class RefreshSingleArchiveRequest(val id: String, val preload: ArchiveMetadata)
 }
