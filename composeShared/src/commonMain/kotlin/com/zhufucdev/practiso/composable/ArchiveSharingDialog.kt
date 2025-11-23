@@ -33,12 +33,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,7 +74,6 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -647,46 +644,6 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
             }
         }
     }
-}
-
-@Immutable
-@Serializable
-private data class LengthConstrainedTextFieldBuffer(
-    val value: String,
-    val isOversized: Boolean = false,
-) {
-    companion object {
-        fun of(value: String, maxLength: Int? = null): LengthConstrainedTextFieldBuffer {
-            return LengthConstrainedTextFieldBuffer(
-                value = value,
-                isOversized = maxLength?.let { maxLength -> maxLength < value.length } == true
-            )
-        }
-    }
-}
-
-@Composable
-private fun LengthConstrainedTextField(
-    modifier: Modifier = Modifier,
-    state: LengthConstrainedTextFieldBuffer,
-    onStateChange: (LengthConstrainedTextFieldBuffer) -> Unit,
-    label: (@Composable () -> Unit)? = null,
-    maxLength: Int? = null,
-) {
-    TextField(
-        modifier = modifier,
-        value = state.value,
-        onValueChange = {
-            onStateChange(LengthConstrainedTextFieldBuffer.of(it, maxLength))
-        },
-        label = label,
-        supportingText = {
-            if (maxLength != null) {
-                Text("${state.value.length} / $maxLength")
-            }
-        },
-        isError = state.isOversized
-    )
 }
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.isNavigateForward(controller: NavHostController): Boolean {
