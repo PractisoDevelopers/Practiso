@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
@@ -84,7 +83,6 @@ import resources.baseline_check_circle_outline
 import resources.cancel_para
 import resources.clear_token_para
 import resources.continue_in_system_file_manager_para
-import resources.device_name_para
 import resources.export_to_file_para
 import resources.from_server_x_para
 import resources.http_error_para
@@ -92,7 +90,6 @@ import resources.must_reregister_to_proceed_para
 import resources.name_of_entry_para
 import resources.outline_alert_circle
 import resources.outline_cloud_upload
-import resources.owner_name_para
 import resources.registration_required_para
 import resources.retry_para
 import resources.reveal_para
@@ -502,27 +499,20 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                             Text(stringResource(Res.string.registration_required_para))
                         }
 
-                        var ownerNameBuffer by rememberSaveable(stateSaver = protobufSaver()) {
-                            mutableStateOf(LengthConstrainedTextFieldBuffer(AppSettings.clientName.value))
+                        var buffer by rememberSaveable(stateSaver = protobufSaver()) {
+                            mutableStateOf(
+                                RegistrationRequiredState(
+                                    initialOwnerName = AppSettings.clientName.value
+                                )
+                            )
                         }
-                        LengthConstrainedTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            state = ownerNameBuffer,
-                            onStateChange = { ownerNameBuffer = it },
-                            label = { Text(stringResource(Res.string.owner_name_para)) },
-                            maxLength = serverInfo?.getOrNull()?.maxNameLength?.value
-                        )
-                        Spacer(Modifier.height(PaddingSmall))
 
-                        var deviceNameBuffer by rememberSaveable(stateSaver = protobufSaver()) {
-                            mutableStateOf(LengthConstrainedTextFieldBuffer(ownerNameBuffer.value))
-                        }
-                        LengthConstrainedTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            state = deviceNameBuffer,
-                            onStateChange = { deviceNameBuffer = it },
-                            label = { Text(stringResource(Res.string.device_name_para)) },
-                            maxLength = serverInfo?.getOrNull()?.maxNameLength?.value
+                        RegistrationRequiredDialogContent(
+                            serverInfo = serverInfo?.getOrNull(),
+                            state = buffer,
+                            onStateChanged = {
+                                buffer = it
+                            }
                         )
 
                         ActionButtons {
@@ -531,13 +521,13 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                                     pageCoroutine.launch {
                                         uploadState.submission.send(
                                             CommunityRegistrationInfo(
-                                                clientName = deviceNameBuffer.value,
-                                                ownerName = ownerNameBuffer.value
+                                                clientName = buffer.deviceName.value,
+                                                ownerName = buffer.ownerName.value
                                             )
                                         )
                                     }
                                 },
-                                enabled = !ownerNameBuffer.isOversized && !deviceNameBuffer.isOversized
+                                enabled = !buffer.ownerName.isOversized && !buffer.deviceName.isOversized
                             ) {
                                 Text(stringResource(Res.string.upload_para))
                             }
