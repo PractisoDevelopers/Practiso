@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -50,6 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.composable.ActionText
 import com.zhufucdev.practiso.composable.DialogContentSkeleton
 import com.zhufucdev.practiso.composable.DialogWithTextInput
 import com.zhufucdev.practiso.composable.FooterColumn
@@ -59,11 +60,14 @@ import com.zhufucdev.practiso.composable.PractisoOptionSkeletonDefaults
 import com.zhufucdev.practiso.composable.SectionCaption
 import com.zhufucdev.practiso.composable.SharedElementTransitionKey
 import com.zhufucdev.practiso.composable.SharedElementTransitionPopup
+import com.zhufucdev.practiso.composable.TextAction
 import com.zhufucdev.practiso.composable.modelFeatureString
 import com.zhufucdev.practiso.composition.BottomUpComposableScope
 import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.datamodel.MlModel
+import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
 import com.zhufucdev.practiso.service.CommunityIdentity
@@ -71,6 +75,8 @@ import com.zhufucdev.practiso.service.communityServerEndpoint
 import com.zhufucdev.practiso.style.PaddingBig
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PaddingSmall
+import com.zhufucdev.practiso.viewmodel.PreferencesAppViewModel
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import opacity.client.HttpStatusAssertionException
 import opacity.client.OpacityClient
@@ -93,7 +99,9 @@ import resources.credentials_para
 import resources.custom_server_for_third_party_access_para
 import resources.custom_server_url_para
 import resources.device_name_para
+import resources.export_para
 import resources.frame_embedding_model_para
+import resources.import_para
 import resources.known_model_names_title
 import resources.navigate_up_para
 import resources.no_tokens_para
@@ -114,7 +122,7 @@ import resources.use_only_cpu_for_inference_para
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PreferencesApp(model: SettingsModel = AppSettings) {
+fun PreferencesApp(model: SettingsModel = AppSettings, vm: PreferencesAppViewModel = viewModel()) {
     val coroutine = rememberCoroutineScope()
 
     BottomUpComposableScope { buc ->
@@ -139,7 +147,7 @@ fun PreferencesApp(model: SettingsModel = AppSettings) {
                 )
             }
         ) { paddingValues ->
-            LazyColumn(Modifier.padding(paddingValues)) {
+            LazyColumn(Modifier.padding(paddingValues), state = vm.listState) {
                 /* Answering */
                 item {
                     SectionCaption(
@@ -583,13 +591,21 @@ private fun CommunityIdentityDialog(
                                     val token = authToken
                                     if (token != null) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            BasicTextField(
-                                                value = token,
-                                                onValueChange = {},
-                                                readOnly = true,
-                                                textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
+                                            ActionText(
+                                                modifier = Modifier.weight(1f),
+                                                text = token,
                                                 visualTransformation = if (!revealToken) PasswordVisualTransformation() else VisualTransformation.None,
-                                                modifier = Modifier.weight(1f)
+                                                actions = listOf(TextAction(
+                                                    label = stringResource(Res.string.export_para),
+                                                    action = {
+                                                        MainScope().launch {
+                                                            Navigator.navigate(
+                                                                Navigation.Goto(AppDestination.QrCodeViewer),
+                                                                NavigationOption.OpenQrCode(stringValue = token)
+                                                            )
+                                                        }
+                                                    }
+                                                ))
                                             )
                                             IconButton(
                                                 onClick = {
@@ -603,7 +619,15 @@ private fun CommunityIdentityDialog(
                                             }
                                         }
                                     } else {
-                                        Text(stringResource(Res.string.no_tokens_para))
+                                        ActionText(
+                                            text = stringResource(Res.string.no_tokens_para),
+                                            actions = listOf(TextAction(
+                                                label = stringResource(Res.string.import_para),
+                                                action = {
+
+                                                }
+                                            ))
+                                        )
                                     }
                                 }
                             )

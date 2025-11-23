@@ -14,7 +14,8 @@ enum class AppDestination {
     MainView,
     QuizCreate,
     Answer,
-    Preferences
+    Preferences,
+    QrCodeViewer
 }
 
 @Serializable
@@ -24,6 +25,9 @@ sealed interface NavigationOption {
 
     @Serializable
     data class OpenTake(val takeId: Long) : NavigationOption
+
+    @Serializable
+    data class OpenQrCode(val stringValue: String, val title: String? = null) : NavigationOption
 }
 
 sealed interface Navigation {

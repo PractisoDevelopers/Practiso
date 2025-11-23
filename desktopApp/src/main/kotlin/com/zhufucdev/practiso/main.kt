@@ -8,18 +8,22 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.window.singleWindowApplication
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.zhufucdev.practiso.datamodel.NamedSource
+import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
 import com.zhufucdev.practiso.platform.Navigation
+import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.NavigationStateSnapshot
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
@@ -30,6 +34,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.selects.select
+import qrcode.QRCode
 import java.awt.Desktop
 import java.io.File
 
@@ -113,6 +118,20 @@ fun main(args: Array<String>) {
 
                         AppDestination.Preferences -> {
                             PreferencesApp()
+                        }
+
+                        AppDestination.QrCodeViewer -> {
+                            val options: NavigationOption.OpenQrCode? =
+                                navState.options.filterFirstIsInstanceOrNull()
+                            if (options != null) {
+                                val pixelColor = MaterialTheme.colorScheme.primary.toArgb()
+                                QrCodeViewerApp(
+                                    model = QRCode.ofRoundedSquares()
+                                        .withColor(pixelColor)
+                                        .build(options.stringValue),
+                                    title = options.title
+                                )
+                            }
                         }
                     }
                 }

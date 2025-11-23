@@ -44,6 +44,7 @@ kotlin {
             implementation(libs.humanreadable)
             implementation(libs.settings.core)
             implementation(libs.settings.coroutine)
+            api(libs.qrcode)
         }
 
         androidMain.dependencies {

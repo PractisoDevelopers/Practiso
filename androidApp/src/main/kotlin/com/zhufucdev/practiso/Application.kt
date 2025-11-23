@@ -5,6 +5,7 @@ import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.AppDestination.Answer
 import com.zhufucdev.practiso.platform.AppDestination.MainView
 import com.zhufucdev.practiso.platform.AppDestination.Preferences
+import com.zhufucdev.practiso.platform.AppDestination.QrCodeViewer
 import com.zhufucdev.practiso.platform.AppDestination.QuizCreate
 
 class Application : PractisoApp(), Destinationable {
@@ -18,5 +19,6 @@ class Application : PractisoApp(), Destinationable {
             QuizCreate -> QuizCreateActivity::class.java
             Answer -> AnswerActivity::class.java
             Preferences -> PreferencesActivity::class.java
+            QrCodeViewer -> QrCodeViewerActivity::class.java
         }
 }
