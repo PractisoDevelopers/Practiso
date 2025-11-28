@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.toArgb
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
+import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.Navigator
@@ -16,7 +17,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import qrcode.QRCode
 
-class QrCodeViewerActivity : NavigatorComponentActivity() {
+class QrCodeViewerActivity : NavigatorComponentActivity<Unit>(AppDestination.QrCodeViewer) {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

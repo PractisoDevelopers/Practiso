@@ -5,10 +5,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.style.PractisoTheme
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 
-class QuizCreateActivity : NavigatorComponentActivity() {
+class QuizCreateActivity : NavigatorComponentActivity<Unit>(AppDestination.QuizCreate) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

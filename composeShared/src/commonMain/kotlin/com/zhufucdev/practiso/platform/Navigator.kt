@@ -1,5 +1,6 @@
 package com.zhufucdev.practiso.platform
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,13 +10,48 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.serialization.Serializable
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
-enum class AppDestination {
-    MainView,
-    QuizCreate,
-    Answer,
-    Preferences,
-    QrCodeViewer
+@Serializable
+sealed class AppDestination<T> {
+    abstract val type: KType
+
+    @Serializable
+    object MainView : AppDestination<Unit>() {
+        override val type: KType
+            get() = typeOf<MainView>()
+    }
+
+    @Serializable
+    object QuizCreate : AppDestination<Unit>() {
+        override val type: KType
+            get() = typeOf<QuizCreate>()
+    }
+
+    @Serializable
+    object Answer : AppDestination<Unit>() {
+        override val type: KType
+            get() = typeOf<Answer>()
+    }
+
+    @Serializable
+    object Preferences : AppDestination<Unit>() {
+        override val type: KType
+            get() = typeOf<Preferences>()
+    }
+
+    @Serializable
+    object QrCodeViewer : AppDestination<Unit>() {
+        override val type: KType
+            get() = typeOf<QrCodeViewer>()
+    }
+
+    @Serializable
+    object QrCodeScanner : AppDestination<String>() {
+        override val type: KType
+            get() = typeOf<QrCodeScanner>()
+    }
 }
 
 @Serializable
@@ -31,36 +67,51 @@ sealed interface NavigationOption {
 }
 
 sealed interface Navigation {
-    interface WithDestination : Navigation {
-        val destination: AppDestination
+    interface WithResult<T> : Navigation {
+        val destination: AppDestination<T>
     }
 
-    data class Goto(
-        override val destination: AppDestination,
-    ) : WithDestination
+    data class Goto<T>(override val destination: AppDestination<T>) : WithResult<T>
 
     data object Forward : Navigation
     data object Backward : Navigation
-    data object Home : WithDestination {
+    data object Home : WithResult<Unit> {
         override val destination get() = AppDestination.MainView
     }
 }
 
 data class NavigationStateSnapshot(
     val navigation: Navigation,
-    val destination: AppDestination,
+    val destination: AppDestination<*>,
     val options: List<NavigationOption> = emptyList(),
 )
 
 interface AppNavigator {
     val current: StateFlow<NavigationStateSnapshot>
     suspend fun navigate(navigation: Navigation, vararg options: NavigationOption)
+
+    @Throws(CancellationException::class)
+    suspend fun <T> navigateForResult(
+        navigation: Navigation.WithResult<T>,
+        vararg options: NavigationOption
+    ): T
 }
 
-data class NavigatorStackItem(
-    val destination: AppDestination,
+@Serializable
+data class NavigatorStackItem<Result>(
+    val destination: AppDestination<Result>,
     val options: List<NavigationOption>,
+    var result: StackNavigatorResult<Result> = StackNavigatorResult.Cancelled()
 )
+
+@Serializable
+sealed class StackNavigatorResult<T> {
+    @Serializable
+    data class Ok<T>(val value: T) : StackNavigatorResult<T>()
+
+    @Serializable
+    class Cancelled<T>() : StackNavigatorResult<T>()
+}
 
 abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator {
     protected val state =
@@ -68,9 +119,12 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
 
     override val current: StateFlow<NavigationStateSnapshot> = state.asStateFlow()
 
-    protected val backstack =
+    protected val internalBackstack: MutableList<NavigatorStackItem<*>> =
         mutableListOf(NavigatorStackItem(Navigation.Home.destination, emptyList()))
     protected var pointer = 0
+
+    val backstack: List<NavigatorStackItem<*>>
+        get() = internalBackstack
 
     private val stateChannel = Channel<NavigationStateSnapshot>()
 
@@ -93,7 +147,7 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                 if (pointer <= 0) {
                     error("Backstack will become empty")
                 }
-                val dest = backstack[--pointer]
+                val dest = internalBackstack[--pointer]
                 stateChannel.send(
                     NavigationStateSnapshot(
                         navigation,
@@ -104,10 +158,10 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
             }
 
             is Navigation.Forward -> {
-                if (pointer >= backstack.lastIndex) {
+                if (pointer >= internalBackstack.lastIndex) {
                     error("Backstack is currently at the edge")
                 }
-                val dest = backstack[++pointer]
+                val dest = internalBackstack[++pointer]
                 stateChannel.send(
                     NavigationStateSnapshot(
                         navigation,
@@ -117,13 +171,13 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                 )
             }
 
-            is Navigation.WithDestination -> {
-                if (pointer < backstack.lastIndex) {
-                    repeat(pointer - backstack.lastIndex) {
-                        backstack.removeAt(pointer)
+            is Navigation.WithResult<*> -> {
+                if (pointer < internalBackstack.lastIndex) {
+                    repeat(pointer - internalBackstack.lastIndex) {
+                        internalBackstack.removeAt(pointer)
                     }
                 }
-                backstack.add(NavigatorStackItem(navigation.destination, options.toList()))
+                internalBackstack.add(NavigatorStackItem(navigation.destination, options.toList()))
                 pointer++
                 stateChannel.send(
                     NavigationStateSnapshot(
@@ -133,6 +187,18 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                     )
                 )
             }
+        }
+    }
+
+    override suspend fun <T> navigateForResult(
+        navigation: Navigation.WithResult<T>,
+        vararg options: NavigationOption
+    ): T {
+        navigate(navigation, *options)
+        @Suppress("UNCHECKED_CAST")
+        when (val result = internalBackstack.last().result) {
+            is StackNavigatorResult.Ok -> return result.value as T
+            is StackNavigatorResult.Cancelled -> throw CancellationException()
         }
     }
 

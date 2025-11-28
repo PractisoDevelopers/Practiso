@@ -34,8 +34,8 @@ material3-adaptive = "1.2.0-alpha06"
 compose-material3 = "1.10.0-alpha01"
 tink = "1.18.0"
 qrcode = "4.5.0"
-lifecycleRuntimeKtx = "2.10.0"
-composeBom = "2024.09.00"
+mlkit-barscanning = "17.3.0"
+camerax = "1.6.0-alpha01"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -91,18 +91,14 @@ ktor-client-contentnegotiation = { module = "io.ktor:ktor-client-content-negotia
 ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 tink-android = { module = "com.google.crypto.tink:tink-android", version.ref = "tink" }
 qrcode = { module = "io.github.g0dkar:qrcode-kotlin", version.ref = "qrcode" }
-androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
-androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
-androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+mlkit-barcodescanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlkit-barscanning" }
+androidx-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 
 [bundles]
 androidx-test = ["androidx-test-core", "androidx-test-core-ktx", "androidx-test-runner"]
+androidx-camerax = ["androidx-camera2", "androidx-camera-lifecycle", "androidx-camera-view"]
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

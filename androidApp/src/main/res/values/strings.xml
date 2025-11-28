@@ -10,4 +10,6 @@
     <string name="explain_why_denying_notification_is_a_bad_idea">Practiso never posts garbage notifications. Instead, if granted such permission, the recommendation system can run some time-consuming machine learning algorithm in the background, saving you from waiting. Do you want to grant notifications permission?</string>
     <string name="export_para">Export</string>
     <string name="title_qr_code_viewer">QR Code Viewer</string>
+    <string name="title_qr_code_scanner">QR Code Scanner</string>
+    <string name="grant_camera_permissions_to_continue_para">Grant camera permissions to continue</string>
 </resources>

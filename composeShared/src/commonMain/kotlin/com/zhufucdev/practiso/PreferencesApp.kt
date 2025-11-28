@@ -595,17 +595,20 @@ private fun CommunityIdentityDialog(
                                                 modifier = Modifier.weight(1f),
                                                 text = token,
                                                 visualTransformation = if (!revealToken) PasswordVisualTransformation() else VisualTransformation.None,
-                                                actions = listOf(TextAction(
-                                                    label = stringResource(Res.string.export_para),
-                                                    action = {
-                                                        MainScope().launch {
-                                                            Navigator.navigate(
-                                                                Navigation.Goto(AppDestination.QrCodeViewer),
-                                                                NavigationOption.OpenQrCode(stringValue = token)
-                                                            )
+                                                actions = listOf(
+                                                    TextAction(
+                                                        label = stringResource(Res.string.export_para),
+                                                        action = {
+                                                            MainScope().launch {
+                                                                Navigator.navigate(
+                                                                    Navigation.Goto(AppDestination.QrCodeViewer),
+                                                                    NavigationOption.OpenQrCode(
+                                                                        stringValue = token
+                                                                    )
+                                                                )
+                                                            }
                                                         }
-                                                    }
-                                                ))
+                                                    ))
                                             )
                                             IconButton(
                                                 onClick = {
@@ -621,12 +624,19 @@ private fun CommunityIdentityDialog(
                                     } else {
                                         ActionText(
                                             text = stringResource(Res.string.no_tokens_para),
-                                            actions = listOf(TextAction(
-                                                label = stringResource(Res.string.import_para),
-                                                action = {
-
-                                                }
-                                            ))
+                                            actions = listOf(
+                                                TextAction(
+                                                    label = stringResource(Res.string.import_para),
+                                                    action = {
+                                                        MainScope().launch {
+                                                            model.authToken.value =
+                                                                Navigator.navigateForResult(
+                                                                    Navigation.Goto(AppDestination.QrCodeScanner)
+                                                                )
+                                                        }
+                                                    }
+                                                )
+                                            )
                                         )
                                     }
                                 }

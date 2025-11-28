@@ -133,6 +133,10 @@ fun main(args: Array<String>) {
                                 )
                             }
                         }
+
+                        AppDestination.QrCodeScanner -> {
+
+                        }
                     }
                 }
             }
@@ -142,7 +146,7 @@ fun main(args: Array<String>) {
 
 val mainFrameTransitionSpec: AnimatedContentTransitionScope<NavigationStateSnapshot>.() -> ContentTransform =
     {
-        if (targetState.navigation is Navigation.Forward || targetState.navigation is Navigation.Goto) {
+        if (targetState.navigation is Navigation.Forward || targetState.navigation is Navigation.Goto<*>) {
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.Start,
                 animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
