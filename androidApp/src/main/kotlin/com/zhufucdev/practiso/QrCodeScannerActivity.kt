@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.ImageAnalysis
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,14 +27,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.zhufucdev.practiso.composable.BarcodeOverlay
 import com.zhufucdev.practiso.composable.CameraView
 import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.rememberCameraController
+import com.zhufucdev.practiso.datamodel.toOffset
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PractisoTheme
@@ -63,7 +70,10 @@ class QrCodeScannerActivity : NavigatorComponentActivity<String>(AppDestination.
                         TopAppBar(
                             title = {},
                             navigationIcon = {
-                                Surface(shape = CircleShape, modifier = Modifier.padding(horizontal = PaddingNormal)) {
+                                Surface(
+                                    shape = CircleShape,
+                                    modifier = Modifier.padding(horizontal = PaddingNormal)
+                                ) {
                                     NavigateUpButton(modifier = Modifier.size(36.dp))
                                 }
                             },
@@ -73,11 +83,32 @@ class QrCodeScannerActivity : NavigatorComponentActivity<String>(AppDestination.
                 ) { innerPadding ->
                     val hasPermission by cameraPermissionsGranted.collectAsState()
                     if (hasPermission) {
-                        val controller = rememberCameraController()
-                        CameraView(
-                            modifier = Modifier.fillMaxSize(),
-                            controller = controller
+                        val window = LocalWindowInfo.current
+                        val density = LocalDensity.current
+
+                        val analyzer = rememberMlKitAnalyzer(
+                            options = BarcodeScannerOptions.Builder()
+                                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                                .build()
                         )
+                        val controller = rememberCameraController(
+                            analyzer = analyzer,
+                            analysisBackpressureStrategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST,
+                        )
+                        Box(Modifier.fillMaxSize()) {
+                            CameraView(
+                                modifier = Modifier.matchParentSize(),
+                                controller = controller
+                            )
+                            val barcodes by analyzer.recognizedBarcodes.collectAsState()
+                            BarcodeOverlay(
+                                modifier = Modifier.matchParentSize(),
+                                coordinationTransformer = { point ->
+                                    point.toOffset()
+                                },
+                                barcodes = barcodes
+                            )
+                        }
                     } else {
                         Box(
                             Modifier

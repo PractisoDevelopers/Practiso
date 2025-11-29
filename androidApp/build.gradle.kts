@@ -76,4 +76,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.protobuf)
     implementation(kotlin("reflect"))
     implementation(libs.bundles.androidx.camerax)
+    implementation(libs.mlkit.barcodescanning)
 }
