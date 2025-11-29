@@ -24,11 +24,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -40,7 +39,6 @@ import com.zhufucdev.practiso.composable.BarcodeOverlay
 import com.zhufucdev.practiso.composable.CameraView
 import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.rememberCameraController
-import com.zhufucdev.practiso.datamodel.toOffset
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PractisoTheme
@@ -83,9 +81,6 @@ class QrCodeScannerActivity : NavigatorComponentActivity<String>(AppDestination.
                 ) { innerPadding ->
                     val hasPermission by cameraPermissionsGranted.collectAsState()
                     if (hasPermission) {
-                        val window = LocalWindowInfo.current
-                        val density = LocalDensity.current
-
                         val analyzer = rememberMlKitAnalyzer(
                             options = BarcodeScannerOptions.Builder()
                                 .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
@@ -103,9 +98,6 @@ class QrCodeScannerActivity : NavigatorComponentActivity<String>(AppDestination.
                             val barcodes by analyzer.recognizedBarcodes.collectAsState()
                             BarcodeOverlay(
                                 modifier = Modifier.matchParentSize(),
-                                coordinationTransformer = { point ->
-                                    point.toOffset()
-                                },
                                 barcodes = barcodes
                             )
                         }
