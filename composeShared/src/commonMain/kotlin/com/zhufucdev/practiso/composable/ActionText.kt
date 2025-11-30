@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 
+private val DEFAULT_HEIGHT = 46.dp
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ActionText(
@@ -66,14 +68,16 @@ fun ActionText(
             Popup(
                 onDismissRequest = { selected = false },
                 alignment = Alignment.TopCenter,
-                offset = IntOffset(x = 0, y = with(LocalDensity.current) { -50.dp.roundToPx() })
+                offset = IntOffset(
+                    x = 0,
+                    y = with(LocalDensity.current) { -(DEFAULT_HEIGHT + 8.dp).roundToPx() })
             ) {
                 val cardShape = RoundedCornerShape(100)
                 Card(
                     shape = cardShape,
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                 ) {
-                    Row(modifier = Modifier.heightIn(max = 42.dp)) {
+                    Row(modifier = Modifier.heightIn(max = DEFAULT_HEIGHT)) {
                         actions.forEach { (label, action) ->
                             Surface(
                                 onClick = {
@@ -83,7 +87,7 @@ fun ActionText(
                                 color = Color.Transparent,
                             ) {
                                 Box(
-                                    modifier = Modifier.padding(12.dp).fillMaxHeight(),
+                                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 14.dp).fillMaxHeight(),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(label)
