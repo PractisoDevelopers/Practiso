@@ -90,7 +90,7 @@ abstract class NavigatorComponentActivity<Result>(protected val destination: App
         setResult(RESULT_OK, Intent().apply {
             putExtra(
                 KEY_RESULT,
-                ProtoBuf.encodeToByteArray(serializer(destination.type), value)
+                ProtoBuf.encodeToByteArray(serializer(destination.resultType), value)
             )
         })
     }
@@ -185,7 +185,7 @@ abstract class NavigatorComponentActivity<Result>(protected val destination: App
                 is AppDestination.QrCodeScanner -> {
                     @Suppress("UNCHECKED_CAST")
                     startActivityForResult(
-                        serializer(navigation.destination.type) as KSerializer<T>,
+                        serializer(navigation.destination.resultType) as KSerializer<T>,
                         navigation.destination,
                         *options
                     )

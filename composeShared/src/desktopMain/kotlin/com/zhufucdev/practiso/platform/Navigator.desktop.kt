@@ -10,7 +10,7 @@ actual val Navigator: AppNavigator
 object DesktopNavigator : StackNavigator(CoroutineScope(Dispatchers.Default)) {
     inline fun <reified T> setResult(value: T) {
         val entry = backstack.last()
-        assert(entry.destination.type == typeOf<T>())
+        assert(entry.destination.resultType == typeOf<T>())
         @Suppress("UNCHECKED_CAST")
         (entry as NavigatorStackItem<T>).result = StackNavigatorResult.Ok(value)
     }

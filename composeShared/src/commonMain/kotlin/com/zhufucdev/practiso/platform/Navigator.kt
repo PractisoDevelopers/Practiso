@@ -1,5 +1,7 @@
 package com.zhufucdev.practiso.platform
 
+import com.zhufucdev.practiso.datamodel.BarcodeType
+import com.zhufucdev.practiso.datamodel.IntFlagSet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -15,42 +17,42 @@ import kotlin.reflect.typeOf
 
 @Serializable
 sealed class AppDestination<T> {
-    abstract val type: KType
+    abstract val resultType: KType
 
     @Serializable
     object MainView : AppDestination<Unit>() {
-        override val type: KType
-            get() = typeOf<MainView>()
+        override val resultType: KType
+            get() = typeOf<Unit>()
     }
 
     @Serializable
     object QuizCreate : AppDestination<Unit>() {
-        override val type: KType
-            get() = typeOf<QuizCreate>()
+        override val resultType: KType
+            get() = typeOf<Unit>()
     }
 
     @Serializable
     object Answer : AppDestination<Unit>() {
-        override val type: KType
-            get() = typeOf<Answer>()
+        override val resultType: KType
+            get() = typeOf<Unit>()
     }
 
     @Serializable
     object Preferences : AppDestination<Unit>() {
-        override val type: KType
-            get() = typeOf<Preferences>()
+        override val resultType: KType
+            get() = typeOf<Unit>()
     }
 
     @Serializable
     object QrCodeViewer : AppDestination<Unit>() {
-        override val type: KType
-            get() = typeOf<QrCodeViewer>()
+        override val resultType: KType
+            get() = typeOf<Unit>()
     }
 
     @Serializable
     object QrCodeScanner : AppDestination<String>() {
-        override val type: KType
-            get() = typeOf<QrCodeScanner>()
+        override val resultType: KType
+            get() = typeOf<String>()
     }
 }
 
@@ -64,6 +66,9 @@ sealed interface NavigationOption {
 
     @Serializable
     data class OpenQrCode(val stringValue: String, val title: String? = null) : NavigationOption
+
+    @Serializable
+    data class ScanQrCodeFilter(val allowedTypes: IntFlagSet<BarcodeType>) : NavigationOption
 }
 
 sealed interface Navigation {
