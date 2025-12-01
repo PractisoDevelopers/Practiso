@@ -36,10 +36,12 @@ import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.zhufucdev.practiso.composable.BarcodeOverlay
+import com.zhufucdev.practiso.composable.BarcodeOverlayState
 import com.zhufucdev.practiso.composable.CameraView
 import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.rememberCameraController
 import com.zhufucdev.practiso.platform.AppDestination
+import com.zhufucdev.practiso.service.communityServerEndpoint
 import com.zhufucdev.practiso.style.PaddingNormal
 import com.zhufucdev.practiso.style.PractisoTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -96,10 +98,19 @@ class QrCodeScannerActivity : NavigatorComponentActivity<String>(AppDestination.
                                 controller = controller
                             )
                             val barcodes by analyzer.recognizedBarcodes.collectAsState()
-                            BarcodeOverlay(
-                                modifier = Modifier.matchParentSize(),
-                                barcodes = barcodes
-                            )
+                            val serverUrl by AppSettings.communityServerEndpoint.collectAsState(null)
+
+                            serverUrl?.let { serverUrl ->
+                                BarcodeOverlay(
+                                    modifier = Modifier.matchParentSize(),
+                                    barcodes = barcodes,
+                                    state = remember { BarcodeOverlayState(serverUrl) },
+                                    onClickBarcode = { barcode ->
+                                        setResult(barcode.value)
+                                        finish()
+                                    }
+                                )
+                            }
                         }
                     } else {
                         Box(

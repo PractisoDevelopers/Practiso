@@ -316,4 +316,7 @@
     <string name="clearing_credentials_wont_remove_activities_para">Clearing credentials will NOT remove your activities from the server. If cleared from all your devices, you will no longer be able to access your account. Proceed?</string>
     <string name="owner_id_para">Owner ID</string>
     <string name="export_para">Export</string>
+    <string name="invalid_authorization_token_para">Invalid authorization token</string>
+    <string name="no_useful_information_para">No useful information</string>
+    <string name="overwriting_current_token_para">This would overwrite current token. Proceed?</string>
 </resources>

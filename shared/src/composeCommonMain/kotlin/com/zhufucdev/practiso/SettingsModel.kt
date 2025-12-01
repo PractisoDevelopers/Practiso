@@ -1,6 +1,7 @@
 package com.zhufucdev.practiso
 
 import com.russhwolf.settings.Settings
+import com.zhufucdev.practiso.datamodel.AuthorizationToken
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.CommunityIdentity
 import io.ktor.util.encodeBase64
@@ -117,7 +118,9 @@ class HybridSettingsCommunityIdentity(
         }
     }
 
-    override val authToken = MutableStateFlow(secure.getStringOrNull("${keyPrefix}_token"))
+    override val authToken: MutableStateFlow<AuthorizationToken?> = MutableStateFlow(
+        secure.getStringOrNull("${keyPrefix}_token")?.let(::AuthorizationToken)
+    )
 
     override fun clear() {
         authToken.tryEmit(null)
@@ -125,10 +128,10 @@ class HybridSettingsCommunityIdentity(
 
     init {
         coroutineScope.launch {
-            authToken.collectLatest { value ->
+            authToken.collectLatest { token ->
                 val key = "${keyPrefix}_token"
-                if (value != null) {
-                    secure.putString(key, value)
+                if (token != null) {
+                    secure.putString(key, token.toString())
                 } else {
                     secure.remove(key)
                 }

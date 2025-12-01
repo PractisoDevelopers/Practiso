@@ -2,6 +2,7 @@ package com.zhufucdev.practiso.service
 
 import com.zhufucdev.practiso.DEFAULT_COMMUNITY_SERVER_URL
 import com.zhufucdev.practiso.datamodel.ArchiveHandle
+import com.zhufucdev.practiso.datamodel.AuthorizationToken
 import com.zhufucdev.practiso.datamodel.NextPointerBasedPaginated
 import com.zhufucdev.practiso.datamodel.Paginated
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
@@ -40,7 +41,7 @@ class CommunityService(
     private val client = identity.authToken.map { authToken ->
         OpacityClient(
             endpoint,
-            authToken,
+            authToken?.toString(),
             PlatformHttpClientFactory
         )
     }
@@ -119,7 +120,7 @@ class CommunityService(
                     when (it) {
                         is ArchiveUploadState.Success -> {
                             if (it.authToken != null) {
-                                identity.authToken.tryEmit(it.authToken)
+                                identity.authToken.tryEmit(AuthorizationToken(it.authToken))
                             }
                             emit(UploadArchive.Success(it.archiveId))
                         }
@@ -193,6 +194,6 @@ sealed class UploadArchive {
 data class CommunityRegistrationInfo(val clientName: String, val ownerName: String)
 
 interface CommunityIdentity {
-    val authToken: MutableStateFlow<String?>
+    val authToken: MutableStateFlow<AuthorizationToken?>
     fun clear()
 }
