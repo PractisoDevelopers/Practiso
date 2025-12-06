@@ -8,15 +8,12 @@ import com.zhufucdev.practiso.datamodel.BarcodeType
 import com.zhufucdev.practiso.datamodel.IntFlagSet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -136,17 +133,10 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
     val backstack: List<BackstackEntry<*>>
         get() = internalBackstack
 
-    private val stateChannel = Channel<NavigationStateSnapshot>()
-
     init {
         coroutineScope.launch {
-            while (isActive) {
-                select {
-                    stateChannel.onReceive {
-                        state.emit(it)
-                        onNavigate(state.value)
-                    }
-                }
+            state.collect {
+                onNavigate(it)
             }
         }
     }
@@ -158,7 +148,7 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                     error("Backstack will become empty")
                 }
                 val dest = internalBackstack[--pointer]
-                stateChannel.send(
+                state.emit(
                     NavigationStateSnapshot(
                         navigation,
                         dest.navigation.destination,
@@ -172,7 +162,7 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                     error("Backstack is currently at the edge")
                 }
                 val dest = internalBackstack[++pointer]
-                stateChannel.send(
+                state.emit(
                     NavigationStateSnapshot(
                         navigation,
                         dest.navigation.destination,
@@ -196,7 +186,7 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                     )
                 )
                 pointer++
-                stateChannel.send(
+                state.emit(
                     NavigationStateSnapshot(
                         navigation,
                         navigation.destination,
