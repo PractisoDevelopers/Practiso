@@ -7,4 +7,5 @@ enum class AppScope {
     FeiResource,
     DownloadExecutor,
     CommunityService,
+    BarcodeScanner,
 }

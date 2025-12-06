@@ -8,6 +8,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -200,8 +202,9 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
         vararg options: NavigationOption
     ): T {
         navigate(navigation, *options)
+        state.filter { it.navigation is Navigation.Backward }.first()
         @Suppress("UNCHECKED_CAST")
-        when (val result = internalBackstack.last().result) {
+        when (val result = internalBackstack[pointer + 1].result) {
             is StackNavigatorResult.Ok -> return result.value as T
             is StackNavigatorResult.Cancelled -> throw CancellationException()
         }

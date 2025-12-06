@@ -10,8 +10,9 @@ value class IntFlagSet<T : IntFlag>(val value: Int) {
         value and typeFlag.value != 0
 }
 
-fun <T : IntFlag> flagSetOf(vararg types: T) =
-    IntFlagSet<T>(types.map { it.value }.reduce { acc, t -> acc or t })
+fun <T : IntFlag> intFlagSetOf(vararg types: T) =
+    IntFlagSet<T>(types.takeIf { it.isNotEmpty() }?.map { it.value }?.reduce { acc, t -> acc or t }
+        ?: 0)
 
 interface IntFlag {
     val value: Int

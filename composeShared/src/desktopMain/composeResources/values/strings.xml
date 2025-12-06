@@ -1,0 +1,5 @@
+<resources>
+    <string name="select_from_files_title">Select from Files</string>
+    <string name="failed_to_load_image_para">Failed to load image</string>
+    <string name="scan_barcodes_to_continue_para">Scan barcodes to continue</string>
+</resources>

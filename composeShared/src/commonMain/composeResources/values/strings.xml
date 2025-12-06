@@ -319,4 +319,6 @@
     <string name="invalid_authorization_token_para">Invalid authorization token</string>
     <string name="no_useful_information_para">No useful information</string>
     <string name="overwriting_current_token_para">This would overwrite current token. Proceed?</string>
+    <string name="barcode_scanner_span">barcode scanner</string>
+    <string name="barcode_not_found_para">Barcode not found</string>
 </resources>

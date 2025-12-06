@@ -50,6 +50,12 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
         }
+
+        val desktopMain by getting {
+            dependencies {
+                implementation(libs.bundles.zxing)
+            }
+        }
     }
 
     compilerOptions {

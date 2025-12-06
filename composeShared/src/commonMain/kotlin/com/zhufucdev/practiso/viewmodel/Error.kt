@@ -8,6 +8,8 @@ import com.zhufucdev.practiso.platform.isDebugBuild
 import org.jetbrains.compose.resources.stringResource
 import resources.Res
 import resources.account_removed_para
+import resources.barcode_not_found_para
+import resources.barcode_scanner_span
 import resources.community_service_span
 import resources.download_executor_span
 import resources.error_at_n_para
@@ -40,6 +42,7 @@ fun AppScope.localizedName(): String =
         AppScope.FeiResource -> stringResource(Res.string.fei_resource_span)
         AppScope.DownloadExecutor -> stringResource(Res.string.download_executor_span)
         AppScope.CommunityService -> stringResource(Res.string.community_service_span)
+        AppScope.BarcodeScanner -> stringResource(Res.string.barcode_scanner_span)
     }
 
 @Composable
@@ -107,6 +110,7 @@ fun AppMessage.localizedString(): String =
         is AppMessage.InsufficientSpace -> stringResource(Res.string.insufficient_disk_space_para)
         is AppMessage.AccountRemoved -> stringResource(Res.string.account_removed_para)
         is AppMessage.NetworkUnavailable -> stringResource(Res.string.network_unavailable_para)
+        is AppMessage.BarcodeNotFound -> stringResource(Res.string.barcode_not_found_para)
     }
 
 @Composable

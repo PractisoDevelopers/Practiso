@@ -18,7 +18,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.window.singleWindowApplication
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.zhufucdev.practiso.datamodel.BarcodeType
 import com.zhufucdev.practiso.datamodel.NamedSource
+import com.zhufucdev.practiso.datamodel.intFlagSetOf
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.DesktopNavigator
@@ -26,6 +28,7 @@ import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.NavigationOption
 import com.zhufucdev.practiso.platform.NavigationStateSnapshot
 import com.zhufucdev.practiso.viewmodel.AnswerViewModel
+import com.zhufucdev.practiso.viewmodel.BarcodeRecognizerViewModel
 import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import com.zhufucdev.practiso.viewmodel.QuizCreateViewModel
 import io.github.vinceglb.filekit.FileKit
@@ -135,7 +138,24 @@ fun main(args: Array<String>) {
                         }
 
                         AppDestination.QrCodeScanner -> {
+                            val options: NavigationOption.ScanQrCodeFilter? =
+                                navState.options.filterFirstIsInstanceOrNull()
+                            val viewModel = viewModel {
+                                BarcodeRecognizerViewModel()
+                            }
 
+                            DisposableEffect(options) {
+                                viewModel.load(
+                                    options?.allowedTypes
+                                        ?: intFlagSetOf(BarcodeType.ALL)
+                                )
+                                onDispose {
+                                    // to prevent memory leak
+                                    viewModel.load(intFlagSetOf())
+                                }
+                            }
+
+                            BarcodeRecognizerApp(viewModel)
                         }
                     }
                 }

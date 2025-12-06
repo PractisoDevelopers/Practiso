@@ -36,6 +36,7 @@ tink = "1.18.0"
 qrcode = "4.5.0"
 mlkit-barscanning = "17.3.0"
 camerax = "1.6.0-alpha01"
+zxing = "3.5.4"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -95,10 +96,13 @@ mlkit-barcodescanning = { module = "com.google.mlkit:barcode-scanning", version.
 androidx-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+zxing = { module = "com.google.zxing:core", version.ref = "zxing" }
+zxing-javase = { module = "com.google.zxing:javase", version.ref = "zxing" }
 
 [bundles]
 androidx-test = ["androidx-test-core", "androidx-test-core-ktx", "androidx-test-runner"]
 androidx-camerax = ["androidx-camera2", "androidx-camera-lifecycle", "androidx-camera-view"]
+zxing = ["zxing", "zxing-javase"]
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

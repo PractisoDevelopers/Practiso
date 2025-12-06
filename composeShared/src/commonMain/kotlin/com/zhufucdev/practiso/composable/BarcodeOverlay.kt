@@ -71,13 +71,13 @@ fun BarcodeOverlay(
     }
 
     SharedTransitionScope { trans ->
-        AnimatedContent(barcodes, modifier = trans, transitionSpec = {
+        AnimatedContent(barcodes, modifier = trans then modifier, transitionSpec = {
             (fadeIn(animationSpec = tween(220)) +
                     scaleIn(initialScale = 0.92f, animationSpec = tween(220)))
                 .togetherWith(fadeOut(animationSpec = tween(90)))
         }
         ) { barcodes ->
-            Layout(modifier = modifier, contents = barcodes.map { barcode ->
+            Layout(contents = barcodes.map { barcode ->
                 when (barcode.type) {
                     BarcodeType.AUTHORIZATION_TOKEN -> ({
                         val token =

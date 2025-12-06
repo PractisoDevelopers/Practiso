@@ -8,6 +8,7 @@ import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.ArchivePack
 import com.zhufucdev.practiso.datamodel.ImportException
 import com.zhufucdev.practiso.datamodel.NamedSource
+import com.zhufucdev.practiso.datamodel.ResourceNotFoundException
 import com.zhufucdev.practiso.datamodel.importTo
 import com.zhufucdev.practiso.datamodel.resources
 import com.zhufucdev.practiso.datamodel.unarchive
@@ -250,7 +251,7 @@ class ImportService(private val db: AppDatabase = Database.app) {
      * than one quiz or [EmptyArchiveException] otherwise.
      *
      * If any of the required resources is not present,
-     * throws [ResourceNotFoundException].
+     * throws [com.zhufucdev.practiso.datamodel.ResourceNotFoundException].
      *
      * @return id of the imported quiz.
      */

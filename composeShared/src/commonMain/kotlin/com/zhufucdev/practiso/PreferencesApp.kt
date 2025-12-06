@@ -69,7 +69,7 @@ import com.zhufucdev.practiso.composition.pseudoClickable
 import com.zhufucdev.practiso.datamodel.AuthorizationToken
 import com.zhufucdev.practiso.datamodel.BarcodeType
 import com.zhufucdev.practiso.datamodel.MlModel
-import com.zhufucdev.practiso.datamodel.flagSetOf
+import com.zhufucdev.practiso.datamodel.intFlagSetOf
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.platform.Navigation
 import com.zhufucdev.practiso.platform.Navigation.Goto
@@ -569,7 +569,7 @@ private fun CommunityIdentityDialog(
                 Navigator.navigateForResult(
                     Goto(AppDestination.QrCodeScanner),
                     ScanQrCodeFilter(
-                        allowedTypes = flagSetOf(BarcodeType.AUTHORIZATION_TOKEN)
+                        allowedTypes = intFlagSetOf(BarcodeType.AUTHORIZATION_TOKEN)
                     )
                 )
             } catch (_: CancellationException) {

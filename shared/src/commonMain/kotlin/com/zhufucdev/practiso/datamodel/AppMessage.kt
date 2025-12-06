@@ -16,4 +16,5 @@ sealed class AppMessage {
         val requester: String? = null,
     ) : AppMessage()
     data object AccountRemoved : AppMessage()
+    data object BarcodeNotFound : AppMessage()
 }
