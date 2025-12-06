@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.zhufucdev.practiso.datamodel.Barcode
+import com.zhufucdev.practiso.helper.await
 import com.zhufucdev.practiso.helper.toBarcode
 import com.zhufucdev.practiso.platform.eprintln
 import kotlinx.coroutines.CoroutineExceptionHandler

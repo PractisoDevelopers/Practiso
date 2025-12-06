@@ -1,4 +1,4 @@
-package com.zhufucdev.practiso
+package com.zhufucdev.practiso.helper
 
 import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -8,6 +8,9 @@ import kotlin.coroutines.resumeWithException
 @OptIn(InternalCoroutinesApi::class)
 suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
     addOnCompleteListener {
+        if (!continuation.isActive) {
+            return@addOnCompleteListener
+        }
         val token = continuation.tryResume(it.result)
         if (token != null) {
             continuation.completeResume(token)
