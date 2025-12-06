@@ -1,5 +1,9 @@
 package com.zhufucdev.practiso.platform
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.zhufucdev.practiso.datamodel.BarcodeType
 import com.zhufucdev.practiso.datamodel.IntFlagSet
 import kotlinx.coroutines.CancellationException
@@ -108,7 +112,6 @@ interface AppNavigator {
 data class NavigatorStackItem<Result>(
     val destination: AppDestination<Result>,
     val options: List<NavigationOption>,
-    var result: StackNavigatorResult<Result> = StackNavigatorResult.Cancelled()
 )
 
 @Serializable
@@ -126,11 +129,11 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
 
     override val current: StateFlow<NavigationStateSnapshot> = state.asStateFlow()
 
-    protected val internalBackstack: MutableList<NavigatorStackItem<*>> =
-        mutableListOf(NavigatorStackItem(Navigation.Home.destination, emptyList()))
+    protected val internalBackstack: MutableList<BackstackEntry<*>> =
+        mutableListOf(BackstackEntry(NavigatorStackItem(Navigation.Home.destination, emptyList())))
     protected var pointer = 0
 
-    val backstack: List<NavigatorStackItem<*>>
+    val backstack: List<BackstackEntry<*>>
         get() = internalBackstack
 
     private val stateChannel = Channel<NavigationStateSnapshot>()
@@ -158,8 +161,8 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                 stateChannel.send(
                     NavigationStateSnapshot(
                         navigation,
-                        dest.destination,
-                        dest.options + options
+                        dest.navigation.destination,
+                        dest.navigation.options + options
                     )
                 )
             }
@@ -172,8 +175,8 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                 stateChannel.send(
                     NavigationStateSnapshot(
                         navigation,
-                        dest.destination,
-                        dest.options + options
+                        dest.navigation.destination,
+                        dest.navigation.options + options
                     )
                 )
             }
@@ -184,7 +187,14 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
                         internalBackstack.removeAt(pointer)
                     }
                 }
-                internalBackstack.add(NavigatorStackItem(navigation.destination, options.toList()))
+                internalBackstack.add(
+                    BackstackEntry(
+                        NavigatorStackItem(
+                            navigation.destination,
+                            options.toList()
+                        )
+                    )
+                )
                 pointer++
                 stateChannel.send(
                     NavigationStateSnapshot(
@@ -211,6 +221,11 @@ abstract class StackNavigator(val coroutineScope: CoroutineScope) : AppNavigator
     }
 
     open suspend fun onNavigate(model: NavigationStateSnapshot) {
+    }
+
+    @Stable
+    class BackstackEntry<Result>(val navigation: NavigatorStackItem<Result>) {
+        var result by mutableStateOf<StackNavigatorResult<Result>>(StackNavigatorResult.Cancelled())
     }
 }
 
