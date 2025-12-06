@@ -541,7 +541,9 @@ sealed class CommunityIdentityDialogState {
     object Empty : CommunityIdentityDialogState()
     data class Loading(val token: AuthorizationToken) : CommunityIdentityDialogState()
     object Lost : CommunityIdentityDialogState()
-    data class ConnectionError(val token: AuthorizationToken, val retry: SendChannel<Unit>) : CommunityIdentityDialogState()
+    data class ConnectionError(val token: AuthorizationToken, val retry: SendChannel<Unit>) :
+        CommunityIdentityDialogState()
+
     data class Loaded(val token: AuthorizationToken, val whoami: Whoami) :
         CommunityIdentityDialogState()
 
@@ -786,9 +788,13 @@ private class CommunityIdentityViewModel(
     val state: StateFlow<CommunityIdentityDialogState> = retryCounter
         .combine(serverEndpoint, ::Pair)
         .combineTransform(identity.authToken) { (_, endpoint), token ->
-            if (token != null) {
-                emit(CommunityIdentityDialogState.Loading(token))
-            }
+            emit(
+                if (token != null) {
+                    CommunityIdentityDialogState.Loading(token)
+                } else {
+                    CommunityIdentityDialogState.Empty
+                }
+            )
 
             val opacityClient = OpacityClient(endpoint, token.toString(), PlatformHttpClientFactory)
             val whoamiChannel = Channel<Result<Whoami?>>()
