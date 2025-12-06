@@ -60,6 +60,8 @@ class BarcodeRecognizerViewModel : ViewModel() {
                     if (image == null) {
                         return@onReceive true
                     }
+                    val hints =
+                        mapOf(DecodeHintType.POSSIBLE_FORMATS to allowedBarcodeTypes.toBarcodeFormats())
                     val decodeResult = try {
                         barcodeReader.decodeMultiple(
                             BinaryBitmap(
@@ -69,11 +71,24 @@ class BarcodeRecognizerViewModel : ViewModel() {
                                     )
                                 )
                             ),
-                            mapOf(DecodeHintType.POSSIBLE_FORMATS to allowedBarcodeTypes.toBarcodeFormats())
+                            hints
                         )
                     } catch (_: NotFoundException) {
-                        _state.value = BarcodeRecognizerState.Error(BarcodeNotFoundException())
-                        return@onReceive true
+                        try {
+                            barcodeReader.decodeMultiple(
+                                BinaryBitmap(
+                                    HybridBinarizer(
+                                        BufferedImageLuminanceSource(
+                                            image
+                                        ).invert()
+                                    )
+                                ),
+                                hints
+                            )
+                        } catch (_: NotFoundException) {
+                            _state.value = BarcodeRecognizerState.Error(BarcodeNotFoundException())
+                            return@onReceive true
+                        }
                     }
 
                     _state.value = BarcodeRecognizerState.Loaded(
