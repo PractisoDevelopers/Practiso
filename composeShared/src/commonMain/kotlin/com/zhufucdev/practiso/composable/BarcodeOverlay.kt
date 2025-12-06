@@ -1,5 +1,13 @@
 package com.zhufucdev.practiso.composable
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +56,7 @@ import resources.invalid_authorization_token_para
 import resources.no_useful_information_para
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun BarcodeOverlay(
     modifier: Modifier = Modifier,
@@ -61,51 +70,70 @@ fun BarcodeOverlay(
         (state as BarcodeOverlayStateImpl).coroutineScope = coroutineScope
     }
 
-    Layout(modifier = modifier, contents = barcodes.map { barcode ->
-        when (barcode.type) {
-            BarcodeType.AUTHORIZATION_TOKEN -> ({
-                val token =
-                    (Protocol(urlString = barcode.value).action as ProtocolAction.ImportAuthToken).token
-                val whoami by produceState((state as BarcodeOverlayStateImpl).whoamiCache[token.toString()]) {
-                    value =
-                        state.getWhoamiResult(token)
-                }
-                AuthTokenOverlay(model = whoami, onClick = {
-                    onClickBarcode?.invoke(barcode)
-                })
-            })
+    SharedTransitionScope { trans ->
+        AnimatedContent(barcodes, modifier = trans, transitionSpec = {
+            (fadeIn(animationSpec = tween(220)) +
+                    scaleIn(initialScale = 0.92f, animationSpec = tween(220)))
+                .togetherWith(fadeOut(animationSpec = tween(90)))
+        }
+        ) { barcodes ->
+            Layout(modifier = modifier, contents = barcodes.map { barcode ->
+                when (barcode.type) {
+                    BarcodeType.AUTHORIZATION_TOKEN -> ({
+                        val token =
+                            (Protocol(urlString = barcode.value).action as ProtocolAction.ImportAuthToken).token
+                        val whoami by produceState((state as BarcodeOverlayStateImpl).whoamiCache[token.toString()]) {
+                            value =
+                                state.getWhoamiResult(token)
+                        }
+                        AuthTokenOverlay(
+                            modifier = Modifier.sharedElement(
+                                rememberSharedContentState(key = barcode.value),
+                                this
+                            ), model = whoami, onClick = {
+                                onClickBarcode?.invoke(barcode)
+                            })
+                    })
 
-            else -> ({ UnknownBarcodeOverlay(onClick = { onClickBarcode?.invoke(barcode) }) })
-        }
-    }) { measureables, constraints ->
-        val placeables = measureables.mapIndexed { index, m ->
-            val barcode = barcodes[index]
-            m.first().measure(
-                Constraints(
-                    minWidth = maxOf(
-                        minOf(
-                            (barcode.width * 0.85).roundToInt(),
-                            constraints.maxWidth
-                        ),
-                        0
-                    ),
-                    maxHeight = maxOf(
-                        minOf(
-                            (barcode.height * 0.85).roundToInt(),
-                            constraints.maxHeight
-                        ),
-                        0
-                    )
-                )
-            ) to barcode.center
-        }
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            placeables.forEachIndexed { index, (placeable, anchor) ->
-                placeable.place(
-                    x = anchor.x - placeable.width / 2,
-                    y = anchor.y - placeable.height / 2,
-                    zIndex = index.toFloat()
-                )
+                    else -> ({
+                        UnknownBarcodeOverlay(
+                            modifier = Modifier.sharedElement(
+                                rememberSharedContentState(key = barcode.value),
+                                this
+                            ), onClick = { onClickBarcode?.invoke(barcode) })
+                    })
+                }
+            }) { measureables, constraints ->
+                val placeables = measureables.mapIndexed { index, m ->
+                    val barcode = barcodes[index]
+                    m.first().measure(
+                        Constraints(
+                            minWidth = maxOf(
+                                minOf(
+                                    (barcode.width * 0.85).roundToInt(),
+                                    constraints.maxWidth
+                                ),
+                                0
+                            ),
+                            maxHeight = maxOf(
+                                minOf(
+                                    (barcode.height * 0.85).roundToInt(),
+                                    constraints.maxHeight
+                                ),
+                                0
+                            )
+                        )
+                    ) to barcode.center
+                }
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    placeables.forEachIndexed { index, (placeable, anchor) ->
+                        placeable.place(
+                            x = anchor.x - placeable.width / 2,
+                            y = anchor.y - placeable.height / 2,
+                            zIndex = index.toFloat()
+                        )
+                    }
+                }
             }
         }
     }

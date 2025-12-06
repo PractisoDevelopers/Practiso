@@ -25,6 +25,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +41,7 @@ import com.zhufucdev.practiso.composable.BarcodeOverlayState
 import com.zhufucdev.practiso.composable.CameraView
 import com.zhufucdev.practiso.composable.NavigateUpButton
 import com.zhufucdev.practiso.composable.rememberCameraController
+import com.zhufucdev.practiso.helper.debounced
 import com.zhufucdev.practiso.platform.AppDestination
 import com.zhufucdev.practiso.service.communityServerEndpoint
 import com.zhufucdev.practiso.style.PaddingNormal
@@ -97,7 +99,11 @@ class QrCodeScannerActivity : NavigatorComponentActivity<String>(AppDestination.
                                 modifier = Modifier.matchParentSize(),
                                 controller = controller
                             )
-                            val barcodes by analyzer.recognizedBarcodes.collectAsState()
+                            val lifecycleScope = rememberCoroutineScope()
+                            val barcodesDebouncedFlow = remember(analyzer.recognizedBarcodes) {
+                                analyzer.recognizedBarcodes.debounced()
+                            }
+                            val barcodes by barcodesDebouncedFlow.collectAsState(initial = emptyList())
                             val serverUrl by AppSettings.communityServerEndpoint.collectAsState(null)
 
                             serverUrl?.let { serverUrl ->

@@ -129,7 +129,7 @@ abstract class NavigatorComponentActivity<Result>(protected val destination: App
         override val current: StateFlow<NavigationStateSnapshot> = state.asStateFlow()
 
         private val stateChannel = Channel<NavigationStateSnapshot>()
-        val coroutineScope = CoroutineScope(Dispatchers.Default)
+        private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
         init {
             coroutineScope.launch {
