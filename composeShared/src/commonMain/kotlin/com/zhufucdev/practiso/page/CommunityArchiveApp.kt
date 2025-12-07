@@ -24,11 +24,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,7 +42,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
@@ -68,6 +73,8 @@ import com.zhufucdev.practiso.composable.SomeGroup
 import com.zhufucdev.practiso.composable.filter
 import com.zhufucdev.practiso.composable.filteredItems
 import com.zhufucdev.practiso.composition.LocalNavController
+import com.zhufucdev.practiso.composition.TopLevelDestination
+import com.zhufucdev.practiso.composition.currentNavController
 import com.zhufucdev.practiso.platform.DownloadCycle
 import com.zhufucdev.practiso.platform.DownloadState
 import com.zhufucdev.practiso.platform.DownloadStopped
@@ -81,13 +88,19 @@ import com.zhufucdev.practiso.viewmodel.ImportViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import opacity.client.ArchiveMetadata
+import opacity.client.AuthorizationException
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import resources.Res
+import resources.authorization_required_para
 import resources.baseline_cloud_download
+import resources.cancel_para
 import resources.download_and_import_para
+import resources.get_started_by_sharing_para
 import resources.import_para
+import resources.open_library_para
+import resources.outline_cloud_key
 import resources.outline_download
 import resources.retry_para
 import resources.stranded_quizzes_para
@@ -319,6 +332,7 @@ private fun ArchiveInfoCardContent(
 ) {
     val state by previewVM.getDownloadStateFlow(archive)
         .collectAsState()
+    var showAuthRequiredDialog by remember { mutableStateOf(false) }
     SharedInitiatingImmediateMutation(
         key = archive.id,
         model = archive,
@@ -365,6 +379,8 @@ private fun ArchiveInfoCardContent(
                                 preload = newValue
                             )
                         )
+                    } catch (_: AuthorizationException) {
+                        showAuthRequiredDialog = true
                     } catch (e: Exception) {
                         onError(e)
                         throw CancellationException(
@@ -376,6 +392,51 @@ private fun ArchiveInfoCardContent(
             }
         )
     }
+    if (showAuthRequiredDialog) {
+        val navController = currentNavController()
+        AuthRequiredDialog(
+            onDismissRequest = { showAuthRequiredDialog = false },
+            onOpenLibraryRequest = {
+                navController.navigate(TopLevelDestination.Library.route)
+            }
+        )
+    }
+}
+
+@Composable
+private fun AuthRequiredDialog(
+    modifier: Modifier = Modifier,
+    onDismissRequest: () -> Unit,
+    onOpenLibraryRequest: () -> Unit,
+) {
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismissRequest,
+        icon = {
+            Icon(
+                painter = painterResource(Res.drawable.outline_cloud_key),
+                contentDescription = null
+            )
+        },
+        title = {
+            Text(stringResource(Res.string.authorization_required_para))
+        },
+        text = {
+            Text(stringResource(Res.string.get_started_by_sharing_para))
+        },
+        confirmButton = {
+            Button(onClick = onOpenLibraryRequest) {
+                Text(stringResource(Res.string.open_library_para))
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismissRequest
+            ) {
+                Text(stringResource(Res.string.cancel_para))
+            }
+        }
+    )
 }
 
 @Composable

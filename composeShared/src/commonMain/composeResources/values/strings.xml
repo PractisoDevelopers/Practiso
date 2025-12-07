@@ -321,4 +321,7 @@
     <string name="overwriting_current_token_para">This would overwrite current token. Proceed?</string>
     <string name="barcode_scanner_span">barcode scanner</string>
     <string name="barcode_not_found_para">Barcode not found</string>
+    <string name="authorization_required_para">Authorization required</string>
+    <string name="get_started_by_sharing_para">You can get started by sharing your content with the community</string>
+    <string name="open_library_para">Open library</string>
 </resources>

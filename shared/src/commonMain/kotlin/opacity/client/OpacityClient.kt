@@ -14,12 +14,12 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.utils.buildHeaders
-import io.ktor.http.HeadersBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
 import io.ktor.http.buildUrl
+import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
@@ -38,7 +38,9 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
         }
         defaultRequest {
             if (authToken != null) {
-                headers.appendAuthToken(authToken)
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $authToken")
+                }
             }
         }
     }
@@ -222,9 +224,6 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
 
     @Throws(AuthorizationException::class, IllegalStateException::class)
     suspend fun like(archiveId: String) {
-        if (authToken == null) {
-            throw IllegalStateException()
-        }
         val response = http.put {
             url {
                 takeFrom(endpoint)
@@ -242,9 +241,6 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
 
     @Throws(AuthorizationException::class, IllegalStateException::class)
     suspend fun removeLike(archiveId: String) {
-        if (authToken == null) {
-            throw IllegalStateException()
-        }
         val response = http.delete {
             url {
                 takeFrom(endpoint)
@@ -258,10 +254,6 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
             throw IllegalStateException(response.bodyAsText())
         }
         assertSuccess(response.status)
-    }
-
-    private fun HeadersBuilder.appendAuthToken(value: String) {
-        append(HttpHeaders.Authorization, "Bearer $value")
     }
 
     private fun assertSuccess(status: HttpStatusCode) {
