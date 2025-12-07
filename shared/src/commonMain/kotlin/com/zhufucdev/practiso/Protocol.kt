@@ -28,11 +28,8 @@ class Protocol(private val url: Url) {
 
         fun importAuthToken(token: AuthorizationToken) = Protocol(buildUrl {
             protocol = PractisoURLProtocol
-            host = "import"
-            appendPathSegments(
-                "auth_token",
-                token.toString()
-            )
+            host = "import_auth_token"
+            appendPathSegments(token.toString())
         })
     }
 }
@@ -43,21 +40,16 @@ sealed class ProtocolAction {
     companion object {
         fun of(url: Url): ProtocolAction =
             when (url.host) {
-                "import" -> {
-                    require(url.segments.size >= 2) {
-                        "Less then 2 segments"
+                "import_auth_token" -> {
+                    require(url.segments.isNotEmpty()) {
+                        "No data to import"
                     }
-                    when (url.segments[0]) {
-                        "auth_token" -> {
-                            ImportAuthToken(
-                                AuthorizationToken(
-                                    value = url.segments[1]
-                                )
-                            )
-                        }
 
-                        else -> error("Unknown token: ${url.segments[0]}")
-                    }
+                    ImportAuthToken(
+                        AuthorizationToken(
+                            value = url.segments[0]
+                        )
+                    )
                 }
 
                 else -> error("Unknown token: ${url.host}")
