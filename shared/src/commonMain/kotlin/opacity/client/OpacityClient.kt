@@ -9,6 +9,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -19,7 +20,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
 import io.ktor.http.buildUrl
-import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
@@ -38,9 +38,7 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
         }
         defaultRequest {
             if (authToken != null) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer $authToken")
-                }
+                header(HttpHeaders.Authorization, "Bearer $authToken")
             }
         }
     }
