@@ -18,16 +18,6 @@
         android:theme="@style/PractisoTheme"
         tools:ignore="UnusedAttribute">
         <activity
-            android:name=".AuthTokenExportActivity"
-            android:exported="false"
-            android:label="@string/export_para">
-            <intent-filter>
-                <action android:name="android.intent.action.PROCESS_TEXT" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".QrCodeScannerActivity"
             android:exported="false"
             android:label="@string/title_qr_code_viewer" />
