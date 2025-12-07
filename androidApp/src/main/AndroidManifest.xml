@@ -5,7 +5,7 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:name=".Application"
@@ -17,6 +17,23 @@
         android:supportsRtl="true"
         android:theme="@style/PractisoTheme"
         tools:ignore="UnusedAttribute">
+        <activity
+            android:name=".ImportAuthTokenActivity"
+            android:exported="true"
+            android:label="@string/title_import_auth_token"
+            android:theme="@android:style/Theme.Dialog"
+            android:launchMode="singleInstance">
+            <intent-filter android:label="@string/title_import_auth_token">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="import_auth_token"
+                    android:scheme="practiso" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".QrCodeScannerActivity"
             android:exported="false"
@@ -40,7 +57,8 @@
         <activity
             android:name=".ImportActivity"
             android:exported="true"
-            android:theme="@android:style/Theme.Dialog">
+            android:theme="@android:style/Theme.Dialog"
+            android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.VIEW" />

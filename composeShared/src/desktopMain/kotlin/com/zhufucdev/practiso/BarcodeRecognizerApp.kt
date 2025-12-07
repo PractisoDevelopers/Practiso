@@ -136,7 +136,7 @@ private fun StarterPage(viewModel: BarcodeRecognizerViewModel) {
 
 @Composable
 private fun LoadedPage(model: BarcodeRecognizerState.Loaded) {
-    val serverEndpoint by AppSettings.communityServerEndpoint.collectAsState(null)
+    val serverEndpoint by AppSettings.communityServerEndpoint.collectAsState()
     var imageViewSize by remember { mutableStateOf(IntSize.Zero) }
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
         Box {
@@ -147,21 +147,19 @@ private fun LoadedPage(model: BarcodeRecognizerState.Loaded) {
                     imageViewSize = it.size
                 }
             )
-            serverEndpoint?.let { serverEndpoint ->
-                BarcodeOverlay(
-                    modifier = Modifier.matchParentSize(),
-                    barcodes = model.barcodes.map {
-                        it.copy(cornerPoints = it.cornerPoints.map { pointPx -> pointPx * (imageViewSize.width.toFloat() / model.image.width) })
-                    },
-                    state = remember(serverEndpoint) { BarcodeOverlayState(serverEndpoint) },
-                    onClickBarcode = { barcode ->
-                        DesktopNavigator.setResult(barcode.value)
-                        MainScope().launch {
-                            DesktopNavigator.navigate(Navigation.Backward)
-                        }
+            BarcodeOverlay(
+                modifier = Modifier.matchParentSize(),
+                barcodes = model.barcodes.map {
+                    it.copy(cornerPoints = it.cornerPoints.map { pointPx -> pointPx * (imageViewSize.width.toFloat() / model.image.width) })
+                },
+                state = remember(serverEndpoint) { BarcodeOverlayState(serverEndpoint) },
+                onClickBarcode = { barcode ->
+                    DesktopNavigator.setResult(barcode.value)
+                    MainScope().launch {
+                        DesktopNavigator.navigate(Navigation.Backward)
                     }
-                )
-            }
+                }
+            )
         }
     }
 }

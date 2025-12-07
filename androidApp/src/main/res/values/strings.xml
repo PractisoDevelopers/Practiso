@@ -12,4 +12,6 @@
     <string name="title_qr_code_viewer">QR Code Viewer</string>
     <string name="title_qr_code_scanner">QR Code Scanner</string>
     <string name="grant_camera_permissions_to_continue_para">Grant camera permissions to continue</string>
+    <string name="title_import_auth_token">Import Authorization Token</string>
+    <string name="unsupported_action_para">Unsupported action</string>
 </resources>

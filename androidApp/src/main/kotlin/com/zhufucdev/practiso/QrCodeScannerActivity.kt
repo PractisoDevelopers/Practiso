@@ -102,19 +102,16 @@ class QrCodeScannerActivity : NavigatorComponentActivity<String>(AppDestination.
                                 analyzer.recognizedBarcodes.debounced()
                             }
                             val barcodes by barcodesDebouncedFlow.collectAsState(initial = emptyList())
-                            val serverUrl by AppSettings.communityServerEndpoint.collectAsState(null)
-
-                            serverUrl?.let { serverUrl ->
-                                BarcodeOverlay(
-                                    modifier = Modifier.matchParentSize(),
-                                    barcodes = barcodes,
-                                    state = remember { BarcodeOverlayState(serverUrl) },
-                                    onClickBarcode = { barcode ->
-                                        setResult(barcode.value)
-                                        finish()
-                                    }
-                                )
-                            }
+                            val serverUrl by AppSettings.communityServerEndpoint.collectAsState()
+                            BarcodeOverlay(
+                                modifier = Modifier.matchParentSize(),
+                                barcodes = barcodes,
+                                state = remember { BarcodeOverlayState(serverUrl) },
+                                onClickBarcode = { barcode ->
+                                    setResult(barcode.value)
+                                    finish()
+                                }
+                            )
                         }
                     } else {
                         Box(
