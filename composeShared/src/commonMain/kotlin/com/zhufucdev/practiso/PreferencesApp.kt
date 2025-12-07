@@ -813,11 +813,11 @@ private class CommunityIdentityViewModel(
                                 true
                             } else {
                                 emit(CommunityIdentityDialogState.Lost)
-                                false // end state
+                                true
                             }
                         } else if (it.exceptionOrNull() is HttpStatusAssertionException) {
                             emit(CommunityIdentityDialogState.Lost)
-                            false // end state
+                            true
                         } else {
                             val retry = Channel<Unit>()
                             emit(CommunityIdentityDialogState.ConnectionError(token!!, retry))
