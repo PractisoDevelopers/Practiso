@@ -379,8 +379,12 @@ private fun ArchiveInfoCardContent(
                                 preload = newValue
                             )
                         )
-                    } catch (_: AuthorizationException) {
+                    } catch (e: AuthorizationException) {
                         showAuthRequiredDialog = true
+                        throw CancellationException(
+                            message = "Authorization required",
+                            cause = e
+                        )
                     } catch (e: Exception) {
                         onError(e)
                         throw CancellationException(
