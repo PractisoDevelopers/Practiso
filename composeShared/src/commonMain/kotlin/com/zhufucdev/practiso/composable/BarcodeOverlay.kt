@@ -239,7 +239,7 @@ private class BarcodeOverlayStateImpl(val serverUrl: String) : BarcodeOverlaySta
         whoamiCache[authToken] = queryResult
         fifo.add(authToken)
         if (whoamiCache.size > MAX_CACHE_CAPACITY) {
-            whoamiCache.remove(fifo.removeFirst())
+            whoamiCache.remove(fifo.removeAt(0))
         }
         return queryResult
     }
