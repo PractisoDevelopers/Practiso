@@ -321,18 +321,14 @@ class FeiService(
                                 )
                             }
 
-                            val (textFrameAddition, imageFrameAddition) = {
+                            val (textFrameAddition, imageFrameAddition) = run {
                                 if (modelVersion == 0 &&
                                     db.settingsQueries.getTextByKey(DB_FEI_MODEL_KEY)
                                         .executeAsOneOrNull() == model.hfId
                                 ) {
                                     val existingIndexes =
                                         db.embeddingQueries.getAllIndex().executeAsList()
-                                            .filter {
-                                                it.textFrameId?.let { i -> i.toULong() in index }
-                                                    ?: it.imageFrameId?.let { i -> i.toULong() in index }
-                                                    ?: false
-                                            }
+                                            .filter { it.indexKey.toULong() in index }
                                     val indexedTextFrameIds =
                                         existingIndexes
                                             .mapNotNull(FrameEmbeddingIndex::textFrameId)
@@ -350,7 +346,7 @@ class FeiService(
                                 } else {
                                     textFrames.addition to imageFrames.addition
                                 }
-                            }()
+                            }
 
                             withContext(Dispatchers.IO) {
                                 db.transaction {
