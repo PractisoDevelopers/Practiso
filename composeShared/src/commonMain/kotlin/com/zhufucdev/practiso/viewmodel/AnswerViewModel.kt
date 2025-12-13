@@ -23,28 +23,24 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.service.TakeService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -82,15 +78,9 @@ class AnswerViewModel(
     private val upstreamAnswers =
         takeService.map { it?.getAnswers() }.flatMapLatest { it ?: flowOf(null) }
             .flowOn(Dispatchers.IO)
-    private val cachedAnswers = MutableStateFlow<List<PractisoAnswer>?>(null).apply {
-        viewModelScope.launch {
-            emit(upstreamAnswers.filter { it != null }.first())
-            upstreamAnswers.debounce(5.seconds).collectLatest {
-                emit(it)
-            }
-        }
-    }
-    val answers get() = cachedAnswers
+            .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
+
+    val answers get() = upstreamAnswers
 
     val take = takeService.map { it?.getTake() }.flatMapLatest { it ?: flowOf(null) }
     val quizzes =
@@ -98,6 +88,7 @@ class AnswerViewModel(
             .flatMapLatest { it ?: flowOf(null) }
             .distinctUntilChanged()
             .flowOn(Dispatchers.IO)
+            .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
     val timers: Flow<List<Double>> =
         takeService.map { it?.getTimersInSecond() }
             .distinctUntilChanged()
@@ -240,33 +231,16 @@ class AnswerViewModel(
 
 
     init {
-        val answerDbLock = Mutex()
-
         viewModelScope.launch {
             while (viewModelScope.isActive) {
                 select<Unit> {
                     event.answer.onReceive {
-                        cachedAnswers.update { cache ->
-                            if (cache == null) listOf(it)
-                            else cache + it
-                        }
-                        async {
-                            answerDbLock.withLock {
-                                takeService.value?.commitAnswer(it, getCurrentQuizIndex())
-                            }
-                        }
+                        val priority = getCurrentQuizIndex()
+                        takeService.value?.commitAnswer(it, priority)
                     }
 
                     event.unanswer.onReceive {
-                        cachedAnswers.update { cache ->
-                            if (cache == null) error("Unexpected null cache")
-                            else cache - it
-                        }
-                        async {
-                            answerDbLock.withLock {
-                                takeService.value?.rollbackAnswer(it)
-                            }
-                        }
+                        takeService.value?.rollbackAnswer(it)
                     }
 
                     event.updateDuration.onReceive {

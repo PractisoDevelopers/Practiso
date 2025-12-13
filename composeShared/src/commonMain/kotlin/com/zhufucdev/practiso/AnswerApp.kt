@@ -107,6 +107,7 @@ import resources.take_n_para
 import resources.time_is_up_para
 import resources.vertical_pager_para
 import kotlin.math.roundToInt
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -157,7 +158,7 @@ fun AnswerApp(model: AnswerViewModel) {
                         model.event.updateCurrentQuizIndex.send(index)
                     }
                     val showAccuracy by model.settings.showAccuracy.collectAsState()
-                    val answers by model.answers.collectAsState(null)
+                    val answers by model.answers.collectAsState()
                     val errorRanges by remember(answers, it.quizzes, showAccuracy) {
                         derivedStateOf {
                             if (showAccuracy && answers != null)
@@ -372,16 +373,13 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                             frame.optionsFrame.name?.let { Text(it) }
                         },
                         content = {
-                            val answerOptionIds by remember(answers) {
-                                derivedStateOf {
-                                    answers?.mapNotNull { (it.takeIf { it is PractisoAnswer.Option } as PractisoAnswer.Option?)?.optionId }
-                                        ?: emptyList()
-                                }
+                            val answerOptionIds = remember(answers) {
+                                println("answer ids recomputed at ${Clock.System.now()}")
+                                answers?.mapNotNull { (it.takeIf { it is PractisoAnswer.Option } as PractisoAnswer.Option?)?.optionId }
+                                    ?: emptyList()
                             }
-                            val correctChoices by remember(pFrame) {
-                                derivedStateOf {
-                                    frame.frames.count { it.isKey }
-                                }
+                            val correctChoices = remember(frame) {
+                                frame.frames.count { it.isKey }
                             }
 
                             fun answerModel(option: KeyedPrioritizedFrame) =
@@ -390,7 +388,6 @@ private fun Quiz(modifier: Modifier = Modifier, quiz: QuizFrames, model: AnswerV
                                     pFrame.frame.id,
                                     quiz.quiz.id
                                 )
-
 
                             frame.frames.forEachIndexed { index, option ->
                                 val checked = option.frame.id in answerOptionIds
