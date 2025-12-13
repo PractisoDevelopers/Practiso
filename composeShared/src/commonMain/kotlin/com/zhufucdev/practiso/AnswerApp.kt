@@ -561,7 +561,7 @@ private fun PagerStyleToggle(settings: SettingsModel) {
             onClick = {
                 val next = PageStyle.entries[(current.ordinal + 1) % PageStyle.entries.size]
                 coroutine.launch {
-                    settings.answerPageStyle.emit(next)
+                    settings.setAnswerPageStyle(next)
                 }
             }
         ) {
@@ -598,9 +598,7 @@ private fun Menu(model: SettingsModel) {
                 text = { Text(stringResource(Res.string.show_accuracy_para)) },
                 leadingIcon = { Checkbox(checked = showAccuracy, onCheckedChange = null) },
                 onClick = {
-                    coroutine.launch {
-                        model.showAccuracy.emit(!showAccuracy)
-                    }
+                    model.setShowAccuracy(!showAccuracy)
                 }
             )
         }

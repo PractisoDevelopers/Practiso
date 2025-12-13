@@ -4,16 +4,18 @@ import android.content.Context
 import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.aead.ChaCha20Poly1305KeyManager
 import com.google.crypto.tink.integration.android.AndroidKeysetManager
-import com.russhwolf.settings.Settings
+import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.SharedPreferencesSettings
 
-actual fun getDefaultSettingsFactory(): Settings.Factory {
-    return SharedPreferencesSettings.Factory(SharedContext)
-}
+actual fun getDefaultSettingsFactory(): ObservableSettingsFactory =
+    object : ObservableSettingsFactory {
+        override fun create(name: String?): ObservableSettings =
+            SharedPreferencesSettings.Factory(SharedContext).create(name)
+    }
 
-actual fun getSecureSettingsFactory(): Settings.Factory {
-    return object : Settings.Factory {
-        override fun create(name: String?): Settings {
+actual fun getSecureSettingsFactory(): ObservableSettingsFactory {
+    return object : ObservableSettingsFactory {
+        override fun create(name: String?): ObservableSettings {
             val keysetManager = AndroidKeysetManager.Builder()
                 .withSharedPref(
                     SharedContext,
@@ -36,8 +38,11 @@ actual fun getSecureSettingsFactory(): Settings.Factory {
                     ),
                 ),
                 aead = object : Aead {
-                    override fun encrypt(plainText: ByteArray): ByteArray = aead.encrypt(plainText, null)
-                    override fun decrypt(cipherText: ByteArray): ByteArray = aead.decrypt(cipherText, null)
+                    override fun encrypt(plainText: ByteArray): ByteArray =
+                        aead.encrypt(plainText, null)
+
+                    override fun decrypt(cipherText: ByteArray): ByteArray =
+                        aead.decrypt(cipherText, null)
                 }
             )
         }

@@ -1,6 +1,13 @@
 package com.zhufucdev.practiso
 
-import com.russhwolf.settings.Settings
+import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.coroutines.getBooleanStateFlow
+import com.russhwolf.settings.coroutines.getIntOrNullFlow
+import com.russhwolf.settings.coroutines.getIntStateFlow
+import com.russhwolf.settings.coroutines.getStringOrNullFlow
+import com.russhwolf.settings.coroutines.getStringOrNullStateFlow
+import com.russhwolf.settings.coroutines.getStringStateFlow
 import com.zhufucdev.practiso.datamodel.AuthorizationToken
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.CommunityIdentity
@@ -8,8 +15,11 @@ import io.ktor.util.encodeBase64
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 
@@ -22,88 +32,102 @@ private const val KeyCommunityServerUrl = "community_server_url"
 private const val KeyCommunityUseCustomServer = "community_use_custom_ser"
 private const val KeyClientName = "client_name"
 
+@OptIn(ExperimentalSettingsApi::class)
 class SettingsModel(
-    private val default: Settings,
-    private val secure: Settings,
+    private val default: ObservableSettings,
+    private val secure: ObservableSettings,
     val coroutineScope: CoroutineScope,
 ) {
-    val answerPageStyle = MutableStateFlow(
-        PageStyle.entries[default.getInt(
-            KeyAnswerPageStyle,
-            PageStyle.Horizontal.ordinal
-        )]
-    )
+    val answerPageStyle = default.getIntOrNullFlow(KeyAnswerPageStyle)
+        .mappedStateIn(
+            coroutineScope,
+            started = SharingStarted.Lazily,
+            defaultValue = PageStyle.Horizontal
+        ) {
+            PageStyle.entries[it]
+        }
+
+    fun setAnswerPageStyle(value: PageStyle) =
+        default.putInt(KeyAnswerPageStyle, value.ordinal)
+
     val showAccuracy =
-        MutableStateFlow(default.getBoolean(KeyShowAccuracy, false))
-    val showNextQuizAutomatically = MutableStateFlow(default.getBoolean(KeyQuizAutoplay, false))
-    val feiModelIndex = MutableStateFlow(default.getInt(KeyFeiModelId, defaultValue = 0))
-    val feiCompatibilityMode =
-        MutableStateFlow(default.getBoolean(KeyFeiCompatibility, defaultValue = false))
-    val communityUseCustomServer =
-        MutableStateFlow(default.getBoolean(KeyCommunityUseCustomServer, defaultValue = false))
-    val communityServerUrl =
-        MutableStateFlow(default.getStringOrNull(KeyCommunityServerUrl))
-    val clientName =
-        MutableStateFlow(default.getStringOrNull(KeyClientName) ?: getPlatform().deviceName)
+        default.getBooleanStateFlow(
+            coroutineScope,
+            key = KeyShowAccuracy,
+            defaultValue = false,
+            sharingStarted = SharingStarted.Lazily
+        )
+
+    fun setShowAccuracy(value: Boolean) =
+        default.putBoolean(KeyShowAccuracy, value)
+
+    val showNextQuizAutomatically = default.getBooleanStateFlow(
+        coroutineScope,
+        key = KeyQuizAutoplay,
+        defaultValue = true,
+        sharingStarted = SharingStarted.Lazily
+    )
+    val feiModelIndex = default.getIntStateFlow(
+        coroutineScope,
+        key = KeyFeiModelId,
+        defaultValue = 0,
+        sharingStarted = SharingStarted.Lazily
+    )
+
+    fun setFeiModelIndex(value: Int) =
+        default.putInt(KeyFeiModelId, value)
+
+    val feiCompatibilityMode = default.getBooleanStateFlow(
+        coroutineScope,
+        key = KeyFeiCompatibility,
+        defaultValue = false,
+        sharingStarted = SharingStarted.Lazily
+    )
+
+    fun setFeiCompatibilityMode(value: Boolean) =
+        default.putBoolean(KeyFeiCompatibility, value)
+
+    val communityUseCustomServer = default.getBooleanStateFlow(
+        coroutineScope,
+        key = KeyCommunityUseCustomServer,
+        defaultValue = false,
+        sharingStarted = SharingStarted.Lazily
+    )
+
+    fun setCommunityUseCustomServer(value: Boolean) =
+        default.putBoolean(KeyCommunityUseCustomServer, value)
+
+    val communityServerUrl = default.getStringOrNullStateFlow(
+        coroutineScope,
+        key = KeyCommunityServerUrl,
+        sharingStarted = SharingStarted.Lazily
+    )
+
+    fun setCommunityServerUrl(value: String?) {
+        if (value == null) {
+            default.remove(KeyCommunityServerUrl)
+        } else {
+            default.putString(KeyCommunityServerUrl, value)
+        }
+    }
+
+    val clientName = default.getStringStateFlow(
+        coroutineScope,
+        key = KeyClientName,
+        defaultValue = getPlatform().deviceName,
+        sharingStarted = SharingStarted.Lazily
+    )
 
     fun getCommunityIdentity(serverUrl: String) =
         HybridSettingsCommunityIdentity(serverUrl, coroutineScope, default, secure)
-
-    init {
-        with(coroutineScope) {
-            launch {
-                answerPageStyle.collectLatest {
-                    default.putInt(KeyAnswerPageStyle, it.ordinal)
-                }
-            }
-            launch {
-                showAccuracy.collectLatest {
-                    default.putBoolean(KeyShowAccuracy, it)
-                }
-            }
-            launch {
-                showNextQuizAutomatically.collectLatest {
-                    default.putBoolean(KeyQuizAutoplay, it)
-                }
-            }
-            launch {
-                feiModelIndex.collectLatest {
-                    default.putInt(KeyFeiModelId, it)
-                }
-            }
-            launch {
-                feiCompatibilityMode.collectLatest {
-                    default.putBoolean(KeyFeiCompatibility, it)
-                }
-            }
-            launch {
-                communityServerUrl.collectLatest {
-                    if (it == null) {
-                        default.remove(KeyCommunityServerUrl)
-                    } else {
-                        default.putString(KeyCommunityServerUrl, it)
-                    }
-                }
-            }
-            launch {
-                communityUseCustomServer.collectLatest {
-                    default.putBoolean(KeyCommunityUseCustomServer, it)
-                }
-            }
-            launch {
-                clientName.collectLatest {
-                    default.putString(KeyClientName, it)
-                }
-            }
-        }
-    }
 }
 
+@OptIn(ExperimentalSettingsApi::class)
 class HybridSettingsCommunityIdentity(
     serverUrl: String,
     coroutineScope: CoroutineScope,
-    private val insecure: Settings,
-    private val secure: Settings = insecure,
+    private val insecure: ObservableSettings,
+    private val secure: ObservableSettings = insecure,
 ) : CommunityIdentity {
     private val keyPrefix =
         serverUrl.encodeBase64()
@@ -118,25 +142,20 @@ class HybridSettingsCommunityIdentity(
         }
     }
 
-    override val authToken: MutableStateFlow<AuthorizationToken?> = MutableStateFlow(
-        secure.getStringOrNull("${keyPrefix}_token")?.let(::AuthorizationToken)
-    )
+    override val authToken =
+        secure.getStringOrNullFlow("${keyPrefix}_token")
+            .mappedStateIn(
+                coroutineScope,
+                started = SharingStarted.Eagerly,
+                defaultValue = null
+            ) { AuthorizationToken(it) }
 
     override fun clear() {
-        authToken.tryEmit(null)
+        secure.remove("${keyPrefix}_token")
     }
 
-    init {
-        coroutineScope.launch {
-            authToken.collectLatest { token ->
-                val key = "${keyPrefix}_token"
-                if (token != null) {
-                    secure.putString(key, token.toString())
-                } else {
-                    secure.remove(key)
-                }
-            }
-        }
+    override fun setAuthToken(value: AuthorizationToken) {
+        secure.putString("${keyPrefix}_token", value.toString())
     }
 }
 
@@ -156,3 +175,11 @@ val AppSettings = with(AppSettingsScope) {
     }
     model
 }
+
+private inline fun <T, O> Flow<O?>.mappedStateIn(
+    scope: CoroutineScope,
+    started: SharingStarted = SharingStarted.Lazily,
+    defaultValue: T,
+    crossinline mapper: (O) -> T,
+) = map { it?.let(mapper) ?: defaultValue }
+    .stateIn(scope, started, defaultValue)

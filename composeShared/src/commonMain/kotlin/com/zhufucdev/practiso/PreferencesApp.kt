@@ -131,7 +131,7 @@ fun PreferencesApp(model: SettingsModel = AppSettings, vm: PreferencesAppViewMod
                             )
                         },
                         onClick = {
-                            model.showAccuracy.tryEmit(!value)
+                            model.setShowAccuracy(!value)
                         }
                     )
                 }
@@ -151,7 +151,7 @@ fun PreferencesApp(model: SettingsModel = AppSettings, vm: PreferencesAppViewMod
                         popup = {
                             FeiModelSelector(
                                 selection = value,
-                                onSelect = model.feiModelIndex::tryEmit
+                                onSelect = model::setFeiModelIndex
                             )
                         },
                         sharedElement = {
@@ -188,7 +188,7 @@ fun PreferencesApp(model: SettingsModel = AppSettings, vm: PreferencesAppViewMod
                             )
                         },
                         onClick = {
-                            model.feiCompatibilityMode.tryEmit(!value)
+                            model.setFeiCompatibilityMode(!value)
                         }
                     )
                 }
@@ -209,7 +209,7 @@ fun PreferencesApp(model: SettingsModel = AppSettings, vm: PreferencesAppViewMod
                             Switch(checked = value, onCheckedChange = null)
                         },
                         onClick = {
-                            model.communityUseCustomServer.tryEmit(!value)
+                            model.setCommunityUseCustomServer(!value)
                         }
                     )
                 }
@@ -239,7 +239,7 @@ fun PreferencesApp(model: SettingsModel = AppSettings, vm: PreferencesAppViewMod
                                     Button(
                                         onClick = {
                                             coroutine.launch {
-                                                model.communityServerUrl.emit(
+                                                model.setCommunityServerUrl(
                                                     urlBuffer.takeIf(
                                                         String::isNotBlank
                                                     )

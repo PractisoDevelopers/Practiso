@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -120,7 +119,7 @@ class CommunityService(
                     when (it) {
                         is ArchiveUploadState.Success -> {
                             if (it.authToken != null) {
-                                identity.authToken.tryEmit(AuthorizationToken(it.authToken))
+                                identity.setAuthToken(AuthorizationToken(it.authToken))
                             }
                             emit(UploadArchive.Success(it.archiveId))
                         }
@@ -194,6 +193,7 @@ sealed class UploadArchive {
 data class CommunityRegistrationInfo(val clientName: String, val ownerName: String)
 
 interface CommunityIdentity {
-    val authToken: MutableStateFlow<AuthorizationToken?>
+    val authToken: StateFlow<AuthorizationToken?>
+    fun setAuthToken(value: AuthorizationToken)
     fun clear()
 }

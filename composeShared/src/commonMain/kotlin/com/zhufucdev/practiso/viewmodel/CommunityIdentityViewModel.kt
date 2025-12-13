@@ -95,14 +95,14 @@ class CommunityIdentityViewModel(
                             retryCounter.value++
                             false
                         } else if (token == null) {
-                            identity.authToken.emit(newToken)
+                            identity.setAuthToken(newToken)
                             false
                         } else {
                             val proceed = Channel<Boolean>()
                             val stateBeforeImport = state.value
                             emit(CommunityIdentityDialogState.WarnBeforeImport(newToken, proceed))
                             if (proceed.receive()) {
-                                identity.authToken.emit(newToken)
+                                identity.setAuthToken(newToken)
                                 retryCounter.value++
                                 false
                             } else {
