@@ -364,6 +364,9 @@
         }
       }
     },
+    "Account removed." : {
+
+    },
     "Add" : {
       "localizations" : {
         "zh-Hans" : {
@@ -524,6 +527,12 @@
         }
       }
     },
+    "Barcode not found." : {
+
+    },
+    "barcode scanner" : {
+
+    },
     "Begin a new take as well" : {
       "localizations" : {
         "zh-Hans" : {
@@ -654,6 +663,9 @@
           }
         }
       }
+    },
+    "community service" : {
+
     },
     "Completed" : {
       "localizations" : {
@@ -1117,6 +1129,9 @@
         }
       }
     },
+    "download executor" : {
+
+    },
     "Download required" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1263,6 +1278,7 @@
       }
     },
     "Failed to copy resource." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1331,6 +1347,12 @@
           }
         }
       }
+    },
+    "Generic error." : {
+
+    },
+    "Generic HTTP failed." : {
+
     },
     "Getting started..." : {
       "localizations" : {
@@ -1411,6 +1433,9 @@
           }
         }
       }
+    },
+    "HTTP transaction failed." : {
+
     },
     "Ignore" : {
       "localizations" : {
@@ -1599,6 +1624,9 @@
           }
         }
       }
+    },
+    "Insufficient disk space." : {
+
     },
     "interact with status bar to continue" : {
       "localizations" : {
@@ -1971,6 +1999,9 @@
         }
       }
     },
+    "Network is unavailable." : {
+
+    },
     "New question" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2313,6 +2344,29 @@
           }
         }
       }
+    },
+    "Resource %@ required by %@ at %@ wsa not found." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ required by %2$@ at %3$@ wsa not found."
+          }
+        }
+      }
+    },
+    "Resource %@ required by %@ was not found." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ required by %2$@ was not found."
+          }
+        }
+      }
+    },
+    "Resource %@ was not found." : {
+
     },
     "Resource is Corrupted" : {
       "localizations" : {
@@ -2810,6 +2864,9 @@
           }
         }
       }
+    },
+    "Unexpected HTTP status (%d)" : {
+
     },
     "Unhide" : {
       "localizations" : {

@@ -170,7 +170,7 @@ extension View {
                 stateBinding.wrappedValue = nil
             }
         } message: {
-            if let msg = stateBinding.wrappedValue?.error.message {
+            if let msg = stateBinding.wrappedValue?.error.appMessage {
                 Text(String(errorMessage: msg))
             } else {
                 Text("No details were reported.")

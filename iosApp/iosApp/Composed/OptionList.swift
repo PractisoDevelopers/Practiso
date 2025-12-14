@@ -190,7 +190,7 @@ struct OptionList<Content : View, Item : Option>: View {
 }
 
 #Preview {
-    let future = Kotlinx_datetimeInstant.Companion.shared.DISTANT_FUTURE
+    let future = KotlinInstant.Companion.shared.DISTANT_FUTURE
     let items: [OptionImpl<QuizOption>] = (0...10).map { i in
         return OptionImpl(kt: QuizOption(quiz: Quiz(id: Int64(i), name: "Sample \(i)", creationTimeISO: future, modificationTimeISO: future), preview: "Lore Ipsum"))
     }

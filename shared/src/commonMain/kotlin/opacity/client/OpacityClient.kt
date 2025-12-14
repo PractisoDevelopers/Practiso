@@ -23,13 +23,18 @@ import io.ktor.http.buildUrl
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
 
-class OpacityClient(val endpoint: String, private val authToken: String? = null, httpClientFactory: HttpClientFactory) {
+class OpacityClient(
+    val endpoint: String,
+    private val authToken: String? = null,
+    httpClientFactory: HttpClientFactory
+) {
     private val http = httpClientFactory.create {
         install(ContentNegotiation) {
             json(Json {
@@ -91,7 +96,7 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
             appendPathSegments("archive", id)
         }
 
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, CancellationException::class)
     suspend fun getBonjour(): BonjourResponse {
         val response = http.get {
             url {
@@ -191,7 +196,7 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
         }
     }
 
-    @Throws(HttpStatusAssertionException::class)
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
     suspend fun getWhoami(): Whoami? {
         if (authToken == null) {
             return null
@@ -206,7 +211,10 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
         return response.body()
     }
 
-    @Throws(AuthorizationException::class, HttpStatusAssertionException::class)
+    @Throws(
+        AuthorizationException::class, HttpStatusAssertionException::class,
+        CancellationException::class
+    )
     suspend fun deleteArchive(archiveId: String) {
         val response = http.delete {
             url {
@@ -220,7 +228,11 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
         assertSuccess(response.status)
     }
 
-    @Throws(AuthorizationException::class, IllegalStateException::class)
+    @Throws(
+        AuthorizationException::class,
+        IllegalStateException::class,
+        CancellationException::class
+    )
     suspend fun like(archiveId: String) {
         val response = http.put {
             url {
@@ -237,7 +249,11 @@ class OpacityClient(val endpoint: String, private val authToken: String? = null,
         assertSuccess(response.status)
     }
 
-    @Throws(AuthorizationException::class, IllegalStateException::class)
+    @Throws(
+        AuthorizationException::class,
+        IllegalStateException::class,
+        CancellationException::class
+    )
     suspend fun removeLike(archiveId: String) {
         val response = http.delete {
             url {
