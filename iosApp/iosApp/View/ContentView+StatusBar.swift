@@ -1,90 +1,177 @@
+import ComposeApp
 import Foundation
 import SwiftUI
-import ComposeApp
 
-struct StatusBarModifier : ViewModifier {
+struct StatusBarModifier: ViewModifier {
     let feiState: FeiDbState?
-    @State private var missingModelState: FeiDbState.MissingModel? = nil
-    @State private var pendingDownloadState: FeiDbState.PendingDownload? = nil
+    @State private var missingModelDialog: FeiDbState.MissingModel? = nil
+    @State private var pendingDownloadDialog: FeiDbState.PendingDownload? = nil
     @State private var errorState: FeiDbState.Error? = nil
 
     func body(content: Content) -> some View {
         content.toolbar {
             toolbarContent
         }
-        .missingModelAlert(stateBinding: $missingModelState)
-        .downloadAlert(stateBinding: $pendingDownloadState)
+        .missingModelAlert(stateBinding: $missingModelDialog)
+        .downloadAlert(stateBinding: $pendingDownloadDialog)
         .errorAlert(stateBinding: $errorState)
     }
-    
+
+    private func buildInProgress(progress: Float, total: Int32) -> some View {
+        SymmetricToolbarContent {
+            CircularProgressView(value: progress)
+        } middle: {
+            Text("Inferring \(total) items...")
+                .font(.caption)
+        } trailing: {
+            Spacer()
+                .frame(width: 24)
+        }
+    }
+
+    private func buildDownloading(progress: Float) -> some View {
+        SymmetricToolbarContent {
+            CircularProgressView(value: progress)
+        } middle: {
+            Text("Downloading model...")
+                .font(.caption)
+        } trailing: {
+            Spacer()
+                .frame(width: 24)
+        }
+    }
+
+    private func buildPendingDownload(action: @escaping () -> Void) -> some View {
+        SymmetricToolbarContent {
+            if #available(iOS 26.0, *) {
+                Image(systemName: "arrow.down.circle.dotted")
+                    .symbolEffect(.wiggle.byLayer, options: .repeat(.periodic(delay: 0.5)))
+                    .frame(minWidth: 24)
+            } else {
+                Image(systemName: "arrow.down.circle.dotted")
+                    .frame(minWidth: 24)
+            }
+        } middle: {
+            Button("Download required", action: action)
+                .buttonStyle(.plain)
+                .font(.caption)
+        } trailing: {
+            Spacer()
+                .frame(width: 24)
+        }
+    }
+
+    private func buildMissingDialog(action: @escaping () -> Void) -> some View {
+        SymmetricToolbarContent {
+            Image(systemName: "gear.badge.questionmark")
+                .frame(minWidth: 24)
+        } middle: {
+            Button("Missing models", action: action)
+                .buttonStyle(.plain)
+                .font(.caption)
+        } trailing: {
+            Spacer()
+                .frame(width: 24)
+        }
+    }
+
+    private func buildCollectingItems() -> some View {
+        SymmetricToolbarContent {
+            Image(systemName: "text.page.badge.magnifyingglass")
+                .symbolEffect(.wiggle.byLayer, options: .repeat(.periodic(delay: 0.5)))
+                .frame(minWidth: 24)
+        } middle: {
+            Text("Collecting frames...")
+                .font(.caption)
+        } trailing: {
+            Spacer()
+                .frame(width: 24)
+        }
+    }
+
+    private func buildError(message: AppMessage?, action: @escaping () -> Void) -> some View {
+        SymmetricToolbarContent {
+            Image(systemName: "exclamationmark.octagon")
+                .frame(minWidth: 24)
+        } middle: {
+            Button(message != nil ? String(errorMessage: message!) : String(localized: "An error occurred"), action: action)
+                .buttonStyle(.plain)
+                .font(.caption)
+        } trailing: {
+            Spacer()
+                .frame(width: 24)
+        }
+    }
+
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
         switch onEnum(of: feiState) {
-        case .inProgress(let progress):
-            ToolbarItem(placement: .status) {
-                Text("Inferring \(progress.total) items...")
-                    .font(.caption)
-            }
+        case let .inProgress(progress):
             ToolbarItem(placement: .bottomBar) {
-                CircularProgressView(value: Float(progress.done) / Float(progress.total))
+                buildInProgress(progress: Float(progress.done) / Float(progress.total), total: progress.total)
             }
-            
-        case .downloadingInference(let download):
-            ToolbarItem(placement: .status) {
-                Text("Downloading model...")
-                    .font(.caption)
-            }
+
+        case let .downloadingInference(download):
             ToolbarItem(placement: .bottomBar) {
-                CircularProgressView(value: download.progress)
+                buildDownloading(progress: download.progress)
             }
-        
-        case .pendingDownload(let pending):
+
+        case let .pendingDownload(pending):
             ToolbarItem(placement: .status) {
-                Button("Download required") {
-                    pendingDownloadState = pending
+                buildPendingDownload {
+                    pendingDownloadDialog = pending
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.red)
-                .font(.caption)
             }
-            
+
         default:
             toolbarContent_2
         }
     }
-    
+
     @ToolbarContentBuilder
     var toolbarContent_2: some ToolbarContent {
         switch onEnum(of: feiState) {
-        case .missingModel(let mms):
-            ToolbarItem(placement: .status) {
-                Button("Missing models") {
-                    missingModelState = mms
+        case let .missingModel(mms):
+            ToolbarItem(placement: .bottomBar) {
+                buildMissingDialog {
+                    missingModelDialog = mms
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.red)
-                .font(.caption)
             }
-            
-        case .collecting(_):
-            ToolbarItem(placement: .status) {
-                Text("Collecting frames...")
-                    .font(.caption)
+        case .collecting:
+            ToolbarItem(placement: .bottomBar) {
+                buildCollectingItems()
             }
-        case .error(let error):
-            ToolbarItem(placement: .status) {
-                Button("An error occurred") {
+        case let .error(error):
+            ToolbarItem(placement: .bottomBar) {
+                buildError(message: error.error.appMessage) {
                     errorState = error
                 }
-                .buttonStyle(.plain)
-                .font(.caption)
-                .foregroundStyle(.red)
             }
-            
+
         default:
             ToolbarItem(placement: .status) {
                 EmptyView()
             }
+        }
+    }
+}
+
+fileprivate struct SymmetricToolbarContent<Leading: View, Middle: View, Trailing: View>: View {
+    @ViewBuilder
+    let leading: () -> Leading
+    @ViewBuilder
+    let middle: () -> Middle
+    @ViewBuilder
+    let trailing: () -> Trailing
+
+    var body: some View {
+        HStack {
+            leading()
+                .padding(.leading)
+            middle()
+                .frame(maxWidth: .infinity)
+            trailing()
+                .padding(.trailing)
         }
     }
 }
@@ -94,7 +181,7 @@ extension View {
         alert("Missing Models", isPresented: Binding(get: {
             stateBinding.wrappedValue != nil
         }, set: { shown in
-            if (!shown) {
+            if !shown {
                 stateBinding.wrappedValue = nil
             }
         }), presenting: stateBinding) { missing in
@@ -123,12 +210,12 @@ extension View {
             Text(missing.wrappedValue!.descriptiveMessage)
         }
     }
-    
+
     fileprivate func downloadAlert(stateBinding: Binding<FeiDbState.PendingDownload?>) -> some View {
         alert("Pending Download", isPresented: Binding(get: {
             stateBinding.wrappedValue != nil
         }, set: { shown in
-            if (!shown) {
+            if !shown {
                 stateBinding.wrappedValue = nil
             }
         })) {
@@ -149,17 +236,17 @@ extension View {
                     partialResult + (curr.size?.int64Value ?? 1 >> 12)
                 })
                 let byteCount = Measurement(value: Double(totalBytes), unit: UnitInformationStorage.bytes)
-                
+
                 Text("About to download \(state.files.count) files, consuming about \(byteCount.formatted(.byteCount(style: .file))) of data. When would you like to start?")
             }
         }
     }
-    
+
     fileprivate func errorAlert(stateBinding: Binding<FeiDbState.Error?>) -> some View {
         alert("An error occurred", isPresented: Binding(get: {
             stateBinding.wrappedValue != nil
         }, set: { newValue in
-            if (!newValue) {
+            if !newValue {
                 stateBinding.wrappedValue = nil
             }
         })) {
@@ -177,9 +264,9 @@ extension View {
             }
         }
     }
-    
+
     func statusBar(feiState: FeiDbState?) -> some View {
-        self.modifier(StatusBarModifier(feiState: feiState))
+        modifier(StatusBarModifier(feiState: feiState))
     }
 }
 
@@ -187,5 +274,5 @@ extension View {
     NavigationStack {
         Text("Example text here")
     }
-    .statusBar(feiState: .InProgress(total: 3, done: 1))
+    .statusBar(feiState: .Collecting())
 }
