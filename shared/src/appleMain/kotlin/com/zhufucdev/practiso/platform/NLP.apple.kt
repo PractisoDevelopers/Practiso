@@ -118,7 +118,20 @@ actual fun createFrameEmbeddingInference(
                 val localMlPackage = coreMlFolder.resolve("$modelFileName.mlpackage")
 
                 val filesToDownload = buildList {
-                    if (!fs.exists(localMlModelC) && !fs.exists(localMlPackage)) {
+                    val broken = if (!fs.exists(localMlModelC) && fs.exists(localMlPackage)) {
+                        try {
+                            compileModel(localMlPackage, localMlModelC)
+                            false
+                        } catch (_: IllegalStateException) {
+                            true
+                        } finally {
+                            fs.deleteRecursively(localMlPackage)
+                        }
+                    } else {
+                        false
+                    }
+
+                    if (broken || !fs.exists(localMlModelC) && !fs.exists(localMlPackage)) {
                         val modelRoot = "CoreML/model.mlpackage"
                         addAll(
                             HfDirectoryWalker(
@@ -131,7 +144,7 @@ actual fun createFrameEmbeddingInference(
                                 .toList()
                         )
                     }
-                    if (!fs.exists(localTokenizer)) {
+                    if (broken || !fs.exists(localTokenizer)) {
                         val file =
                             HfSingleFileWalker(
                                 repoId = model.hfId,
@@ -139,12 +152,6 @@ actual fun createFrameEmbeddingInference(
                             ).throwsFeiError().files.first()
                         add(file.copy(name = localTokenizer.name))
                     }
-                }
-
-                if (!fs.exists(localMlModelC) && fs.exists(localMlPackage)) {
-                    // assume the file's integrity
-                    compileModel(localMlPackage, localMlModelC)
-                    fs.deleteRecursively(localMlPackage)
                 }
 
                 if (filesToDownload.isNotEmpty()) {
