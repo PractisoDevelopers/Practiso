@@ -80,14 +80,13 @@ struct AnswerView : View {
             .statusBarHidden()
             .matchedGeometryEffect(id: takeId, in: namespace, isSource: true)
             .overlay(alignment: .topTrailing) {
-                ClosePushButton()
-                    .padding(max(16, window.safeAreaInsets.top - 28))
-                    .scalesOnTap(scale: 0.9)
-                    .onTapGesture {
-                        withAnimation {
-                            _ = contentModel.path.popLast()
-                        }
+                ClosePushButton {
+                    withAnimation {
+                        _ = contentModel.path.popLast()
                     }
+                }
+                    .padding(max(14, window.safeAreaInsets.top - 32))
+                    .scalesOnTap()
                     .ignoresSafeArea()
             }
             .overlay(alignment: .bottom) {

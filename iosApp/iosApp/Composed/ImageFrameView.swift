@@ -1,15 +1,15 @@
+import ComposeApp
 import Foundation
 import SwiftUI
-import ComposeApp
 
-struct ImageFrameView : View {
+struct ImageFrameView: View {
     enum DataState {
         case pending
         case ok(image: CGImage)
         case resourceUnavailable(fileName: String)
         case invalidImage(fileName: String)
     }
-    
+
     @State private var __data: DataState = .pending
     @State private var isFullscreen = false
     @State private var fullscreenScale: CGFloat = 1
@@ -36,7 +36,7 @@ struct ImageFrameView : View {
     var body: some View {
         Group {
             switch data?.wrappedValue ?? __data {
-            case .ok(let image):
+            case let .ok(image):
                 Image(image, scale: 1, orientation: .up, label: Text(frame.altText ?? ""))
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -45,7 +45,7 @@ struct ImageFrameView : View {
                         fullscreenScale = 1
                         isFullscreen = true
                     }
-                
+
             case .resourceUnavailable:
                 VStack {
                     Image(systemName: "photo.badge.exclamationmark")
@@ -63,7 +63,7 @@ struct ImageFrameView : View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .border(.secondary, cornerRadius: 12)
-                
+
             default:
                 VStack {
                     ProgressView()
@@ -98,7 +98,7 @@ struct ImageFrameView : View {
         .fullScreenCover(isPresented: $isFullscreen) {
             Group {
                 switch data?.wrappedValue ?? __data {
-                case .ok(let image):
+                case let .ok(image):
                     ZoomableScrollView(scale: $fullscreenScale, maxScale: 10) {
                         Image(image, scale: 1, label: Text(frame.altText ?? ""))
                             .resizable()
@@ -116,11 +116,11 @@ struct ImageFrameView : View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                ClosePushButton()
-                    .onTapGesture {
-                        isFullscreen = false
-                    }
-                    .padding(12)
+                ClosePushButton {
+                    isFullscreen = false
+                }
+                .scalesOnTap()
+                .padding(.horizontal)
             }
         }
         .alert("Alternative Text", isPresented: $isAltTextShown) {

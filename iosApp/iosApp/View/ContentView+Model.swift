@@ -8,6 +8,7 @@ extension ContentView {
         @Published var detail: Detail?
         @Published var path: [TopLevel] = []
         @Published var answerData: AnswerView.DataState = .pending
+        @Published var column: NavigationSplitViewColumn = .content
 
         var pathPeek: TopLevel {
             get {

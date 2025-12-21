@@ -22,7 +22,7 @@ struct ScaleTap : ViewModifier {
 }
 
 extension View {
-    func scalesOnTap(scale: Double = 0.97) -> some View {
+    func scalesOnTap(scale: Double = 0.9) -> some View {
         modifier(ScaleTap(scale: scale))
     }
 }

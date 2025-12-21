@@ -99,8 +99,10 @@ struct DimensionView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Create", systemImage: "plus") {
-                    isNamingAlertShown = true
+                if editMode.isEditing == false {
+                    Button("Create", systemImage: "plus") {
+                        isNamingAlertShown = true
+                    }
                 }
             }
         }

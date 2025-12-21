@@ -26,15 +26,17 @@ struct QuestionEditor : View {
         }
         .environment(\.editMode, Binding.constant(.inactive))
         .listStyle(.plain)
+        .toolbar(removing: .title)
+        .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItemGroup(placement: .secondaryAction) {
-                Button("Undo", systemImage: "arrow.uturn.backward.circle") {
+            ToolbarItemGroup(placement: .navigation) {
+                Button("Undo", systemImage: "arrow.uturn.backward") {
                     if let mod = history.undo() {
                         undo(mod)
                     }
                 }
                 .disabled(!history.canUndo)
-                Button("Redo", systemImage: "arrow.uturn.forward.circle") {
+                Button("Redo", systemImage: "arrow.uturn.forward") {
                     if let mod = history.redo() {
                         redo(mod)
                     }
@@ -148,6 +150,7 @@ struct QuestionEditor : View {
     NavigationStack {
         QuestionEditor(data: $frames, namespace: namespace, history: $history)
             .navigationTitle("Sample Question")
+            .environment(ContentView.ErrorHandler())
     }
 }
 

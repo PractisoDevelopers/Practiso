@@ -1,74 +1,78 @@
+import ComposeApp
 import Foundation
 import SwiftUI
-import ComposeApp
 
-struct SessionDetailView : View {
+struct SessionDetailView: View {
     let libraryService = LibraryService(db: Database.shared.app)
     let createService = CreateService(db: Database.shared.app)
     let editService = EditService(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ContentView.Model.self) private var contentModel
-    
+
     let option: SessionOption
     let namespace: Namespace.ID
-    
+
     @State private var isTakeCreatorShown = false
     @State private var takeParamsBuffer: TakeParameters
     @State private var isHiddenSectonExpanded = false
     @State private var takesFlow: SkieSwiftFlow<[TakeStat]>
-    
+
     init(option: SessionOption, namespace: Namespace.ID) {
         self.option = option
         self.namespace = namespace
-        self.takeParamsBuffer = .init(sessionId: option.id)
-        self.takesFlow = libraryService.getTakesBySession(id: option.id)
+        takeParamsBuffer = .init(sessionId: option.id)
+        takesFlow = libraryService.getTakesBySession(id: option.id)
     }
-    
+
     var body: some View {
-        Observing(takesFlow) {
-            OptionListPlaceholder()
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        ProgressView()
-                    }
-                }
-        } content: { array in
-            Group {
-                if array.isEmpty {
-                    OptionListPlaceholder()
-                } else {
-                    takeList(array)
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Create", systemImage: "plus") {
-                        isTakeCreatorShown = true
-                    }
-                }
-            }
-            .sheet(isPresented: $isTakeCreatorShown) {
-                NavigationStack {
-                    TakeCreatorView(session: option, takeParams: $takeParamsBuffer)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button("Cancel") {
-                                    isTakeCreatorShown = false
-                                }
+        Delay { pastDelay in
+            Observing(takesFlow) {
+                OptionListPlaceholder()
+                    .toolbar {
+                        if pastDelay {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                ProgressView()
                             }
-                            ToolbarItem(placement: .primaryAction) {
-                                Button("Create") {
-                                    isTakeCreatorShown = false
-                                    Task.detached {
-                                        await errorHandler.catchAndShowImmediately {
-                                            let creator = TakeCreator(take: takeParamsBuffer)
-                                            _ = try await creator.create()
-                                            takeParamsBuffer = TakeParameters(sessionId: option.id)
+                        }
+                    }
+            } content: { array in
+                Group {
+                    if array.isEmpty {
+                        OptionListPlaceholder()
+                    } else {
+                        takeList(array)
+                    }
+                }
+                .sheet(isPresented: $isTakeCreatorShown) {
+                    NavigationStack {
+                        TakeCreatorView(session: option, takeParams: $takeParamsBuffer)
+                            .toolbar {
+                                ToolbarItem(placement: .topBarLeading) {
+                                    Button("Cancel") {
+                                        isTakeCreatorShown = false
+                                    }
+                                }
+                                ToolbarItem(placement: .primaryAction) {
+                                    Button("Create") {
+                                        isTakeCreatorShown = false
+                                        Task.detached {
+                                            await errorHandler.catchAndShowImmediately {
+                                                let creator = TakeCreator(take: takeParamsBuffer)
+                                                _ = try await creator.create()
+                                                takeParamsBuffer = TakeParameters(sessionId: option.id)
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
+                    }
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Create", systemImage: "plus") {
+                    isTakeCreatorShown = true
                 }
             }
         }
@@ -89,7 +93,7 @@ struct SessionDetailView : View {
         }))
         .navigationBarTitleDisplayMode(.inline)
     }
-    
+
     func takeList(_ array: [TakeStat]) -> some View {
         List(selection: Binding(get: {
             Set<Int64>()
@@ -131,7 +135,7 @@ struct SessionDetailView : View {
         }
         .listStyle(.plain)
     }
-    
+
     var hiddenSectionHeader: some View {
         Button {
             withAnimation {

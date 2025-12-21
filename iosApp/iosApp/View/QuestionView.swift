@@ -1,6 +1,6 @@
+@preconcurrency import ComposeApp
 import Foundation
 import SwiftUI
-@preconcurrency import ComposeApp
 import UniformTypeIdentifiers
 
 struct QuestionView: View {
@@ -10,9 +10,9 @@ struct QuestionView: View {
     private let createService = CreateService(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ContentView.Model.self) private var contentModel
-    
+
     @State var data = OptionListData<OptionImpl<QuizOption>>()
-    
+
     @State private var isArchiveImporterShown = false
     @State private var isDeletingDialogShown = false
     @State private var editMode: EditMode = .inactive
@@ -24,11 +24,11 @@ struct QuestionView: View {
                 selection
             }, set: { newValue in
                 if !editMode.isEditing, let id = newValue.first {
-                    contentModel.detail = .question(data.items.first(where: {$0.id == id})!.kt)
+                    contentModel.detail = .question(data.items.first(where: { $0.id == id })!.kt)
                 }
                 selection = newValue
             }),
-            onDelete: { options in
+            onDelete: { _ in
                 isDeletingDialogShown = true
             }
         ) { option in
@@ -71,7 +71,7 @@ struct QuestionView: View {
                 Text("Would you like to delete these questions? This operation is inreversible.")
             } else if selection.count > 0 {
                 if let selectedId = selection.first {
-                    if let selectedName = data.items.first(where: { $0.id == selectedId  })?.view.header {
+                    if let selectedName = data.items.first(where: { $0.id == selectedId })?.view.header {
                         Text("Would you like to remove \"\(selectedName)\"? This operation is inreversible.")
                     }
                 }
@@ -80,17 +80,19 @@ struct QuestionView: View {
         .toolbar {
             if editMode == .inactive {
                 ToolbarItem(placement: .primaryAction) {
-                    Menu("Add", systemImage: "plus") {
-                        Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
-                            isArchiveImporterShown = true
-                        }
-                        
-                        Button("Create", systemImage: "document.badge.plus") {
-                            Task {
+                    Button("Create", systemImage: "plus") {
+                        Task {
+                            await errorHandler.catchAndShowImmediately {
                                 let created = try await createService.createNewQuiz()
                                 contentModel.detail = .question(created)
+                                contentModel.column = .detail
                             }
                         }
+                    }
+                }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button("Import Archive", systemImage: "square.and.arrow.down.on.square") {
+                        isArchiveImporterShown = true
                     }
                 }
             }
@@ -117,14 +119,14 @@ struct QuestionView: View {
             }
         }
     }
-    
+
     private func processImport(items: [CopiedTransfer]) -> Bool {
         var packs: [ArchivePack] = []
         packs.reserveCapacity(items.count)
-        
+
         for item in items {
             switch item {
-            case .binary(let data):
+            case let .binary(data):
                 if let pack = (errorHandler.catchAndShowImmediately {
                     try archiveService.unarchive(it: NamedSource(data: data))
                 }) {
@@ -132,7 +134,7 @@ struct QuestionView: View {
                 } else {
                     return true
                 }
-            case .url(let url):
+            case let .url(url):
                 if let pack = (errorHandler.catchAndShowImmediately {
                     try archiveService.unarchive(it: NamedSource(url: url))
                 }) {
@@ -140,18 +142,18 @@ struct QuestionView: View {
                 } else {
                     return true
                 }
-            case .error(let description):
+            case let .error(description):
                 errorHandler.show(message: description)
                 return true
             }
         }
-        
+
         for pack in packs {
             errorHandler.catchAndShowImmediately {
                 try importService.importAll(pack: pack)
             }
         }
-        
+
         return true
     }
 }

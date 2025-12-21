@@ -64,10 +64,6 @@ struct SessionCreatorView : View {
                         }
                         .disabled(model.isEmpty)
                     }
-                    ToolbarItem(placement: .status) {
-                        Text("\(model.sessionParams.selection.quizIds.count + model.sessionParams.selection.dimensionIds.count) items selected")
-                            .font(.footnote)
-                    }
                 }
         }
     }

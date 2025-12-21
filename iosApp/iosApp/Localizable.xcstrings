@@ -201,6 +201,7 @@
       }
     },
     "%lld items selected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -365,6 +366,9 @@
       }
     },
     "Account removed." : {
+
+    },
+    "Acending" : {
 
     },
     "Add" : {
@@ -859,6 +863,9 @@
         }
       }
     },
+    "Decending" : {
+
+    },
     "Delete" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1165,6 +1172,7 @@
       }
     },
     "Edit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1791,6 +1799,9 @@
         }
       }
     },
+    "Loading question..." : {
+
+    },
     "Loading Question..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2227,6 +2238,9 @@
         }
       }
     },
+    "Question name" : {
+
+    },
     "Question Unavailable" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2290,6 +2304,9 @@
           }
         }
       }
+    },
+    "Rename" : {
+
     },
     "Replace With" : {
       "localizations" : {
@@ -2576,6 +2593,9 @@
           }
         }
       }
+    },
+    "Sorting" : {
+
     },
     "Source" : {
       "localizations" : {

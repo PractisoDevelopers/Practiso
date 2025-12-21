@@ -11,7 +11,6 @@ struct ContentView: View {
     @ObservedObject private var takeStarterCache = TakeStarter.Cache()
     @State private var feiState: FeiDbState? = nil
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
-    @State private var preferredColumn: NavigationSplitViewColumn = .content
     @State private var appScale = 1.0
     @State private var isBackGestureActivated = false
 
@@ -96,7 +95,7 @@ struct ContentView: View {
     }
     
     var libraryApp: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
+        NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $model.column) {
             LibraryView(destination: $model.destination)
                 .titleBar(title: "Library", feiState: feiState)
         } content: {
