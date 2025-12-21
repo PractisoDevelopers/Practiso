@@ -98,26 +98,26 @@ struct ContentView: View {
     var libraryApp: some View {
         NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredColumn) {
             LibraryView(destination: $model.destination)
-                .navigationTitle("Library")
+                .titleBar(title: "Library", feiState: feiState)
         } content: {
             Group {
                 switch model.destination {
                 case .template:
                     TemplateView()
-                        .navigationTitle("Template")
+                        .titleBar(title: "Template", feiState: feiState)
                 case .dimension:
                     DimensionView()
-                        .navigationTitle("Dimension")
+                        .titleBar(title: "Dimension", feiState: feiState)
                 case .question:
                     QuestionView()
-                        .navigationTitle("Question")
+                        .titleBar(title: "Question", feiState: feiState)
                 default:
                     SessionView(namespace: namespace)
-                        .navigationTitle("Session")
+                        .titleBar(title: "Session", feiState: feiState)
+                        .navigationBarTitleDisplayMode(.inline)
                         .environment(\.takeStarterCache, takeStarterCache)
                 }
             }
-            .statusBar(feiState: feiState)
         } detail: {
             Group {
                 switch model.detail {
@@ -125,7 +125,7 @@ struct ContentView: View {
                     QuestionDetailView(option: quizOption)
                 case .dimension(let dimensionOption):
                     DimensionDetailView(option: dimensionOption)
-                case .template(let templateOption):
+                case .template(_):
                     TemplateDetailView()
                 case .session(let sessionOption):
                     SessionDetailView(option: sessionOption, namespace: namespace)

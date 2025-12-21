@@ -3,153 +3,88 @@ import Foundation
 import SwiftUI
 
 struct StatusBarModifier: ViewModifier {
+    let title: LocalizedStringKey
     let feiState: FeiDbState?
     @State private var missingModelDialog: FeiDbState.MissingModel? = nil
     @State private var pendingDownloadDialog: FeiDbState.PendingDownload? = nil
     @State private var errorState: FeiDbState.Error? = nil
 
     func body(content: Content) -> some View {
-        content.toolbar {
-            toolbarContent
+        Group {
+            if #available(iOS 26.0, *) {
+                content
+                    .navigationTitle(title)
+                    .toolbar {
+                        ToolbarItem(placement: .subtitle) {
+                            actionStatus
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        ToolbarItem(placement: .topBarTrailing) {
+                            progress
+                        }
+                    }
+            } else {
+                content.toolbar {
+                    ToolbarItem(placement: .principal) {
+                        VStack {
+                            Text(title)
+                                .fontWeight(.semibold)
+
+                            actionStatus
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
         }
         .missingModelAlert(stateBinding: $missingModelDialog)
         .downloadAlert(stateBinding: $pendingDownloadDialog)
         .errorAlert(stateBinding: $errorState)
     }
 
-    private func buildInProgress(progress: Float, total: Int32) -> some View {
-        SymmetricToolbarContent {
-            CircularProgressView(value: progress)
-        } middle: {
-            Text("Inferring \(total) items...")
-                .font(.caption)
-        } trailing: {
-            Spacer()
-                .frame(width: 24)
-        }
-    }
+    var actionStatus: some View {
+        Group {
+            switch onEnum(of: feiState) {
+            case let .inProgress(progress):
+                Text("Inferring \(progress.total) items...")
 
-    private func buildDownloading(progress: Float) -> some View {
-        SymmetricToolbarContent {
-            CircularProgressView(value: progress)
-        } middle: {
-            Text("Downloading model...")
-                .font(.caption)
-        } trailing: {
-            Spacer()
-                .frame(width: 24)
-        }
-    }
+            case .downloadingInference:
+                Text("Downloading model...")
 
-    private func buildPendingDownload(action: @escaping () -> Void) -> some View {
-        SymmetricToolbarContent {
-            if #available(iOS 26.0, *) {
-                Image(systemName: "arrow.down.circle.dotted")
-                    .symbolEffect(.wiggle.byLayer, options: .repeat(.periodic(delay: 0.5)))
-                    .frame(minWidth: 24)
-            } else {
-                Image(systemName: "arrow.down.circle.dotted")
-                    .frame(minWidth: 24)
-            }
-        } middle: {
-            Button("Download required", action: action)
-                .buttonStyle(.plain)
-                .font(.caption)
-        } trailing: {
-            Spacer()
-                .frame(width: 24)
-        }
-    }
-
-    private func buildMissingDialog(action: @escaping () -> Void) -> some View {
-        SymmetricToolbarContent {
-            Image(systemName: "gear.badge.questionmark")
-                .frame(minWidth: 24)
-        } middle: {
-            Button("Missing models", action: action)
-                .buttonStyle(.plain)
-                .font(.caption)
-        } trailing: {
-            Spacer()
-                .frame(width: 24)
-        }
-    }
-
-    private func buildCollectingItems() -> some View {
-        SymmetricToolbarContent {
-            Image(systemName: "text.page.badge.magnifyingglass")
-                .symbolEffect(.wiggle.byLayer, options: .repeat(.periodic(delay: 0.5)))
-                .frame(minWidth: 24)
-        } middle: {
-            Text("Collecting frames...")
-                .font(.caption)
-        } trailing: {
-            Spacer()
-                .frame(width: 24)
-        }
-    }
-
-    private func buildError(message: AppMessage?, action: @escaping () -> Void) -> some View {
-        SymmetricToolbarContent {
-            Image(systemName: "exclamationmark.octagon")
-                .frame(minWidth: 24)
-        } middle: {
-            Button(message != nil ? String(errorMessage: message!) : String(localized: "An error occurred"), action: action)
-                .buttonStyle(.plain)
-                .font(.caption)
-        } trailing: {
-            Spacer()
-                .frame(width: 24)
-        }
-    }
-
-    @ToolbarContentBuilder
-    var toolbarContent: some ToolbarContent {
-        switch onEnum(of: feiState) {
-        case let .inProgress(progress):
-            ToolbarItem(placement: .bottomBar) {
-                buildInProgress(progress: Float(progress.done) / Float(progress.total), total: progress.total)
-            }
-
-        case let .downloadingInference(download):
-            ToolbarItem(placement: .bottomBar) {
-                buildDownloading(progress: download.progress)
-            }
-
-        case let .pendingDownload(pending):
-            ToolbarItem(placement: .status) {
-                buildPendingDownload {
-                    pendingDownloadDialog = pending
+            case let .pendingDownload(state):
+                Button("Download required") {
+                    pendingDownloadDialog = state
                 }
-            }
 
-        default:
-            toolbarContent_2
+            case let .missingModel(state):
+                Button("Missing models") {
+                    missingModelDialog = state
+                }
+
+            case .collecting:
+                Text("Collecting frames...")
+
+            case let .error(error):
+                Text({ if let message = error.error.appMessage { String(errorMessage: message) } else { String(localized: "An error occurred") }}())
+
+            default:
+                EmptyView()
+            }
         }
     }
 
-    @ToolbarContentBuilder
-    var toolbarContent_2: some ToolbarContent {
-        switch onEnum(of: feiState) {
-        case let .missingModel(mms):
-            ToolbarItem(placement: .bottomBar) {
-                buildMissingDialog {
-                    missingModelDialog = mms
-                }
-            }
-        case .collecting:
-            ToolbarItem(placement: .bottomBar) {
-                buildCollectingItems()
-            }
-        case let .error(error):
-            ToolbarItem(placement: .bottomBar) {
-                buildError(message: error.error.appMessage) {
-                    errorState = error
-                }
-            }
+    var progress: some View {
+        Group {
+            switch onEnum(of: feiState) {
+            case let .inProgress(progress):
+                CircularProgressView(value: Float(progress.done) / Float(progress.total))
 
-        default:
-            ToolbarItem(placement: .status) {
+            case let .downloadingInference(progress):
+                CircularProgressView(value: progress.progress)
+
+            default:
                 EmptyView()
             }
         }
@@ -265,14 +200,20 @@ extension View {
         }
     }
 
-    func statusBar(feiState: FeiDbState?) -> some View {
-        modifier(StatusBarModifier(feiState: feiState))
+    func titleBar(title: LocalizedStringKey, feiState: FeiDbState?) -> some View {
+        modifier(StatusBarModifier(title: title, feiState: feiState))
     }
 }
 
 #Preview {
     NavigationStack {
         Text("Example text here")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    EditButton()
+                }
+            }
+            .titleBar(title: "Practiso", feiState: .InProgress(total: 30, done: 25))
     }
-    .statusBar(feiState: .Collecting())
 }
