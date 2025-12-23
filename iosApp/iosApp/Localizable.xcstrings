@@ -1637,6 +1637,7 @@
 
     },
     "interact with status bar to continue" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

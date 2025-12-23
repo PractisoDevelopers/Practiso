@@ -24,16 +24,7 @@ struct SessionView: View {
     
     var body: some View {
         Observing(sessionFlow, takeFlow) {
-            Delay { pass in
-                OptionListPlaceholder()
-                    .toolbar {
-                        if pass {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                ProgressView()
-                            }
-                        }
-                    }
-            }
+            OptionListPlaceholder()
         } content: { sessions, takes in
             if sessions.isEmpty && takes.isEmpty {
                 OptionListPlaceholder()

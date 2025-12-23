@@ -112,7 +112,7 @@ fileprivate struct SymmetricToolbarContent<Leading: View, Middle: View, Trailing
 }
 
 extension View {
-    fileprivate func missingModelAlert(stateBinding: Binding<FeiDbState.MissingModel?>) -> some View {
+    func missingModelAlert(stateBinding: Binding<FeiDbState.MissingModel?>) -> some View {
         alert("Missing Models", isPresented: Binding(get: {
             stateBinding.wrappedValue != nil
         }, set: { shown in
@@ -146,7 +146,7 @@ extension View {
         }
     }
 
-    fileprivate func downloadAlert(stateBinding: Binding<FeiDbState.PendingDownload?>) -> some View {
+    func downloadAlert(stateBinding: Binding<FeiDbState.PendingDownload?>) -> some View {
         alert("Pending Download", isPresented: Binding(get: {
             stateBinding.wrappedValue != nil
         }, set: { shown in
@@ -177,7 +177,7 @@ extension View {
         }
     }
 
-    fileprivate func errorAlert(stateBinding: Binding<FeiDbState.Error?>) -> some View {
+    func errorAlert(stateBinding: Binding<FeiDbState.Error?>) -> some View {
         alert("An error occurred", isPresented: Binding(get: {
             stateBinding.wrappedValue != nil
         }, set: { newValue in
