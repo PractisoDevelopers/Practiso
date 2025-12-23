@@ -79,13 +79,6 @@ struct QuestionDetailView: View {
                     ToolbarItem(placement: .confirmationAction) {
                         EditButton()
                             .environment(\.editMode, $editMode)
-                            .onTapGesture {
-                                if !editHistory.isEmpty {
-                                    errorHandler.catchAndShowImmediately {
-                                        try editService.saveModification(data: editHistory.modifications, quizId: option.id)
-                                    }
-                                }
-                            }
                     }
                 } else {
                     ToolbarItem(placement: .bottomBar) {
@@ -129,6 +122,13 @@ struct QuestionDetailView: View {
             return
         }
         
+        if editHistory.isEmpty {
+            return
+        }
+        
+        errorHandler.catchAndShowImmediately {
+            try editService.saveModification(data: editHistory.modifications, quizId: option.id)
+        }
         editHistory = History() // editor always starts with empty history
     }
 
