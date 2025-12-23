@@ -61,6 +61,7 @@ struct SuggestionSelector : View {
     
     @State private var missingModelAlert: FeiDbState.MissingModel? = nil
     @State private var downloadPendingAlert: FeiDbState.PendingDownload? = nil
+    @State private var errorAlert: FeiDbState.Error? = nil
     var initializationView: some View {
         Observing(Database.shared.fei.getUpgradeState()) {
             loadingView
@@ -80,6 +81,16 @@ struct SuggestionSelector : View {
                         downloadPendingAlert = state
                     }
                     .downloadAlert(stateBinding: $downloadPendingAlert)
+            case let .error(state):
+                VStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.title2)
+                    Text("Suggestions failed")
+                }
+                    .onAppear {
+                        errorAlert = state
+                    }
+                    .errorAlert(stateBinding: $errorAlert)
             default:
                 VStack {
                     ProgressView()

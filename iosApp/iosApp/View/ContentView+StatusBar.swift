@@ -67,7 +67,9 @@ struct StatusBarModifier: ViewModifier {
                 Text("Collecting frames...")
 
             case let .error(error):
-                Text({ if let message = error.error.appMessage { String(errorMessage: message) } else { String(localized: "An error occurred") }}())
+                Button("An error occurred") {
+                    errorState = error
+                }
 
             default:
                 EmptyView()
