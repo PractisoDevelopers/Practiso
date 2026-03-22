@@ -15,7 +15,7 @@ struct TakeServiceKey : EnvironmentKey {
 }
 
 struct TakeStarterCacheKey : EnvironmentKey {
-    static let defaultValue: TakeStarter.Cache = .init()
+    static let defaultValue: TakeStarterDefaultLabel.Cache = .init()
 }
 
 extension EnvironmentValues {
@@ -34,7 +34,7 @@ extension EnvironmentValues {
         set { self[TakeServiceKey.self] = newValue }
     }
     
-    var takeStarterCache: TakeStarter.Cache {
+    var takeStarterCache: TakeStarterDefaultLabel.Cache {
         get { self[TakeStarterCacheKey.self] }
         set { self[TakeStarterCacheKey.self] = newValue }
     }

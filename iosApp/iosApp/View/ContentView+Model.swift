@@ -7,8 +7,9 @@ extension ContentView {
         @Published var destination: Destination? = .session
         @Published var detail: Detail?
         @Published var path: [TopLevel] = []
-        @Published var answerData: AnswerView.DataState = .pending
+        @Published var answerData: AnswerViewDataState = .pending
         @Published var column: NavigationSplitViewColumn = .content
+        @Published var hideStatusBar = false
 
         var pathPeek: TopLevel {
             get {

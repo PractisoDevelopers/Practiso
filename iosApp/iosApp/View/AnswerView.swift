@@ -1,36 +1,30 @@
+import ComposeApp
 import Foundation
 import SwiftUI
-import ComposeApp
 import SwiftUIPager
+import Transmission
 
-struct AnswerView : View {
-    @Environment(ContentView.Model.self) private var contentModel
+struct AnswerView<CloseButton: View>: View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
-    
+
     let takeId: Int64
-    let namespace: Namespace.ID
     let service: TakeService
-    
-    @Binding private var data: DataState
+    @ViewBuilder let closeButton: () -> CloseButton
+
+    @Binding private var data: AnswerViewDataState
     @Binding private var isGesturesEnabled: Bool
     @StateObject private var page: SwiftUIPager.Page = .first()
     @State private var buffer = Buffer()
-    
-    init(takeId: Int64, namespace: Namespace.ID, data: Binding<DataState>, isGesturesEnabled: Binding<Bool> = .constant(true)) {
+
+    init(takeId: Int64, data: Binding<AnswerViewDataState>, closeButton: @escaping () -> CloseButton, isGesturesEnabled: Binding<Bool> = .constant(true)) {
         self.takeId = takeId
-        self.namespace = namespace
+        self.closeButton = closeButton
         let service = TakeService(takeId: takeId, db: Database.shared.app)
         self.service = service
-        self._data = data
-        self._isGesturesEnabled = isGesturesEnabled
+        _data = data
+        _isGesturesEnabled = isGesturesEnabled
     }
-    
-    enum DataState {
-        case pending
-        case transition(qf: QuizFrames)
-        case ok(qf: [QuizFrames], answers: [PractisoAnswer], currentQuizId: Int64)
-    }
-    
+
     var body: some View {
         GeometryReader { window in
             ZStack {
@@ -40,12 +34,12 @@ struct AnswerView : View {
                         ProgressView()
                         Text("Loading Take...")
                     }
-                case .transition(let qf):
-                    Page(quizFrames: qf, answer: [], namespace: namespace)
+                case let .transition(qf):
+                    Page(quizFrames: qf, answer: [])
                         .pageDefaults(safeAreaTop: window.safeAreaInsets.top)
-                case .ok(let qf, let answers, _):
+                case let .ok(qf, answers, _):
                     SwiftUIPager.Pager(page: page, data: qf, id: \.quiz.id) { qf in
-                        Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id }, namespace: namespace)
+                        Page(quizFrames: qf, answer: answers.filter { $0.quizId == qf.quiz.id })
                             .pageDefaults(safeAreaTop: window.safeAreaInsets.top)
                             .background()
                     }
@@ -59,7 +53,7 @@ struct AnswerView : View {
                         }
                     }
                     .gesture(
-                        PanGesture(isEnabled: $isGesturesEnabled, source: [.mouse, .trackpad]) { location, translation, velocity in
+                        PanGesture(isEnabled: $isGesturesEnabled, source: [.mouse, .trackpad]) { _, translation, _ in
                             if abs(translation.y) > 100 {
                                 withAnimation {
                                     if translation.y < 0 {
@@ -76,16 +70,10 @@ struct AnswerView : View {
                     )
                 }
             }
-            .background()
-            .statusBarHidden()
-            .matchedGeometryEffect(id: takeId, in: namespace, isSource: true)
+            .hideUIKitStatusBar()
             .overlay(alignment: .topTrailing) {
-                ClosePushButton {
-                    withAnimation {
-                        _ = contentModel.path.popLast()
-                    }
-                }
-                    .padding(max(14, window.safeAreaInsets.top - 32))
+                closeButton()
+                    .padding(max(14, window.safeAreaInsets.top - 40))
                     .scalesOnTap()
                     .ignoresSafeArea()
             }
@@ -106,7 +94,7 @@ struct AnswerView : View {
                 }
             }
             .task(id: takeId) {
-                let curr: Int64 = if let id = (try? await service.getCurrentQuizId())?.int64Value {
+                let curr: Int64 = if let id = service.getCurrentQuizId()?.int64Value {
                     id
                 } else {
                     -1
@@ -120,11 +108,11 @@ struct AnswerView : View {
             .environment(\.takeService, service)
         }
     }
-    
+
     func initative() {
         let state = buffer.dataState()
-        if case .ok(let qf, _, let currentQuizId) = state {
-            let firstInitativation = if case .ok(_, _, _) = data {
+        if case let .ok(qf, _, currentQuizId) = state {
+            let firstInitativation = if case .ok = data {
                 false
             } else {
                 true
@@ -147,13 +135,13 @@ struct AnswerView : View {
             }
         }
     }
-    
+
     private struct Buffer {
         var qf: [QuizFrames]? = nil
         var answers: [PractisoAnswer]? = nil
         var currQuizId: Int64? = nil
-        
-        func dataState() -> DataState {
+
+        func dataState() -> AnswerViewDataState {
             if let qf = qf, let ans = answers, let currQuizId = currQuizId {
                 .ok(qf: qf, answers: ans, currentQuizId: currQuizId)
             } else {
@@ -169,4 +157,10 @@ extension View {
             .offset(y: safeAreaTop < 56 ? 56 : 0)
             .frame(maxHeight: .infinity, alignment: .top)
     }
+}
+
+enum AnswerViewDataState {
+    case pending
+    case transition(qf: QuizFrames)
+    case ok(qf: [QuizFrames], answers: [PractisoAnswer], currentQuizId: Int64)
 }

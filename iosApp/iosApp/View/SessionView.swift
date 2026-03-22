@@ -1,23 +1,20 @@
-import SwiftUI
-import Foundation
 @preconcurrency import ComposeApp
+import Foundation
+import SwiftUI
+import Transmission
 
 struct SessionView: View {
-    let namespace: Namespace.ID
-    
     private let libraryService = LibraryService(db: Database.shared.app)
     private let removeService = RemoveServiceSync(db: Database.shared.app)
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
     @Environment(ContentView.Model.self) private var contentModel
-    
+
     @State private var isCreatorShown = false
     @State private var creatorModel = SessionCreatorView.Model()
-    @State private var selection = Set<Int64>()
     @State private var sessionFlow: SkieSwiftFlow<[SessionOption]>
     @State private var takeFlow: SkieSwiftFlow<[TakeStat]>
     
-    init(namespace: Namespace.ID) {
-        self.namespace = namespace
+    init() {
         self.sessionFlow = libraryService.getSessions()
         self.takeFlow = libraryService.getRecentTakes()
     }
@@ -29,25 +26,27 @@ struct SessionView: View {
             if sessions.isEmpty && takes.isEmpty {
                 OptionListPlaceholder()
             } else {
-                List(selection: Binding(get: {
-                    selection
+                List(selection: Binding<Set<Int128>>(get: {
+                    Set()
                 }, set: { newValue in
-                    if newValue.count == 1 {
-                        let id = newValue.first!
+                    if let id = newValue.first {
+                        let id = Int64(id & Int128(Int64.max))
                         if let option = sessions.first(where: { $0.id == id }) {
                             contentModel.detail = .session(option)
+                            contentModel.column = .detail
                         }
                     }
-                    selection = newValue
                 })) {
                     Section("Takes") {
-                        ForEach(takes, id: \.id) { stat in
-                            TakeStarter(stat: stat, namespace: namespace)
+                        ForEach(takes, id: \.sessionId) { stat in
+                            TakeStarter(stat: stat) {
+                                TakeStarterDefaultLabel(stat: $0, answerData: $1)
+                            }
                         }
                         .listRowSeparator(.hidden)
                     }
                     Section("Sessions") {
-                        ForEach(sessions.map(OptionImpl.init), id: \.id) { option in
+                        ForEach(sessions.map(OptionImpl.init), id: \.sessionId) { option in
                             OptionListItem(data: option)
                                 .swipeActions {
                                     Button("Remove", systemImage: "trash", role: .destructive) {
@@ -83,6 +82,7 @@ struct SessionView: View {
                             case .reveal:
                                 let session = await libraryService.getSession(id: sessionId).makeAsyncIterator().next()!
                                 contentModel.detail = .session(session)
+                                contentModel.column = .detail
                             case .startTake:
                                 contentModel.pathPeek = .answer(takeId: takeId)
                             case .none:
@@ -109,5 +109,17 @@ struct SessionView: View {
                 isCreatorShown = false
             }
         }
+    }
+}
+
+extension TakeStat {
+    var sessionId: Int128 {
+        1 << 64 | Int128(self.id)
+    }
+}
+
+extension OptionImpl<SessionOption> {
+    var sessionId: Int128 {
+        2 << 64 | Int128(self.id)
     }
 }

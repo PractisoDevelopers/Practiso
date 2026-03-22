@@ -7,13 +7,11 @@ extension AnswerView {
         let quizId: Int64
         let frames: [Frame]
         let answer: [PractisoAnswer]
-        let namespace: Namespace.ID
         
-        init(quizFrames: QuizFrames, answer: [PractisoAnswer], namespace: Namespace.ID) {
+        init(quizFrames: QuizFrames, answer: [PractisoAnswer]) {
             self.quizId = quizFrames.quiz.id
             self.frames = quizFrames.frames.sorted(by: { $0.priority < $1.priority }).map(\.frame)
             self.answer = answer
-            self.namespace = namespace
         }
         
         var body: some View {
@@ -21,10 +19,9 @@ extension AnswerView {
                 ForEach(frames, id: \.utid) { frame in
                     switch onEnum(of: frame) {
                     case .answerable(let frame):
-                        StatefulFrame(quizId: quizId, data: frame, answers: answer.filter { $0.frameId == frame.id },
-                                      namespace: namespace)
+                        StatefulFrame(quizId: quizId, data: frame, answers: answer.filter { $0.frameId == frame.id })
                     default:
-                        StatelessFrame(data: frame, namespace: namespace)
+                        StatelessFrame(data: frame)
                     }
                 }
             }
@@ -33,18 +30,14 @@ extension AnswerView {
     
     struct StatelessFrame : View {
         let data: Frame
-        let namespace: Namespace.ID
-        
         var body: some View {
             switch onEnum(of: data) {
             case .answerable(_):
                 fatalError("Stateless frame with Answerable model.")
             case .image(let image):
                 ImageFrameView(frame: image.imageFrame)
-                    .matchedGeometryEffect(id: image.utid, in: namespace)
             case .text(let text):
                 TextFrameView(frame: text.textFrame)
-                    .matchedTransitionSource(id: text.utid, in: namespace)
             }
         }
     }
@@ -55,13 +48,11 @@ extension AnswerView {
         let quizId: Int64
         let data: FrameAnswerable
         let answers: [PractisoAnswer]
-        let namespace: Namespace.ID
         
-        init(quizId: Int64, data: FrameAnswerable, answers: [PractisoAnswer], namespace: Namespace.ID) {
+        init(quizId: Int64, data: FrameAnswerable, answers: [PractisoAnswer]) {
             self.quizId = quizId
             self.data = data
             self.answers = answers
-            self.namespace = namespace
         }
         
         var body: some View {
@@ -69,9 +60,9 @@ extension AnswerView {
                 switch onEnum(of: data) {
                 case .options(let options):
                     if options.frames.count(where: {$0.isKey}) <= 1 {
-                        SingleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId, namespace: namespace)
+                        SingleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId)
                     } else {
-                        MultipleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId, namespace: namespace)
+                        MultipleAnswerOptionsFrame(options: options, answers: answers, quizId: quizId)
                     }
                 }
             }
@@ -91,15 +82,13 @@ extension AnswerView {
             let options: FrameOptions
             let answers: [PractisoAnswer]
             let quizId: Int64
-            let namespace: Namespace.ID
             
             @State private var xOffsets: [Double]
             
-            init(options: FrameOptions, answers: [PractisoAnswer], quizId: Int64, namespace: Namespace.ID) {
+            init(options: FrameOptions, answers: [PractisoAnswer], quizId: Int64) {
                 self.options = options
                 self.answers = answers
                 self.quizId = quizId
-                self.namespace = namespace
                 
                 self.xOffsets = Array(repeating: 0.0, count: options.frames.count)
             }
@@ -108,7 +97,7 @@ extension AnswerView {
                 VStack(alignment: .leading) {
                     ForEach(Array(options.frames.enumerated()), id: \.element.frame.utid) { index, option in
                         Checkmark(isOn: itemBindings[index]) {
-                            StatelessFrame(data: option.frame, namespace: namespace)
+                            StatelessFrame(data: option.frame)
                                 .offset(x: xOffsets[index])
                                 .onTapGesture {
                                     itemBindings[index].wrappedValue.toggle()
@@ -166,15 +155,13 @@ extension AnswerView {
             let options: FrameOptions
             let answers: [PractisoAnswer]
             let quizId: Int64
-            let namespace: Namespace.ID
             
             @State private var xOffsets: [Double]
             
-            init(options: FrameOptions, answers: [PractisoAnswer], quizId: Int64, namespace: Namespace.ID) {
+            init(options: FrameOptions, answers: [PractisoAnswer], quizId: Int64) {
                 self.options = options
                 self.answers = answers
                 self.quizId = quizId
-                self.namespace = namespace
                 
                 self.xOffsets = Array(repeating: 0.0, count: options.frames.count)
             }
@@ -183,7 +170,7 @@ extension AnswerView {
                 VStack(alignment: .leading) {
                     ForEach(Array(options.frames.enumerated()), id: \.element.frame.utid) { index, option in
                         CheckmarkSquare(isOn: itemBindings[index]) {
-                            StatelessFrame(data: option.frame, namespace: namespace)
+                            StatelessFrame(data: option.frame)
                                 .offset(x: xOffsets[index])
                                 .onTapGesture {
                                     itemBindings[index].wrappedValue.toggle()

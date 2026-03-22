@@ -1,27 +1,48 @@
+@preconcurrency import ComposeApp
 import Foundation
 import SwiftUI
-@preconcurrency import ComposeApp
+import Transmission
 
-struct TakeStarter : View {
+struct TakeStarter<Label: View>: View {
+    let stat: TakeStat
+    @State var answerData: AnswerViewDataState = .pending
+    @ViewBuilder let label: (TakeStat, Binding<AnswerViewDataState>) -> Label
+
+    @Environment(ContentView.Model.self) private var contentModel
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
+    @Environment(\.presentationCoordinator) var presentationCoordinator
+
+    var body: some View {
+        PresentationLink(transition: .zoom) {
+            AnswerView(takeId: stat.id, data: $answerData) {
+                ClosePushButton {
+                    presentationCoordinator.dismiss()
+                }
+            }
+            .environment(errorHandler)
+            .environment(contentModel)
+        } label: {
+            label(stat, $answerData)
+        }
+    }
+}
+
+struct TakeStarterDefaultLabel: View {
+    let stat: TakeStat
+    @Binding var answerData: AnswerViewDataState
+
+    @State private var data: DataState = .pending
+    @State private var isReady: Bool = false
+    @State private var isLocked: Bool = false
+    
+    @Environment(\.takeStarterCache) private var cache
+
+    private let placeholderNS = Namespace()
+
     enum DataState {
         case pending
         case ok(QuizFrames)
         case empty
-    }
-    
-    let stat: TakeStat
-    let namespace: Namespace.ID
-    
-    @Environment(ContentView.Model.self) private var contentModel
-    @Environment(\.takeStarterCache) private var cache
-    
-    @State private var isReady: Bool = false
-    @State private var isLocked: Bool = false
-    @State private var data: DataState = .pending
-    
-    init(stat: TakeStat, namespace: Namespace.ID) {
-        self.stat = stat
-        self.namespace = namespace
     }
 
     var body: some View {
@@ -46,8 +67,8 @@ struct TakeStarter : View {
                     } content: {
                         Text("Session is empty")
                     }
-                case .ok(let qf):
-                    Question(frames: qf.frames, namespace: namespace)
+                case let .ok(qf):
+                    Question(frames: qf.frames, namespace: placeholderNS.wrappedValue)
                         .opacity(isReady ? 0.6 : 0)
                         .animation(.default, value: isReady)
                 }
@@ -56,23 +77,13 @@ struct TakeStarter : View {
             .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2), .init(color: .black, location: 1)], startPoint: .top, endPoint: .bottom))
             .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2), .init(color: .black, location: 1)], startPoint: .leading, endPoint: .trailing))
         }
-        .background {
-            Rectangle().fill(Color(accentColorFrom: "\(stat.name)\(stat.id)"))
-                .matchedGeometryEffect(id: stat.id, in: namespace)
-        }
+        .background(Color(accentColorFrom: "\(stat.name)\(stat.id)"), in: .rect)
         .clipShape(.rect(cornerRadius: 20))
         .frame(maxWidth: .infinity)
-        .scalesOnRelease {
-            if case .ok(let qf) = data {
-                contentModel.answerData = .transition(qf: qf)
-            }
-            withAnimation {
-                contentModel.pathPeek = .answer(takeId: stat.id)
-            }
-        }
         .task(id: stat.id) {
             if let cached = await cache.get(name: stat.id) {
                 data = .ok(cached)
+                answerData = .transition(qf: cached)
             }
             let takeService = TakeService(takeId: stat.id, db: Database.shared.app)
             if let quiz = try? await takeService.getCurrentQuiz() {
@@ -85,9 +96,14 @@ struct TakeStarter : View {
     
     private func updateModel(newValue: DataState) {
         data = newValue
+        if case let .ok(v) = newValue {
+            answerData = .transition(qf: v)
+        } else {
+            answerData = .pending
+        }
         DispatchQueue.main.schedule {
             withAnimation {
-                if case .ok(let v) = newValue {
+                if case let .ok(v) = newValue {
                     Task {
                         await cache.put(name: stat.id, value: v)
                     }

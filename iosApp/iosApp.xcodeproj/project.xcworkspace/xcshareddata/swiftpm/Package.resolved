@@ -1,6 +1,24 @@
 {
-  "originHash" : "779b6c0911bd3db6600429be0177d011474810635ec16709da3b47c4cfb7ab02",
+  "originHash" : "002b498a447230d867fcd3201956db9962bc6f92ab828dea3180d769b5c174b6",
   "pins" : [
+    {
+      "identity" : "engine",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nathantannar4/Engine",
+      "state" : {
+        "revision" : "f532c1bf9ca338f332e61145dad0a9aa1a8402eb",
+        "version" : "2.6.2"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax",
+      "state" : {
+        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
+        "version" : "602.0.0"
+      }
+    },
     {
       "identity" : "swiftuipager",
       "kind" : "remoteSourceControl",
@@ -8,6 +26,15 @@
       "state" : {
         "revision" : "4ddc04c801aac143090bb14cf26603a3bf9c74cb",
         "version" : "2.5.0"
+      }
+    },
+    {
+      "identity" : "transmission",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nathantannar4/Transmission",
+      "state" : {
+        "revision" : "463735ac34dbf39bb4b6246e60e8793353a4c33d",
+        "version" : "2.8.1"
       }
     }
   ],

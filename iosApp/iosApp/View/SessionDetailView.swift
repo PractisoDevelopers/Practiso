@@ -1,6 +1,7 @@
 import ComposeApp
 import Foundation
 import SwiftUI
+import Transmission
 
 struct SessionDetailView: View {
     let libraryService = LibraryService(db: Database.shared.app)
@@ -10,16 +11,14 @@ struct SessionDetailView: View {
     @Environment(ContentView.Model.self) private var contentModel
 
     let option: SessionOption
-    let namespace: Namespace.ID
 
     @State private var isTakeCreatorShown = false
     @State private var takeParamsBuffer: TakeParameters
     @State private var isHiddenSectonExpanded = false
     @State private var takesFlow: SkieSwiftFlow<[TakeStat]>
 
-    init(option: SessionOption, namespace: Namespace.ID) {
+    init(option: SessionOption) {
         self.option = option
-        self.namespace = namespace
         takeParamsBuffer = .init(sessionId: option.id)
         takesFlow = libraryService.getTakesBySession(id: option.id)
     }
@@ -95,39 +94,35 @@ struct SessionDetailView: View {
     }
 
     func takeList(_ array: [TakeStat]) -> some View {
-        List(selection: Binding(get: {
-            Set<Int64>()
-        }, set: { newValue in
-            if let first = newValue.first {
-                withAnimation {
-                    contentModel.pathPeek = .answer(takeId: first)
-                }
-            }
-        })) {
+        List {
             Section {
                 ForEach(array.filter({ $0.hidden == 0 }), id: \.id) { take in
-                    TakeDetailHeader(stat: take)
-                        .swipeActions {
-                            Button("Hide", systemImage: "eye.slash", role: .destructive) {
-                                let service = TakeServiceSync(base: TakeService(takeId: take.id, db: Database.shared.app))
-                                errorHandler.catchAndShowImmediately {
-                                    try service.updateVisibility(hidden: true)
-                                }
+                    TakeStarter(stat: take) { take, _ in
+                        TakeDetailHeader(stat: take)
+                    }
+                    .swipeActions {
+                        Button("Hide", systemImage: "eye.slash", role: .destructive) {
+                            let service = TakeServiceSync(base: TakeService(takeId: take.id, db: Database.shared.app))
+                            errorHandler.catchAndShowImmediately {
+                                try service.updateVisibility(hidden: true)
                             }
                         }
+                    }
                 }
             }
             Section(isExpanded: $isHiddenSectonExpanded) {
                 ForEach(array.filter({ $0.hidden == 1 }), id: \.id) { take in
-                    TakeDetailHeader(stat: take)
-                        .swipeActions {
-                            Button("Unhide", systemImage: "arrow.up.to.line", role: .destructive) {
-                                let service = TakeServiceSync(base: TakeService(takeId: take.id, db: Database.shared.app))
-                                errorHandler.catchAndShowImmediately {
-                                    try service.updateVisibility(hidden: false)
-                                }
+                    TakeStarter(stat: take) { take, _ in
+                        TakeDetailHeader(stat: take)
+                    }
+                    .swipeActions {
+                        Button("Unhide", systemImage: "arrow.up.to.line", role: .destructive) {
+                            let service = TakeServiceSync(base: TakeService(takeId: take.id, db: Database.shared.app))
+                            errorHandler.catchAndShowImmediately {
+                                try service.updateVisibility(hidden: false)
                             }
                         }
+                    }
                 }
             } header: {
                 hiddenSectionHeader

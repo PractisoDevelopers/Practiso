@@ -14,6 +14,7 @@
 		6A2D44262D98E22E00E18022 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 6A2D44252D98E22E00E18022 /* Settings.bundle */; };
 		6A806BCC2D60E0F200453A72 /* Archive@x2.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A806BCB2D60E0F200453A72 /* Archive@x2.png */; };
 		6A9D7F892D54D83700A57747 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6A9D7F882D54D83700A57747 /* Localizable.xcstrings */; };
+		6AB0EBC82F6FE0C300953706 /* Transmission in Frameworks */ = {isa = PBXBuildFile; productRef = 6AB0EBC72F6FE0C300953706 /* Transmission */; };
 		6AFCF2EB2D89AE8800C3B648 /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFCF2EA2D89AE8800C3B648 /* SwiftUIPager */; };
 /* End PBXBuildFile section */
 
@@ -68,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6AB0EBC82F6FE0C300953706 /* Transmission in Frameworks */,
 				6AFCF2EB2D89AE8800C3B648 /* SwiftUIPager in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -186,6 +188,7 @@
 			name = iosApp;
 			packageProductDependencies = (
 				6AFCF2EA2D89AE8800C3B648 /* SwiftUIPager */,
+				6AB0EBC72F6FE0C300953706 /* Transmission */,
 			);
 			productName = iosApp;
 			productReference = 7555FF7B242A565900829871 /* Practiso.app */;
@@ -222,6 +225,7 @@
 			mainGroup = 7555FF72242A565900829871;
 			packageReferences = (
 				6AFCF2E92D89AE8800C3B648 /* XCRemoteSwiftPackageReference "SwiftUIPager" */,
+				6AB0EBC62F6FE0C300953706 /* XCRemoteSwiftPackageReference "Transmission" */,
 			);
 			productRefGroup = 7555FF7C242A565900829871 /* Products */;
 			projectDirPath = "";
@@ -594,6 +598,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		6AB0EBC62F6FE0C300953706 /* XCRemoteSwiftPackageReference "Transmission" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nathantannar4/Transmission";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.1;
+			};
+		};
 		6AFCF2E92D89AE8800C3B648 /* XCRemoteSwiftPackageReference "SwiftUIPager" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/fermoya/SwiftUIPager.git";
@@ -605,6 +617,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		6AB0EBC72F6FE0C300953706 /* Transmission */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AB0EBC62F6FE0C300953706 /* XCRemoteSwiftPackageReference "Transmission" */;
+			productName = Transmission;
+		};
 		6AFCF2EA2D89AE8800C3B648 /* SwiftUIPager */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6AFCF2E92D89AE8800C3B648 /* XCRemoteSwiftPackageReference "SwiftUIPager" */;
