@@ -9,10 +9,10 @@
     <string name="dismiss_para">取消</string>
     <string name="notification_permission_denied_title">拒绝通知权限</string>
     <string name="explain_why_denying_notification_is_a_bad_idea">Practiso绝不会发送垃圾通知。相反，如果授予该权限，建议系统可以在后台运行耗费时间的机器学习算法，从而使您不必等待。您想授予通知权限吗？</string>
-    <string name="export_para">Export</string>
-    <string name="title_qr_code_viewer">QR Code Viewer</string>
-    <string name="title_qr_code_scanner">QR Code Scanner</string>
-    <string name="grant_camera_permissions_to_continue_para">Grant camera permissions to continue</string>
-    <string name="title_import_auth_token">Import Authorization Token</string>
-    <string name="unsupported_action_para">Unsupported action</string>
+    <string name="export_para">导出</string>
+    <string name="title_qr_code_viewer">二维码查看器</string>
+    <string name="title_qr_code_scanner">二维码扫描器</string>
+    <string name="grant_camera_permissions_to_continue_para">给予相机权限以继续</string>
+    <string name="title_import_auth_token">导入鉴权令牌</string>
+    <string name="unsupported_action_para">不支持该操作</string>
 </resources>
