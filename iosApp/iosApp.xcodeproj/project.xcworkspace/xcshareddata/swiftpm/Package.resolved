@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nathantannar4/Engine",
       "state" : {
-        "revision" : "f532c1bf9ca338f332e61145dad0a9aa1a8402eb",
-        "version" : "2.6.2"
+        "revision" : "34664a7b8131caf91f1de0a407dfc6a590a4c52e",
+        "version" : "2.6.5"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nathantannar4/Transmission",
       "state" : {
-        "revision" : "463735ac34dbf39bb4b6246e60e8793353a4c33d",
-        "version" : "2.8.1"
+        "revision" : "7e2a207d70a2bcd7dd5c538e18977adc22738e5d",
+        "version" : "2.9.3"
       }
     }
   ],

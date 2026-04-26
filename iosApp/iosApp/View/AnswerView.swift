@@ -70,7 +70,7 @@ struct AnswerView<CloseButton: View>: View {
                     )
                 }
             }
-            .hideUIKitStatusBar()
+            .statusBarHidden()
             .overlay(alignment: .topTrailing) {
                 closeButton()
                     .padding(max(14, window.safeAreaInsets.top - 40))
