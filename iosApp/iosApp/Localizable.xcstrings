@@ -366,10 +366,36 @@
       }
     },
     "Account removed." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Account removed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Account removed."
+          }
+        }
+      }
     },
     "Acending" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Acending"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Acending"
+          }
+        }
+      }
     },
     "Add" : {
       "localizations" : {
@@ -532,10 +558,36 @@
       }
     },
     "Barcode not found." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Barcode not found."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Barcode not found."
+          }
+        }
+      }
     },
     "barcode scanner" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "barcode scanner"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "barcode scanner"
+          }
+        }
+      }
     },
     "Begin a new take as well" : {
       "localizations" : {
@@ -602,7 +654,20 @@
       }
     },
     "Categorize" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Categorize"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Categorize"
+          }
+        }
+      }
     },
     "Change Intensity" : {
       "localizations" : {
@@ -669,7 +734,20 @@
       }
     },
     "community service" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "community service"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "community service"
+          }
+        }
+      }
     },
     "Completed" : {
       "localizations" : {
@@ -864,7 +942,20 @@
       }
     },
     "Decending" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Decending"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Decending"
+          }
+        }
+      }
     },
     "Delete" : {
       "localizations" : {
@@ -1137,7 +1228,20 @@
       }
     },
     "download executor" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "download executor"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "download executor"
+          }
+        }
+      }
     },
     "Download required" : {
       "localizations" : {
@@ -1357,10 +1461,36 @@
       }
     },
     "Generic error." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Generic error."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Generic error."
+          }
+        }
+      }
     },
     "Generic HTTP failed." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Generic HTTP failed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Generic HTTP failed."
+          }
+        }
+      }
     },
     "Getting started..." : {
       "localizations" : {
@@ -1443,7 +1573,20 @@
       }
     },
     "HTTP transaction failed." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HTTP transaction failed."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HTTP transaction failed."
+          }
+        }
+      }
     },
     "Ignore" : {
       "localizations" : {
@@ -1634,7 +1777,20 @@
       }
     },
     "Insufficient disk space." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Insufficient disk space."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Insufficient disk space."
+          }
+        }
+      }
     },
     "interact with status bar to continue" : {
       "extractionState" : "stale",
@@ -1766,7 +1922,20 @@
       }
     },
     "Loading dimensions..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading dimensions..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading dimensions..."
+          }
+        }
+      }
     },
     "Loading Image..." : {
       "localizations" : {
@@ -1801,7 +1970,20 @@
       }
     },
     "Loading question..." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading question..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading question..."
+          }
+        }
+      }
     },
     "Loading Question..." : {
       "localizations" : {
@@ -2012,7 +2194,20 @@
       }
     },
     "Network is unavailable." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network is unavailable."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network is unavailable."
+          }
+        }
+      }
     },
     "New question" : {
       "extractionState" : "manual",
@@ -2240,7 +2435,20 @@
       }
     },
     "Question name" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Question name"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Question name"
+          }
+        }
+      }
     },
     "Question Unavailable" : {
       "localizations" : {
@@ -2307,7 +2515,20 @@
       }
     },
     "Rename" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rename"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rename"
+          }
+        }
+      }
     },
     "Replace With" : {
       "localizations" : {
@@ -2370,6 +2591,18 @@
             "state" : "new",
             "value" : "Resource %1$@ required by %2$@ at %3$@ wsa not found."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ required by %2$@ at %3$@ wsa not found."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ required by %2$@ at %3$@ wsa not found."
+          }
         }
       }
     },
@@ -2380,11 +2613,36 @@
             "state" : "new",
             "value" : "Resource %1$@ required by %2$@ was not found."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ required by %2$@ was not found."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %1$@ required by %2$@ was not found."
+          }
         }
       }
     },
     "Resource %@ was not found." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %@ was not found."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resource %@ was not found."
+          }
+        }
+      }
     },
     "Resource is Corrupted" : {
       "localizations" : {
@@ -2596,7 +2854,20 @@
       }
     },
     "Sorting" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sorting"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sorting"
+          }
+        }
+      }
     },
     "Source" : {
       "localizations" : {
@@ -2679,7 +2950,20 @@
       }
     },
     "Suggestions failed" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Suggestions failed"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Suggestions failed"
+          }
+        }
+      }
     },
     "Take" : {
       "localizations" : {
@@ -2890,7 +3174,20 @@
       }
     },
     "Unexpected HTTP status (%d)" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unexpected HTTP status (%d)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unexpected HTTP status (%d)"
+          }
+        }
+      }
     },
     "Unhide" : {
       "localizations" : {
