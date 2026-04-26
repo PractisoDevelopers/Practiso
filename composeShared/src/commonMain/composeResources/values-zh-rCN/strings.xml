@@ -243,7 +243,7 @@
     <string name="likes_para">喜欢</string>
     <string name="downloads_para">下载</string>
     <string name="use_custom_server_para">使用自定义服务器</string>
-    <string name="custom_server_for_third_party_access_para">Practiso可以使用自定义服务器以访问第三方资源。隐私和权限策略可能应服务器而异。</string>
+    <string name="custom_server_for_third_party_access_para">Practiso可以使用自定义服务器以访问第三方资源。隐私和权限策略可能应服务器而异</string>
     <string name="custom_server_url_para">自定义服务器URL</string>
     <string name="not_specified_para">未指定</string>
     <string name="failed_to_load_next_page_para">下一页加载失败</string>
