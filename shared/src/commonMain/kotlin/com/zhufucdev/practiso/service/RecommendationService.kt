@@ -142,7 +142,7 @@ class RecommendationService(
                     answeredQuizzes.ratioOf(AnsweredQuiz::isCorrect)
                         .entries
                         .filter { it.value < 1 }
-                        .sortedByDescending { it.value }
+                        .sortedBy { it.value }
                         .map { (occurrence, _) ->
                             occurrence.quiz.frames
                                 .map { option ->
