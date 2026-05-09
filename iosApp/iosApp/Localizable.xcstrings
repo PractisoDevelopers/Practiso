@@ -18,6 +18,16 @@
       },
       "shouldTranslate" : false
     },
+    "%@ %d %@ %d" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$d %3$@ %4$d"
+          }
+        }
+      }
+    },
     "%@ and %d more" : {
       "localizations" : {
         "en" : {
@@ -733,12 +743,22 @@
         }
       }
     },
+    "Community" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "社区"
+          }
+        }
+      }
+    },
     "community service" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "community service"
+            "state" : "translated",
+            "value" : "社区服务"
           }
         },
         "zh-Hant" : {
@@ -1405,6 +1425,9 @@
           }
         }
       }
+    },
+    "Failed to load Community" : {
+
     },
     "found %d items related to %@" : {
       "localizations" : {
@@ -3140,6 +3163,9 @@
           }
         }
       }
+    },
+    "try again" : {
+
     },
     "Type text here..." : {
       "localizations" : {

@@ -12,13 +12,11 @@ struct OptionListItem: View {
             if let title = data.view.title {
                 Text(title)
                     .lineLimit(1)
-                    .font(.system(size: 15))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let subtitle = data.view.subtitle {
                 Text(subtitle)
                     .lineLimit(1)
-                    .font(.system(size: 15))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

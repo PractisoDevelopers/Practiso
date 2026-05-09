@@ -5,4 +5,5 @@ enum Destination {
     case template
     case dimension
     case question
+    case community
 }

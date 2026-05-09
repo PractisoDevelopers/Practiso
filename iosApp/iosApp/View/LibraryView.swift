@@ -3,52 +3,48 @@ import SwiftUI
 
 struct LibraryView: View {
     @Binding var destination: Destination?
-    
-    struct LibrarySection: Identifiable {
-        var isExpanded = true
-        let options: [LibraryOption]
-        let id: String
-    }
-    
+
     struct LibraryOption: Identifiable {
         let name: String
         let systemImage: String
         let id: Destination
     }
-    
-    @State private var sections: [LibrarySection] = [
-        LibrarySection(options: [
-            .init(name: .init(localized: "Session"), systemImage: "star", id: .session)
-        ], id: .init(localized: "Derived")),
-        LibrarySection(options: [
-            .init(name: .init(localized: "Template"), systemImage: "gearshape", id: .template),
-            .init(name: .init(localized: "Dimension"), systemImage: "tag", id: .dimension),
-            .init(name: .init(localized: "Question"), systemImage: "document", id: .question)
-        ], id: .init(localized: "Source"))
-    ]
-    
+
+    @State var deriveSectionExpanded = true
+    @State var sourceSectionExpanded = true
+
     var body: some View {
         List(selection: $destination) {
-            ForEach($sections) { $section in
-                Section(isExpanded: $section.isExpanded, content: {
-                    ForEach(section.options) { option in
-                        Item(option: option) {
-                            destination = option.id
-                        }
-                    }
-                }, header: {
-                    Text(section.id)
-                })
+            Section(isExpanded: $deriveSectionExpanded) {
+                Item(option: .init(name: .init(localized: "Session"), systemImage: "star", id: .session)) {
+                    destination = .session
+                }
+            } header: {
+                Text("Derived")
+            }
+
+            Section(isExpanded: $sourceSectionExpanded) {
+                Item(option: .init(name: .init(localized: "Dimension"), systemImage: "tag", id: .dimension)) {
+                    destination = .dimension
+                }
+                Item(option: .init(name: .init(localized: "Question"), systemImage: "document", id: .question)) {
+                    destination = .question
+                }
+                Item(option: .init(name: .init(localized: "Community"), systemImage: "globe.americas", id: .community)) {
+                    destination = .community
+                }
+            } header: {
+                Text("Source")
             }
         }
     }
-    
-    private struct Item : View {
+
+    private struct Item: View {
         let option: LibraryOption
         @ObservedObject private var dropDelegate: HoverableDropDelegate
         init(option: LibraryOption, trigger: @escaping () -> Void) {
             self.option = option
-            self.dropDelegate = HoverableDropDelegate(trigger: trigger)
+            dropDelegate = HoverableDropDelegate(trigger: trigger)
         }
 
         var body: some View {

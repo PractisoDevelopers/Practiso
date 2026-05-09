@@ -6,4 +6,5 @@ enum Detail {
     case dimension(DimensionOption)
     case template(TemplateOption)
     case session(SessionOption)
+    case archivePreview(ArchiveMetadata)
 }

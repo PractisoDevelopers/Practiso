@@ -67,6 +67,10 @@ struct ContentView: View {
                 case .question:
                     QuestionView()
                         .titleBar(title: "Question", feiState: feiState)
+                case .community:
+                    CommunityView()
+                        .navigationTitle("Community")
+                        .navigationBarTitleDisplayMode(.inline)
                 default:
                     SessionView()
                         .titleBar(title: "Session", feiState: feiState)
@@ -85,6 +89,8 @@ struct ContentView: View {
                     TemplateDetailView()
                 case let .session(sessionOption):
                     SessionDetailView(option: sessionOption)
+                case let .archivePreview(meta):
+                    CommunityArchiveView(item: meta)
                 case .none:
                     selectItemScreen
                 }
