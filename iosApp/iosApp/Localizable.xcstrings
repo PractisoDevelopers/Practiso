@@ -25,6 +25,18 @@
             "state" : "new",
             "value" : "%1$@ %2$d %3$@ %4$d"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$d %3$@ %4$d"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$d %3$@ %4$d"
+          }
         }
       }
     },
@@ -747,8 +759,14 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "社区"
+            "state" : "new",
+            "value" : "Community"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Community"
           }
         }
       }
@@ -757,8 +775,8 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "社区服务"
+            "state" : "new",
+            "value" : "community service"
           }
         },
         "zh-Hant" : {
@@ -1427,7 +1445,20 @@
       }
     },
     "Failed to load Community" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to load Community"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to load Community"
+          }
+        }
+      }
     },
     "found %d items related to %@" : {
       "localizations" : {
@@ -3165,7 +3196,20 @@
       }
     },
     "try again" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "try again"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "try again"
+          }
+        }
+      }
     },
     "Type text here..." : {
       "localizations" : {
