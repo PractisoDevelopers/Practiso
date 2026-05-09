@@ -9,6 +9,7 @@ import com.zhufucdev.practiso.datamodel.AccountRemovedException
 import com.zhufucdev.practiso.datamodel.AppException
 import com.zhufucdev.practiso.datamodel.AppScope
 import com.zhufucdev.practiso.datamodel.HttpResponseException
+import com.zhufucdev.practiso.helper.mapToResults
 import com.zhufucdev.practiso.helper.removeWithRollbackablity
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.getCommunityServiceWithDownloadManager
@@ -23,9 +24,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
@@ -109,8 +111,8 @@ class CommunityAppViewModel(
                         }
                         _archiveList[archiveIndex] = preload
                         launch(Dispatchers.IO) {
-                            val newMetadata =  try {
-                                communityService.first().getArchiveMetadata(archiveId = id)
+                            val newMetadata = try {
+                                communityService.first().getArchiveMetadata(archiveId = id).first()
                             } catch (_: Exception) {
                                 return@launch
                             }
@@ -135,6 +137,7 @@ class CommunityAppViewModel(
         refreshCounter
             .combine(communityService, ::Pair)
             .map { (_, server) -> server.getDimensions(5) }
+            .flattenConcat()
             .catch { markPageFailed(it) }
             .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
@@ -145,6 +148,7 @@ class CommunityAppViewModel(
         refreshCounter
             .combine(_archiveSortOptions) { _, s -> s }
             .combine(communityService) { sort, service -> service.getArchivePagination(sort) }
+            .flattenConcat()
             .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
             .onEach { _archiveList.clear() }
             .map { PaginatedListPresenter(it, viewModelScope, listDelegate = _archiveList) }
@@ -161,7 +165,8 @@ class CommunityAppViewModel(
 
     val whoami =
         refreshCounter.combine(communityService, ::Pair)
-            .mapLatest { (_, community) -> runCatching { community.getWhoami() } }
+            .flatMapConcat { (_, community) -> community.getWhoami() }
+            .mapToResults()
             .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
     private fun markPageFailed(reason: Throwable) {

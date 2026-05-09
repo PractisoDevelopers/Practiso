@@ -580,6 +580,7 @@ fun ArchiveSharingDialogBuilder.uploadToCommunity(model: ArchiveSharingViewModel
                                         model.communityService
                                             .first()
                                             .getArchiveMetadata(uploadState.archiveId)
+                                            .first()
                                     }
                                     metadata.getOrNull()?.let {
                                         navController.navigate(ArchivePreviewRouteParams(metadata = it))

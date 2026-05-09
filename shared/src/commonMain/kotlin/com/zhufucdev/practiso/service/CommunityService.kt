@@ -46,52 +46,54 @@ class CommunityService(
     }
         .shareIn(clientScope, started = SharingStarted.Eagerly, replay = 1)
 
-    fun getArchivePagination(sortOptions: SortOptions = SortOptions()): Paginated<ArchiveMetadata> =
-        object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
-            override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
-                return client.first().getArchiveList(sortOptions).let { it.page to it.next }
-            }
+    fun getArchivePagination(sortOptions: SortOptions = SortOptions()): Flow<Paginated<ArchiveMetadata>> =
+        client.map { client ->
+            object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
+                override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
+                    return client.getArchiveList(sortOptions).let { it.page to it.next }
+                }
 
-            override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
-                return client.first().getArchiveList(sortOptions, priorPointer)
-                    .let { it.page to it.next }
+                override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
+                    return client.getArchiveList(sortOptions, priorPointer)
+                        .let { it.page to it.next }
+                }
             }
         }
 
     fun getDimensionArchivePagination(
         dimensionName: String,
         sortOptions: SortOptions = SortOptions(),
-    ): Paginated<ArchiveMetadata> =
-        object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
-            override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
-                return client
-                    .first()
-                    .getDimensionArchiveList(dimensionName, sortOptions)
-                    .let { it.page to it.next }
-            }
+    ): Flow<Paginated<ArchiveMetadata>> =
+        client.map { client ->
+            object : NextPointerBasedPaginated<ArchiveMetadata, String>() {
+                override suspend fun getFirstPage(): Pair<List<ArchiveMetadata>, String?> {
+                    return client
+                        .getDimensionArchiveList(dimensionName, sortOptions)
+                        .let { it.page to it.next }
+                }
 
-            override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
-                return client.first()
-                    .getDimensionArchiveList(dimensionName, sortOptions, priorPointer)
-                    .let { it.page to it.next }
+                override suspend fun getFollowingPages(priorPointer: String): Pair<List<ArchiveMetadata>, String?> {
+                    return client
+                        .getDimensionArchiveList(dimensionName, sortOptions, priorPointer)
+                        .let { it.page to it.next }
+                }
             }
         }
 
-
     fun ArchiveMetadata.toHandle(): ArchiveHandle = ArchiveHandle(this, client)
 
-    suspend fun getDimensions(takeFirst: Int = 20): List<DimensionMetadata> =
-        client.first().getDimensionList(takeFirst)
+    fun getDimensions(takeFirst: Int = 20): Flow<List<DimensionMetadata>> =
+        client.map { it.getDimensionList(takeFirst) }
 
-    suspend fun getArchivePreview(archiveId: String): List<ArchivePreview> =
-        client.first().getArchivePreview(archiveId)
+    fun getArchivePreview(archiveId: String): Flow<List<ArchivePreview>> =
+        client.map { it.getArchivePreview(archiveId) }
 
-    suspend fun getArchiveMetadata(archiveId: String): ArchiveMetadata? =
-        client.first().getArchiveMetadata(archiveId)
+    fun getArchiveMetadata(archiveId: String): Flow<ArchiveMetadata?> =
+        client.map { it.getArchiveMetadata(archiveId) }
 
-    suspend fun getServerInfo(): BonjourResponse = client.first().getBonjour()
+    fun getServerInfo(): Flow<BonjourResponse> = client.map(OpacityClient::getBonjour)
 
-    suspend fun getWhoami(): Whoami? = client.first().getWhoami()
+    fun getWhoami(): Flow<Whoami?> = client.map(OpacityClient::getWhoami)
 
     suspend fun deleteArchive(archiveId: String) =
         client.first().deleteArchive(archiveId)

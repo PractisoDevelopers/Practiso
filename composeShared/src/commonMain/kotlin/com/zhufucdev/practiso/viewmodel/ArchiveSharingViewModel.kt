@@ -10,6 +10,7 @@ import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.database.Dimension
 import com.zhufucdev.practiso.database.Quiz
 import com.zhufucdev.practiso.datamodel.Selection
+import com.zhufucdev.practiso.helper.mapToResults
 import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.ExportService
@@ -28,9 +29,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flattenMerge
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
@@ -74,7 +75,8 @@ abstract class CommonArchiveSharingViewModel(
     var uploadState: UploadArchive? by mutableStateOf(null)
 
     val serverInfo: StateFlow<Result<BonjourResponse>?> =
-        communityService.map { runCatching { it.getServerInfo() } }
+        communityService.flatMapConcat { it.getServerInfo() }
+            .mapToResults()
             .flowOn(Dispatchers.IO)
             .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
 

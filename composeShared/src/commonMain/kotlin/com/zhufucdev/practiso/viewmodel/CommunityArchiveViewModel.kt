@@ -14,6 +14,7 @@ import com.zhufucdev.practiso.platform.createPlatformSavedStateHandle
 import com.zhufucdev.practiso.route.ArchivePreviewRouteParams
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.getCommunityServiceWithDownloadManager
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
@@ -29,7 +32,7 @@ import kotlinx.coroutines.selects.select
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
 
-@OptIn(SavedStateHandleSaveableApi::class)
+@OptIn(SavedStateHandleSaveableApi::class, ExperimentalCoroutinesApi::class)
 class CommunityArchiveViewModel(
     state: SavedStateHandle,
     private val communityService: Flow<CommunityService>,
@@ -47,9 +50,9 @@ class CommunityArchiveViewModel(
         refreshCounter
             .combine(archive) { c, archive -> c to archive?.id }
             .combine(communityService, ::Pair)
-            .map { (pair, service) ->
+            .flatMapConcat { (pair, service) ->
                 val (_, archiveId) = pair
-                archiveId?.let { service.getArchivePreview(it) }
+                archiveId?.let { service.getArchivePreview(it) } ?: flowOf(null)
             }
             .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)
     val filterController =
@@ -77,19 +80,31 @@ class CommunityArchiveViewModel(
 
     init {
         viewModelScope.launch {
-            while (isActive) {
-                select {
-                    event.refresh.onReceive {
-                        val id = archive.value?.id ?: return@onReceive
-                        try {
-                            val newMetadata = communityService.first()
-                                .getArchiveMetadata(id)
-                            _archive.tryEmit(newMetadata)
-                        } catch (_: Exception) {
-                            // noop
+            launch {
+                while (isActive) {
+                    select {
+                        event.refresh.onReceive {
+                            val id = archive.value?.id ?: return@onReceive
+                            try {
+                                val newMetadata = communityService.first()
+                                    .getArchiveMetadata(id)
+                                    .first()
+                                _archive.tryEmit(newMetadata)
+                            } catch (_: Exception) {
+                                // noop
+                            }
                         }
                     }
                 }
+            }
+            launch {
+                archive.combine(communityService, ::Pair)
+                    .flatMapConcat { (metadata, service) ->
+                        service.getArchiveMetadata(
+                            metadata?.id ?: return@flatMapConcat flowOf(null)
+                        )
+                    }
+                    .collect(_archive)
             }
         }
     }
