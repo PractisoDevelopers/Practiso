@@ -5,9 +5,16 @@ import com.russhwolf.settings.NSUserDefaultsSettings
 import com.russhwolf.settings.coroutines.getStringFlow
 import com.zhufucdev.practiso.convert.NSData
 import com.zhufucdev.practiso.datamodel.AuthorizationToken
+import com.zhufucdev.practiso.datamodel.DownloadException
 import com.zhufucdev.practiso.datamodel.Paginated
+import com.zhufucdev.practiso.helper.simpleHandleQuestions
+import com.zhufucdev.practiso.platform.DownloadCycle
+import com.zhufucdev.practiso.platform.DownloadState
+import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.CommunityIdentity
 import com.zhufucdev.practiso.service.CommunityService
+import com.zhufucdev.practiso.service.ImportService
+import io.ktor.utils.io.CancellationException
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -26,7 +33,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
@@ -159,6 +167,8 @@ object AppCommunityService {
                 replay = 1
             )
 
+    private val importService = ImportService()
+
     fun getArchivePreview(archiveId: String): Flow<List<ArchivePreview>> =
         community.flatMapLatest { it.getArchivePreview(archiveId) }
 
@@ -167,4 +177,35 @@ object AppCommunityService {
 
     fun getDimensions(takeFirst: Int = 20): Flow<List<DimensionMetadata>> =
         community.flatMapLatest { it.getDimensions(takeFirst) }
+
+    @Throws(DownloadException::class, CancellationException::class)
+    suspend fun download(archive: ArchiveMetadata) {
+        val handle = with(community.first()) {
+            archive.toHandle()
+        }
+        val downloadMgr = download.first()
+        val pack = try {
+            handle.getAsSource(downloadMgr)
+        } catch (_: CancellationException) {
+            // noop
+            return
+        }
+        importService.import(pack).simpleHandleQuestions()
+    }
+
+    fun downloadState(of: ArchiveMetadata): Flow<DownloadCycle> =
+        community.map { with(it) { of.toHandle() }.taskId }
+            .flatMapLatest { taskId ->
+                download.flatMapLatest { it[taskId] }
+            }
+
+    suspend fun cancelDownload(of: ArchiveMetadata) {
+        val handle = with(community.first()) { of.toHandle() }
+        val downloadMgr = download.first()
+        downloadMgr.cancel(handle.taskId)
+        (downloadMgr[handle.taskId].first() as? DownloadState.Completed)
+            ?.let {
+                getPlatform().filesystem.delete(it.destination)
+            }
+    }
 }

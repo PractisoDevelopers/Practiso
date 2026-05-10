@@ -13,7 +13,7 @@ struct CommunityView: View {
     private let archivePages = AppCommunityService.shared.getArchivePagination(sortOptions: SortOptions(descending: true, keyword: .updateTime))
     private let refreshChannel = AsyncChannel<Void>()
 
-    enum PageState {
+    enum PageState: Equatable {
         case loading
         case ready(dimensions: [DimensionMetadata], archives: [ArchiveMetadata])
         case error(message: String)
@@ -66,6 +66,7 @@ struct CommunityView: View {
                 }
             }
         }
+        .animation(.default, value: state)
         .refreshable {
             refreshCounter += 1
             var iter = refreshChannel.makeAsyncIterator()

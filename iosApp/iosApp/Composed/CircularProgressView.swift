@@ -36,10 +36,35 @@ struct CircularProgressView<Value : BinaryFloatingPoint> : View {
     }
 }
 
+struct IndeterministicCircularProgressView : View {
+    @State private var animating = false
+    var body: some View {
+        ZStack {
+            CircularProgressView(value: 0.86)
+                .rotationEffect(.degrees(animating ? 360 : 0))
+                .animation(.linear(duration: 2).repeatForever(autoreverses: false), value: animating)
+                .onAppear {
+                    animating = true
+                }
+        }
+    }
+}
+
 #Preview {
-    VStack {
-        ForEach(0..<10) { i in
-            CircularProgressView(value: 0.1 * Double(i))
+    NavigationStack {
+        VStack {
+            ForEach(0..<10) { i in
+                CircularProgressView(value: 0.1 * Double(i))
+            }
+            IndeterministicCircularProgressView()
+        }
+        .navigationTitle("Preview")
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                IndeterministicCircularProgressView()
+                Button("Check", systemImage: "checkmark") {
+                }
+            }
         }
     }
 }

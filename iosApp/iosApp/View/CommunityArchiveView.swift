@@ -3,13 +3,18 @@ import Foundation
 import SwiftUI
 
 struct CommunityArchiveView: View {
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
+    @Environment(ContentView.Model.self) private var model
+
     let item: ArchiveMetadata
 
     @State private var dimSelection = Set<String>()
     @State private var state: PageState = .loading
+    @State private var downloadState: DownloadCycle = DownloadStopped.Idle.shared
+    @State private var showRedownloadAlert = false
     @State private var searchKeywords = ""
 
-    enum PageState {
+    enum PageState: Equatable {
         case loading
         case ready(content: [ArchivePreview])
     }
@@ -61,18 +66,61 @@ struct CommunityArchiveView: View {
         .task(id: item.id) {
             state = .loading
             for await res in AppCommunityService.shared.getArchivePreview(archiveId: item.id) {
-                state = .ready(content: res)
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Download", systemImage: "square.and.arrow.down") {
+                withAnimation {
+                    state = .ready(content: res)
                 }
             }
         }
+        .task(id: item.id) {
+            downloadState = DownloadStopped.Idle.shared
+            for await update in AppCommunityService.shared.downloadState(of: item) {
+                withAnimation {
+                    downloadState = update
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                downloadProgressView(cycle: downloadState)
+                    .animation(.default, value: downloadState)
+                
+                Button("Download", systemImage: "square.and.arrow.down") {
+                    if downloadState is DownloadState.Completed {
+                        showRedownloadAlert = true
+                    } else if downloadState is DownloadState {
+                        Task {
+                            await errorHandler.catchAndShowImmediately {
+                                try await AppCommunityService.shared.cancelDownload(of: item)
+                            }
+                        }
+                    } else {
+                        Task {
+                            await errorHandler.catchAndShowImmediately {
+                                try await AppCommunityService.shared.download(archive: item)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .alert("Re-download", isPresented: $showRedownloadAlert, actions: {
+            Button("Yes") {
+                Task {
+                    await errorHandler.catchAndShowImmediately {
+                        try await AppCommunityService.shared.cancelDownload(of: item)
+                        try await AppCommunityService.shared.download(archive: item)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                showRedownloadAlert = false
+            }
+        }, message: {
+            Text("Do you want to download this again?")
+        })
         .searchable(text: $searchKeywords)
     }
-    
+
     func archiveView(_ quiz: ArchivePreview) -> some View {
         FileIcon()
             .contextMenu {
@@ -96,6 +144,29 @@ struct CommunityArchiveView: View {
             }
     }
 
+    func downloadProgressView(cycle: DownloadCycle) -> some View {
+        Group {
+            switch onEnum(of: cycle) {
+            case .downloadStopped:
+                EmptyView()
+            case let .downloadState(state):
+                switch onEnum(of: state) {
+                case .completed:
+                    Image(systemName: "checkmark")
+
+                case .configure:
+                    IndeterministicCircularProgressView()
+                    
+                case .preparing:
+                    IndeterministicCircularProgressView()
+
+                case let .downloading(download):
+                    CircularProgressView(value: download.progress)
+                }
+            }
+        }
+    }
+
     func filterContent(_ content: [ArchivePreview], dims: Set<String>, keywords: String) -> [ArchivePreview] {
         func filterByDim(_ content: [ArchivePreview]) -> [ArchivePreview] {
             if dims.isEmpty {
@@ -105,7 +176,7 @@ struct CommunityArchiveView: View {
                 quiz.dimensions.first(where: dims.contains) != nil
             }
         }
-        
+
         func filterByKeywords(_ content: [ArchivePreview]) -> [ArchivePreview] {
             if keywords.isEmpty {
                 return content
@@ -117,7 +188,7 @@ struct CommunityArchiveView: View {
                 }
             }
         }
-        
+
         return filterByKeywords(filterByDim(content))
     }
 }

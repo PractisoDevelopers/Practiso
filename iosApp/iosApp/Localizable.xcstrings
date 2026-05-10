@@ -1215,6 +1215,9 @@
         }
       }
     },
+    "Do you want to download this again?" : {
+
+    },
     "Don't create takes for now" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2492,6 +2495,9 @@
         }
       }
     },
+    "Re-download" : {
+
+    },
     "Recently created" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3455,6 +3461,9 @@
           }
         }
       }
+    },
+    "Yes" : {
+
     }
   },
   "version" : "1.0"
