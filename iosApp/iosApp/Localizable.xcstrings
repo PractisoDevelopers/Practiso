@@ -1233,6 +1233,22 @@
         }
       }
     },
+    "Do you want to download this again?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Do you want to download this again?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Do you want to download this again?"
+          }
+        }
+      }
+    },
     "Don't create takes for now" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2536,6 +2552,22 @@
         }
       }
     },
+    "Re-download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Re-download"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Re-download"
+          }
+        }
+      }
+    },
     "Recently created" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3509,6 +3541,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "您想要立即開始新建立的題集嗎？"
+          }
+        }
+      }
+    },
+    "Yes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Yes"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Yes"
           }
         }
       }
