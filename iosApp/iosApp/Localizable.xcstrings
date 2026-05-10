@@ -1247,6 +1247,9 @@
         }
       }
     },
+    "Download" : {
+
+    },
     "download executor" : {
       "localizations" : {
         "zh-Hans" : {

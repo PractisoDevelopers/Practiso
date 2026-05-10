@@ -10,7 +10,7 @@ struct CommunityView: View {
     @State private var refreshCounter = 0
     @State private var selection = Set<String>()
 
-    private let archivePages = AppCommunityService.getArchivePagination(sortOptions: SortOptions(descending: true, keyword: .updateTime))
+    private let archivePages = AppCommunityService.shared.getArchivePagination(sortOptions: SortOptions(descending: true, keyword: .updateTime))
     private let refreshChannel = AsyncChannel<Void>()
 
     enum PageState {
@@ -92,7 +92,7 @@ struct CommunityView: View {
 
                 let resources = Resources()
                 tg.addTask {
-                    for await items in AppCommunityService.getDimensions(takeFirst: 5) {
+                    for await items in AppCommunityService.shared.getDimensions(takeFirst: 5) {
                         await resources.setDims(items)
                         Task { @MainActor in
                             if let dimensions = await resources.dims, let archives = await resources.archives {
