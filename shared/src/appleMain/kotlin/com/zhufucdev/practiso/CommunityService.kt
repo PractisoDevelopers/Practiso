@@ -1,7 +1,11 @@
 package com.zhufucdev.practiso
 
+import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.NSUserDefaultsSettings
+import com.russhwolf.settings.coroutines.getStringFlow
 import com.zhufucdev.practiso.convert.NSData
 import com.zhufucdev.practiso.datamodel.AuthorizationToken
+import com.zhufucdev.practiso.datamodel.Paginated
 import com.zhufucdev.practiso.service.CommunityIdentity
 import com.zhufucdev.practiso.service.CommunityService
 import kotlinx.cinterop.ByteVar
@@ -12,8 +16,24 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.toKString
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.runningReduce
+import kotlinx.coroutines.flow.shareIn
+import opacity.client.ArchiveMetadata
+import opacity.client.ArchivePreview
+import opacity.client.DimensionMetadata
+import opacity.client.SortOptions
 import platform.CoreFoundation.CFDictionaryAddValue
 import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFDictionaryGetValue
@@ -22,6 +42,7 @@ import platform.CoreFoundation.CFMutableDictionaryRef
 import platform.CoreFoundation.CFTypeRefVar
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSUserDefaults
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
@@ -29,7 +50,6 @@ import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccount
 import platform.Security.kSecAttrServer
-import platform.Security.kSecAttrService
 import platform.Security.kSecClass
 import platform.Security.kSecClassInternetPassword
 import platform.Security.kSecMatchLimit
@@ -109,4 +129,42 @@ class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentit
             withSecQuery(::SecItemDelete)
         }
     }
+}
+
+private const val COMMUNITY_SERVER_URL_KEY = "CommunityServerURL"
+
+@OptIn(ExperimentalSettingsApi::class, ExperimentalCoroutinesApi::class)
+object AppCommunityService {
+    private val settings = NSUserDefaultsSettings(NSUserDefaults())
+    private val community =
+        settings.getStringFlow(COMMUNITY_SERVER_URL_KEY, DEFAULT_COMMUNITY_SERVER_URL)
+            .map { CommunityService(it, KeychainCommunityIdentity(it)) }
+            .shareIn(
+                MainScope(),
+                started = SharingStarted.Lazily,
+                replay = 1
+            )
+    private val download =
+        settings.getStringFlow(COMMUNITY_SERVER_URL_KEY, DEFAULT_COMMUNITY_SERVER_URL)
+            .distinctUntilChanged()
+            .map { CoroutineScope(Dispatchers.UniqueIO) }
+            .runningReduce { old, new ->
+                old.cancel()
+                new
+            }
+            .map(::DownloadManager)
+            .shareIn(
+                MainScope(),
+                started = SharingStarted.Lazily,
+                replay = 1
+            )
+
+    fun getArchivePreview(archiveId: String): Flow<List<ArchivePreview>> =
+        community.flatMapConcat { it.getArchivePreview(archiveId) }
+
+    fun getArchivePagination(sortOptions: SortOptions = SortOptions()): Flow<Paginated<ArchiveMetadata>> =
+        community.flatMapConcat { it.getArchivePagination(sortOptions) }
+
+    fun getDimensions(takeFirst: Int = 20): Flow<List<DimensionMetadata>> =
+        community.flatMapConcat { it.getDimensions(takeFirst) }
 }
