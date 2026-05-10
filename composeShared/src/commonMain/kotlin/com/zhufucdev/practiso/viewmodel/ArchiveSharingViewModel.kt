@@ -29,7 +29,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flattenMerge
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
@@ -75,7 +75,7 @@ abstract class CommonArchiveSharingViewModel(
     var uploadState: UploadArchive? by mutableStateOf(null)
 
     val serverInfo: StateFlow<Result<BonjourResponse>?> =
-        communityService.flatMapConcat { it.getServerInfo() }
+        communityService.flatMapLatest { it.getServerInfo() }
             .mapToResults()
             .flowOn(Dispatchers.IO)
             .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = null)

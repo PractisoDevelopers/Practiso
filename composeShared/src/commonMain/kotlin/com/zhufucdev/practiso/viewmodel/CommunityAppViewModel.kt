@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -136,8 +136,7 @@ class CommunityAppViewModel(
     val dimensions =
         refreshCounter
             .combine(communityService, ::Pair)
-            .map { (_, server) -> server.getDimensions(5) }
-            .flattenConcat()
+            .flatMapLatest { (_, server) -> server.getDimensions(5) }
             .catch { markPageFailed(it) }
             .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
@@ -147,8 +146,7 @@ class CommunityAppViewModel(
     val archivePresenter =
         refreshCounter
             .combine(_archiveSortOptions) { _, s -> s }
-            .combine(communityService) { sort, service -> service.getArchivePagination(sort) }
-            .flattenConcat()
+            .flatMapConcat { sort -> communityService.flatMapLatest { it.getArchivePagination(sort) } }
             .shareIn(viewModelScope, replay = 1, started = SharingStarted.Lazily)
             .onEach { _archiveList.clear() }
             .map { PaginatedListPresenter(it, viewModelScope, listDelegate = _archiveList) }
@@ -165,7 +163,7 @@ class CommunityAppViewModel(
 
     val whoami =
         refreshCounter.combine(communityService, ::Pair)
-            .flatMapConcat { (_, community) -> community.getWhoami() }
+            .flatMapLatest { (_, community) -> community.getWhoami() }
             .mapToResults()
             .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 

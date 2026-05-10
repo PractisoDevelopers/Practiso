@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
@@ -39,12 +39,11 @@ class CommunityDimensionViewModel(
         .combine(dimension, ::Pair)
         .combine(communityService, ::Pair)
         .combine(sortOptions, ::Pair)
-        .map { (pair, sortOptions) ->
+        .flatMapLatest { (pair, sortOptions) ->
             val dimension = pair.first.second
             val service = pair.second
             service.getDimensionArchivePagination(dimension)
         }
-        .flattenConcat()
         .map { PaginatedListPresenter(it, viewModelScope) }
         .stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 

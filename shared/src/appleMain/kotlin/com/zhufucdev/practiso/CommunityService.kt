@@ -160,11 +160,11 @@ object AppCommunityService {
             )
 
     fun getArchivePreview(archiveId: String): Flow<List<ArchivePreview>> =
-        community.flatMapConcat { it.getArchivePreview(archiveId) }
+        community.flatMapLatest { it.getArchivePreview(archiveId) }
 
     fun getArchivePagination(sortOptions: SortOptions = SortOptions()): Flow<Paginated<ArchiveMetadata>> =
-        community.flatMapConcat { it.getArchivePagination(sortOptions) }
+        community.flatMapLatest { it.getArchivePagination(sortOptions) }
 
     fun getDimensions(takeFirst: Int = 20): Flow<List<DimensionMetadata>> =
-        community.flatMapConcat { it.getDimensions(takeFirst) }
+        community.flatMapLatest { it.getDimensions(takeFirst) }
 }

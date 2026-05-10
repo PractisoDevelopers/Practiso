@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -50,7 +50,7 @@ class CommunityArchiveViewModel(
         refreshCounter
             .combine(archive) { c, archive -> c to archive?.id }
             .combine(communityService, ::Pair)
-            .flatMapConcat { (pair, service) ->
+            .flatMapLatest { (pair, service) ->
                 val (_, archiveId) = pair
                 archiveId?.let { service.getArchivePreview(it) } ?: flowOf(null)
             }
@@ -99,9 +99,9 @@ class CommunityArchiveViewModel(
             }
             launch {
                 archive.combine(communityService, ::Pair)
-                    .flatMapConcat { (metadata, service) ->
+                    .flatMapLatest { (metadata, service) ->
                         service.getArchiveMetadata(
-                            metadata?.id ?: return@flatMapConcat flowOf(null)
+                            metadata?.id ?: return@flatMapLatest flowOf(null)
                         )
                     }
                     .collect(_archive)
