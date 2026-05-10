@@ -74,7 +74,7 @@ struct CommunityArchiveView: View {
                 }
             }
         }
-        .navigationTitle(item.name)
+        .navigationTitle(item.nameWithoutExtension)
         .navigationBarTitleDisplayMode(.inline)
         .task(id: item.id) {
             state = .loading

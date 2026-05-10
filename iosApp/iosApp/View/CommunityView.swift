@@ -49,7 +49,7 @@ struct CommunityView: View {
 
                     ForEach(archives, id: \.id) { archive in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(archive.name)
+                            Text(archive.nameWithoutExtension)
                             Text("\(Image(systemName: "heart")) \(archive.likes) \(Image(systemName: "arrow.down.circle")) \(archive.downloads)")
                                 .foregroundStyle(.secondary)
                         }
