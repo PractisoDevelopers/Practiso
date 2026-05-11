@@ -375,6 +375,9 @@
         }
       }
     },
+    "Account" : {
+
+    },
     "Account removed." : {
       "localizations" : {
         "zh-Hans" : {
@@ -422,6 +425,9 @@
           }
         }
       }
+    },
+    "Add existing" : {
+
     },
     "Add Option" : {
       "localizations" : {
@@ -727,6 +733,9 @@
         }
       }
     },
+    "Close" : {
+
+    },
     "Collecting frames..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -752,6 +761,9 @@
           }
         }
       }
+    },
+    "Community Account" : {
+
     },
     "community service" : {
       "localizations" : {
@@ -2274,6 +2286,9 @@
         }
       }
     },
+    "No account" : {
+
+    },
     "No details were reported." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3179,6 +3194,9 @@
     "try again" : {
 
     },
+    "Type In Token" : {
+
+    },
     "Type text here..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3323,6 +3341,9 @@
         }
       }
     },
+    "Via QR Code" : {
+
+    },
     "Waiting for inference..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3466,6 +3487,9 @@
       }
     },
     "Yes" : {
+
+    },
+    "You may create new accounts by sharing your content." : {
 
     }
   },

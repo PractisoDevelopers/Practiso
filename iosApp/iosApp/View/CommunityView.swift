@@ -10,9 +10,10 @@ struct CommunityView: View {
     @State private var state: PageState = .loading
     @State private var refreshCounter = 0
     @State private var selection = Set<String>()
+    @State private var refreshChannel = AsyncChannel<Void>()
+    @State private var showAccountSheet = false
 
     private let archivePages = AppCommunityService.shared.getArchivePagination(sortOptions: SortOptions(descending: true, keyword: .updateTime))
-    @State private var refreshChannel = AsyncChannel<Void>()
 
     enum PageState: Equatable {
         case loading
@@ -21,7 +22,7 @@ struct CommunityView: View {
     }
 
     var body: some View {
-        VStack {
+        Group {
             switch state {
             case .loading:
                 ProgressView()
@@ -54,12 +55,14 @@ struct CommunityView: View {
                 }
 
             case let .error(message):
-                Text("Failed to load Community")
-                Text(message)
-                Button {
-                    refreshCounter += 1
-                } label: {
-                    Text("try again")
+                VStack {
+                    Text("Failed to load Community")
+                    Text(message)
+                    Button {
+                        refreshCounter += 1
+                    } label: {
+                        Text("try again")
+                    }
                 }
             }
         }
@@ -69,6 +72,38 @@ struct CommunityView: View {
             refreshCounter += 1
             var iter = refreshChannel.makeAsyncIterator()
             await iter.next()
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Account", systemImage: "person") {
+                    showAccountSheet = true
+                }
+            }
+        }
+        .sheet(isPresented: $showAccountSheet) {
+            NavigationStack {
+                CommunityAccountView()
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            HStack {
+                                Color.secondary
+                                    .frame(width: 32, height: 32)
+                                    .mask {
+                                        Image("AppIconMask")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                    }
+                                Text("Community Account")
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Close", systemImage: "xmark") {
+                                showAccountSheet = false
+                            }
+                        }
+                    }
+            }
         }
         .task(id: refreshCounter) {
             await withTaskGroup { tg in
@@ -123,17 +158,16 @@ struct CommunityView: View {
             }
         }
     }
-
 }
 
 fileprivate struct ArchiveItemView: View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
-    
+
     let meta: ArchiveMetadata
-    
+
     @State private var showRedownloadAlert = false
     @State private var cycle: DownloadCycle = DownloadStopped.Idle()
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -141,7 +175,7 @@ fileprivate struct ArchiveItemView: View {
                 Text("\(Image(systemName: "heart")) \(meta.likes) \(Image(systemName: "arrow.down.circle")) \(meta.downloads)")
                     .foregroundStyle(.secondary)
             }
-            
+
             Spacer()
             switch onEnum(of: cycle) {
             case let .downloadState(state):
@@ -208,7 +242,7 @@ fileprivate struct ArchiveItemView: View {
             Text("Do you want to download this again?")
         })
     }
-    
+
     func cancelDownloadButton<C: View>(_ content: C) -> some View {
         Button {
             Task {
@@ -220,7 +254,7 @@ fileprivate struct ArchiveItemView: View {
             content
         }
     }
-    
+
     var downloadButton: some View {
         Button("Get") {
             Task {
@@ -231,7 +265,7 @@ fileprivate struct ArchiveItemView: View {
         }
         .buttonStyle(.bordered)
     }
-    
+
     func archiveCtxMenuPreview(_ meta: ArchiveMetadata) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(meta.dimensions, id: \.name) { dim in
@@ -239,4 +273,8 @@ fileprivate struct ArchiveItemView: View {
             }
         }
     }
+}
+
+#Preview {
+    CommunityView()
 }

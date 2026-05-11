@@ -44,6 +44,7 @@ import opacity.client.ArchivePreview
 import opacity.client.AuthorizationException
 import opacity.client.DimensionMetadata
 import opacity.client.SortOptions
+import opacity.client.Whoami
 import platform.CoreFoundation.CFDictionaryAddValue
 import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFDictionaryGetValue
@@ -179,6 +180,8 @@ object AppCommunityService {
 
     fun getDimensions(takeFirst: Int = 20): Flow<List<DimensionMetadata>> =
         community.flatMapLatest { it.getDimensions(takeFirst) }
+
+    fun getWhoami(): Flow<Whoami?> = community.flatMapLatest { it.getWhoami() }
 
     @Throws(DownloadException::class, CancellationException::class)
     suspend fun download(archive: ArchiveMetadata) {
