@@ -5,6 +5,7 @@ import SwiftUI
 
 struct CommunityView: View {
     @Environment(ContentView.Model.self) private var model
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
 
     @State private var state: PageState = .loading
     @State private var refreshCounter = 0
@@ -48,11 +49,19 @@ struct CommunityView: View {
                     .listRowInsets(.zero)
 
                     ForEach(archives, id: \.id) { archive in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(archive.nameWithoutExtension)
-                            Text("\(Image(systemName: "heart")) \(archive.likes) \(Image(systemName: "arrow.down.circle")) \(archive.downloads)")
-                                .foregroundStyle(.secondary)
-                        }
+                        ArchiveItemView(meta: archive)
+                            .contextMenu {
+                                Button("Download", systemImage: "square.and.arrow.down") {
+                                    Task {
+                                        await errorHandler.catchAndShowImmediately {
+                                            try await AppCommunityService.shared.download(archive: archive)
+                                        }
+                                    }
+                                }
+                            } preview: {
+                                archiveCtxMenuPreview(archive)
+                                    .padding()
+                            }
                     }
                 }
 
@@ -124,5 +133,85 @@ struct CommunityView: View {
                 await tg.waitForAll()
             }
         }
+    }
+
+    func archiveCtxMenuPreview(_ meta: ArchiveMetadata) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(meta.dimensions, id: \.name) { dim in
+                DimensionChip.Text(emoji: dim.emoji, name: "\(dim.name) × \(dim.quizCount)")
+            }
+        }
+    }
+}
+
+fileprivate struct ArchiveItemView: View {
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
+
+    let meta: ArchiveMetadata
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(meta.nameWithoutExtension)
+                Text("\(Image(systemName: "heart")) \(meta.likes) \(Image(systemName: "arrow.down.circle")) \(meta.downloads)")
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+            Observing(AppCommunityService.shared.downloadState(of: meta)) {
+                downloadButton
+            } content: { cycle in
+                switch onEnum(of: cycle) {
+                case let .downloadState(state):
+                    switch onEnum(of: state) {
+                    case .completed:
+                        Image(systemName: "checkmark")
+                    case .configure:
+                        cancelDownloadButton(
+                            WithStopIcon {
+                                IndeterministicCircularProgressView()
+                            }
+                        )
+                    case .preparing:
+                        cancelDownloadButton(
+                            WithStopIcon {
+                                IndeterministicCircularProgressView()
+                            }
+                        )
+                    case let .downloading(download):
+                        cancelDownloadButton(
+                            WithStopIcon {
+                                CircularProgressView(value: download.progress)
+                            }
+                        )
+                    }
+                case .downloadStopped:
+                    downloadButton
+                }
+            }
+        }
+    }
+
+    func cancelDownloadButton<C: View>(_ content: C) -> some View {
+        Button {
+            Task {
+                await errorHandler.catchAndShowImmediately {
+                    try await AppCommunityService.shared.cancelDownload(of: meta)
+                }
+            }
+        } label: {
+            content
+        }
+    }
+
+    var downloadButton: some View {
+        Button("Get") {
+            Task {
+                await errorHandler.catchAndShowImmediately {
+                    try await AppCommunityService.shared.download(archive: meta)
+                }
+            }
+        }
+        .buttonStyle(.bordered)
     }
 }

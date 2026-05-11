@@ -17,11 +17,20 @@ struct DimensionChip: View {
             if selected {
                 Color.accentColor.opacity(0.6)
             }
-            Text(String("\(emoji ?? "📝") \(name)"))
+            Text(emoji: emoji, name: name)
                 .padding(10)
                 .chipMaterial()
         }
         .clipShape(.capsule)
+    }
+    
+    struct Text: View {
+        let emoji: String?
+        let name: String
+        
+        var body: some View {
+            SwiftUI.Text(String("\(emoji ?? "📝") \(name)"))
+        }
     }
 }
 

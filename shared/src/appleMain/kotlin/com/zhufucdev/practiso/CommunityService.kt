@@ -34,12 +34,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
+import opacity.client.AuthorizationException
 import opacity.client.DimensionMetadata
 import opacity.client.SortOptions
 import platform.CoreFoundation.CFDictionaryAddValue
@@ -208,4 +210,12 @@ object AppCommunityService {
                 getPlatform().filesystem.delete(it.destination)
             }
     }
+
+    @Throws(AuthorizationException::class, IllegalStateException::class)
+    suspend fun like(archiveId: String) = community.first().like(archiveId)
+
+    @Throws(AuthorizationException::class, IllegalStateException::class)
+    suspend fun removeLike(archiveId: String) = community.first().removeLike(archiveId)
+
+    suspend fun isAuthenticated() = community.first().identity.authToken.firstOrNull() != null
 }
