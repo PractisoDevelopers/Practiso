@@ -50,18 +50,6 @@ struct CommunityView: View {
 
                     ForEach(archives, id: \.id) { archive in
                         ArchiveItemView(meta: archive)
-                            .contextMenu {
-                                Button("Download", systemImage: "square.and.arrow.down") {
-                                    Task {
-                                        await errorHandler.catchAndShowImmediately {
-                                            try await AppCommunityService.shared.download(archive: archive)
-                                        }
-                                    }
-                                }
-                            } preview: {
-                                archiveCtxMenuPreview(archive)
-                                    .padding()
-                            }
                     }
                 }
 
@@ -136,20 +124,16 @@ struct CommunityView: View {
         }
     }
 
-    func archiveCtxMenuPreview(_ meta: ArchiveMetadata) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(meta.dimensions, id: \.name) { dim in
-                DimensionChip.Text(emoji: dim.emoji, name: "\(dim.name) × \(dim.quizCount)")
-            }
-        }
-    }
 }
 
 fileprivate struct ArchiveItemView: View {
     @Environment(ContentView.ErrorHandler.self) private var errorHandler
-
+    
     let meta: ArchiveMetadata
-
+    
+    @State private var showRedownloadAlert = false
+    @State private var cycle: DownloadCycle = DownloadStopped.Idle()
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -157,42 +141,74 @@ fileprivate struct ArchiveItemView: View {
                 Text("\(Image(systemName: "heart")) \(meta.likes) \(Image(systemName: "arrow.down.circle")) \(meta.downloads)")
                     .foregroundStyle(.secondary)
             }
-
+            
             Spacer()
-            Observing(AppCommunityService.shared.downloadState(of: meta)) {
-                downloadButton
-            } content: { cycle in
-                switch onEnum(of: cycle) {
-                case let .downloadState(state):
-                    switch onEnum(of: state) {
-                    case .completed:
-                        Image(systemName: "checkmark")
-                    case .configure:
-                        cancelDownloadButton(
-                            WithStopIcon {
-                                IndeterministicCircularProgressView()
-                            }
-                        )
-                    case .preparing:
-                        cancelDownloadButton(
-                            WithStopIcon {
-                                IndeterministicCircularProgressView()
-                            }
-                        )
-                    case let .downloading(download):
-                        cancelDownloadButton(
-                            WithStopIcon {
-                                CircularProgressView(value: download.progress)
-                            }
-                        )
-                    }
-                case .downloadStopped:
-                    downloadButton
+            switch onEnum(of: cycle) {
+            case let .downloadState(state):
+                switch onEnum(of: state) {
+                case .completed:
+                    Image(systemName: "checkmark")
+                case .configure:
+                    cancelDownloadButton(
+                        WithStopIcon {
+                            IndeterministicCircularProgressView()
+                        }
+                    )
+                case .preparing:
+                    cancelDownloadButton(
+                        WithStopIcon {
+                            IndeterministicCircularProgressView()
+                        }
+                    )
+                case let .downloading(download):
+                    cancelDownloadButton(
+                        WithStopIcon {
+                            CircularProgressView(value: download.progress)
+                        }
+                    )
                 }
+            case .downloadStopped:
+                downloadButton
             }
         }
+        .task(id: meta.id) {
+            for await update in AppCommunityService.shared.downloadState(of: meta) {
+                cycle = update
+            }
+        }
+        .contextMenu {
+            Button("Get", systemImage: "square.and.arrow.down") {
+                if cycle is DownloadState.Completed {
+                    showRedownloadAlert = true
+                } else {
+                    Task {
+                        await errorHandler.catchAndShowImmediately {
+                            try await AppCommunityService.shared.download(archive: meta)
+                        }
+                    }
+                }
+            }
+        } preview: {
+            archiveCtxMenuPreview(meta)
+                .padding()
+        }
+        .alert("Re-download", isPresented: $showRedownloadAlert, actions: {
+            Button("Yes") {
+                Task {
+                    await errorHandler.catchAndShowImmediately {
+                        try await AppCommunityService.shared.cancelDownload(of: meta)
+                        try await AppCommunityService.shared.download(archive: meta)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                showRedownloadAlert = false
+            }
+        }, message: {
+            Text("Do you want to download this again?")
+        })
     }
-
+    
     func cancelDownloadButton<C: View>(_ content: C) -> some View {
         Button {
             Task {
@@ -204,7 +220,7 @@ fileprivate struct ArchiveItemView: View {
             content
         }
     }
-
+    
     var downloadButton: some View {
         Button("Get") {
             Task {
@@ -214,5 +230,13 @@ fileprivate struct ArchiveItemView: View {
             }
         }
         .buttonStyle(.bordered)
+    }
+    
+    func archiveCtxMenuPreview(_ meta: ArchiveMetadata) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(meta.dimensions, id: \.name) { dim in
+                DimensionChip.Text(emoji: dim.emoji, name: "\(dim.name) × \(dim.quizCount)")
+            }
+        }
     }
 }
