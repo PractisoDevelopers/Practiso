@@ -75,7 +75,7 @@ struct CommunityView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Account", systemImage: "person") {
+                Button("Account", systemImage: "person.crop.circle") {
                     showAccountSheet = true
                 }
             }
@@ -264,6 +264,7 @@ fileprivate struct ArchiveItemView: View {
             }
         }
         .buttonStyle(.bordered)
+        .bold()
     }
 
     func archiveCtxMenuPreview(_ meta: ArchiveMetadata) -> some View {
