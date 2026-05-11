@@ -3,6 +3,7 @@ package com.zhufucdev.practiso
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.NSUserDefaultsSettings
 import com.russhwolf.settings.coroutines.getStringFlow
+import com.zhufucdev.practiso.bridge.NamedSource
 import com.zhufucdev.practiso.convert.NSData
 import com.zhufucdev.practiso.datamodel.AuthorizationToken
 import com.zhufucdev.practiso.datamodel.DownloadException
@@ -14,15 +15,16 @@ import com.zhufucdev.practiso.platform.getPlatform
 import com.zhufucdev.practiso.service.CommunityIdentity
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.ImportService
+import com.zhufucdev.practiso.service.UploadArchive
 import io.ktor.utils.io.CancellationException
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.MemScope
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.toKString
+import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,7 +33,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -39,21 +40,29 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.io.buffered
+import kotlinx.io.okio.asKotlinxIoRawSource
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
 import opacity.client.AuthorizationException
+import opacity.client.BonjourResponse
 import opacity.client.DimensionMetadata
 import opacity.client.SortOptions
 import opacity.client.Whoami
 import platform.CoreFoundation.CFDictionaryAddValue
 import platform.CoreFoundation.CFDictionaryCreateMutable
-import platform.CoreFoundation.CFDictionaryGetValue
-import platform.CoreFoundation.CFDictionaryRef
 import platform.CoreFoundation.CFMutableDictionaryRef
 import platform.CoreFoundation.CFTypeRefVar
+import platform.CoreFoundation.kCFBooleanTrue
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSData
+import platform.Foundation.NSString
+import platform.Foundation.NSURL
+import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.NSUserDefaults
+import platform.Foundation.UTF8String
+import platform.Foundation.create
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
@@ -65,6 +74,7 @@ import platform.Security.kSecClass
 import platform.Security.kSecClassInternetPassword
 import platform.Security.kSecMatchLimit
 import platform.Security.kSecMatchLimitOne
+import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -75,12 +85,13 @@ const val COMMUNITY_ACCOUNT = "community"
 class KeychainError(val status: Int) : IllegalStateException("unexpected Keychain status: $status")
 
 @Suppress("UNCHECKED_CAST")
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentity {
-    override val authToken: StateFlow<AuthorizationToken?> = MutableStateFlow(run {
+    override val authToken: MutableStateFlow<AuthorizationToken?> = MutableStateFlow(run {
         memScoped {
             withSecQuery { parameters ->
                 CFDictionaryAddValue(parameters, kSecMatchLimit, kSecMatchLimitOne)
+                CFDictionaryAddValue(parameters, kSecReturnData, kCFBooleanTrue)
                 val item = alloc<CFTypeRefVar>()
                 val status = SecItemCopyMatching(parameters, item.ptr)
                 if (status == errSecItemNotFound) {
@@ -88,9 +99,13 @@ class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentit
                 } else if (status != errSecSuccess) {
                     throw KeychainError(status)
                 } else {
-                    val result = item.ptr as CFDictionaryRef
-                    val tokenPtr = CFDictionaryGetValue(result, kSecValueData) as CPointer<ByteVar>
-                    AuthorizationToken(tokenPtr.toKString())
+                    (CFBridgingRelease(item.value) as? NSData)
+                        ?.let {
+                            val nss = NSString.create(it, NSUTF8StringEncoding)
+                            nss?.UTF8String?.toKString()
+                        }
+                        ?.let { AuthorizationToken(it) }
+                        ?.also { println("Token: $it") }
                 }
             }
         }
@@ -101,37 +116,46 @@ class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentit
         contract {
             callsInPlace(block, InvocationKind.EXACTLY_ONCE)
         }
-        val parameters = CFDictionaryCreateMutable(null, 3, null, null)
+        val parameters = CFDictionaryCreateMutable(null, 4, null, null)
         CFDictionaryAddValue(parameters, kSecClass, kSecClassInternetPassword)
+        val accountNameRef =
+            CFBridgingRetain(NSData(COMMUNITY_ACCOUNT))
         CFDictionaryAddValue(
             parameters,
             kSecAttrAccount,
-            CFBridgingRetain(NSData(COMMUNITY_ACCOUNT))
+            accountNameRef
         )
+        val endpointRef = CFBridgingRetain(NSData(endpoint))
         CFDictionaryAddValue(
             parameters,
             kSecAttrServer,
-            CFBridgingRetain(NSData(endpoint))
+            endpointRef
         )
         val result = block(parameters!!)
         CFBridgingRelease(parameters)
+        CFBridgingRelease(endpointRef)
+        CFBridgingRelease(accountNameRef)
         return result
     }
 
     override fun setAuthToken(value: AuthorizationToken) {
         val status = memScoped {
             withSecQuery { parameters ->
+                val valueRef = CFBridgingRetain(NSData(value.toString()))
                 CFDictionaryAddValue(
                     parameters,
                     kSecValueData,
-                    CFBridgingRetain(NSData(value.toString()))
+                    valueRef
                 )
-                SecItemAdd(parameters, null)
+                val status = SecItemAdd(parameters, null)
+                CFBridgingRelease(valueRef)
+                status
             }
         }
         if (status != errSecSuccess) {
             throw KeychainError(status)
         }
+        authToken.value = value
     }
 
     @OptIn(ExperimentalForeignApi::class)
@@ -139,6 +163,7 @@ class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentit
         memScoped {
             withSecQuery(::SecItemDelete)
         }
+        authToken.value = null
     }
 }
 
