@@ -387,6 +387,22 @@
         }
       }
     },
+    "Account" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Account"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Account"
+          }
+        }
+      }
+    },
     "Account removed." : {
       "localizations" : {
         "zh-Hans" : {
@@ -431,6 +447,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新增"
+          }
+        }
+      }
+    },
+    "Add existing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add existing"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add existing"
           }
         }
       }
@@ -739,6 +771,22 @@
         }
       }
     },
+    "Close" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Close"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Close"
+          }
+        }
+      }
+    },
     "Collecting frames..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -767,6 +815,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Community"
+          }
+        }
+      }
+    },
+    "Community Account" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Community Account"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Community Account"
           }
         }
       }
@@ -2344,6 +2408,22 @@
         }
       }
     },
+    "No account" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No account"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No account"
+          }
+        }
+      }
+    },
     "No details were reported." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3275,6 +3355,22 @@
         }
       }
     },
+    "Type In Token" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Type In Token"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Type In Token"
+          }
+        }
+      }
+    },
     "Type text here..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3415,6 +3511,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "僅使用WLAN"
+          }
+        }
+      }
+    },
+    "Via QR Code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Via QR Code"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Via QR Code"
           }
         }
       }
@@ -3573,6 +3685,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Yes"
+          }
+        }
+      }
+    },
+    "You may create new accounts by sharing your content" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You may create new accounts by sharing your content"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You may create new accounts by sharing your content"
           }
         }
       }
