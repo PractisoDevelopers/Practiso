@@ -1578,6 +1578,22 @@
         }
       }
     },
+    "Get" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Get"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Get"
+          }
+        }
+      }
+    },
     "Getting started..." : {
       "localizations" : {
         "zh-Hans" : {
