@@ -1,15 +1,11 @@
 package com.zhufucdev.practiso.convert
 
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.MemScope
-import kotlinx.cinterop.cstr
 import platform.Foundation.NSData
-import platform.Foundation.dataWithBytes
+import platform.Foundation.NSString
+import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.dataUsingEncoding
 
-@OptIn(ExperimentalForeignApi::class)
-fun MemScope.NSData(string: String): NSData {
-    return NSData.dataWithBytes(
-        string.cstr.ptr,
-        length = string.length.toULong() + 1u/* with trailing zero terminator */
-    )
+@Suppress("CAST_NEVER_SUCCEEDS")
+fun NSData(string: String): NSData? {
+    return (string as NSString).dataUsingEncoding(NSUTF8StringEncoding)
 }

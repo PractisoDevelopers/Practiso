@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Shared
 @preconcurrency import ComposeApp
 
 struct DimensionView: View {

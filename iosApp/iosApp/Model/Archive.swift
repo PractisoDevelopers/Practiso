@@ -2,11 +2,7 @@ import Foundation
 import UniformTypeIdentifiers
 import ComposeApp
 import CoreTransferable
-
-extension UTType {
-    static var psarchive: UTType { UTType(exportedAs: "com.zhufucdev.psarchive") }
-    static var psquiz: UTType { UTType(exportedAs: "com.zhufucdev.psquiz") }
-}
+import Shared
 
 enum SingleQuizTransferError : LocalizedError {
     case containsMultiple

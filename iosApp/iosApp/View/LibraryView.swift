@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Shared
 
 struct LibraryView: View {
     @Binding var destination: Destination?

@@ -48,6 +48,7 @@ class OpacityClient(
         }
     }
 
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
     suspend fun getArchiveList(
         sortOptions: SortOptions,
         predecessorId: String? = null,
@@ -60,9 +61,11 @@ class OpacityClient(
                 predecessorId?.let { parameters.append("predecessor", it) }
             }
         }
+        assertSuccess(response.status)
         return response.body()
     }
 
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
     suspend fun getDimensionArchiveList(
         dimensionName: String,
         sortOptions: SortOptions,
@@ -76,9 +79,11 @@ class OpacityClient(
                 predecessorId?.let { parameters.append("predecessor", it) }
             }
         }
+        assertSuccess(response.status)
         return response.body()
     }
 
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
     suspend fun getDimensionList(takeFirst: Int = 20): GetDimensionListResponse {
         val response = http.get {
             url {
@@ -87,6 +92,7 @@ class OpacityClient(
                 parameter("first", takeFirst)
             }
         }
+        assertSuccess(response.status)
         return response.body()
     }
 
@@ -122,6 +128,7 @@ class OpacityClient(
         )
     }
 
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
     suspend fun getArchivePreview(archiveId: String): GetArchivePreviewResponse {
         val response = http.get {
             url {
@@ -129,6 +136,7 @@ class OpacityClient(
                 appendPathSegments("archive", archiveId, "preview")
             }
         }
+        assertSuccess(response.status)
         return response.body()
     }
 

@@ -19,7 +19,6 @@ import com.zhufucdev.practiso.service.UploadArchive
 import io.ktor.utils.io.CancellationException
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.MemScope
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
@@ -56,6 +55,7 @@ import platform.CoreFoundation.CFTypeRefVar
 import platform.CoreFoundation.kCFBooleanTrue
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSBundle
 import platform.Foundation.NSData
 import platform.Foundation.NSString
 import platform.Foundation.NSURL
@@ -68,6 +68,7 @@ import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
 import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
+import platform.Security.kSecAttrAccessGroup
 import platform.Security.kSecAttrAccount
 import platform.Security.kSecAttrServer
 import platform.Security.kSecClass
@@ -86,7 +87,10 @@ class KeychainError(val status: Int) : IllegalStateException("unexpected Keychai
 
 @Suppress("UNCHECKED_CAST")
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentity {
+class KeychainCommunityIdentity(
+    private val endpoint: String,
+    private val keychainGroup: String? = null
+) : CommunityIdentity {
     override val authToken: MutableStateFlow<AuthorizationToken?> = MutableStateFlow(run {
         memScoped {
             withSecQuery { parameters ->
@@ -112,7 +116,7 @@ class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentit
     })
 
     @OptIn(ExperimentalContracts::class)
-    private fun <T> MemScope.withSecQuery(block: (CFMutableDictionaryRef) -> T): T {
+    private fun <T> withSecQuery(block: (CFMutableDictionaryRef) -> T): T {
         contract {
             callsInPlace(block, InvocationKind.EXACTLY_ONCE)
         }
@@ -131,10 +135,21 @@ class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentit
             kSecAttrServer,
             endpointRef
         )
+        val keychainGroupRef = keychainGroup?.let { CFBridgingRetain(keychainGroup) }
+        if (keychainGroupRef != null) {
+            CFDictionaryAddValue(
+                parameters,
+                kSecAttrAccessGroup,
+                keychainGroupRef
+            )
+        }
         val result = block(parameters!!)
-        CFBridgingRelease(parameters)
+        if (keychainGroupRef != null) {
+            CFBridgingRelease(keychainGroupRef)
+        }
         CFBridgingRelease(endpointRef)
         CFBridgingRelease(accountNameRef)
+        CFBridgingRelease(parameters)
         return result
     }
 
@@ -168,13 +183,19 @@ class KeychainCommunityIdentity(private val endpoint: String) : CommunityIdentit
 }
 
 private const val COMMUNITY_SERVER_URL_KEY = "CommunityServerURL"
+val APP_KEYCHAIN_SHARING = "${NSBundle.mainBundle.objectForInfoDictionaryKey("AppIdentifierPrefix")}com.zhufucdev.practiso.keychain.shared"
 
 @OptIn(ExperimentalSettingsApi::class, ExperimentalCoroutinesApi::class)
 object AppCommunityService {
     private val settings = NSUserDefaultsSettings(NSUserDefaults())
     private val community =
         settings.getStringFlow(COMMUNITY_SERVER_URL_KEY, DEFAULT_COMMUNITY_SERVER_URL)
-            .map { CommunityService(it, KeychainCommunityIdentity(it)) }
+            .map {
+                CommunityService(
+                    it,
+                    KeychainCommunityIdentity(it, keychainGroup = APP_KEYCHAIN_SHARING)
+                )
+            }
             .shareIn(
                 MainScope(),
                 started = SharingStarted.Lazily,
@@ -208,6 +229,8 @@ object AppCommunityService {
 
     fun getWhoami(): Flow<Whoami?> = community.flatMapLatest { it.getWhoami() }
 
+    fun getServerInfo(): Flow<BonjourResponse> = community.flatMapLatest { it.getServerInfo() }
+
     @Throws(DownloadException::class, CancellationException::class)
     suspend fun download(archive: ArchiveMetadata) {
         val handle = with(community.first()) {
@@ -237,6 +260,11 @@ object AppCommunityService {
             ?.let {
                 getPlatform().filesystem.delete(it.destination)
             }
+    }
+
+    fun upload(contentsOf: NSURL, contentName: String? = null): Flow<UploadArchive> {
+        val content = NamedSource(contentsOf).source.asKotlinxIoRawSource().buffered()
+        return community.flatMapLatest { it.uploadArchive(content, contentName) }
     }
 
     @Throws(AuthorizationException::class, IllegalStateException::class)

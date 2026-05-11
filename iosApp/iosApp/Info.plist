@@ -105,5 +105,7 @@
 			</dict>
 		</dict>
 	</array>
+	<key>AppIdentifierPrefix</key>
+	<string>$(AppIdentifierPrefix)</string>
 </dict>
 </plist>
