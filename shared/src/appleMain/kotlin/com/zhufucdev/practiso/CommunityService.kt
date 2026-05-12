@@ -230,6 +230,9 @@ object AppCommunityService {
 
     fun getServerInfo(): Flow<BonjourResponse> = community.flatMapLatest { it.getServerInfo() }
 
+    fun getArchiveMetadata(archiveId: String): Flow<ArchiveMetadata?> =
+        community.flatMapLatest { it.getArchiveMetadata(archiveId) }
+
     @Throws(DownloadException::class, CancellationException::class)
     suspend fun download(archive: ArchiveMetadata) {
         val handle = with(community.first()) {

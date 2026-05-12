@@ -63,27 +63,15 @@ struct CommunityArchiveView: View {
         }
         .navigationTitle(item.nameWithoutExtension)
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: item.id) {
-            state = .loading
-            for await res in AppCommunityService.shared.getArchivePreview(archiveId: item.id) {
-                withAnimation {
-                    state = .ready(content: res)
-                }
-            }
+        .collect(flow: AppCommunityService.shared.getArchivePreview(archiveId: item.id), into: $state) { update in
+            .ready(content: update)
         }
-        .task(id: item.id) {
-            downloadState = DownloadStopped.Idle.shared
-            for await update in AppCommunityService.shared.downloadState(of: item) {
-                withAnimation {
-                    downloadState = update
-                }
-            }
-        }
+        .collect(flow: AppCommunityService.shared.downloadState(of: item), into: $downloadState)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 downloadProgressView(cycle: downloadState)
                     .animation(.default, value: downloadState)
-                
+
                 Button("Download", systemImage: "square.and.arrow.down") {
                     if downloadState is DownloadState.Completed {
                         showRedownloadAlert = true
@@ -156,7 +144,7 @@ struct CommunityArchiveView: View {
 
                 case .configure:
                     IndeterministicCircularProgressView()
-                    
+
                 case .preparing:
                     IndeterministicCircularProgressView()
 

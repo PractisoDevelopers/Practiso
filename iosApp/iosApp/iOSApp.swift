@@ -1,7 +1,7 @@
 import Combine
-import SwiftUI
-import CoreHaptics
 import ComposeApp
+import CoreHaptics
+import SwiftUI
 
 @main
 struct iOSApp: App {
@@ -11,64 +11,47 @@ struct iOSApp: App {
     
     @AppStorage(.feiModel) private var feiModelIndex = 0
     
-    @State private var url: URL? = nil
+    @State private var mainWindowAppLinks: AppLinkDestination? = nil
     
     init() {
         try? Database.shared.fei.setFeiModelSync(model: UserDefaults.standard.feiModel)
     }
     
     var body: some Scene {
-        WindowGroup(id: "content") {
-            if let openingUrl = url {
-                ArchiveDocumentView(url: openingUrl) {
-                    self.url = nil
+        WindowGroup {
+            contentView($mainWindowAppLinks)
+        }
+        
+        WindowGroup(id: "appLinks", for: AppLinkDestination.self) { dest in
+            contentView(dest)
+        }
+        .handlesExternalEvents(matching: ["psarchive"])
+    }
+    
+    func contentView(_ dest: Binding<AppLinkDestination?>) -> some View {
+        Group {
+            switch dest.wrappedValue {
+            case let .archiveDocument(url):
+                ArchiveDocumentView(url: url, onClose: {
+                    dest.wrappedValue = nil
+                })
+
+            case let .communityArchive(archiveId):
+                if let archiveId {
+                    ContentView(communityArchiveId: archiveId)
+                } else {
+                    ContentView(destination: .community)
                 }
-            } else {
+
+            case nil:
                 ContentView()
-                    .onOpenURL { value in
-                        if supportsMultipleWindow {
-                            openWindow(id: "browser", value: value)
-                        } else {
-                            withAnimation {
-                                self.url = value
-                            }
-                        }
-                    }
-                    .onChange(of: feiModelIndex) { oldValue, newValue in
+                    .onChange(of: feiModelIndex) { _, newValue in
                         try? Database.shared.fei.setFeiModelSync(model: KnownModel(index: Int32(newValue)))
                     }
             }
         }
-        
-        WindowGroup(id: "browser", for: URL.self) { $url in
-            Group {
-                if let openingUrl = url {
-                    ArchiveDocumentView(
-                        url: openingUrl,
-                        onClose: {
-                            if supportsMultipleWindow {
-                                openWindow(id: "content")
-                                dismissWindow(id: "browser")
-                            } else {
-                                url = nil
-                            }
-                        }
-                    )
-                } else if supportsMultipleWindow {
-                    OptionListPlaceholder()
-                } else {
-                    ContentView()
-                        .onOpenURL { value in
-                            withAnimation {
-                                url = value
-                            }
-                        }
-                }
-            }
-            .onOpenURL { value in
-                url = value
-            }
+        .onOpenURL { value in
+            dest.wrappedValue = .init(url: value)
         }
-        .handlesExternalEvents(matching: ["psarchive"])
     }
 }

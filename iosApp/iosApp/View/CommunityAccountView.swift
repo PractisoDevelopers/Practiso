@@ -23,7 +23,7 @@ struct CommunityAccountView: View {
                         HStack {
                             Image(systemName: "person.crop.circle")
                             VStack(alignment: .leading) {
-                                Text(info.name)
+                                Text(info.name ?? info.name)
                                 Text(info.clientName)
                                     .fontDesign(.monospaced)
                                     .foregroundStyle(.secondary)

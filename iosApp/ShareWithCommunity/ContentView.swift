@@ -14,7 +14,7 @@ struct ContentView: View {
         case signUp(submission: Ref<AsyncChannel<CommunityRegistrationInfo>>)
         case upload(progess: UploadArchive.InProgress)
         case invalidIdentity(UploadArchive.SignOffRequired)
-        case success
+        case success(archiveId: String)
         case failure(UploadArchive.Failure)
     }
 
@@ -43,61 +43,14 @@ struct ContentView: View {
                 }
             }
             .navigationDestination(for: Step.self) { step in
-                Group {
-                    switch step {
-                    case let .fileName(submission):
-                        FileNameView(onContinue: { name in
-                            await submission.value.send(name)
-                            for await _ in stateChange {
-                                break
-                            }
-                        })
-                        .navigationTitle("Archive name")
-                        .navigationBarTitleDisplayMode(.large)
-
-                    case let .signUp(submission):
-                        SignUpView(onContinue: { registration in
-                            await submission.value.send(registration)
-                            for await _ in stateChange {
-                                break
-                            }
-                        })
-                        .navigationTitle("Create account")
-                        .navigationBarTitleDisplayMode(.large)
-
-                    case let .upload(progress):
-                        UploadView(progress: progress)
-                            .task {
-                                for await _ in stateChange {
-                                    break
-                                }
-                            }
-
-                    case let .invalidIdentity(state):
-                        InvalidIdentityView()
-
-                    case .success:
-                        SuccessView()
-                            .task {
-                                try? await Task.sleep(for: .seconds(5))
-                                finishTask()
-                            }
-
-                    case let .failure(state):
-                        FailureView(message: state.message, code: state.statusCode.value) {
-                            retryCounter += 1
-                        } onCancel: {
+                currentView(step)
+                    .environment(\.archiveResource, archive)
+                    .navigationBarBackButtonHidden()
+                    .toolbar {
+                        Button("Cancel", systemImage: "xmark", role: .cancel) {
                             finishTask()
                         }
                     }
-                }
-                .environment(\.archiveResource, archive)
-                .navigationBarBackButtonHidden()
-                .toolbar {
-                    Button("Cancel", systemImage: "xmark", role: .cancel) {
-                        finishTask()
-                    }
-                }
             }
             .toolbar {
                 Button("Cancel", systemImage: "xmark", role: .cancel) {
@@ -152,8 +105,8 @@ struct ContentView: View {
                 case let .signOffRequired(state):
                     path.append(.invalidIdentity(state))
 
-                case .success:
-                    path.append(.success)
+                case let .success(state):
+                    path.append(.success(archiveId: state.archiveId))
                 }
             }
         }
@@ -170,6 +123,59 @@ struct ContentView: View {
         } message: {
             if let errorMessage {
                 Text(errorMessage)
+            }
+        }
+    }
+
+    func currentView(_ step: Step) -> some View {
+        Group {
+            switch step {
+            case let .fileName(submission):
+                FileNameView(onContinue: { name in
+                    await submission.value.send(name)
+                    for await _ in stateChange {
+                        break
+                    }
+                })
+                .navigationTitle("Archive name")
+                .navigationBarTitleDisplayMode(.large)
+
+            case let .signUp(submission):
+                SignUpView(onContinue: { registration in
+                    await submission.value.send(registration)
+                    for await _ in stateChange {
+                        break
+                    }
+                })
+                .navigationTitle("Create account")
+                .navigationBarTitleDisplayMode(.large)
+
+            case let .upload(progress):
+                UploadView(progress: progress)
+                    .task {
+                        for await _ in stateChange {
+                            break
+                        }
+                    }
+
+            case let .invalidIdentity(state):
+                InvalidIdentityView()
+
+            case let .success(archiveId):
+                SuccessView(archiveId: archiveId, onClose: {
+                    finishTask()
+                })
+                    .task {
+                        try? await Task.sleep(for: .seconds(5))
+                        finishTask()
+                    }
+
+            case let .failure(state):
+                FailureView(message: state.message, code: state.statusCode.value) {
+                    retryCounter += 1
+                } onCancel: {
+                    finishTask()
+                }
             }
         }
     }
@@ -288,7 +294,7 @@ fileprivate struct UploadView: View {
                 .frame(width: 48)
                 .foregroundStyle(Color.accentColor)
                 .symbolEffect(.rotate, options: .repeat(.continuous))
-                .padding(.top, 12)
+                .padding(.top, 18)
 
             Spacer()
             Observing(progress.stats) { stats in
@@ -328,7 +334,7 @@ fileprivate struct FailureView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 24)
-            
+
             Text("Upload failed")
                 .font(.title)
             Text("Status code \(code)")
@@ -361,14 +367,47 @@ fileprivate struct InvalidIdentityView: View {
 }
 
 fileprivate struct SuccessView: View {
+    @Environment(\.openURL) private var openURL
+    
+    let archiveId: String
+    let onClose: () -> Void
+
+    @State private var secsUntilClose = 5
+
     var body: some View {
-        VStack {
-            Image(systemName: "checkmark.circle")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 48)
-                .foregroundStyle(.green)
+        VStack(alignment: .leading) {
+            HStack {
+                Image(systemName: "checkmark.circle")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48)
+                    .foregroundStyle(.green)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 24)
+            Text("Completed!")
+                .font(.title)
+                .bold()
+            Text("Others can view and download your quizzes, and share with their friends")
+            Spacer()
+
+            FullWidthButton(action: onClose, label: {
+                Text("Closing in \(secsUntilClose)")
+            })
+            .task(id: archiveId) {
+                while secsUntilClose > 0 {
+                    try? await Task.sleep(for: .seconds(1))
+                    secsUntilClose -= 1
+                }
+            }
+            FullWidthButton {
+                openURL(URL(string: "practiso:community/archive/\(archiveId)")!)
+            } label: {
+                Text("Reveal in Practiso")
+            }
+            .tint(.clear)
         }
+        .padding(.horizontal)
     }
 }
 

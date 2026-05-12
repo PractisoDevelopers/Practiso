@@ -8,6 +8,19 @@ struct ContentView: View {
     @ObservedObject private var takeStarterCache = TakeStarterDefaultLabel.Cache()
     @State private var feiState: FeiDbState? = nil
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
+    
+    init() {
+    }
+    
+    init(destination: Destination) {
+        model.destination = destination
+    }
+    
+    init(communityArchiveId: String) {
+        model.destination = .community
+        model.detail = .archiveIdPreview(communityArchiveId)
+        model.column = .detail
+    }
 
     var body: some View {
         Group {
@@ -91,6 +104,8 @@ struct ContentView: View {
                     SessionDetailView(option: sessionOption)
                 case let .archivePreview(meta):
                     CommunityArchiveView(item: meta)
+                case let .archiveIdPreview(id):
+                    CommunityArchiveIdView(id: id)
                 case .none:
                     selectItemScreen
                 }
