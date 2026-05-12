@@ -63,6 +63,9 @@ struct CommunityArchiveView: View {
         }
         .navigationTitle(item.nameWithoutExtension)
         .navigationBarTitleDisplayMode(.inline)
+        .task(id: item.id) {
+            state = .loading
+        }
         .collect(flow: AppCommunityService.shared.getArchivePreview(archiveId: item.id), into: $state) { update in
             .ready(content: update)
         }

@@ -51,6 +51,7 @@ struct iOSApp: App {
             }
         }
         .onOpenURL { value in
+            dest.wrappedValue = nil
             dest.wrappedValue = .init(url: value)
         }
     }
