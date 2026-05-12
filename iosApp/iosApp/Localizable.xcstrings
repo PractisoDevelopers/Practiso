@@ -1059,6 +1059,38 @@
         }
       }
     },
+    "Deactivate" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deactivate"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deactivate"
+          }
+        }
+      }
+    },
+    "Deactivating account" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deactivating account"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deactivating account"
+          }
+        }
+      }
+    },
     "Decending" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1261,6 +1293,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "了解詳情"
+          }
+        }
+      }
+    },
+    "Device name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Device name"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Device name"
           }
         }
       }
@@ -2247,6 +2295,38 @@
         }
       }
     },
+    "Log out" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Log out"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Log out"
+          }
+        }
+      }
+    },
+    "Logging out" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Logging out"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Logging out"
+          }
+        }
+      }
+    },
     "Missing models" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2323,6 +2403,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "名稱"
+          }
+        }
+      }
+    },
+    "Name change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Name change"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Name change"
           }
         }
       }
@@ -3531,6 +3627,22 @@
         }
       }
     },
+    "User name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "User name"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "User name"
+          }
+        }
+      }
+    },
     "Via QR Code" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3701,6 +3813,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Yes"
+          }
+        }
+      }
+    },
+    "You are erasing your account along with all your uploaded data. Would you like to continue?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You are erasing your account along with all your uploaded data. Would you like to continue?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You are erasing your account along with all your uploaded data. Would you like to continue?"
           }
         }
       }
