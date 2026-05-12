@@ -17,23 +17,16 @@
 		6A806BCC2D60E0F200453A72 /* Archive@x2.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A806BCB2D60E0F200453A72 /* Archive@x2.png */; };
 		6A9D7F892D54D83700A57747 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6A9D7F882D54D83700A57747 /* Localizable.xcstrings */; };
 		6AA9977E2FB1BC2C00FD3AA9 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA9977D2FB1BC2C00FD3AA9 /* UniformTypeIdentifiers.framework */; };
-		6AA9978A2FB1BC2C00FD3AA9 /* ShareWithCommunity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6AA9977B2FB1BC2C00FD3AA9 /* ShareWithCommunity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6AA997A42FB1CF7200FD3AA9 /* libShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA9979D2FB1CF5F00FD3AA9 /* libShared.a */; };
 		6AA997A72FB1D0BD00FD3AA9 /* libShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA9979D2FB1CF5F00FD3AA9 /* libShared.a */; };
 		6AA997C92FB21BE600FD3AA9 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 6AA997C82FB21BE600FD3AA9 /* AsyncAlgorithms */; };
 		6AA997CC2FB22CCF00FD3AA9 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 6AA997CB2FB22CCF00FD3AA9 /* SwiftUIIntrospect */; };
 		6AB0EBC82F6FE0C300953706 /* Transmission in Frameworks */ = {isa = PBXBuildFile; productRef = 6AB0EBC72F6FE0C300953706 /* Transmission */; };
+		6AC6AA542FB2BA2F00FF0D26 /* ShareWithCommunity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6AA9977B2FB1BC2C00FD3AA9 /* ShareWithCommunity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6AFCF2EB2D89AE8800C3B648 /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFCF2EA2D89AE8800C3B648 /* SwiftUIPager */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		6AA997882FB1BC2C00FD3AA9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7555FF73242A565900829871 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6AA9977A2FB1BC2C00FD3AA9;
-			remoteInfo = CommunityActions;
-		};
 		6AA997A52FB1CF7200FD3AA9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7555FF73242A565900829871 /* Project object */;
@@ -55,20 +48,30 @@
 			remoteGlobalIDString = 7555FF7A242A565900829871;
 			remoteInfo = iosApp;
 		};
+		6AC6AA552FB2BA2F00FF0D26 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7555FF73242A565900829871 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6AA9977A2FB1BC2C00FD3AA9;
+			remoteInfo = ShareWithCommunity;
+		};
+		6AC6AA582FB2BA3600FF0D26 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7555FF73242A565900829871 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6AA9977A2FB1BC2C00FD3AA9;
+			remoteInfo = ShareWithCommunity;
+		};
+		6AC6AA5A2FB2BA4100FF0D26 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7555FF73242A565900829871 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6AA9977A2FB1BC2C00FD3AA9;
+			remoteInfo = ShareWithCommunity;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		6AA9978F2FB1BC2C00FD3AA9 /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				6AA9978A2FB1BC2C00FD3AA9 /* ShareWithCommunity.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		6AA9979B2FB1CF5F00FD3AA9 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -76,6 +79,17 @@
 			dstSubfolderSpec = 16;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6AC6AA572FB2BA2F00FF0D26 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6AC6AA542FB2BA2F00FF0D26 /* ShareWithCommunity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -329,16 +343,18 @@
 			buildConfigurationList = 7555FFA5242A565B00829871 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
 				F36B1CEB2AD83DDC00CB74D5 /* Compile Kotlin Framework */,
-				6AA9978F2FB1BC2C00FD3AA9 /* Embed Foundation Extensions */,
 				7555FF77242A565900829871 /* Sources */,
 				B92378962B6B1156000C7307 /* Frameworks */,
 				7555FF79242A565900829871 /* Resources */,
+				6AC6AA572FB2BA2F00FF0D26 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				6AA997892FB1BC2C00FD3AA9 /* PBXTargetDependency */,
 				6AA997A62FB1CF7200FD3AA9 /* PBXTargetDependency */,
+				6AC6AA562FB2BA2F00FF0D26 /* PBXTargetDependency */,
+				6AC6AA592FB2BA3600FF0D26 /* PBXTargetDependency */,
+				6AC6AA5B2FB2BA4100FF0D26 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				6A0E3A022D5F72E70087FD38 /* Helper */,
@@ -498,11 +514,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		6AA997892FB1BC2C00FD3AA9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6AA9977A2FB1BC2C00FD3AA9 /* ShareWithCommunity */;
-			targetProxy = 6AA997882FB1BC2C00FD3AA9 /* PBXContainerItemProxy */;
-		};
 		6AA997A62FB1CF7200FD3AA9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 6AA9979C2FB1CF5F00FD3AA9 /* Shared */;
@@ -517,6 +528,21 @@
 			isa = PBXTargetDependency;
 			target = 7555FF7A242A565900829871 /* iosApp */;
 			targetProxy = 6ABC79512DAF542A00BC8C74 /* PBXContainerItemProxy */;
+		};
+		6AC6AA562FB2BA2F00FF0D26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6AA9977A2FB1BC2C00FD3AA9 /* ShareWithCommunity */;
+			targetProxy = 6AC6AA552FB2BA2F00FF0D26 /* PBXContainerItemProxy */;
+		};
+		6AC6AA592FB2BA3600FF0D26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6AA9977A2FB1BC2C00FD3AA9 /* ShareWithCommunity */;
+			targetProxy = 6AC6AA582FB2BA3600FF0D26 /* PBXContainerItemProxy */;
+		};
+		6AC6AA5B2FB2BA4100FF0D26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6AA9977A2FB1BC2C00FD3AA9 /* ShareWithCommunity */;
+			targetProxy = 6AC6AA5A2FB2BA4100FF0D26 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
