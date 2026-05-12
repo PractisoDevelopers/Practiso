@@ -1,20 +1,20 @@
+@preconcurrency import ComposeApp
 import Foundation
 import SwiftUI
-@preconcurrency import ComposeApp
 
-struct ImageServiceKey : EnvironmentKey {
+struct ImageServiceKey: EnvironmentKey {
     static let defaultValue: any ImageService = ResourceImageService.shared
 }
 
-struct ImageCacheKey : EnvironmentKey {
+struct ImageCacheKey: EnvironmentKey {
     static let defaultValue: ImageFrameView.Cache = .init()
 }
 
-struct TakeServiceKey : EnvironmentKey {
+struct TakeServiceKey: EnvironmentKey {
     static let defaultValue: TakeService = .init(takeId: 0, db: Database.shared.app)
 }
 
-struct TakeStarterCacheKey : EnvironmentKey {
+struct TakeStarterCacheKey: EnvironmentKey {
     static let defaultValue: TakeStarterDefaultLabel.Cache = .init()
 }
 
@@ -23,17 +23,17 @@ extension EnvironmentValues {
         get { self[ImageServiceKey.self] }
         set { self[ImageServiceKey.self] = newValue }
     }
-    
+
     var imageCache: ImageFrameView.Cache {
         get { self[ImageCacheKey.self] }
         set { self[ImageCacheKey.self] = newValue }
     }
-    
+
     var takeService: TakeService {
         get { self[TakeServiceKey.self] }
         set { self[TakeServiceKey.self] = newValue }
     }
-    
+
     var takeStarterCache: TakeStarterDefaultLabel.Cache {
         get { self[TakeStarterCacheKey.self] }
         set { self[TakeStarterCacheKey.self] = newValue }

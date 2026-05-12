@@ -131,7 +131,9 @@ struct CommunityView: View {
                         Task { @MainActor in
                             if let dimensions = await resources.dims, let archives = await resources.archives {
                                 state = .ready(dimensions: dimensions, archives: archives)
-                                await refreshChannel.send(())
+                                Task {
+                                    await refreshChannel.send(())
+                                }
                             }
                         }
                     }
@@ -148,7 +150,9 @@ struct CommunityView: View {
                             Task { @MainActor in
                                 if let dimensions = await resources.dims, let archives = await resources.archives {
                                     state = .ready(dimensions: dimensions, archives: archives)
-                                    await refreshChannel.send(())
+                                    Task {
+                                        await refreshChannel.send(())
+                                    }
                                 }
                             }
                         }

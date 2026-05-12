@@ -976,6 +976,12 @@
         }
       }
     },
+    "Deactivate" : {
+
+    },
+    "Deactivating account" : {
+
+    },
     "Decending" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1181,6 +1187,9 @@
           }
         }
       }
+    },
+    "Device name" : {
+
     },
     "Dimension" : {
       "localizations" : {
@@ -2112,6 +2121,12 @@
         }
       }
     },
+    "Log out" : {
+
+    },
+    "Logging out" : {
+
+    },
     "Missing models" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2191,6 +2206,9 @@
           }
         }
       }
+    },
+    "Name change" : {
+
     },
     "Name of options frame" : {
       "localizations" : {
@@ -3344,6 +3362,9 @@
         }
       }
     },
+    "User name" : {
+
+    },
     "Via QR Code" : {
 
     },
@@ -3490,6 +3511,9 @@
       }
     },
     "Yes" : {
+
+    },
+    "You are erasing your account along with all your uploaded data. Would you like to continue?" : {
 
     },
     "You may create new accounts by sharing your content" : {

@@ -7,6 +7,7 @@ import com.zhufucdev.practiso.datamodel.NextPointerBasedPaginated
 import com.zhufucdev.practiso.datamodel.Paginated
 import com.zhufucdev.practiso.platform.PlatformHttpClientFactory
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -28,7 +29,9 @@ import opacity.client.ArchiveUploadState
 import opacity.client.AuthorizationException
 import opacity.client.BonjourResponse
 import opacity.client.DimensionMetadata
+import opacity.client.HttpStatusAssertionException
 import opacity.client.OpacityClient
+import opacity.client.SetWhoami
 import opacity.client.SortOptions
 import opacity.client.TransferStats
 import opacity.client.Whoami
@@ -95,6 +98,12 @@ class CommunityService(
     fun getServerInfo(): Flow<BonjourResponse> = client.map(OpacityClient::getBonjour)
 
     fun getWhoami(): Flow<Whoami?> = client.map(OpacityClient::getWhoami)
+
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun setWhoami(info: SetWhoami) = client.first().setWhoami(info)
+
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun deleteWhoami() = client.first().deleteWhoami()
 
     suspend fun deleteArchive(archiveId: String) =
         client.first().deleteArchive(archiveId)

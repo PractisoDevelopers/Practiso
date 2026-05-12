@@ -8,9 +8,11 @@ import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
+import opacity.SetField
 
 class OpacityClient(
     val endpoint: String,
@@ -217,6 +220,40 @@ class OpacityClient(
         }
         assertSuccess(response.status)
         return response.body()
+    }
+
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun setWhoami(info: SetWhoami) {
+        val response = http.patch {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("whoami")
+            }
+            setBody(MultiPartFormDataContent(formData {
+                if (info.name is SetField.Update) {
+                    if (info.name.value == null) {
+                        append("\"owner-name\"", "")
+                    } else {
+                        append("\"owner-name\"", info.name.value)
+                    }
+                }
+                if (info.clientName is SetField.Update) {
+                    append("\"client-name\"", info.clientName.value)
+                }
+            }))
+        }
+        assertSuccess(response.status)
+    }
+
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun deleteWhoami() {
+        val response = http.delete {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("whoami")
+            }
+        }
+        assertSuccess(response.status)
     }
 
     @Throws(

@@ -46,6 +46,8 @@ import opacity.client.ArchivePreview
 import opacity.client.AuthorizationException
 import opacity.client.BonjourResponse
 import opacity.client.DimensionMetadata
+import opacity.client.HttpStatusAssertionException
+import opacity.client.SetWhoami
 import opacity.client.SortOptions
 import opacity.client.Whoami
 import platform.CoreFoundation.CFDictionaryAddValue
@@ -228,6 +230,12 @@ object AppCommunityService {
 
     fun getWhoami(): Flow<Whoami?> = community.flatMapLatest { it.getWhoami() }
 
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun setWhoami(info: SetWhoami) = community.first().setWhoami(info)
+
+    @Throws(HttpStatusAssertionException::class, kotlinx.coroutines.CancellationException::class)
+    suspend fun deleteWhoami() = community.first().deleteWhoami()
+
     fun getServerInfo(): Flow<BonjourResponse> = community.flatMapLatest { it.getServerInfo() }
 
     fun getArchiveMetadata(archiveId: String): Flow<ArchiveMetadata?> =
@@ -276,4 +284,6 @@ object AppCommunityService {
     suspend fun removeLike(archiveId: String) = community.first().removeLike(archiveId)
 
     suspend fun isAuthenticated() = community.first().identity.authToken.firstOrNull() != null
+
+    suspend fun clearIdentity() = community.first().identity.clear()
 }
