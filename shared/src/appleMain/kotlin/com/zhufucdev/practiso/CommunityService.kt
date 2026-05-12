@@ -109,7 +109,6 @@ class KeychainCommunityIdentity(
                             nss?.UTF8String?.toKString()
                         }
                         ?.let { AuthorizationToken(it) }
-                        ?.also { println("Token: $it") }
                 }
             }
         }
