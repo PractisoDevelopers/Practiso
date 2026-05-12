@@ -5,7 +5,6 @@
 //  Created by Claude on 2026/5/11.
 //
 
-
 import Foundation
 
 /// Estimates remaining time for a job using an exponential moving average
@@ -14,9 +13,8 @@ import Foundation
 /// Usage:
 /// ```swift
 /// let estimator = TimeRemainingEstimator()
-/// estimator.start(total: 1_000_000)
 ///
-/// // Call as work completes:
+/// // Call as work completes — uses wall clock automatically:
 /// if let remaining = estimator.elapsed(done: 250_000, total: 1_000_000) {
 ///     print("ETA: \(remaining.formatted())")
 /// }
@@ -35,6 +33,9 @@ public final class TimeRemainingEstimator {
 
     // MARK: - Private state
 
+    /// Swappable clock — defaults to `Date()`, override in tests/demos.
+    private let now: () -> Date
+
     private var startTime: Date?
     private var lastSampleTime: Date?
     private var lastDone: Int64 = 0
@@ -49,24 +50,30 @@ public final class TimeRemainingEstimator {
     /// - Parameters:
     ///   - smoothingFactor: EMA α in (0, 1]. Default `0.25`.
     ///   - minimumSamples: Samples needed before producing an estimate. Default `2`.
-    public init(smoothingFactor: Double = 0.25, minimumSamples: Int = 2) {
+    ///   - clock: Time source. Defaults to `Date()`. Override for testing or simulation.
+    public init(
+        smoothingFactor: Double = 0.25,
+        minimumSamples: Int = 2,
+        clock: @escaping () -> Date = Date.init
+    ) {
         precondition((0.0...1.0).contains(smoothingFactor),
                      "smoothingFactor must be in 0...1")
         precondition(minimumSamples >= 1, "minimumSamples must be ≥ 1")
         self.smoothingFactor = smoothingFactor
         self.minimumSamples = minimumSamples
+        self.now = clock
     }
 
     // MARK: - Public API
 
     /// Explicitly mark the start of the job and reset all state.
     /// Optional — `elapsed(done:total:)` auto-starts on first call.
-    public func start(total: Int64 = 0) {
+    public func start() {
         reset()
-        startTime = Date()
+        startTime = now()
     }
 
-    /// Reset estimator back to its initial state.
+    /// Reset the estimator back to its initial state.
     public func reset() {
         startTime = nil
         lastSampleTime = nil
@@ -86,39 +93,36 @@ public final class TimeRemainingEstimator {
     public func elapsed(done: Int64, total: Int64) -> TimeInterval? {
         guard total > 0, done >= 0, done <= total else { return nil }
 
-        let now = Date()
+        let timestamp = now()
 
         // Auto-start on first observation.
-        if startTime == nil {
-            startTime = now
-            lastSampleTime = now
+        guard let sampleStart = lastSampleTime else {
+            startTime = timestamp
+            lastSampleTime = timestamp
             lastDone = done
             return nil
         }
 
-        let sampleStart = lastSampleTime ?? startTime ?? now
-        let dt = now.timeIntervalSince(sampleStart)
+        let dt = timestamp.timeIntervalSince(sampleStart)
         let unitsDelta = done - lastDone
 
         // Only record a sample when meaningful time and work have passed.
         if dt > 0, unitsDelta > 0 {
             let throughput = Double(unitsDelta) / dt   // units / second
 
-            if let prev = emaThroughput {
-                emaThroughput = smoothingFactor * throughput + (1.0 - smoothingFactor) * prev
-            } else {
-                emaThroughput = throughput
-            }
+            emaThroughput = emaThroughput.map {
+                smoothingFactor * throughput + (1.0 - smoothingFactor) * $0
+            } ?? throughput
 
             sampleCount += 1
-            lastSampleTime = now
+            lastSampleTime = timestamp
             lastDone = done
         }
 
         guard sampleCount >= minimumSamples,
               let rate = emaThroughput, rate > 0 else { return nil }
 
-        let remaining = Int64(total) - done
+        let remaining = total - done
         return Double(remaining) / rate
     }
 
@@ -126,7 +130,7 @@ public final class TimeRemainingEstimator {
 
     /// Elapsed wall-clock time since `start()` or first `elapsed(done:total:)` call.
     public var elapsedTime: TimeInterval? {
-        startTime.map { Date().timeIntervalSince($0) }
+        startTime.map { now().timeIntervalSince($0) }
     }
 
     /// Most recent EMA throughput estimate (units per second).
@@ -140,7 +144,7 @@ public extension TimeInterval {
     func formatted() -> String {
         guard self >= 0, !isNaN, !isInfinite else { return "Unknown" }
 
-        let total   = Int(self.rounded())
+        let total   = Int((self * 1000).rounded())
         let hours   = total / 3600
         let minutes = (total % 3600) / 60
         let seconds = total % 60
@@ -152,35 +156,3 @@ public extension TimeInterval {
         }
     }
 }
-
-// MARK: - Example / smoke-test
-
-#if DEBUG
-func runDemo() {
-    let estimator = TimeRemainingEstimator(smoothingFactor: 0.3, minimumSamples: 2)
-    let total: Int64 = 10_000
-
-    print("Simulating a \(total)-unit job...\n")
-
-    var done: Int64 = 0
-    var tick = 0
-
-    // Simulate uneven throughput: fast start, slow middle, fast end.
-    while done < total {
-        let phase = Double(done) / Double(total)
-        let rate: Int64 = phase < 0.4 ? 400 : (phase < 0.7 ? 150 : 500)
-        done = min(done + rate, total)
-        tick += 1
-
-        // Pretend 0.25 s passes each iteration (demo only; real code uses wall time).
-        if let eta = estimator.elapsed(done: done, total: total) {
-            let pct = 100.0 * Double(done) / Double(total)
-            print(String(format: "  tick %2d | %6.1f%% done | ETA: %@",
-                         tick, pct, eta.formatted()))
-        }
-    }
-
-    print("\nDone! Total wall time: \(estimator.elapsedTime.map { "\($0.formatted())" } ?? "n/a")")
-}
-
-#endif
