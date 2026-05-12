@@ -26,7 +26,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack(path: $path) {
             Group {
-                if case let .failure(error) = archive.url {
+                if case let .failure(error) = archive.resource {
                     Text(error.localizedDescription)
                         .padding()
                 } else {
@@ -63,14 +63,19 @@ struct ContentView: View {
                 retryCounter += 1
             }
         }
-        .task(id: "\(urlOrNull(archive)?.absoluteString ?? "nil")#\(retryCounter)") {
-            guard case let .success(url) = archive.url else {
+        .task(id: Pair(a: archive.resource, b: retryCounter)) {
+            guard case let .success(resource) = archive.resource else {
                 return
             }
 
             path.removeAll()
-
-            for await update in AppCommunityService.shared.upload(contentsOf: url, contentName: nil) {
+            let updates = switch resource {
+            case let .data(data):
+                AppCommunityService.shared.upload(data: data, contentName: nil)
+            case let .url(url):
+                AppCommunityService.shared.upload(contentsOf: url, contentName: nil)
+            }
+            for await update in updates {
                 await stateChange.send(())
                 stateChange.finish()
                 stateChange = .init()
@@ -165,10 +170,10 @@ struct ContentView: View {
                 SuccessView(archiveId: archiveId, onClose: {
                     finishTask()
                 })
-                    .task {
-                        try? await Task.sleep(for: .seconds(5))
-                        finishTask()
-                    }
+                .task {
+                    try? await Task.sleep(for: .seconds(5))
+                    finishTask()
+                }
 
             case let .failure(state):
                 FailureView(message: state.message, code: state.statusCode.value) {
@@ -187,13 +192,6 @@ struct ContentView: View {
             errorMessage = error.localizedDescription
         }
     }
-
-    func urlOrNull(_ archive: ArchiveResourceInfo) -> URL? {
-        if case let .success(url) = archive.url {
-            return url
-        }
-        return nil
-    }
 }
 
 fileprivate struct FileNameView: View {
@@ -208,12 +206,16 @@ fileprivate struct FileNameView: View {
     var body: some View {
         VStack {
             Form {
-                TextField("Archive name", text: $value)
-                    .shakeAnimation($wobbling, sink: shake)
-                    .textInputAutocapitalization(.words)
-                    .introspect(.textField, on: .iOS(.v13...)) { textField in
-                        textField.clearButtonMode = .whileEditing
-                    }
+                Section {
+                    TextField("Archive name", text: $value)
+                        .shakeAnimation($wobbling, sink: shake)
+                        .textInputAutocapitalization(.words)
+                        .introspect(.textField, on: .iOS(.v13...)) { textField in
+                            textField.clearButtonMode = .whileEditing
+                        }
+                } footer: {
+                    Text("Used to identify the content within for others")
+                }
             }
 
             Spacer()
@@ -235,9 +237,15 @@ fileprivate struct FileNameView: View {
             .padding()
         }
         .onAppear {
-            if case let .success(url) = archive.url,
-               let name = url.lastPathComponent.split(separator: ".").first {
-                value = String(name)
+            if case let .success(resource) = archive.resource {
+                if case let .url(url) = resource,
+                   let name = url.lastPathComponent.split(separator: ".").first {
+                    value = String(name)
+                } else if #available(iOS 18.2, *),
+                          case let .data(data) = resource,
+                          let name = data.suggestedFilename {
+                    value = name
+                }
             }
         }
     }
@@ -368,7 +376,7 @@ fileprivate struct InvalidIdentityView: View {
 
 fileprivate struct SuccessView: View {
     @Environment(\.openURL) private var openURL
-    
+
     let archiveId: String
     let onClose: () -> Void
 
@@ -437,4 +445,9 @@ fileprivate struct FullWidthButton<Label: View>: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
     }
+}
+
+fileprivate struct Pair<A, B>: Equatable where A: Equatable, B: Equatable {
+    var a: A
+    var b: B
 }
