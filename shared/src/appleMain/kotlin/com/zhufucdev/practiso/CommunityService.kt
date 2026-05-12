@@ -16,6 +16,7 @@ import com.zhufucdev.practiso.service.CommunityIdentity
 import com.zhufucdev.practiso.service.CommunityService
 import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.service.UploadArchive
+import io.github.vinceglb.filekit.utils.toByteArray
 import io.ktor.utils.io.CancellationException
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.io.Buffer
 import kotlinx.io.buffered
 import kotlinx.io.okio.asKotlinxIoRawSource
 import opacity.client.ArchiveMetadata
@@ -274,6 +276,11 @@ object AppCommunityService {
 
     fun upload(contentsOf: NSURL, contentName: String? = null): Flow<UploadArchive> {
         val content = NamedSource(contentsOf).source.asKotlinxIoRawSource().buffered()
+        return community.flatMapLatest { it.uploadArchive(content, contentName) }
+    }
+
+    fun upload(data: NSData, contentName: String? = null): Flow<UploadArchive> {
+        val content = Buffer().apply { write(data.toByteArray()) }
         return community.flatMapLatest { it.uploadArchive(content, contentName) }
     }
 

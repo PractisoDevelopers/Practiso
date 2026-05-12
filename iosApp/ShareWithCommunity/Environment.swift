@@ -9,11 +9,6 @@ struct FinishTaskKey: EnvironmentKey {
     static let defaultValue: () -> Void = {}
 }
 
-@Observable
-class ArchiveResourceInfo {
-    var url: Result<URL, any Error>? = nil
-}
-
 extension EnvironmentValues {
     var archiveResource: ArchiveResourceInfo {
         get { self[ArchiveURLKey.self] }

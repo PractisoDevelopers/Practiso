@@ -2,6 +2,7 @@ package com.zhufucdev.practiso
 
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.ArchivePack
+import com.zhufucdev.practiso.datamodel.ImportException
 import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.ResourceNotFoundException
 import com.zhufucdev.practiso.helper.simpleHandleQuestions
@@ -20,5 +21,10 @@ class ImportServiceSync(db: AppDatabase) {
     @Throws(Exception::class, RuntimeException::class)
     fun importAll(pack: ArchivePack) = runBlocking {
         service.import(pack).simpleHandleQuestions()
+    }
+
+    @Throws(ImportException::class)
+    fun import(namedSource: NamedSource) = runBlocking {
+        service.import(namedSource).simpleHandleQuestions()
     }
 }

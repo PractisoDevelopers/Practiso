@@ -7,7 +7,7 @@ class ArchiveResourceInfo {
 
 enum ArchiveResource: Equatable {
     case url(URL)
-    case data(Data)
+    case data(Data, fileName: String?)
 }
 
 struct ResourceError: LocalizedError, Equatable {

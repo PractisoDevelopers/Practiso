@@ -23,6 +23,7 @@
 		6AA997CC2FB22CCF00FD3AA9 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 6AA997CB2FB22CCF00FD3AA9 /* SwiftUIIntrospect */; };
 		6AB0EBC82F6FE0C300953706 /* Transmission in Frameworks */ = {isa = PBXBuildFile; productRef = 6AB0EBC72F6FE0C300953706 /* Transmission */; };
 		6AC6AA542FB2BA2F00FF0D26 /* ShareWithCommunity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6AA9977B2FB1BC2C00FD3AA9 /* ShareWithCommunity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6AC6ABE32FB35A6500FF0D26 /* libShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA9979D2FB1CF5F00FD3AA9 /* libShared.a */; };
 		6AFCF2EB2D89AE8800C3B648 /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFCF2EA2D89AE8800C3B648 /* SwiftUIPager */; };
 /* End PBXBuildFile section */
 
@@ -68,6 +69,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 6AA9977A2FB1BC2C00FD3AA9;
 			remoteInfo = ShareWithCommunity;
+		};
+		6AC6ABE42FB35A6500FF0D26 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7555FF73242A565900829871 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6AA9979C2FB1CF5F00FD3AA9;
+			remoteInfo = Shared;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -175,6 +183,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6AC6ABE32FB35A6500FF0D26 /* libShared.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,6 +335,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				6AC6ABE52FB35A6500FF0D26 /* PBXTargetDependency */,
 				6ABC79522DAF542A00BC8C74 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
@@ -382,7 +392,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastSwiftUpdateCheck = 2640;
+				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 1540;
 				ORGANIZATIONNAME = orgName;
 				TargetAttributes = {
@@ -543,6 +553,11 @@
 			isa = PBXTargetDependency;
 			target = 6AA9977A2FB1BC2C00FD3AA9 /* ShareWithCommunity */;
 			targetProxy = 6AC6AA5A2FB2BA4100FF0D26 /* PBXContainerItemProxy */;
+		};
+		6AC6ABE52FB35A6500FF0D26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6AA9979C2FB1CF5F00FD3AA9 /* Shared */;
+			targetProxy = 6AC6ABE42FB35A6500FF0D26 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

@@ -70,7 +70,7 @@ struct ContentView: View {
 
             path.removeAll()
             let updates = switch resource {
-            case let .data(data):
+            case let .data(data, _):
                 AppCommunityService.shared.upload(data: data, contentName: nil)
             case let .url(url):
                 AppCommunityService.shared.upload(contentsOf: url, contentName: nil)
@@ -241,10 +241,8 @@ fileprivate struct FileNameView: View {
                 if case let .url(url) = resource,
                    let name = url.lastPathComponent.split(separator: ".").first {
                     value = String(name)
-                } else if #available(iOS 18.2, *),
-                          case let .data(data) = resource,
-                          let name = data.suggestedFilename {
-                    value = name
+                } else if case let .data(_, fileName) = resource, let fileName {
+                    value = fileName
                 }
             }
         }
@@ -309,7 +307,7 @@ fileprivate struct UploadView: View {
                 if let bytesTotal = stats.bytesTotal?.int64Value {
                     ProgressView(value: Float(stats.bytesSent) / Float(bytesTotal)) {
                         if let eta = timeEstimator.elapsed(done: stats.bytesSent, total: bytesTotal) {
-                            Text("\(eta.formatted()) ETA")
+                            Text("\(eta.formatted()) remaining")
                         } else {
                             Text("Estimating time remaining...")
                         }

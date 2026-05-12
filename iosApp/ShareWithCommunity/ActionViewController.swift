@@ -9,10 +9,10 @@ class ActionViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let resource = ArchiveResourceInfo()
+        let archive = ArchiveResourceInfo()
         
         let swiftUIView = ContentView()
-            .environment(\.archiveResource, resource)
+            .environment(\.archiveResource, archive)
             .environment(\.finishTask, {
                 self.extensionContext!.completeRequest(returningItems: nil, completionHandler: nil)
             })
@@ -37,11 +37,13 @@ class ActionViewController: UIViewController {
                     continue
                 }
 
-                provider.loadItem(forTypeIdentifier: UTType.psarchive.identifier) { archiveURL, error in
-                    if let archiveURL = archiveURL as? URL {
-                        resource.url = .success(archiveURL)
+                provider.loadItem(forTypeIdentifier: UTType.psarchive.identifier) { res, error in
+                    if let archiveURL = res as? URL {
+                        archive.resource = .success(.url(archiveURL))
+                    } else if let data = res as? Data {
+                        archive.resource = .success(.data(data, fileName: provider.suggestedName))
                     } else {
-                        resource.url = .failure(error!)
+                        archive.resource = .failure(.init(error ?? CocoaError(.fileReadUnsupportedScheme)))
                     }
                 }
 
