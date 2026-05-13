@@ -102,7 +102,7 @@ struct OptionList<Content: View, Item: Option>: View {
                     
                     ToolbarItem(placement: .secondaryAction) {
                         Menu("Sorting", systemImage: "line.3.horizontal.decrease.circle") {
-                            Toggle("Acending", systemImage: "chevron.up", isOn: Binding(get: {
+                            Toggle("Ascending", systemImage: "chevron.up", isOn: Binding(get: {
                                 sorting.order == .acending
                             }, set: { isOn in
                                 sorting = sorting.ordered(by: isOn ? .acending : .decending)

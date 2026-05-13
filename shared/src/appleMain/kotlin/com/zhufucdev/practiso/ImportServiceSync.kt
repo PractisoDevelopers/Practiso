@@ -2,8 +2,10 @@ package com.zhufucdev.practiso
 
 import com.zhufucdev.practiso.database.AppDatabase
 import com.zhufucdev.practiso.datamodel.ArchivePack
+import com.zhufucdev.practiso.datamodel.ImportException
 import com.zhufucdev.practiso.datamodel.NamedSource
 import com.zhufucdev.practiso.datamodel.ResourceNotFoundException
+import com.zhufucdev.practiso.helper.simpleHandleQuestions
 import com.zhufucdev.practiso.service.ImportService
 import com.zhufucdev.practiso.service.ImportState
 import kotlinx.coroutines.runBlocking
@@ -18,22 +20,11 @@ class ImportServiceSync(db: AppDatabase) {
 
     @Throws(Exception::class, RuntimeException::class)
     fun importAll(pack: ArchivePack) = runBlocking {
-        service.import(pack).collect {
-            when (it) {
-                is ImportState.Confirmation -> it.ok.send(Unit)
-                is ImportState.Error -> {
-                    if (it.error.cause != null) {
-                        it.cancel.trySend(Unit)
-                        throw it.error.cause
-                    } else {
-                        error("Unspecified error while importing an archive.")
-                    }
-                }
+        service.import(pack).simpleHandleQuestions()
+    }
 
-                is ImportState.Idle -> {}
-                is ImportState.Importing -> {}
-                is ImportState.Unarchiving -> {}
-            }
-        }
+    @Throws(ImportException::class)
+    fun import(namedSource: NamedSource) = runBlocking {
+        service.import(namedSource).simpleHandleQuestions()
     }
 }

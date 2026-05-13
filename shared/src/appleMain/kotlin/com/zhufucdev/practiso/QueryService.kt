@@ -13,4 +13,10 @@ class QueryService(private val db: AppDatabase) {
             .firstOrNull()
             ?.toOption()
     }
+
+    fun getQuizOptions(quizIds: Collection<Long>) = runBlocking {
+        db.quizQueries.getQuizFrames(db.quizQueries.getQuizByIds(quizIds))
+            .first()
+            .map { it.toOption() }
+    }
 }

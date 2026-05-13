@@ -57,6 +57,8 @@ kotlin {
             api(libs.kotlinx.io.okio)
             api(libs.filekit.core)
             api(libs.okio)
+            api(libs.settings.core)
+            api(libs.settings.coroutine)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
@@ -100,13 +102,12 @@ kotlin {
             implementation(libs.sqldelight.native.driver)
             implementation(libs.ktor.client.darwin)
         }
+        val appleTest by getting {
+            dependsOn(commonTest.get())
+        }
 
         val composeCommonMain by getting {
             dependsOn(commonMain.get())
-            dependencies {
-                implementation(libs.settings.core)
-                implementation(libs.settings.coroutine)
-            }
         }
 
         val composeCommonTest by getting {

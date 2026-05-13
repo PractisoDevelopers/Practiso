@@ -357,7 +357,7 @@
         }
       }
     },
-    "Add" : {
+    "Account removed." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -773,6 +773,9 @@
         }
       }
     },
+    "Close" : {
+
+    },
     "Collecting frames..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -820,6 +823,9 @@
           }
         }
       }
+    },
+    "Community Account" : {
+
     },
     "community service" : {
       "localizations" : {
@@ -1347,6 +1353,9 @@
         }
       }
     },
+    "Do you want to download this again?" : {
+
+    },
     "Don't create takes for now" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1689,6 +1698,9 @@
           }
         }
       }
+    },
+    "Get" : {
+
     },
     "Getting started..." : {
       "localizations" : {
@@ -2294,6 +2306,12 @@
         }
       }
     },
+    "Log Out" : {
+
+    },
+    "Logging out" : {
+
+    },
     "Missing models" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2573,6 +2591,9 @@
         }
       }
     },
+    "No actions available" : {
+
+    },
     "No details were reported." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2636,6 +2657,9 @@
           }
         }
       }
+    },
+    "Nothing was scanned" : {
+
     },
     "Now" : {
       "localizations" : {
@@ -3232,6 +3256,9 @@
         }
       }
     },
+    "Show Credentials" : {
+
+    },
     "Skip" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3583,6 +3610,9 @@
           }
         }
       }
+    },
+    "Type In Token" : {
+
     },
     "Type text here..." : {
       "localizations" : {

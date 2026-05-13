@@ -1,0 +1,63 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ remaining" : {
+
+    },
+    "Archive name" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Closing in %lld" : {
+
+    },
+    "Completed!" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Create account" : {
+
+    },
+    "Default user name is the same as device name." : {
+
+    },
+    "Device name" : {
+
+    },
+    "Estimating time remaining..." : {
+
+    },
+    "Others can view and download your quizzes, and share with their friends" : {
+
+    },
+    "Retry" : {
+
+    },
+    "Reveal in Practiso" : {
+
+    },
+    "Status code %d" : {
+
+    },
+    "Unexpected error" : {
+
+    },
+    "Upload failed" : {
+
+    },
+    "Uploading..." : {
+
+    },
+    "Used to identify the content within for others" : {
+
+    },
+    "User name" : {
+
+    }
+  },
+  "version" : "1.2"
+}

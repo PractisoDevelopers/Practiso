@@ -95,6 +95,12 @@ struct QuestionView: View {
                         isArchiveImporterShown = true
                     }
                 }
+            } else {
+                ToolbarItem(placement: .bottomBar) {
+                    ShareLink(item: data.items.filter { selection.contains($0.kt.id) }.map { $0.kt },
+                              preview: SharePreview("\(selection.count) questions in selection"))
+                    .disabled(selection.isEmpty)
+                }
             }
         }
         .environment(\.editMode, $editMode)

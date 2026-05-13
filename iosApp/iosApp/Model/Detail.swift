@@ -7,4 +7,5 @@ enum Detail {
     case template(TemplateOption)
     case session(SessionOption)
     case archivePreview(ArchiveMetadata)
+    case archiveIdPreview(String)
 }

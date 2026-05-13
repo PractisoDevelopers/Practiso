@@ -5,22 +5,24 @@ import SwiftUI
 
 struct CommunityView: View {
     @Environment(ContentView.Model.self) private var model
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
 
     @State private var state: PageState = .loading
     @State private var refreshCounter = 0
     @State private var selection = Set<String>()
+    @State private var refreshChannel = AsyncChannel<Void>()
+    @State private var showAccountSheet = false
 
-    private let archivePages = AppCommunityService.getArchivePagination(sortOptions: SortOptions(descending: true, keyword: .updateTime))
-    private let refreshChannel = AsyncChannel<Void>()
+    private let archivePages = AppCommunityService.shared.getArchivePagination(sortOptions: SortOptions(descending: true, keyword: .updateTime))
 
-    enum PageState {
+    enum PageState: Equatable {
         case loading
         case ready(dimensions: [DimensionMetadata], archives: [ArchiveMetadata])
         case error(message: String)
     }
 
     var body: some View {
-        VStack {
+        Group {
             switch state {
             case .loading:
                 ProgressView()
@@ -48,28 +50,60 @@ struct CommunityView: View {
                     .listRowInsets(.zero)
 
                     ForEach(archives, id: \.id) { archive in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(archive.name)
-                            Text("\(Image(systemName: "heart")) \(archive.likes) \(Image(systemName: "arrow.down.circle")) \(archive.downloads)")
-                                .foregroundStyle(.secondary)
-                        }
+                        ArchiveItemView(meta: archive)
                     }
                 }
 
             case let .error(message):
-                Text("Failed to load Community")
-                Text(message)
-                Button {
-                    refreshCounter += 1
-                } label: {
-                    Text("try again")
+                VStack {
+                    Text("Failed to load Community")
+                    Text(message)
+                    Button {
+                        refreshCounter += 1
+                    } label: {
+                        Text("try again")
+                    }
                 }
             }
         }
+        .animation(.default, value: state)
         .refreshable {
+            refreshChannel = .init()
             refreshCounter += 1
             var iter = refreshChannel.makeAsyncIterator()
             await iter.next()
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Account", systemImage: "person.crop.circle") {
+                    showAccountSheet = true
+                }
+            }
+        }
+        .sheet(isPresented: $showAccountSheet) {
+            NavigationStack {
+                CommunityAccountView()
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            HStack {
+                                Color.secondary
+                                    .frame(width: 32, height: 32)
+                                    .mask {
+                                        Image("AppIconMask")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                    }
+                                Text("Community Account")
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Close", systemImage: "xmark") {
+                                showAccountSheet = false
+                            }
+                        }
+                    }
+            }
         }
         .task(id: refreshCounter) {
             await withTaskGroup { tg in
@@ -77,11 +111,11 @@ struct CommunityView: View {
                     var dims: [DimensionMetadata]?
                     var archives: [ArchiveMetadata]?
 
-                    func setDims(_ newValue: [DimensionMetadata]) {
+                    func setDims(_ newValue: [DimensionMetadata]?) {
                         self.dims = newValue
                     }
 
-                    func setArchives(_ newValue: [ArchiveMetadata]) {
+                    func setArchives(_ newValue: [ArchiveMetadata]?) {
                         self.archives = newValue
                     }
 
@@ -92,21 +126,24 @@ struct CommunityView: View {
 
                 let resources = Resources()
                 tg.addTask {
-                    for await items in AppCommunityService.getDimensions(takeFirst: 5) {
+                    for await items in AppCommunityService.shared.getDimensions(takeFirst: 5) {
                         await resources.setDims(items)
                         Task { @MainActor in
                             if let dimensions = await resources.dims, let archives = await resources.archives {
                                 state = .ready(dimensions: dimensions, archives: archives)
-                                await refreshChannel.send(())
+                                Task {
+                                    await refreshChannel.send(())
+                                }
                             }
                         }
                     }
                 }
                 tg.addTask {
                     for await page in await archivePages {
+                        await resources.setArchives(nil)
                         for await items in page.items {
                             if await resources.archives == nil {
-                                await resources.setArchives(items as! [ArchiveMetadata])
+                                await resources.setArchives((items as! [ArchiveMetadata]))
                             } else {
                                 await resources.appendArchives(contentsOf: items as! [ArchiveMetadata])
                             }
@@ -114,7 +151,9 @@ struct CommunityView: View {
                             Task { @MainActor in
                                 if let dimensions = await resources.dims, let archives = await resources.archives {
                                     state = .ready(dimensions: dimensions, archives: archives)
-                                    await refreshChannel.send(())
+                                    Task {
+                                        await refreshChannel.send(())
+                                    }
                                 }
                             }
                         }
@@ -124,4 +163,123 @@ struct CommunityView: View {
             }
         }
     }
+}
+
+fileprivate struct ArchiveItemView: View {
+    @Environment(ContentView.ErrorHandler.self) private var errorHandler
+
+    let meta: ArchiveMetadata
+
+    @State private var showRedownloadAlert = false
+    @State private var cycle: DownloadCycle = DownloadStopped.Idle()
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(meta.nameWithoutExtension)
+                Text("\(Image(systemName: "heart")) \(meta.likes) \(Image(systemName: "arrow.down.circle")) \(meta.downloads)")
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+            switch onEnum(of: cycle) {
+            case let .downloadState(state):
+                switch onEnum(of: state) {
+                case .completed:
+                    Image(systemName: "checkmark")
+                case .configure:
+                    cancelDownloadButton(
+                        WithStopIcon {
+                            IndeterministicCircularProgressView()
+                        }
+                    )
+                case .preparing:
+                    cancelDownloadButton(
+                        WithStopIcon {
+                            IndeterministicCircularProgressView()
+                        }
+                    )
+                case let .downloading(download):
+                    cancelDownloadButton(
+                        WithStopIcon {
+                            CircularProgressView(value: download.progress)
+                        }
+                    )
+                }
+            case .downloadStopped:
+                downloadButton
+            }
+        }
+        .task(id: meta.id) {
+            for await update in AppCommunityService.shared.downloadState(of: meta) {
+                cycle = update
+            }
+        }
+        .contextMenu {
+            Button("Get", systemImage: "square.and.arrow.down") {
+                if cycle is DownloadState.Completed {
+                    showRedownloadAlert = true
+                } else {
+                    Task {
+                        await errorHandler.catchAndShowImmediately {
+                            try await AppCommunityService.shared.download(archive: meta)
+                        }
+                    }
+                }
+            }
+        } preview: {
+            archiveCtxMenuPreview(meta)
+                .padding()
+        }
+        .alert("Re-download", isPresented: $showRedownloadAlert, actions: {
+            Button("Yes") {
+                Task {
+                    await errorHandler.catchAndShowImmediately {
+                        try await AppCommunityService.shared.cancelDownload(of: meta)
+                        try await AppCommunityService.shared.download(archive: meta)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                showRedownloadAlert = false
+            }
+        }, message: {
+            Text("Do you want to download this again?")
+        })
+    }
+
+    func cancelDownloadButton<C: View>(_ content: C) -> some View {
+        content
+            .onTapGesture {
+                Task {
+                    await errorHandler.catchAndShowImmediately {
+                        try await AppCommunityService.shared.cancelDownload(of: meta)
+                    }
+                }
+            }
+    }
+
+    var downloadButton: some View {
+        Button("Get") {
+            Task {
+                await errorHandler.catchAndShowImmediately {
+                    try await AppCommunityService.shared.download(archive: meta)
+                }
+            }
+        }
+        .buttonStyle(.bordered)
+        .bold()
+    }
+
+    func archiveCtxMenuPreview(_ meta: ArchiveMetadata) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(meta.dimensions, id: \.name) { dim in
+                DimensionChip.Text(emoji: dim.emoji, name: "\(dim.name) × \(dim.quizCount)")
+            }
+        }
+    }
+}
+
+#Preview {
+    CommunityView()
 }

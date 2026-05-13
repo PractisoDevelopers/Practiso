@@ -1,17 +1,13 @@
-import Foundation
-import UniformTypeIdentifiers
 import ComposeApp
 import CoreTransferable
+import Foundation
+import Shared
+import UniformTypeIdentifiers
 
-extension UTType {
-    static var psarchive: UTType { UTType(exportedAs: "com.zhufucdev.psarchive") }
-    static var psquiz: UTType { UTType(exportedAs: "com.zhufucdev.psquiz") }
-}
-
-enum SingleQuizTransferError : LocalizedError {
+enum SingleQuizTransferError: LocalizedError {
     case containsMultiple
     case empty
-    
+
     var errorDescription: String? {
         switch self {
         case .containsMultiple:
@@ -26,7 +22,7 @@ private func importQuiz(source: NamedSource) throws -> QuizOption {
     let serivce = ImportServiceSync(db: Database.shared.app)
     do {
         let quizId = try serivce.importSingleton(namedSource: source)
-        
+
         let query = QueryService(db: Database.shared.app)
         return query.getQuizOption(quizId: quizId)!
     } catch is EmptyArchiveException {
@@ -36,20 +32,20 @@ private func importQuiz(source: NamedSource) throws -> QuizOption {
     }
 }
 
-fileprivate struct IdProxy : Codable, Transferable {
+fileprivate struct IdProxy: Codable, Transferable {
     let id: Int64
-    
+
     static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: .psquiz)
     }
 }
 
-extension QuizOption : @retroactive Transferable {
+extension QuizOption: @retroactive Transferable {
     func data() throws -> Data {
         let service = ExportServiceSync(db: Database.shared.app)
         return service.exportOneAsData(quizId: id)
     }
-    
+
     public static var transferRepresentation: some TransferRepresentation {
         ProxyRepresentation { option in
             IdProxy(id: option.id)
@@ -60,7 +56,7 @@ extension QuizOption : @retroactive Transferable {
             }
             throw CocoaError(.fileNoSuchFile)
         }
-        
+
         DataRepresentation(contentType: .psarchive) { option in
             try option.data()
         } importing: { data in
@@ -69,3 +65,31 @@ extension QuizOption : @retroactive Transferable {
     }
 }
 
+fileprivate struct IdSetProxy: Codable, Transferable {
+    let set: Set<Int64>
+    
+    init<S>(_ sequence: S) where S: Sequence<Int64> {
+        self.set = .init(sequence)
+    }
+    
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .psquizset)
+    }
+}
+
+extension [QuizOption]: @retroactive Transferable {
+    public static var transferRepresentation: some TransferRepresentation {
+        ProxyRepresentation { options in
+            IdSetProxy(options.map { $0.id })
+        } importing: { proxy in
+            let service = QueryService(db: Database.shared.app)
+            return service.getQuizOptions(quizIds: proxy.set)
+        }
+        
+        DataRepresentation(exportedContentType: .psarchive) { options in
+            let service = ExportServiceSync(db: Database.shared.app)
+            return try service.exportAsData(quizIds: options.map { KotlinLong(value: $0.id) })
+        }
+        .suggestedFileName(String(localized: "Multiple questions"))
+    }
+}
