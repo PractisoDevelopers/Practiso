@@ -293,23 +293,6 @@
         }
       }
     },
-    "Acending" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Acending"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Acending"
-          }
-        }
-      }
-    },
     "Add" : {
       "localizations" : {
         "zh-Hans" : {
