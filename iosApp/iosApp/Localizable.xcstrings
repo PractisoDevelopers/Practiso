@@ -84,6 +84,22 @@
         }
       }
     },
+    "%@ done" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ done"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ done"
+          }
+        }
+      }
+    },
     "%@ Unavailable" : {
       "localizations" : {
         "zh-Hans" : {
@@ -222,53 +238,6 @@
         }
       }
     },
-    "%lld items selected" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld item selected"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld items selected"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "已选择%lld项"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "已選擇%lld項"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%lld min" : {
       "localizations" : {
         "zh-Hans" : {
@@ -313,70 +282,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld秒"
-          }
-        }
-      }
-    },
-    "%lld%%" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld%%"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld%%"
-          }
-        }
-      }
-    },
-    "%lld%% done" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已完成%lld%%"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已完成%lld%%"
-          }
-        }
-      }
-    },
-    "0%" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "0%"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "0%"
-          }
-        }
-      }
-    },
-    "100%" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "100%"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "100%"
           }
         }
       }
@@ -1537,23 +1442,6 @@
         }
       }
     },
-    "Edit" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "编辑"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "編輯"
-          }
-        }
-      }
-    },
     "Edit Content" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1663,23 +1551,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "瀏覽"
-          }
-        }
-      }
-    },
-    "Failed to copy resource." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "复制资源失败。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "複製資源失敗。"
           }
         }
       }
@@ -2114,23 +1985,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Insufficient disk space."
-          }
-        }
-      }
-    },
-    "interact with status bar to continue" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "与状态栏交互以继续"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "與狀態列互動以繼續"
           }
         }
       }
