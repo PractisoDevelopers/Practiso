@@ -4,6 +4,9 @@ files:
   - source: /iosApp/iosApp/Localizable.xcstrings
     translation: /iosApp/iosApp/Localizable.xcstrings
     multilingual: 1
+  - source: /iosApp/ShareWithCommunity/Localizable.xcstrings
+    translation: /iosApp/ShareWithCommunity/Localizable.xcstrings
+    multilingual: 1
   - source: /androidApp/src/main/res/values/strings.xml
     translation: /androidApp/src/main/res/values-%android_code%/strings.xml
   - source: /iosApp/iosApp/Settings.bundle/en.lproj/*.strings
