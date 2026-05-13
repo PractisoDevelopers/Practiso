@@ -10,6 +10,7 @@ import io.ktor.http.parseUrl
 val PractisoURLProtocol = URLProtocol("practiso", 0)
 
 class Protocol(private val url: Url) {
+    @Throws(IllegalArgumentException::class)
     constructor(urlString: String) : this(
         parseUrl(urlString) ?: throw IllegalArgumentException("urlString is not an valid URL")
     )
@@ -35,24 +36,38 @@ class Protocol(private val url: Url) {
 }
 
 sealed class ProtocolAction {
-    data class ImportAuthToken(val token: AuthorizationToken) : ProtocolAction()
+    data class ImportAuthToken(val token: AuthorizationToken) : ProtocolAction() {
+        // for Apple platforms
+        val tokenString: String get() = token.toString()
+    }
+    data class RevealCommunityArchive(val id: String?) : ProtocolAction()
 
     companion object {
-        fun of(url: Url): ProtocolAction =
+        @Throws(IllegalArgumentException::class)
+        fun of(url: Url): ProtocolAction {
             when (url.host) {
                 "import_auth_token" -> {
                     require(url.segments.isNotEmpty()) {
-                        "No data to import"
+                        "No token data to import"
                     }
 
-                    ImportAuthToken(
+                    return ImportAuthToken(
                         AuthorizationToken(
                             value = url.segments[0]
                         )
                     )
                 }
 
-                else -> error("Unknown token: ${url.host}")
+                "community" -> {
+                    when (url.segments.firstOrNull()) {
+                        "archive" -> {
+                            return RevealCommunityArchive(url.segments.getOrNull(2))
+                        }
+                    }
+                }
             }
+
+            throw IllegalArgumentException("Unknown token: ${url.host}")
+        }
     }
 }

@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.runBlocking
 import kotlinx.io.Buffer
 import kotlinx.io.buffered
 import kotlinx.io.okio.asKotlinxIoRawSource
@@ -297,10 +298,15 @@ object AppCommunityService {
     fun getAuthToken() =
         community.flatMapLatest { it.identity.authToken.map { token -> token?.toString() } }
 
+    fun isAuthenticated(): Boolean {
+        val endpoint = settings.getString(COMMUNITY_SERVER_URL_KEY, DEFAULT_COMMUNITY_SERVER_URL)
+        return KeychainCommunityIdentity(endpoint, APP_KEYCHAIN_SHARING).authToken.value != null
+    }
+
     suspend fun clearIdentity() = community.first().identity.clear()
 
     suspend fun setIdentity(token: String) {
-        (community.first().identity as KeychainCommunityIdentity).authToken.emit(
+        community.first().identity.setAuthToken(
             AuthorizationToken(token)
         )
     }
@@ -313,9 +319,7 @@ object AppCommunityService {
         assert(community.identity.authToken.value != null) {
             "Not logged in even with existing token"
         }
-        println("Step 2")
         val newToken = community.forkWhoami(clientName)
-        println("new token: $newToken")
         community.identity.setAuthToken(newToken)
     }
 }

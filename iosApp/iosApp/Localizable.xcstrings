@@ -1883,6 +1883,9 @@
         }
       }
     },
+    "Invalid credentials" : {
+
+    },
     "Invalid file format." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2295,6 +2298,19 @@
         }
       }
     },
+    "New account is %@" : {
+
+    },
+    "New account is %@ on %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New account is %1$@ on %2$@"
+          }
+        }
+      }
+    },
     "New question" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2381,6 +2397,9 @@
           }
         }
       }
+    },
+    "Nothing was scanned" : {
+
     },
     "Now" : {
       "localizations" : {

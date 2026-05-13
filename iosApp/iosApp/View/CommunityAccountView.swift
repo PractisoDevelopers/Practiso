@@ -1,4 +1,5 @@
 import AsyncAlgorithms
+import CodeScanner
 @preconcurrency import ComposeApp
 import Foundation
 import SwiftUI
@@ -220,12 +221,14 @@ fileprivate struct HasAccount: View {
 
 fileprivate struct NoAccount: View {
     @State private var showTypeInDialog = false
+    @State private var showScanningDialog = false
+    @State private var showEmptyScanDialog = false
     @State private var accessTokenBuffer = ""
     @State private var tokenToAdd: String? = nil
     @State private var addAccountStateChannel = AsyncChannel<AddAccountState>()
     @State private var disabled = false
     @State private var addAccountError: AddAccountError? = nil
-    
+
     var body: some View {
         Form {
             Section {
@@ -233,23 +236,16 @@ fileprivate struct NoAccount: View {
             }
             Section {
                 Button("Via QR Code") {
+                    showScanningDialog = true
+                    Task {
+                        await subscribeToAddAccountNotifications()
+                    }
                 }
                 Button("Type In Token") {
                     accessTokenBuffer = ""
-                    addAccountStateChannel = .init()
                     showTypeInDialog = true
                     Task {
-                        for await update in addAccountStateChannel {
-                            switch update {
-                            case .working:
-                                disabled = true
-                            case .success:
-                                disabled = false
-                            case .error(let err):
-                                disabled = false
-                                addAccountError = err
-                            }
-                        }
+                        await subscribeToAddAccountNotifications()
                     }
                 }
             } header: {
@@ -274,6 +270,52 @@ fileprivate struct NoAccount: View {
             Button("Cancel", role: .cancel) {
             }
         }
+        .sheet(isPresented: $showScanningDialog) {
+            CodeScannerView(codeTypes: [.qr]) { result in
+                switch result {
+                case let .success(success):
+                    guard let url = URL(string: success.string) else {
+                        finishScanningEmptyhanded()
+                        return
+                    }
+                    guard let dest = AppLinkDestination(url: url), case let .addAccount(token) = dest else {
+                        finishScanningEmptyhanded()
+                        return
+                    }
+                    tokenToAdd = token
+
+                case .failure:
+                    finishScanningEmptyhanded()
+                }
+            }
+        }
+        .alert("Add account", isPresented: $showEmptyScanDialog) {
+            Button("OK", role: .cancel) {
+                showEmptyScanDialog = false
+            }
+        } message: {
+            Text("Nothing was scanned")
+        }
+    }
+
+    func finishScanningEmptyhanded() {
+        showScanningDialog = false
+        showEmptyScanDialog = true
+    }
+
+    func subscribeToAddAccountNotifications() async {
+        addAccountStateChannel = .init()
+        for await update in addAccountStateChannel {
+            switch update {
+            case .working:
+                disabled = true
+            case .success:
+                disabled = false
+            case let .error(err):
+                disabled = false
+                addAccountError = err
+            }
+        }
     }
 }
 
@@ -294,7 +336,7 @@ fileprivate struct CredentialsView: View {
 
 fileprivate struct CredentialsViewImpl: View {
     let token: String
-    
+
     @Environment(\.displayScale) private var displayScale
     @State private var qrCodeImage: CGImage? = nil
 
@@ -333,7 +375,7 @@ fileprivate struct CredentialsViewImpl: View {
 
         Text("Named:")
         CommunityAccountViewImpl(state: Binding.constant(.some(info: Whoami(clientName: "iPhone", name: "Caturday", ownerId: 2, mode: 111))))
-        
+
         Text("Credentials:")
         CredentialsViewImpl(token: "example-token")
     }

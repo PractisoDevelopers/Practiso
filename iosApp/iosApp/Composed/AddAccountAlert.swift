@@ -54,14 +54,14 @@ extension View {
                             await stateNotifier.send(.error(.http(status: error.statusCode)))
                         }
                     }
+                    stateNotifier.finish()
                 }
             }
             Button("Cancel", role: .cancel) {
                 token.wrappedValue = nil
             }
         } message: {
-            Observing(AppCommunityService.shared.getAuthToken()) {
-            } content: { _ in
+            if AppCommunityService.shared.isAuthenticated() {
                 Text("Existing credentials would be overwritten, and you would have access no longer")
             }
         }
