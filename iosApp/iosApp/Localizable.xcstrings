@@ -294,6 +294,7 @@
       }
     },
     "Acending" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -463,6 +464,9 @@
 
     },
     "As New Device" : {
+
+    },
+    "Ascending" : {
 
     },
     "Automatic Clustering" : {
