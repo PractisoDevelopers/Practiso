@@ -407,7 +407,7 @@ fileprivate struct SuccessView: View {
                 }
             }
             FullWidthButton {
-                openURL(URL(string: "practiso:community/archive/\(archiveId)")!)
+                openURL(URL(string: "\(ComposeApp.Protocol_.Companion.shared.revealCommunityArchive(id: archiveId))")!)
             } label: {
                 Text("Reveal in Practiso")
             }

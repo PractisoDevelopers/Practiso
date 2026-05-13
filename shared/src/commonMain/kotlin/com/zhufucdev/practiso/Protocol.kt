@@ -6,6 +6,7 @@ import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
 import io.ktor.http.buildUrl
 import io.ktor.http.parseUrl
+import kotlin.jvm.JvmStatic
 
 val PractisoURLProtocol = URLProtocol("practiso", 0)
 
@@ -31,6 +32,15 @@ class Protocol(private val url: Url) {
             protocol = PractisoURLProtocol
             host = "import_auth_token"
             appendPathSegments(token.toString())
+        })
+
+        fun revealCommunityArchive(id: String?) = Protocol(buildUrl {
+            protocol = PractisoURLProtocol
+            host = "community"
+            appendPathSegments("archive")
+            if (id != null) {
+                appendPathSegments(id)
+            }
         })
     }
 }
