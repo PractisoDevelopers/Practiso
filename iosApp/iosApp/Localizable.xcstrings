@@ -26,7 +26,8 @@
             "value" : "%1$@ %2$d %3$@ %4$d"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%@ and %d more" : {
       "localizations" : {
