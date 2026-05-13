@@ -161,6 +161,7 @@ class KeychainCommunityIdentity(
     }
 
     override fun setAuthToken(value: AuthorizationToken) {
+        clear()
         val status = memScoped {
             withSecQuery { parameters ->
                 val valueRef = CFBridgingRetain(NSData(value.toString()))
