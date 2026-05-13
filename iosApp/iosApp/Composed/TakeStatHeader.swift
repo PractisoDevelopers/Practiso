@@ -10,7 +10,7 @@ struct TakeStatHeader : View {
             CircularProgressView(value: Double(stat.countQuizDone) / Double(stat.countQuizTotal))
             VStack(alignment: .leading) {
                 Text(stat.name)
-                Text("\(100 * stat.countQuizDone / stat.countQuizTotal)% done")
+                Text("\(Text(100 * stat.countQuizDone / stat.countQuizTotal, format: .percent)) done")
                     .font(.subheadline)
             }
         }

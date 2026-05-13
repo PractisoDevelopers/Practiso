@@ -44,7 +44,7 @@ fileprivate struct DimensionListView : View {
                 HStack {
                     Text(dim.dimension.name)
                     Spacer()
-                    Text("\(Int(round(dim.intensity * 100)))%")
+                    Text(Int(round(dim.intensity * 100)), format: .percent)
                 }
                 .frame(minHeight: 42)
             }
