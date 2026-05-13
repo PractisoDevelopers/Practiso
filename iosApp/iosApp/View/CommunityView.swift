@@ -248,15 +248,14 @@ fileprivate struct ArchiveItemView: View {
     }
 
     func cancelDownloadButton<C: View>(_ content: C) -> some View {
-        Button {
-            Task {
-                await errorHandler.catchAndShowImmediately {
-                    try await AppCommunityService.shared.cancelDownload(of: meta)
+        content
+            .onTapGesture {
+                Task {
+                    await errorHandler.catchAndShowImmediately {
+                        try await AppCommunityService.shared.cancelDownload(of: meta)
+                    }
                 }
             }
-        } label: {
-            content
-        }
     }
 
     var downloadButton: some View {
