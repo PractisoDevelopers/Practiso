@@ -358,7 +358,20 @@
       }
     },
     "Add" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增"
+          }
+        }
+      }
     },
     "Add account" : {
       "localizations" : {
@@ -2657,7 +2670,20 @@
       }
     },
     "Once logged out on all your devices, your account will become inaccessible, while your data holds still. Would you like to continue?" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Once logged out on all your devices, your account will become inaccessible, while your data holds still. Would you like to continue?"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Once logged out on all your devices, your account will become inaccessible, while your data holds still. Would you like to continue?"
+          }
+        }
+      }
     },
     "Options" : {
       "localizations" : {
