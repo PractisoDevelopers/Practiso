@@ -111,11 +111,11 @@ struct CommunityView: View {
                     var dims: [DimensionMetadata]?
                     var archives: [ArchiveMetadata]?
 
-                    func setDims(_ newValue: [DimensionMetadata]) {
+                    func setDims(_ newValue: [DimensionMetadata]?) {
                         self.dims = newValue
                     }
 
-                    func setArchives(_ newValue: [ArchiveMetadata]) {
+                    func setArchives(_ newValue: [ArchiveMetadata]?) {
                         self.archives = newValue
                     }
 
@@ -140,9 +140,10 @@ struct CommunityView: View {
                 }
                 tg.addTask {
                     for await page in await archivePages {
+                        await resources.setArchives(nil)
                         for await items in page.items {
                             if await resources.archives == nil {
-                                await resources.setArchives(items as! [ArchiveMetadata])
+                                await resources.setArchives((items as! [ArchiveMetadata]))
                             } else {
                                 await resources.appendArchives(contentsOf: items as! [ArchiveMetadata])
                             }
