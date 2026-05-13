@@ -163,8 +163,7 @@ fileprivate struct HasAccount: View {
                 }
             }
         } message: {
-            Text("Once logged out on all your devices, your account will become inaccessible, " +
-                "while your data holds still. Would you like to continue?")
+            Text("Once logged out on all your devices, your account will become inaccessible, while your data holds still. Would you like to continue?")
         }
         .alert("Deactivating account", isPresented: $showDeactivateDialog) {
             Button("Cancel", role: .cancel) {

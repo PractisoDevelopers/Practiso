@@ -357,21 +357,8 @@
         }
       }
     },
-    "Account removed." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "添加"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新增"
-          }
-        }
-      }
+    "Add" : {
+
     },
     "Add account" : {
       "localizations" : {
@@ -773,9 +760,6 @@
         }
       }
     },
-    "Close" : {
-
-    },
     "Collecting frames..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -823,9 +807,6 @@
           }
         }
       }
-    },
-    "Community Account" : {
-
     },
     "community service" : {
       "localizations" : {
@@ -1353,9 +1334,6 @@
         }
       }
     },
-    "Do you want to download this again?" : {
-
-    },
     "Don't create takes for now" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1698,9 +1676,6 @@
           }
         }
       }
-    },
-    "Get" : {
-
     },
     "Getting started..." : {
       "localizations" : {
@@ -2306,12 +2281,6 @@
         }
       }
     },
-    "Log Out" : {
-
-    },
-    "Logging out" : {
-
-    },
     "Missing models" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2591,9 +2560,6 @@
         }
       }
     },
-    "No actions available" : {
-
-    },
     "No details were reported." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2658,9 +2624,6 @@
         }
       }
     },
-    "Nothing was scanned" : {
-
-    },
     "Now" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2692,6 +2655,9 @@
           }
         }
       }
+    },
+    "Once logged out on all your devices, your account will become inaccessible, while your data holds still. Would you like to continue?" : {
+
     },
     "Options" : {
       "localizations" : {
@@ -3256,9 +3222,6 @@
         }
       }
     },
-    "Show Credentials" : {
-
-    },
     "Skip" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3610,9 +3573,6 @@
           }
         }
       }
-    },
-    "Type In Token" : {
-
     },
     "Type text here..." : {
       "localizations" : {
