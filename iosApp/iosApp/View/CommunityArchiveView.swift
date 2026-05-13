@@ -115,6 +115,9 @@ struct CommunityArchiveView: View {
     func archiveView(_ quiz: ArchivePreview) -> some View {
         FileIcon()
             .contextMenu {
+                if quiz.dimensions.isEmpty {
+                    Text("No actions available")
+                }
                 ForEach(quiz.dimensions) { dimName in
                     Toggle(dimName, isOn: Binding(get: {
                         dimSelection.contains(dimName)
