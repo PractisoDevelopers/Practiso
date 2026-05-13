@@ -1,5 +1,6 @@
 package opacity.client
 
+import com.zhufucdev.practiso.datamodel.AuthorizationToken
 import com.zhufucdev.practiso.helper.filterFirstIsInstanceOrNull
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -13,6 +14,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
+import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -23,6 +25,7 @@ import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
 import io.ktor.http.buildUrl
 import io.ktor.http.isSuccess
+import io.ktor.http.parameters
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
@@ -254,6 +257,25 @@ class OpacityClient(
             }
         }
         assertSuccess(response.status)
+    }
+
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun forkWhoami(clientName: SetField<String>): AuthorizationToken {
+        val response = http.submitForm(
+            formParameters = parameters {
+                if (clientName is SetField.Update) {
+                    append("client-name", clientName.value)
+                }
+            }
+        ) {
+            url {
+                takeFrom(endpoint)
+                appendPathSegments("whoami", "fork")
+            }
+        }
+        assertSuccess(response.status)
+        val body: ForkWhoamiResponse = response.body()
+        return AuthorizationToken(body.authToken)
     }
 
     @Throws(

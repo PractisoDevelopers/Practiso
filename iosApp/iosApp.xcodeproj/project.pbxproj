@@ -139,6 +139,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ArchiveUTType.swift,
+				DeviceIdentifier.swift,
 			);
 			target = 6AA9979C2FB1CF5F00FD3AA9 /* Shared */;
 		};

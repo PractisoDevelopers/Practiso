@@ -38,11 +38,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.runningReduce
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.io.Buffer
 import kotlinx.io.buffered
 import kotlinx.io.okio.asKotlinxIoRawSource
+import opacity.SetField
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
 import opacity.client.AuthorizationException
@@ -84,6 +86,7 @@ import platform.Security.kSecValueData
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
+import kotlin.experimental.ExperimentalNativeApi
 
 const val COMMUNITY_ACCOUNT = "community"
 
@@ -186,7 +189,8 @@ class KeychainCommunityIdentity(
 }
 
 private const val COMMUNITY_SERVER_URL_KEY = "CommunityServerURL"
-val APP_KEYCHAIN_SHARING = "${NSBundle.mainBundle.objectForInfoDictionaryKey("AppIdentifierPrefix")}com.zhufucdev.practiso.keychain.shared"
+val APP_KEYCHAIN_SHARING =
+    "${NSBundle.mainBundle.objectForInfoDictionaryKey("AppIdentifierPrefix")}com.zhufucdev.practiso.keychain.shared"
 
 @OptIn(ExperimentalSettingsApi::class, ExperimentalCoroutinesApi::class)
 object AppCommunityService {
@@ -290,7 +294,28 @@ object AppCommunityService {
     @Throws(AuthorizationException::class, IllegalStateException::class)
     suspend fun removeLike(archiveId: String) = community.first().removeLike(archiveId)
 
-    suspend fun isAuthenticated() = community.first().identity.authToken.firstOrNull() != null
+    fun getAuthToken() =
+        community.flatMapLatest { it.identity.authToken.map { token -> token?.toString() } }
 
     suspend fun clearIdentity() = community.first().identity.clear()
+
+    suspend fun setIdentity(token: String) {
+        (community.first().identity as KeychainCommunityIdentity).authToken.emit(
+            AuthorizationToken(token)
+        )
+    }
+
+    @OptIn(ExperimentalNativeApi::class)
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun setIdentityAsNewDevice(token: String, clientName: SetField<String>) {
+        setIdentity(token)
+        val community = community.first()
+        assert(community.identity.authToken.value != null) {
+            "Not logged in even with existing token"
+        }
+        println("Step 2")
+        val newToken = community.forkWhoami(clientName)
+        println("new token: $newToken")
+        community.identity.setAuthToken(newToken)
+    }
 }

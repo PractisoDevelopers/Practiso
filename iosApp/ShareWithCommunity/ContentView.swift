@@ -253,7 +253,7 @@ fileprivate struct SignUpView: View {
     let onContinue: (CommunityRegistrationInfo) async -> Void
 
     @State private var userName = ""
-    @State private var deviceName = "\(getPlatform().deviceName) (\(getPlatform().name))"
+    @State private var deviceName = "\(DeviceIdentifier.default)"
     @State private var loading = false
 
     var body: some View {

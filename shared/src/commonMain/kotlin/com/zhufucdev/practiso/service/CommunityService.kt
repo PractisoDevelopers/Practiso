@@ -15,6 +15,7 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transform
 import kotlinx.io.Source
+import opacity.SetField
 import opacity.client.ArchiveMetadata
 import opacity.client.ArchivePreview
 import opacity.client.ArchiveUploadState
@@ -40,7 +42,6 @@ class CommunityService(
     endpoint: String = DEFAULT_COMMUNITY_SERVER_URL,
     val identity: CommunityIdentity,
 ) {
-    private val clientScope = CoroutineScope(Dispatchers.Default)
     private val client = identity.authToken.map { authToken ->
         OpacityClient(
             endpoint,
@@ -48,7 +49,6 @@ class CommunityService(
             PlatformHttpClientFactory
         )
     }
-        .shareIn(clientScope, started = SharingStarted.Eagerly, replay = 1)
 
     fun getArchivePagination(sortOptions: SortOptions = SortOptions()): Flow<Paginated<ArchiveMetadata>> =
         client.map { client ->
@@ -104,6 +104,9 @@ class CommunityService(
 
     @Throws(HttpStatusAssertionException::class, CancellationException::class)
     suspend fun deleteWhoami() = client.first().deleteWhoami()
+
+    @Throws(HttpStatusAssertionException::class, CancellationException::class)
+    suspend fun forkWhoami(clientName: SetField<String>) = client.first().forkWhoami(clientName)
 
     suspend fun deleteArchive(archiveId: String) =
         client.first().deleteArchive(archiveId)

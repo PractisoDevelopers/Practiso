@@ -378,6 +378,9 @@
         }
       }
     },
+    "Access token" : {
+
+    },
     "Account" : {
 
     },
@@ -428,6 +431,9 @@
           }
         }
       }
+    },
+    "Add account" : {
+
     },
     "Add existing" : {
 
@@ -561,6 +567,9 @@
       }
     },
     "Archive not found" : {
+
+    },
+    "As New Device" : {
 
     },
     "Automatic Clustering" : {
@@ -1426,6 +1435,9 @@
         }
       }
     },
+    "Existing credentials would be overwritten, and you would have access no longer" : {
+
+    },
     "Explore" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1515,6 +1527,9 @@
           }
         }
       }
+    },
+    "Generating QR code..." : {
+
     },
     "Generic error." : {
       "localizations" : {
@@ -2124,7 +2139,7 @@
         }
       }
     },
-    "Log out" : {
+    "Log Out" : {
 
     },
     "Logging out" : {
@@ -2578,6 +2593,9 @@
         }
       }
     },
+    "Remote server responded with HTTP status code %d" : {
+
+    },
     "Remove" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2917,6 +2935,9 @@
         }
       }
     },
+    "Show Credentials" : {
+
+    },
     "Skip" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3141,6 +3162,9 @@
         }
       }
     },
+    "The credentials given are invalid" : {
+
+    },
     "Thinking about %@..." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3355,6 +3379,9 @@
         }
       }
     },
+    "Use As Is" : {
+
+    },
     "Use WLAN Only" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3523,6 +3550,9 @@
 
     },
     "You are erasing your account along with all your uploaded data. Would you like to continue?" : {
+
+    },
+    "You are logged out" : {
 
     },
     "You may create new accounts by sharing your content" : {

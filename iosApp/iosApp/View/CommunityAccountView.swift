@@ -1,7 +1,7 @@
+import AsyncAlgorithms
 @preconcurrency import ComposeApp
 import Foundation
 import SwiftUI
-import AsyncAlgorithms
 
 struct CommunityAccountView: View {
     @State private var state: PageState = .loading
@@ -25,7 +25,7 @@ struct CommunityAccountView: View {
             .refreshable {
                 refreshChannel.finish()
                 refreshChannel = .init()
-                
+
                 refreshCounter += 1
                 for await _ in refreshChannel {
                     break
@@ -71,6 +71,7 @@ fileprivate struct HasAccount: View {
     @State private var showRenameDialog = false
     @State private var showLogoutDialog = false
     @State private var showDeactivateDialog = false
+    @State private var showCredentials = false
     @State private var userNameBuffer: String
     @State private var deviceNameBuffer: String
 
@@ -116,7 +117,14 @@ fileprivate struct HasAccount: View {
                 .disabled(changingName || deactivating)
             }
             Section {
-                Button("Log out", role: .destructive) {
+                Button("Show Credentials") {
+                    showCredentials = true
+                }
+                .popover(isPresented: $showCredentials) {
+                    CredentialsView()
+                        .padding()
+                }
+                Button("Log Out", role: .destructive) {
                     showLogoutDialog = true
                 }
                 Button("Deactivate", role: .destructive) {
@@ -211,6 +219,13 @@ fileprivate struct HasAccount: View {
 }
 
 fileprivate struct NoAccount: View {
+    @State private var showTypeInDialog = false
+    @State private var accessTokenBuffer = ""
+    @State private var tokenToAdd: String? = nil
+    @State private var addAccountStateChannel = AsyncChannel<AddAccountState>()
+    @State private var disabled = false
+    @State private var addAccountError: AddAccountError? = nil
+    
     var body: some View {
         Form {
             Section {
@@ -220,14 +235,91 @@ fileprivate struct NoAccount: View {
                 Button("Via QR Code") {
                 }
                 Button("Type In Token") {
+                    accessTokenBuffer = ""
+                    addAccountStateChannel = .init()
+                    showTypeInDialog = true
+                    Task {
+                        for await update in addAccountStateChannel {
+                            switch update {
+                            case .working:
+                                disabled = true
+                            case .success:
+                                disabled = false
+                            case .error(let err):
+                                disabled = false
+                                addAccountError = err
+                            }
+                        }
+                    }
                 }
             } header: {
                 Text("Add existing")
             } footer: {
                 Text("You may create new accounts by sharing your content")
             }
+            .disabled(disabled)
         }
         .contentMargins(.top, .zero)
+        .alert("Add account", isPresented: $showTypeInDialog) {
+            TextField("Access token", text: $accessTokenBuffer)
+            Button("Continue") {
+                tokenToAdd = accessTokenBuffer
+            }
+            Button("Cancel", role: .cancel) {
+                showTypeInDialog = false
+            }
+        }
+        .addAccountAlert($tokenToAdd, stateNotifier: addAccountStateChannel)
+        .alert(isPresented: $addAccountError.isNotNil(), error: addAccountError) {
+            Button("Cancel", role: .cancel) {
+            }
+        }
+    }
+}
+
+fileprivate struct CredentialsView: View {
+    var body: some View {
+        Observing(AppCommunityService.shared.getAuthToken()) {
+            ProgressView()
+        } content: { token in
+            if let token {
+                CredentialsViewImpl(token: token)
+            } else {
+                Text("You are logged out")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+fileprivate struct CredentialsViewImpl: View {
+    let token: String
+    
+    @Environment(\.displayScale) private var displayScale
+    @State private var qrCodeImage: CGImage? = nil
+
+    var body: some View {
+        VStack(spacing: 12) {
+            VStack {
+                if let qrCodeImage {
+                    Image(decorative: qrCodeImage, scale: displayScale)
+                        .interpolation(.none)
+                        .antialiased(false)
+                } else {
+                    ProgressView()
+                    Text("Generating QR code...")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                }
+            }
+            .frame(minHeight: 200)
+            Text(token)
+                .textSelection(.enabled)
+        }
+        .onAppear {
+            qrCodeImage = qrCode(from: "\(ComposeApp.Protocol_.Companion.shared.importAuthToken(token: token))",
+                                 targetSize: .init(width: 200, height: 200), displayScale: displayScale)
+        }
     }
 }
 
@@ -241,5 +333,8 @@ fileprivate struct NoAccount: View {
 
         Text("Named:")
         CommunityAccountViewImpl(state: Binding.constant(.some(info: Whoami(clientName: "iPhone", name: "Caturday", ownerId: 2, mode: 111))))
+        
+        Text("Credentials:")
+        CredentialsViewImpl(token: "example-token")
     }
 }
