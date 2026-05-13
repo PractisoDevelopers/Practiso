@@ -403,6 +403,22 @@
         }
       }
     },
+    "Access token" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Access token"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Access token"
+          }
+        }
+      }
+    },
     "Account" : {
       "localizations" : {
         "zh-Hans" : {
@@ -463,6 +479,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新增"
+          }
+        }
+      }
+    },
+    "Add account" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add account"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add account"
           }
         }
       }
@@ -623,6 +655,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Archive not found"
+          }
+        }
+      }
+    },
+    "As New Device" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "As New Device"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "As New Device"
           }
         }
       }
@@ -1587,6 +1635,22 @@
         }
       }
     },
+    "Existing credentials would be overwritten, and you would have access no longer" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Existing credentials would be overwritten, and you would have access no longer"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Existing credentials would be overwritten, and you would have access no longer"
+          }
+        }
+      }
+    },
     "Explore" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1686,6 +1750,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "框嵌入推論資源"
+          }
+        }
+      }
+    },
+    "Generating QR code..." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Generating QR code..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Generating QR code..."
           }
         }
       }
@@ -2055,6 +2135,22 @@
         }
       }
     },
+    "Invalid credentials" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid credentials"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invalid credentials"
+          }
+        }
+      }
+    },
     "Invalid file format." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2311,18 +2407,18 @@
         }
       }
     },
-    "Log out" : {
+    "Log Out" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Log out"
+            "value" : "Log Out"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Log out"
+            "value" : "Log Out"
           }
         }
       }
@@ -2519,6 +2615,44 @@
         }
       }
     },
+    "New account is %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New account is %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New account is %@"
+          }
+        }
+      }
+    },
+    "New account is %@ on %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New account is %1$@ on %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New account is %1$@ on %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New account is %1$@ on %2$@"
+          }
+        }
+      }
+    },
     "New question" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2568,6 +2702,22 @@
         }
       }
     },
+    "No actions available" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No actions available"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No actions available"
+          }
+        }
+      }
+    },
     "No details were reported." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2612,6 +2762,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "nothing was found related to %@"
+          }
+        }
+      }
+    },
+    "Nothing was scanned" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nothing was scanned"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nothing was scanned"
           }
         }
       }
@@ -2836,6 +3002,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重做"
+          }
+        }
+      }
+    },
+    "Remote server responded with HTTP status code %d" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remote server responded with HTTP status code %d"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remote server responded with HTTP status code %d"
           }
         }
       }
@@ -3179,6 +3361,22 @@
         }
       }
     },
+    "Show Credentials" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show Credentials"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show Credentials"
+          }
+        }
+      }
+    },
     "Skip" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3399,6 +3597,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文字"
+          }
+        }
+      }
+    },
+    "The credentials given are invalid" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The credentials given are invalid"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The credentials given are invalid"
           }
         }
       }
@@ -3643,6 +3857,22 @@
         }
       }
     },
+    "Use As Is" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use As Is"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use As Is"
+          }
+        }
+      }
+    },
     "Use WLAN Only" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3861,6 +4091,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "You are erasing your account along with all your uploaded data. Would you like to continue?"
+          }
+        }
+      }
+    },
+    "You are logged out" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You are logged out"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You are logged out"
           }
         }
       }
