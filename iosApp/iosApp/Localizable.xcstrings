@@ -2673,14 +2673,14 @@
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Once logged out on all your devices, your account will become inaccessible, while your data holds still. Would you like to continue?"
+            "state" : "translated",
+            "value" : "一旦登出你所有的设备，你的帐户将无法访问，而数据仍然保留。你想要继续吗？"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Once logged out on all your devices, your account will become inaccessible, while your data holds still. Would you like to continue?"
+            "state" : "translated",
+            "value" : "一旦登出你所有的裝置，你的帳戶將無法訪問，而數據仍保留。你想要繼續嗎？"
           }
         }
       }
