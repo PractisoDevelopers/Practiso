@@ -299,7 +299,9 @@ fileprivate struct NoAccount: View {
 
     func finishScanningEmptyhanded() {
         showScanningDialog = false
-        showEmptyScanDialog = true
+        DispatchQueue.main.asyncAfter(deadline: .now().advanced(by: .seconds(1))) {
+            showEmptyScanDialog = true
+        }
     }
 
     func subscribeToAddAccountNotifications() async {

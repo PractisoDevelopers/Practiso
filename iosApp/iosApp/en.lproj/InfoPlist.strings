@@ -1,0 +1,8 @@
+/* 
+  InfoPlist.strings
+  iosApp
+
+  Created by Caturday Reed on 2026/5/14.
+  Copyright © 2026 orgName. All rights reserved.
+*/
+"NSCameraUsageDescription" = "Scan QR codes for adding community accounts from credentials.";
