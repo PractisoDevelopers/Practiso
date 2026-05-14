@@ -103,7 +103,6 @@ kotlin {
             implementation(libs.ktor.client.darwin)
         }
         val appleTest by getting {
-            dependsOn(commonTest.get())
         }
 
         val composeCommonMain by getting {
