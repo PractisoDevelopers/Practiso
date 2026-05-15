@@ -408,6 +408,7 @@ fileprivate struct SuccessView: View {
             }
             FullWidthButton {
                 openURL(URL(string: "\(ComposeApp.Protocol_.Companion.shared.revealCommunityArchive(id: archiveId))")!)
+                onClose()
             } label: {
                 Text("Reveal in Practiso")
             }
