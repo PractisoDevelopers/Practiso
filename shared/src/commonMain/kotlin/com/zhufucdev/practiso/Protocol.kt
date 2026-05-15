@@ -71,7 +71,7 @@ sealed class ProtocolAction {
                 "community" -> {
                     when (url.segments.firstOrNull()) {
                         "archive" -> {
-                            return RevealCommunityArchive(url.segments.getOrNull(2))
+                            return RevealCommunityArchive(url.segments.getOrNull(1))
                         }
                     }
                 }
