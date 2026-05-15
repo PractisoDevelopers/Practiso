@@ -99,7 +99,7 @@ class KeychainCommunityIdentity(
     private val endpoint: String,
     private val keychainGroup: String? = null
 ) : CommunityIdentity {
-    override val authToken: MutableStateFlow<AuthorizationToken?> = MutableStateFlow(run {
+    fun getKeychainToken() =
         memScoped {
             withSecQuery { parameters ->
                 CFDictionaryAddValue(parameters, kSecMatchLimit, kSecMatchLimitOne)
@@ -120,7 +120,9 @@ class KeychainCommunityIdentity(
                 }
             }
         }
-    })
+
+    override val authToken: MutableStateFlow<AuthorizationToken?> =
+        MutableStateFlow(getKeychainToken())
 
     @OptIn(ExperimentalContracts::class)
     private fun <T> withSecQuery(block: (CFMutableDictionaryRef) -> T): T {
@@ -323,4 +325,9 @@ object AppCommunityService {
         val newToken = community.forkWhoami(clientName)
         community.identity.setAuthToken(newToken)
     }
+
+    suspend fun loadTokenFromKeychain() =
+        (community.first().identity as KeychainCommunityIdentity).apply {
+            authToken.emit(getKeychainToken())
+        }
 }

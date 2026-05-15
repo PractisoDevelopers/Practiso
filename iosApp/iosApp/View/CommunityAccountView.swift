@@ -12,6 +12,7 @@ struct CommunityAccountView: View {
     var body: some View {
         CommunityAccountViewImpl(state: $state)
             .task(id: refreshCounter) {
+                _ = try? await AppCommunityService.shared.loadTokenFromKeychain()
                 for await update in AppCommunityService.shared.getWhoami() {
                     if let update {
                         state = .some(info: update)
