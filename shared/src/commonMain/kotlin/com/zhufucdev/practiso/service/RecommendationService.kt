@@ -28,8 +28,8 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 
 data class RecommendationServiceConfiguration(
-    val searchK: Int = 10,
-    val idealSimilarity: Float = 0.8f,
+    val searchK: Int = 100,
+    val idealSimilarity: Float = 0.7f,
     val idealItemCount: Int = 5,
 ) {
     companion object {
