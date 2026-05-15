@@ -20,11 +20,13 @@ object AndroidPlatform : Platform() {
     override val deviceName: String
         get() = Settings.Global.getString(SharedContext.contentResolver, Settings.Global.DEVICE_NAME)
 
-    override fun createDbDriver(): SqlDriver {
+    override fun createDbDriver(): SqlDriver = createDbDriver("practiso.db")
+
+    override fun createDbDriver(name: String): SqlDriver {
         return AndroidSqliteDriver(
             schema = AppDatabase.Schema.synchronous(),
             context = SharedContext,
-            name = "practiso.db",
+            name = name,
             callback = object : AndroidSqliteDriver.Callback(AppDatabase.Schema.synchronous()) {
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     db.setForeignKeyConstraintsEnabled(true)

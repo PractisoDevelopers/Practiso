@@ -17,7 +17,9 @@ import platform.Foundation.NSUserDomainMask
 import platform.Foundation.temporaryDirectory
 
 abstract class ApplePlatform : Platform() {
-    override fun createDbDriver(): SqlDriver {
+    override fun createDbDriver(): SqlDriver = createDbDriver("practiso.db")
+
+    override fun createDbDriver(name: String): SqlDriver {
         return NativeSqliteDriver(
             schema = AppDatabase.Schema.synchronous(),
             name = "practiso.db",

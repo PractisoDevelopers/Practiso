@@ -26,9 +26,11 @@ abstract class JVMPlatform : Platform() {
     abstract val accentColor: Color?
     abstract val dataPath: String
 
-    override fun createDbDriver(): SqlDriver {
+    override fun createDbDriver(): SqlDriver = createDbDriver("app.db")
+
+    override fun createDbDriver(name: String): SqlDriver {
         val dataPath = Path(dataPath)
-        val dbPath = dataPath.resolve("app.db")
+        val dbPath = dataPath.resolve(name)
         if (dataPath.notExists()) {
             dataPath.createDirectory()
         }

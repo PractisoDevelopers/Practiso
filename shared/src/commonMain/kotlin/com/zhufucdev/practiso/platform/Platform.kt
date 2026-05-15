@@ -11,6 +11,7 @@ abstract class Platform {
     abstract val filesystem: FileSystem
     abstract val logicalProcessorsCount: Int
     abstract fun createDbDriver(): SqlDriver
+    abstract fun createDbDriver(name: String): SqlDriver
 
     /**
      * Create a temporary file, respecting platform differences.

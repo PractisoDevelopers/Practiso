@@ -72,6 +72,7 @@ import okio.use
 import usearch.Index
 import usearch.IndexOptions
 import usearch.ScalarKind
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 class FeiService(
@@ -79,8 +80,9 @@ class FeiService(
     private val defaultModel: MlModel = JinaV2SmallEn,
     private val parallelTasks: Int = 8,
     private val inferenceSession: Flow<InferenceSession>,
+    context: CoroutineContext = Dispatchers.Main
 ) :
-    CoroutineScope by CoroutineScope(Dispatchers.Main) {
+    CoroutineScope by CoroutineScope(context) {
     companion object {
         val INDEX_PATH = getPlatform().resourcePath.resolve("search").resolve("embeddings.index")
         const val EMBEDDING_TOP_KEY = "embedding_top"

@@ -73,6 +73,7 @@ settings-coroutine = { module = "com.russhwolf:multiplatform-settings-coroutines
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlin-coroutine-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 materialkolor = { module = "com.materialkolor:material-kolor", version.ref = "material-kolor" }
 onnx-runtime-jvm = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnx-runtime" }
 hgtk-core = { module = "com.zhufucdev.hgtk:core", version.ref = "hgtk" }
