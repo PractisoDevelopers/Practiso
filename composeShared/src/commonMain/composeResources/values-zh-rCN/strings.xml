@@ -293,7 +293,7 @@
     <string name="stored_access_tokens_and_account_info_to_current_server_para">为当前服务器存储的访问凭据和账户信息</string>
     <string name="no_tokens_para">无凭据</string>
     <string name="authorization_token_para">访问令牌</string>
-    <string name="clearing_credentials_wont_remove_activities_para">清除令牌不会移除服务器上的活动记录。如果所有设备都清除，将无法访问你的账户。继续骂？</string>
+    <string name="clearing_credentials_wont_remove_activities_para">清除令牌不会移除服务器上的活动记录。如果所有设备都清除，将无法访问你的账户。继续吗？</string>
     <string name="owner_id_para">所有者ID</string>
     <string name="export_para">导出</string>
     <string name="invalid_authorization_token_para">无效访问令牌</string>
