@@ -56,7 +56,7 @@ data object JinaV2EnDe : MlModel(
 
 object KnownModels : List<MlModel> by listOf(
     JinaV2SmallEn, DmetaSmallZh,
-    FlagEmbeddingSmallZh, JinaV2EnEs, JinaV2EnDe
+    FlagEmbeddingSmallZh
 ) {
     operator fun get(hfId: String): MlModel? = firstOrNull { it.hfId == hfId }
 }
