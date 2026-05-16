@@ -413,6 +413,7 @@ fileprivate struct SuccessView: View {
                 Text("Reveal in Practiso")
             }
             .tint(.clear)
+            .foregroundStyle(.foreground)
         }
         .padding(.horizontal)
     }
